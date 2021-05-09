@@ -1,0 +1,269 @@
+#+title: Emacs Lisp
+* Emacs Lisp
+* コードメモ
+
+http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
+の元の内容に、たまにコメントをつけて読んでいったものです。
+- 実装を見ている
+- わかりやすい例
+** ring
+
+データ型定義のやり方。型述語の実装。
+https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/ring.el#L47
+
+** eww
+
+https://github.com/kijimaD/emacs/blob/master/lisp/net/eww.el#L1
+
+** lisp.h
+
+lispシンボルの実装。
+https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
+
+#+begin_src emacs-lisp
+(type-of 42)
+=>integer
+(type-of 3.14)
+=> float
+(type-of "foo")
+=> string
+(type-of '(1 2))
+=> cons
+(type-of '[1 2])
+=> vector
+(type-of 'foo)
+=> symbol
+(type-of ?a)  ; Cの'a'相当。内部的には数値
+=> integer
+#+end_src
+
+** 中で起こってること
+
+~(setq foo "FOO")~ したとき、symbolオブジェクトは以下のようにセットされます。
+#+begin_src c
+// lisp.h
+struct Lisp_Symbol
+  {
+    struct Lisp_String *name;  => "foo"
+    Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
+    Lisp_Object function;  => 空
+    略
+  };
+#+end_src
+
+↑のように作られているオブジェクトを関数で調べてみます。
+
+#+begin_src emacs-lisp
+(symbolp 'foo)    ; シンボルか否かの判定。tが真。nilが偽。(後述)
+=> t
+(symbol-name 'foo)
+=> "foo"
+(symbol-value 'foo)
+=> "FOO"
+(boundp 'foo)   ; 値セルに値があればt、なければnil
+=> t
+(fboundp 'foo)  ; 関数セルに関数があればt、なければnil
+=> nil
+(symbol-function 'foo)
+; まだ設定していないので、今はエラー
+#+end_src
+
+** クォートの意味
+
+#+begin_quote
+クォートは「評価しない」ことを指示します。クォートしないと、基本的に評価されてしまいます。
+#+end_quote
+
+#+begin_src emacs-lisp
+(type-of 'foo)
+=> symbol
+(type-of foo)
+=> string   ; 評価後、つまり値セルの指すオブジェクトの型が出力されます
+#+end_src
+
+~'~ は ~quote~ 関数の略記です。
+
+** シンボルのまとめ
+
+#+begin_quote
+ここまでで分かったこと
+
+シンボルは名前を持つ (symbol-name関数で確認可能)
+シンボルの値セルは任意のオブジェクトを指す (symbol-value関数で確認可能)
+シンボルの指すオブジェクトの型はtype-ofで確認可能
+#+end_quote
+
+** コンスセルの表記
+
+#+begin_quote
+コンスセルとはふたつのポインタ(*)を持ったオブジェクトです。
+#+end_quote
+実装
+https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L1350
+
+#+begin_src c
+struct Lisp_Cons
+{
+  union
+  {
+    struct
+    {
+      /* Car of this cons cell.  */
+      Lisp_Object car;
+
+      union
+      {
+	/* Cdr of this cons cell.  */
+	Lisp_Object cdr;
+
+	/* Used to chain conses on a free list.  */
+	struct Lisp_Cons *chain;
+      } u;
+    } s;
+    GCALIGNED_UNION_MEMBER
+  } u;
+};
+#+end_src
+サイトのときとはコードが変わっているようです。
+- ~union~ って何だろう。
+- 2つのポインタ…elispではcarとcdr
+
+#+begin_quote
+後述するように、コンスセルのcdrが別のコンスセルを指すことで、リスト構造を作ります。コンスセルで作るリスト処理こそがLisp(LISt Processing)の名前の由来でもあります。
+#+end_quote
+
+** コンスセルの表記
+
+~("foo" . "bar")~
+これは内部的に↓
+#+begin_src c
+struct Lisp_Cons
+  {
+    Lisp_Object car;  => "foo"文字列オブジェクトを指す
+    Lisp_Object cdr;  => "bar"文字列オブジェクトを指す
+  };
+#+end_src
+
+オブジェクトが2つ組み合わされたもの。
+
+** コンスセルの生成
+
+#+begin_src emacs-lisp
+(cons "foo" "bar")
+=> ("foo" . "bar")
+#+end_src
+
+- consはconstructの略。
+
+** コンスセルの値
+
+コンスセルの値にアクセスするには ~car~ と ~cdr~ だけ使える。getterメソッドみたいなもの。
+
+#+begin_quote
+car、cdr以外にコンスセルの中を参照する手段はありません。
+#+end_quote
+
+なるほど。
+
+#+begin_src emacs-lisp
+(car '("foo" . "bar"))
+=> "foo"
+(cdr '("foo" . "bar"))
+=> "bar"
+#+end_src
+
+#+begin_quote
+Java風に言えば、コンスセルはふたつのprivateフィールドとふたつのアクセサを持つだけの軽いオブジェクトです。
+#+end_quote
+
+** プログラム自体がオブジェクト
+
+#+begin_quote
+厳密に言えば、("foo" . "bar") という文字列は、コンスセルの(Java風に言えば)シリアライズ化した表現です。
+後述するように、elispのプログラム自体はリスト表現で書きます。
+これの意味することは、プログラム自体がオブジェクトであり、ソースコードはオブジェクトをシリアライズ化しただけの文字列と言えます。
+#+end_quote
+
+- シリアライズ化?
+- データとプログラムの区別がない…真髄的なところだということはわかる。
+
+** なんでもオブジェクト
+
+#+begin_src
+(setq foo '("foo" . 42))  ; carに文字列、cdrに数値のコンスセルを指すシンボルfoo
+=> ("foo" . 42)
+(setq bar '(foo . foo))   ; quoteは全体に効いているので、carとcdrの両方がシンボルfoo
+=> (foo . foo)
+(symbol-value (car bar))
+=> ("foo" . 42)
+(symbol-value (cdr bar))
+=> ("foo" . 42)
+(setq bar `(,foo . foo))  ; backquoteの例
+=> (("foo" . 42) . foo)   ; ,のついたオブジェクトは評価。そうでないオブジェクトは未評価
+#+end_src
+
+bar -> foo -> "foo" -> 42
+
+** cdrが別のコンスセル
+
+#+begin_src emacs-lisp
+(cons "foo" '("bar" . "baz"))
+=> ("foo" "bar" . "baz")
+#+end_src
+
+~("foo" . "bar" "baz")~ とはならない
+
+#+begin_src emacs-lisp
+'("foo" . ("bar" . "baz"))
+;; => ("foo" "bar" . "baz")
+#+end_src
+
+** リスト化
+
+最期のcdrをnilにするとリストに。
+#+begin_src emacs-lisp
+(cons "foo" '("bar" . nil))
+;; => ("foo" "bar")
+#+end_src
+
+nilじゃないとコンスセルになる(前の節の通り)。
+#+begin_src emacs-lisp
+(cons "foo" '("bar" . "aaa"))
+("foo" "bar" . "aaa")
+#+end_src
+
+** リスト操作
+
+#+begin_src emacs-lisp
+(car '("foo" "bar" "baz"))
+=> "foo"
+(cdr '("foo" "bar" "baz"))
+=> ("bar" "baz")
+(cdr (cdr '("foo" "bar" "baz")))
+=> ("baz")    ; dotted pair notationで書けば ("baz" . nil)
+(cdr (cdr (cdr '("foo" "bar" "baz"))))
+=> nil
+#+end_src
+
+#+begin_src emacs-lisp
+(setq foo "a")
+(setq foo (cons "value" foo))   ; リストfooに要素をprepend
+;; => ("value" . "a")
+(setq foo (cons "value" foo))   ; さらにprepend
+;; => ("value" "value" . "a")
+(setq load-path (cons (expand-file-name "~/elisp") load-path))
+
+(list "foo" "bar" "baz")  ; 引数を要素に持つリストを生成
+=> ("foo" "bar" "baz")
+
+(append '("foo" "bar") '("baz"))  ; 連接したリストを生成
+=> ("foo" "bar" "baz")
+(setq load-path (append load-path (list (expand-file-name "~/elisp"))))
+
+(car (nthcdr 1 '("foo" "bar" "baz")))   ; N番目の要素の取得
+=> "bar"
+#+end_src
+
+* 元サイト
+
+http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
