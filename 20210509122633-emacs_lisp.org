@@ -1,5 +1,5 @@
 #+title: Emacs Lisp
-* Emacs Lisp
+
 * コードメモ
 
 http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
@@ -113,11 +113,11 @@ struct Lisp_Cons
 
       union
       {
-	/* Cdr of this cons cell.  */
-	Lisp_Object cdr;
+    /* Cdr of this cons cell.  */
+    Lisp_Object cdr;
 
-	/* Used to chain conses on a free list.  */
-	struct Lisp_Cons *chain;
+    /* Used to chain conses on a free list.  */
+    struct Lisp_Cons *chain;
       } u;
     } s;
     GCALIGNED_UNION_MEMBER
@@ -189,7 +189,7 @@ Java風に言えば、コンスセルはふたつのprivateフィールドとふ
 
 ** なんでもオブジェクト
 
-#+begin_src
+#+begin_src emacs-lisp
 (setq foo '("foo" . 42))  ; carに文字列、cdrに数値のコンスセルを指すシンボルfoo
 => ("foo" . 42)
 (setq bar '(foo . foo))   ; quoteは全体に効いているので、carとcdrの両方がシンボルfoo
@@ -204,6 +204,7 @@ Java風に言えば、コンスセルはふたつのprivateフィールドとふ
 
 bar -> foo -> "foo" -> 42
 
+シンボルを評価すると、値セルを返します。
 ** cdrが別のコンスセル
 
 #+begin_src emacs-lisp
@@ -245,6 +246,8 @@ nilじゃないとコンスセルになる(前の節の通り)。
 => nil
 #+end_src
 
+面倒だけど、リストの操作が行えることがわかります。
+
 #+begin_src emacs-lisp
 (setq foo "a")
 (setq foo (cons "value" foo))   ; リストfooに要素をprepend
@@ -262,6 +265,290 @@ nilじゃないとコンスセルになる(前の節の通り)。
 
 (car (nthcdr 1 '("foo" "bar" "baz")))   ; N番目の要素の取得
 => "bar"
+#+end_src
+
+** 評価
+#+begin_quote
+コンスセルの評価は次のように行います。
+
+リストの先頭要素(先頭のコンスセルのcar)のシンボルの関数セルの指す関数呼び出し
+リストの後続要素(先頭以外のコンスセルのcar)を関数の引数として渡す。引数はquoteがなければ、評価してから引数に渡ります
+リストの後続要素は、リストであるかもしれません。この場合、内側のリストを評価、つまり関数呼び出しをしてから、外側のリストの関数呼び出しをします(前ページで既にやっていますが)。
+#+end_quote
+
+- コンスセルとリストの違い。コンスセルは ~( . )~ で、最後のcdrがnilでないもの。
+- リストは最後のcdrがnilのもの。
+- ~(append '("foo" "bar") '("baz"))~ の例.
+  1. リストの先頭要素 ~append~ の関数セルの指す関数を呼び出す。
+  2. リストの後続要素 ~'("foo" "bar") '("baz")~ が引数として呼び出される。quoteがあるので評価されない。リストのときは評価=関数呼び出しを1.と同様に内側→外側の順に行う。
+
+#+begin_src emacs-lisp
+(defun plus1 (n)
+  (+ n 1))
+=> plus1
+(plus1 10)
+=> 11
+(defun my-plus (m n)
+  (+ m n))
+=> my-plus
+(my-plus 2 5)
+=> 7
+#+end_src
+
+#+begin_quote
+関数の戻り値(=関数の評価結果)は、関数本体の最後の評価結果です
+#+end_quote
+
+なるほど。
+** 関数に名前はない
+
+#+begin_quote
+defunを見て、関数に名前があると思うのは間違いです。
+
+defunは、シンボルを作って、その関数セルが関数定義を指すようにしています。
+#+end_quote
+
+シンボルの定義を思い返してみます。
+
+#+begin_src c
+// lisp.h
+struct Lisp_Symbol
+  {
+    struct Lisp_String *name;  => "foo"
+    Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
+    Lisp_Object function;  => 空
+    略
+  };
+#+end_src
+
+確かに関数定義を指しています。
+
+#+begin_src emacs-lisp
+(defun foo () (message "a"))
+(symbolp 'foo)
+=> t
+(symbol-name 'foo)
+=> "foo"
+(symbol-value 'foo)
+=> error: (void-variable foo)
+(symbol-function 'foo)
+=> (lambda nil (message "a"))
+(boundp 'foo)
+=> nil
+(fboundp 'foo) ; 関数定義
+=> t
+#+end_src
+
+** 既存関数も同じ
+どれもシンボルで、関数定義を指しています
+#+begin_src emacs-lisp
+(symbol-function 'car)
+=> #<subr car>
+(symbol-function 'defun)
+=> #<subr defun>
+(symbol-function '+)
+=> #<subr +>
+#+end_src
+
+#+begin_quote
+subr(subroutineの略)は、Cで書かれた関数を意味しています。
+
+構造(シンボルcarやシンボルdefunがあり、それらの関数セルが関数定義を指す)は同じです。
+#+end_quote
+
+subrそうだったのか。 ~#<>~ はどういう意味なのだろう。
+
+** fset
+#+begin_quote
+値セルにsetqやsetがあったように、関数セルにはfsetがあります(fsetqはありません)。
+#+end_quote
+
+#+begin_src emacs-lisp
+(fset 'my-plus2
+  '(lambda (n) (+ n 2)))   ; defunと同じ
+=> (lambda (n) (+ n 2))
+(my-plus2 10)
+=> 12
+#+end_src
+
+関数セルと値セルを確認します。
+
+#+begin_src emacs-lisp
+(setq foo "foo")
+=> "foo"
+(fset 'foo '(lambda (s) (concat s "bar"))) ; 名前とリストの組み合わせ。どちらも未評価で渡す。
+=> (lambda (s) (concat s "bar"))
+(foo foo)
+=> "foobar"
+#+end_src
+
+** lambda
+
+https://github.com/kijimaD/emacs/blob/master/lisp/subr.el#L106
+
+#+begin_src emacs-lisp
+(lambda (引数 ...) (関数本体))
+#+end_src
+
+処理の中身。名前と組み合わせると関数になります。
+
+#+begin_src emacs-lisp
+((lambda (m n) (+ m n)) 2 5)
+=> 7
+#+end_src
+
+関数定義。declare(...関数やマクロに関する情報、infoで出てくる文章)の箇所を除くとこれだけです。
+引数cdr(処理したい内容)でコンスセルを作って、関数セルと組み合わせてリストを作ります。なので名前はありません。
+#+begin_src emacs-lisp
+(defmacro lambda (&rest cdr)
+  (list 'function (cons 'lambda cdr)))
+#+end_src
+
+** 関数とは何か
+
+述語関数から見てます。この方法いいですね。
+
+#+begin_src emacs-lisp
+; subr.el
+(defun functionp (object)
+  "Non-nil if OBJECT is a type of object that can be called as a function."
+  (or (subrp object) (byte-code-function-p object)
+      (eq (car-safe object) 'lambda)
+      (and (symbolp object) (fboundp object))))
+#+end_src
+
+#+begin_quote
+elispにとって、「関数」とは次の4つのいずれかであることが分かります。
+
+- subroutine (Cで書かれた関数)
+- バイトコンパイルされた関数 (今はあまり気にしないように)
+- シンボルlambdaで始まるリスト
+- 関数セルが空ではないシンボル
+#+end_quote
+
+** 関数呼び出し
+
+#+begin_quote
+リストの先頭要素に「関数」があれば、関数呼び出しになります。
+#+end_quote
+
+リストがすべてに優先して存在します。
+
+#+begin_src emacs-lisp
+(my-plus 1 3)   ; シンボルであれば関数セルの指す関数を呼び出す
+=> 4
+((lambda (m n) (+ m n)) 1 3)   ; シンボルlambdaで始まるリストも「関数」
+=> 4
+#+end_src
+
+** funcall
+#+begin_quote
+funcall関数は引数の1番目を関数として呼びます。
+#+end_quote
+
+#+begin_src emacs-lisp
+(funcall 'my-plus 1 3)
+=> 4
+(funcall '(lambda (m n) (+ m n)) 1 3)
+=> 4
+#+end_src
+
+- ~'(lambda (m n) (+ m n))~ は関数として呼ばれる。
+~- (lambda (m n) (+ m n))~ でもいいみたい。
+
+違いは何だっけ。... 評価して渡されるかどうか。この場合は関数なので、評価されるのがいつでも結果は変わらない。
+
+#+begin_src emacs-lisp
+(funcall '(lambda () (+ 1 2)))
+(if (eq 1 (+ 1)) 1) ; 1
+(if (eq 1 '(+ 1)) 1) ; nil
+
+(+ (+ 1) 1) ; 2
+(+ '(+ 1) 1) ; (wrong-type-argument number-or-marker-p (+ 1))
+#+end_src
+
+** 値セルにlambda
+
+つまり、値を関数でも呼び出せます。
+
+#+begin_src emacs-lisp
+(setq foo '(lambda (m n) (+ m n)))
+=> (lambda (m n) (+ m n))
+(funcall foo 2 5)
+=> 7
+#+end_src
+
+なるほど…。
+
+** 明示的に空にする
+
+#+begin_quote
+(makunbound 'foo)   ;値セルを空にする
+=> foo
+(fmakunbound 'foo)  ;関数セルを空にする
+=> foo
+#+end_quote
+
+** 連想リスト(association list)
+
+#+begin_src emacs-lisp
+'(("foo" . "FOO") ("bar" . "BAR") ("baz" . "BAZ"))
+#+end_src
+
+リストの要素がコンスセル。
+
+** 配列
+
+#+begin_quote
+配列は次の4つに分類できます。
+
+- ベクタ
+- 文字列
+- 文字テーブル
+- ブールベクタ
+#+end_quote
+
+#+begin_quote
+言語仕様として「配列」があると言うより、次のarrayp述語で「配列」型(基本型では無い)が定義されているようなものです。
+#+end_quote
+
+#+begin_src c
+// data.c
+DEFUN ("arrayp", Farrayp, Sarrayp, 1, 1, 0, "Return t if OBJECT is an array (string or vector).")
+  (object)
+     Lisp_Object object;
+{
+  if (VECTORP (object) || STRINGP (object)
+      || CHAR_TABLE_P (object) || BOOL_VECTOR_P (object))
+    return Qt;
+  return Qnil;
+}
+#+end_src
+
+ベクタ または 文字 または 文字テーブル または ブールベクタ であればarray。なんだそりゃ？
+
+#+begin_src emacs-lisp
+(arrayp '(1 2)) ; nil
+(arrayp "aaa")  ; t
+#+end_src
+
+** ベクタ
+
+#+begin_src emacs-lisp
+[1 3 5]
+=> [1 3 5]
+(vectorp [1 3 5])
+=> t
+(setq foo [1 3 5])    ; quoteしてもしなくても同じ
+=> [1 3 5]
+(vectorp foo)
+=> t
+#+end_src
+
+** ベクタの操作
+
+#+begin_src emacs-lisp
+
 #+end_src
 
 * 元サイト
