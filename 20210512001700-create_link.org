@@ -3,10 +3,12 @@
 
 * Emacsパッケージ(#2)を作りました。
 [[https://github.com/kijimaD/create-link][GitHub - kijimaD/create-link: Formatted link generator package for Emacs.]]
-* やったこと
+* 作ったもの
 ** Chrome拡張CreateLinkをEmacsに移植した
-~CreateLink~ というChrome拡張があります。それのEmacs版を作成してみました。
+~CreateLink~ というChrome拡張があります。
 
+それのEmacs版を作成しました。
+公式パッケージ集での審査中(まだ返信来ない)。
 ** 元になったCreateLinkの説明🔗
 現在のページの名前のついたリンクを取得する拡張です。GitHubとかSlackに貼り付けるときに便利なやつです。
 
@@ -17,8 +19,8 @@ https://chrome.google.com/webstore/detail/create-link/gcmghdmnkfdbncmnmlkkglmnnh
 https://www.google.com -> [Google](https://www.google.com/) みたいな。
 
 (ブラウザのデモ)
-** 作成したcreate-linkのデモ
-- 各種ブラウザ eww, w3m
+** 作成したcreate-linkの紹介
+- Emacs上の各種ブラウザ eww, w3m
 - 各種フォーマット HTML(default), LaTeX, Markdown, MediaWiki, Org-mode
 - ブラウザ以外のときはローカルファイルのパスを取得する
 
@@ -26,7 +28,6 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
 
 (実行・オプション操作のデモ)
 * コード
-作ってすぐ公式パッケージ集にPRを送りました(まだ返信来ない)。
 ライセンスの部分を除くと、90行くらいしかありません。
 
 半分くらいはユーザ設定のための決まりきった記述のため、実際は40行ほど。
@@ -49,7 +50,9 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
                  (const :tag "markdown" markdown)
                  (other :tag "org" org)
                  (other :tag "media-wiki" media-wiki)
-		 (other :tag "latex" latex)))
+                 (other :tag "latex" latex)))
+
+;; 🌟オプション設定
 
 ;; Format keywords:
 ;; %url% - http://www.google.com/
@@ -121,6 +124,7 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
 ;; stringはraw-format(<a href='%url%'>%title%</a>など)を受け取り、regexp-replacement-pairはreplace-dictionaryのイテレーション分が入る。ブロック引数。
 #+end_comment
 
+;; 🌟ブラウザやその他をラップしてtitle, urlを返す！
 (defun create-link-get-information ()
   "Get keyword information on your browser."
   (cond ((string-match-p "eww" (buffer-name))
@@ -134,7 +138,7 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
          `((title . ,(buffer-name))
            (url . ,(buffer-file-name))))))
 
-;; エントリーポイント
+;; 🌟エントリーポイント
 ;;;###autoload
 (defun create-link ()
   "Create formatted link."
@@ -148,10 +152,12 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
 #+end_src
 
 * 知見
-** 短くてもOK
-コードやアイデアの参考にするため使っているパッケージのコードを眺めていて、こういう短いものでも多くの人に使われているパッケージはけっこうあることに気づきました。
+** 短くても問題なし
+大きなパッケージに比べてこれはゴミみたいなもんだな、と思ってました。
 
-これらはけっこう使われているもの。
+でもコードやアイデアの参考にするため使っているパッケージのコードを眺めていて、こういう短いものでも自分が日々使ってたり、多くの人に使われているパッケージはけっこうあることに気づきました。
+
+たとえば:
 
 [[/home/kijima/.emacs.d/.cask/27.1/elpa/add-node-modules-path-20210305.312/add-node-modules-path.el][add-node-modules-path.el]] - node環境の読み込み 86行
 [[/home/kijima/.emacs.d/.cask/27.1/elpa/org-bullets-20200317.1740/org-bullets.el][org-bullets.el]] - リストをいい感じに表示する 109行
@@ -161,7 +167,7 @@ https://www.google.com -> [Google](https://www.google.com/) みたいな。
 - 重要なのは一つのことをうまくやること。
 
 ** 他の人に使ってもらえるとうれしい
-パッケージ集PRは審査中ですが、マージ前に使ってくれた人がいて、PRが来ました。
+使ってくれた＋PRが来ました。
 褒めてくれてテンション上がる。
 https://github.com/kijimaD/create-link/pull/7
 
@@ -203,3 +209,5 @@ or
 0. 移植技を覚えました。要件が明確＋元ソースを読むことができると楽。プログラムに集中できて美味しい。
 1. ちょっとした不便さは少ないコードで解決できるかもしれません。
 2. ごく単純なコンセプトでも、拡張の方向性は意外と多いです。
+
+おわり --
