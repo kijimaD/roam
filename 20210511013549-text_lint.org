@@ -1,0 +1,60 @@
+#+title: text-lint
+
+text-lintをorg-modeに対応させたい。
+単にテキストからのAST変換…構文解析してオブジェクトに変換する…の部分ができればすべてうまくいくはずだ。
+
+* 勉強
+https://azu.github.io/JavaScript-Plugin-Architecture/JavaScript-Plugin-Architecture.pdf
+- lintは直に文字列を比較しているわけではない。ASTを比較してる。確かに文字列比較している箇所はなかった。
+
+#+begin_src emacs-lisp
+const ast = parse(code);
+#+end_src
+の部分だ。ルールではなく、ASTのparseをorgに対応させる。それくらいすでにありそうだけどな。
+
+#+begin_quote
+ルールの実装の方を見てみると、直接オブジェクトをexportしないで、
+contextとしてRuleContextのインスタンスを受け取っていることが分かると思
+います。
+#+end_quote
+
+#+begin_src js
+module.exports = {
+    meta: { /* ルールのメタ情報 */ },
+    create: function (context) {
+        return {
+            "MemberExpression": function (node) {
+                if (node.object.name === "console") {
+                    context.report({
+                        node,
+                        message: "Unexpected console statement."
+                    });
+                }
+            }
+        };
+    }
+};
+#+end_src
+
+#+begin_quote
+このようにして、ルールは context という与えられたものだけを使うので、ルー
+ルがMyLinter本体の実装の詳細を知らなくても良くなります。
+#+end_quote
+
+#+begin_quote
+このプラグインアーキテクチャはPub/Subパターンを上手く使い、 ESLintのよ
+うに与えられたコードを読み取ってチェックするような使い方に向いています。
+#+end_quote
+
+- read向け。writeは競合変更などに対応しにくい。
+- 走査が一回なので性能がよい
+
+* 誤字
+- 実際に利⽤するため際は
+- 制御することのは難しい
+- Getting Started with Redux - Course by @dan_abramov @eggheadio (リンク切れ)
+- test/prh-rule.yaml (リンク切れ)
+- staltz.com/unidirectional-user-interface-architectures.htmlo(右端にoがついてる)
+- middleware が直接的に結果(State)を直接書き換えることはできません。(直接が2回)
+- test/prh-rule.yaml(リンク切れ)
+- conventional-changelog/angular.md at master · ajoslin/conventional-changelog(リンク切れ) → https://github.com/angular/angular/blob/master/CONTRIBUTING.md#commit になったぽい?
