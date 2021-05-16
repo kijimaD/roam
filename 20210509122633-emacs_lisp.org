@@ -1,6 +1,6 @@
 #+title: Emacs Lisp
 
-* コードメモ
+* arielコードメモ
 
 http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
 の元の内容に、たまにコメントをつけて読んでいったものです。
@@ -550,7 +550,73 @@ DEFUN ("arrayp", Farrayp, Sarrayp, 1, 1, 0, "Return t if OBJECT is an array (str
 #+begin_src emacs-lisp
 
 #+end_src
-
-* 元サイト
-
+** 元ページ再掲
 http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
+* リスト遊び
+** リスト
+- リストを構成するセルのCDRはm，セルかnilを指している。
+しかしポイントはなんでも指せるので、CDRはアトム(整数とか)も参照できる。
+CARが1, CDRが2のセルは、表記方法では表現できない。
+これを表現するために、ドット対表記が用意されている。
+#+begin_src emacs-lisp
+(cons 1 (cons 2 nil))
+=> (1 2)
+
+(cons 1 2)
+=> (1 . 2)
+#+end_src
+
+nilで終端しないセルはドット対で表記する。
+この方法で表現すると、
+(1) => (1. nil)
+(1 2 3) => (1 . (2 . (3. nil)))
+みたいになる。ドット対は連想リストで用いられる。
+** Lispのデータ
+- セル(1対のポインタ。consで作られる。CARとCDRが指しているポインタが指すデータを見るには、carとcdrを用いる)
+- アトム(セル以外。整数とか)
+** Lispの評価
+- 式がセルなら関数を呼び出す。第1要素のシンボルの指す関数を実行する。引数は評価する。
+- 式がアトムならその値を返す。
+** quote
+クオートをつけると評価せずそのまま返す。
+
+#+begin_src emacs-lisp
+(quote (1 2))
+=> (1 2)
+
+同じ意味:
+'(1 2)
+
+(setq dog 5)
+dog
+=> 5   ; 評価結果
+'dog
+=> dog ; シンボル自身を表現する
+#+end_src
+
+(setq dog "dog")
+はシンボルdog(評価しない)に、"dog"を入れるということ。
+** ポインタ
+変数から変数への代入は、ポインタを複製するということ。
+
+#+begin_src emacs-lisp
+(setq x 'dog)
+(setq y 'dog)
+(eq x y)
+=> t
+(setq z y)
+(eq y z)
+=> t
+#+end_src
+
+#+begin_src emacs-lisp
+(setq x "dog")
+(setq y "dog")
+(eq x y)
+=> nil ; 同じ中身の文字列だが、指しているポインタが異なるため。
+(setq z y)
+(eq y z)
+=> t   ; 指しているポインタが同じため
+#+end_src
+
+変数はポインタを格納する箱
