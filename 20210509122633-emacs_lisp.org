@@ -619,4 +619,53 @@ dog
 => t   ; 指しているポインタが同じため
 #+end_src
 
-変数はポインタを格納する箱
+変数はポインタを格納する箱。
+* On Lisp
+** もう一つの関数定義
+
+#+begin_src emacs-lisp
+(defun double (x) (* x 2))
+#'double ; 関数オブジェクトを得る
+
+#'(lambda (x) (* x 2))
+#+end_src
+
+#+begin_quote
+名前が関数呼び出しの先頭かシャープクォートの次に来ると関数への参照と見
+なされ， それ以外では変数名と見なされる．
+#+end_quote
+なので(double double)とかも可能。変数と関数の名前空間が異なっている。
+
+- 関数は普通のデータオブジェクト。なので変数が値として関数を持てる。
+
+#+begin_src emacs-lisp
+(setq x #'append)
+#+end_src
+
+2つの式は大体同じことをしている:
+#+begin_src emacs-lisp
+(defun double (x) (* x 2))
+
+(setf (symbol-function 'double)
+      #'(lambda (x) (* x 2)))
+#+end_src
+
+手続き定義…名前をコードと関連付ける。
+
+#+begin_quote
+関数を作るのにdefunは必要ではなく， 関数は何かのシンボルの値と
+して保存されなくてもいい．
+defunの背後には， もっと一般的な仕組みが隠れている： 関数を作ることと，
+それをある名前に関連づけることは別々の働きだ． Lispの関数の概念の一般性
+全体までは必要ないとき， defunはもっと制限の強いプログラミング言語と同
+じ位単純に関数定義を行う．
+#+end_quote
+
+applyは、オブジェクトを関数として実行する。
+
+#+begin_src emacs-lisp
+(+ 1 2)
+(apply #'+ '(1 2))
+(apply (symbol-function '+) '(1 2))
+(apply #'(lambda (x y) (+ x y)) '(1 2))
+#+end_src
