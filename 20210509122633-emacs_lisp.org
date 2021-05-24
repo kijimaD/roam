@@ -669,3 +669,82 @@ applyは、オブジェクトを関数として実行する。
 (apply (symbol-function '+) '(1 2))
 (apply #'(lambda (x y) (+ x y)) '(1 2))
 #+end_src
+** クロージャ
+#+begin_src emacs-lisp
+(defun make-adder (n)
+  #'(lambda (x) (+ x n)))
+#+end_src
+
+は数を取り，「呼ばれると引数にその数を加えるクロージャ」を返す． その足
+し算関数のインスタンスは幾らでも作ることができる：
+
+#+begin_src emacs-lisp
+> (setq add2 (make-adder 2)
+        add10 (make-adder 10))
+#<Interpreted-Function BF162E>
+> (funcall add2 5)
+7
+> (funcall add10 3)
+13
+#+end_src
+
+変数に引数をとった関数を入れる。すごいな。
+** 末尾再帰
+再帰関数とは自分自身を呼び出す関数だ． そして関数呼び出しの後に行うべき
+作業が残っていなければ， その呼び出しは\emph{末尾再帰}だ． 次の関数は末
+尾再帰でない．
+
+#+begin_src emacs-lisp :tangle yes
+(defun our-length (lst)
+  (if (null lst)
+      0
+      (1+ (our-length (cdr lst)))))
+
+#+end_src
+
+再帰呼び出しから戻った後，結果を1+ に渡さなければいけないからだ． しか
+し次の関数は末尾再帰だ．
+
+#+begin_src emacs-lisp :tangle yes
+(defun our-find-if (fn lst)
+  (if (funcall fn (car lst))
+      (car lst)
+      (our-find-if fn (cdr lst))))
+#+end_src
+** 抽象化
+#+begin_src emacs-lisp :tangle yes
+(defun 1st (exp) (car exp))
+(defun 2nd (exp) (car (cdr exp)))
+(defun 3rd (exp) (car (cdr (cdr exp))))
+
+(setq order-func1 '((OP . 2nd) (ARG1 . 1st) (ARG2 . 3rd)))
+(setq order-func2 '((OP . 1st) (ARG1 . 2nd) (ARG2 . 3rd)))
+
+(defun order-func (sym odr-db)
+  (cdr (assq sym odr-db)))
+
+(defun op (exp order-db)
+  (funcall (order-func 'OP order-db) exp))
+(defun arg1 (exp order-db)
+  (funcall (order-func 'ARG1 order-db) exp))
+(defun arg2 (exp order-db)
+  (funcall (order-func 'ARG2 order-db) exp))
+
+(setq op-func1 '((+ . +) (- . -) (* . *)))
+(setq op-func2 '((add . +) (sub . -) (mul . *)))
+
+(defun op-func (sym op-db)
+  (cdr (assq sym op-db)))
+
+(defun calc (exp op-db odr-db)
+  (cond
+    ((atom exp) exp)
+    (t (funcall
+        (op-func (op exp odr-db) op-db)
+        (calc (arg1 exp odr-db) op-db odr-db)
+        (calc (arg2 exp odr-db) op-db odr-db)))))
+
+(calc '(1 + (2 * 3)) op-func1 order-func1)
+(calc '(add 1 (mul 2 3)) op-func2 order-func2)
+#+end_src
+* memo
