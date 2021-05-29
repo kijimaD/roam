@@ -621,6 +621,7 @@ dog
 
 変数はポインタを格納する箱。
 * On Lisp
+[[http://www.asahi-net.or.jp/~kc7k-nd/onlispjhtml/preface.html][On Lisp --- 前書き]]
 ** もう一つの関数定義
 
 #+begin_src emacs-lisp
@@ -689,6 +690,19 @@ applyは、オブジェクトを関数として実行する。
 #+end_src
 
 変数に引数をとった関数を入れる。すごいな。
+
+#+begin_src emacs-lisp
+(defun make-dbms (db)
+  (list
+    #'(lambda (key)
+        (cdr (assoc key db)))
+    #'(lambda (key val)
+        (push (cons key val) db)
+        key)
+    #'(lambda (key)
+        (setf db (delete key db :key #'car))
+        key)))
+#+end_src
 ** 末尾再帰
 再帰関数とは自分自身を呼び出す関数だ． そして関数呼び出しの後に行うべき
 作業が残っていなければ， その呼び出しは\emph{末尾再帰}だ． 次の関数は末
@@ -747,4 +761,249 @@ applyは、オブジェクトを関数として実行する。
 (calc '(1 + (2 * 3)) op-func1 order-func1)
 (calc '(add 1 (mul 2 3)) op-func2 order-func2)
 #+end_src
+** 関数
+[[http://www.asahi-net.or.jp/~kc7k-nd/onlispjhtml/functions.html][On Lisp --- 関数]]
+
+#+begin_quote
+関数的プログラミングとは，副作用ではなく， 値を返すことで動作するプログ
+ラムを書くことだ．
+
+副作用とはオブジェクトの破壊的な変更（rplacaの使用等）
+や 変数への代入（setqの使用等）を含む．
+
+reverse等のオペレータは，副作用でなく返
+り値のために呼ばれるよう意図されている
+#+end_quote
+
+setqを使うときはたいてい副作用だ。
+lispのほとんどの関数は副作用のために呼ばれることを意図されていない。
+だから副作用がほしいときはsetqを使う。
+
+#+begin_quote
+この習慣を育てるには時間がかかるかもしれない． 一つの方法は，以下のオペ
+レータは税金がかかっているつもりで扱うことだ：
+
+set setq setf psetf psetq incf decf push pop pushnew
+rplaca rplacd rotatef shiftf remf remprop remhash
+
+あとlet*もそうだ． この中に命令的プログラムが潜んでいることがしばしばあ
+る． これらのオペレータに税金がかかっているつもりになるのは， よいLisp
+のプログラミング・スタイルへ向かう手助けとして勧めただけで， それがよい
+スタイルの基準なのではない． しかし，それだけでもずいぶん進歩できるだろ
+う．
+#+end_quote
+
+上は危険。
+
+#+begin_src emacs-lisp
+> (multiple-value-bind (int frac) (truncate 26.21875)
+    (list int frac))
+(26 0.21875)
+#+end_src
+
+多値。
+
+関数的プログラムは，それが欲しがるものを求める。
+命令的プログラムは，何をすべきかの指示を求める。
+
+関数的プログラムの 「aと，xの第1要素の2乗から成るリスト
+を返せ．」：
+#+begin_src emacs-lisp :tangle yes
+(defun fun (x)
+  (list 'a (expt (car x) 2)))
+#+end_src
+
+命令的プログラミングではこうだ． 「xの第1要素を求め，それを2乗せよ． そ
+してaと，先程2乗した値から成るリストを返せ．」：
+#+begin_src emacs-lisp :tangle yes
+(defun imp (x)
+  (let (y sqr)
+    (setq y (car x))
+    (setq sqr (expt y 2))
+    (list 'a sqr)))
+#+end_src
+
+その方法は，命令的プログラムは関数的プログラムを裏返しにしたものと思う
+ことだ． 関数的プログラムが命令的プログラムの中に隠れているのを見つける
+には， ただ裏返しにすればいい． この方法をimpで試してみよう．
+
+#+begin_quote
+だからルールはこうあるべきだ： 任意の関数呼び出しが， 自分だけが支配す
+るオブジェクトを安全に書き換えられるようにする．
+
+何が引数と返り値を支配するのだろう？ 関数呼び出しは返り値として受け取る
+オブジェクトを支配するが， 引数として渡されるオブジェクトは支配しない，
+というのがLispの慣習のようだ． 引数に変更を加える関数は「破壊的」との呼
+び名で区別されるが， 返ってくるオブジェクトに変更を加える関数には特に呼
+び名がない．
+#+end_quote
+** ユーティリティ関数
+[[http://www.asahi-net.or.jp/~kc7k-nd/onlispjhtml/utilityFunctions.html][On Lisp --- ユーティリティ関数]]
+
+#+begin_quote
+Common Lispのオペレータは3種類に分かれる： 関数にマクロ（ユーザが作れる
+もの）と，特殊オペレータ（ユーザには作れない）だ． この章では，Lispを新
+しい関数で拡張するテクニックを説明する． しかしここで言う「テクニック」
+は普通の意味のものではない． そういった関数について知るべき重要な点は，
+それらをどうやって書くかということではなく，それらがどこから来たのかと
+いうことだ． Lispの拡張には，他の関数を書くときと大体同じテクニックが使
+われることになる． そういった拡張を書くとき難しいのは， どうやって書く
+かを決めることではなく，何を書くかを決めることだ．
+#+end_quote
+
+ユーティリティ関数について。
+最初は本屋を検索する関数をこう書いた。
+
+#+begin_src emacs-lisp
+(defun find-books (towns)
+  (if (null towns)
+      nil
+      (let ((shops (bookshops (car towns))))
+        (if shops
+            (values (car towns) shops)
+            (find-books (cdr towns))))))
+#+end_src
+
+本当に欲しいのは(val ues (car towns) shops)だ。
+これは一般化できる。
+
+#+begin_src emacs-lisp
+(defun find2 (fn lst)
+  (if (null lst)
+      nil
+      (let ((val (funcall fn (car lst))))
+        (if val
+            (values (car lst) val)
+            (find2 fn (cdr lst))))))
+#+end_src
+
+(find2 #'bookshops towns)
+だけで達成できるようになった。引数で関数を渡すようになった。
+
+#+begin_quote
+Lispプログラミング独特の特徴の一つは，引数としての関数の重要性だ． これ
+はLispがボトムアップ・プログラミングに適している理由の一部だ． 関数の骨
+格を抽象化するのは，引数に関数を使うことで肉付けができるときには比較的
+簡単だ．
+#+end_quote
+
+なるほど。
+
+#+begin_quote
+Lispでは関数全体を引数として渡せるので，この考えをさらに深めることがで
+きる． 前述の例の両方で，特定の関数から始めて，関数を引数に取る一般的な
+関数に進んだ． 1番目の例では既に定義されていたmapcanを使い， 2番目の例
+では新しいユーティリティfind2を書いたが， 全体的な原則は同じだ： 一般部
+分と個別部分を混ぜ合わせるのでなく， 一般部分を定義して個別部分を引数と
+して渡すこと．
+#+end_quote
+
+filterは関数と1個のリストを取り， その関数がリストに適用されたときに非
+nil値が返されるような要素全てをリストにして返す．
+
+#+begin_src emacs-lisp
+> (filter #'(lambda (x) (if (numberp x) (1+ x)))
+    '(a 1 2 b 3 c d 4))
+(2 3 4 5)
+#+end_src
+
+#+begin_src emacs-lisp
+(defun longer (x y)
+  (labels ((compare (x y)
+                    (and (consp x)
+                         (or (null y)
+                             (compare (cdr x) (cdr y))))))
+    (if (and (listp x) (listp y))
+        (compare x y)
+        (> (length x) (length y)))))
+
+(defun filter (fn lst)
+  (let ((acc nil))
+    (dolist (x lst)
+      (let ((val (funcall fn x)))
+        (if val (push val acc))))
+    (nreverse acc)))
+
+(defun group (source n)
+  (if (zerop n) (error "zero length"))
+  (labels ((rec (source acc)
+                (let ((rest (nthcdr n source)))
+                  (if (consp rest)
+                      (rec rest (cons (subseq source 0 n) acc))
+                      (nreverse (cons source acc))))))
+    (if source (rec source nil) nil)))
+#+end_src
+
+さまざまな検索ユーティリティ。
+
+#+begin_src emacs-lisp
+> (split-if #'(lambda (x) (> x 4))
+            '(1 2 3 4 5 6 7 8 9 10))
+(1 2 3 4)
+(5 6 7 8 9 10)
+#+end_src
+
+#+begin_src emacs-lisp
+        (defun mapa-b (fn a b &optional (step 1)
+          (map-> fn
+                 a
+                 #'(lambda (x) (> x b))
+                 #'(lambda (x) (+ x step)))
+#+end_src
+
+うーむ。急にむずかしくなってよくわからないぞ。
+対応付け関数というのは役立ちそうだが。
+
+#+begin_src emacs-lisp
+(defun map-> (fn start test-fn succ-fn)
+  (do ((i start (funcall succ-fn i))
+       (result nil))
+    ((funcall test-fn i) (nreverse result))
+    (push (funcall fn i) result)))
+#+end_src
+** シンボルとストリング
+
+新しく作るユーティリティについて…
+#+begin_quote
+それらの新オペレータは，どれも（議論の余地はあるが）プログラムを読み辛
+くしてしまう． プログラムを読み取れるようになる前に，それらのユーティリ
+ティを全て理解しなければいけない． こういった言明がなぜ誤解されるのかに
+ついては， popページで説明した例（一番近い書店を探した例）のことを考え
+てみて欲しい． そのプログラムをfind2を使って書けば， 「プログラムを読み
+取れるようになる前に， この新ユーティリティの定義を理解しなければいけな
+いじゃないか．」 と不満を言う人が出てくる． それでは，find2を使わなかっ
+たとしてみよう． するとfind2の定義は理解しなくてもいいが， find-booksの
+定義を理解しなければいけない． その中ではfind2の仕事が「書店を見つける」
+という個別の課題と混ざっている． find2を理解するのはせいぜいfind-books
+と同じくらい難しいだけだ． また，ここでは新ユーティリティは1回しか使っ
+ていない． ユーティリティは繰り返し使うよう意図されたものだ． 実際のプ
+ログラムでは，find2を理解しなければいけないか， または3, 4個の特定目的
+の検索ルーチンを理解しなければいけないかの，どちらかの選択だろう． 前者
+の方が確実に簡単だ．
+#+end_quote
+
+なるほど。十分に抽象的であればほかでも使えるし、理解として蓄積してほかのプログラムを読み書きするときに利用できる。
+** 返り値としての関数
+[[http://www.asahi-net.or.jp/~kc7k-nd/onlispjhtml/returningFunctions.html][On Lisp --- 返り値としての関数]]
+
+#+begin_quote
+前章では，関数を引数として渡せることが抽象化への可能性をどれ程大きくす
+るかを見た． 関数に対して行える操作が豊かな程，その可能性を深く利用でき
+る． 新しい関数を生成して返す関数を定義することで， 関数を引数に取るユー
+ティリティの効果を増幅できる．
+#+end_quote
+
+#+begin_src emacs-lisp
+(defun joiner (obj)
+  (typecase obj
+    (cons #'append)
+    (number #'+)))
+#+end_src
+
+#+begin_quote
+これはオブジェクトを引数に取り， その型に応じてそれらのオブジェクトを加
+え合わせる関数を返す． これは数やリストに対して働く多態的な
+(polymorphic)連結関数の定義に使える：
+#+end_quote
+なるほど。
 * memo

@@ -1,0 +1,39 @@
+#+title: GNU Guix
+* セットアップ
+** システム
+#+begin_src shell
+sudo guix install glibc-locales
+sudo emacs /root/.profile
+# export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"
+# を追加する
+#+end_src
+
+システムレベルなのでsudoでやる必要がある。普通はなしでインストールする。
+
+システムのguixをアップグレードするとき
+sudo -i guix pull
+sudo -i guix pull --news
+** 普段のコマンド
+guix pull --news
+guix install {package}
+guix remove {package}
+guix package --list-generations
+guix package --list-installed
+guix package --switch-generation=42
+
+どうやってEmacsのパッケージ管理をすればいいのだろう？
+** CA
+git cloneが認証エラーになった。
+
+#+begin_src sh
+guix install nss-certs
+export SSL_CERT_DIR="$HOME/.guix-profile/etc/ssl/certs"
+export SSL_CERT_FILE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
+export GIT_SSL_CAINFO="$SSL_CERT_FILE"
+export CURL_CA_BUNDLE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
+#+end_src
+
+結果が変わらないので、エラーをよく見てみるとcloneする方法がhttps://github.com/... であることに気づいた。
+~git@github.com:neovim/libvterm.git~ みたいな感じではない。
+なので、cloneする方を変えることにした。
+vterm-20210409.1558/CMakeLists.txt から該当箇所を見つけて、書き換えたらうまくいった。
