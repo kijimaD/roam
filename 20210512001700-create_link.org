@@ -12,16 +12,16 @@
 ** 元になったCreateLinkの説明🔗
 現在のページの名前のついたリンクを取得する拡張です。GitHubとかSlackに貼り付けるときに便利なやつです。
 
-- CreateLinkのリンク(Chrome ウェブストア)
+- CreateLinkのリンク(Chromeウェブストア)
 https://chrome.google.com/webstore/detail/create-link/gcmghdmnkfdbncmnmlkkglmnnhagajbm?hl=ja
 
 - 例: Markdownリンクだと、
-https://www.google.com -> [Google](https://www.google.com/) みたいな。
+https://www.google.com ->[Google](https://www.google.com/) みたいな。
 
 (ブラウザのデモ)
 ** 作成したcreate-linkの紹介
-- Emacs上の各種ブラウザ eww, w3m
-- 各種フォーマット HTML(default), LaTeX, Markdown, MediaWiki, Org-mode
+- Emacs上の各種ブラウザeww, w3m
+- 各種フォーマットHTML(default), LaTeX, Markdown, MediaWiki, Org-mode
 - ブラウザ以外のときはローカルファイルのパスを取得する
 
 に対応してます。
@@ -190,7 +190,7 @@ I like this package, is simple and useful.
 CLOSED: [2021-05-14 金 10:52]
 *** DONE ユーザ定義のフィルター … chromeの拡張の方にはある
 CLOSED: [2021-05-14 金 10:52]
-*** ~Magit(Gitクライアント)~ の場合。(すでにGitHubリンクの生成はある) ~git-link~ これの整形バージョン、みたいな
+*** ~Magit(Gitクライアント)~ の場合。(すでにGitHubリンクの生成はある) ~git-link~ これの整形バージョン
 そこまではちょっとやりすぎ感。依存が増えすぎるのも微妙な感じか? でも欲しいよな…。
 各PRまではいいけど、少なくともリポジトリのホームページくらいならいいかな。
 *** シェルだったらカレントディレクトリを取る
@@ -242,7 +242,8 @@ markdown-mode.elの(markdown-kill-thing-at-point)が参考になりそう。
 
 別に独自実装しなくても、各modeのregexpを使えばいいかな。いや、フル装備でめちゃくちゃ複雑だし、いろんな依存(5つも増えるのはさすがに…)があるので独自でやろう。
 https://ayatakesi.github.io/emacs/25.1/Regexps.html
-*** フォーマットごとの特殊ルールを追加する
+*** DONE フォーマットごとの特殊ルールを追加する
+CLOSED: [2021-05-31 月 19:26]
 たとえばlatexの場合、ファイルリンクにはプレフィクスrun:がつくらしい。
 今のコードだとファイルリンクだという検知はget-informationでしかできないのでそこに書くしかない。
 一般的関数に特定のファイルフォーマットの処理が挟まれると非常に醜い。
@@ -303,9 +304,24 @@ test2
 (setq add2 (make-adder 2))
 (funcall add2 5)
 
-
 (funcall (lambda (a b c) (+ a b c))
          1 2 3)
 
 (funcall (lambda (n) (1+ n))        ; One required:
          1)
+** モード別に分岐する関数の参考になる
+ace-link.el は参考になるな。
+buffer-nameで判別してたが、modeのほうがよさそう。
+
+  #+begin_src emacs-lisp
+  (cond ((eq major-mode 'Info-mode)
+         (ace-link-info))
+        ((member major-mode '(help-mode
+                              package-menu-mode geiser-doc-mode elbank-report-mode
+                              elbank-overview-mode slime-trace-dialog-mode helpful-mode))
+         (ace-link-help))
+        ((eq major-mode 'Man-mode)
+         (ace-link-man))
+        ((eq major-mode 'woman-mode)
+         (ace-link-woman))
+  #+end_src
