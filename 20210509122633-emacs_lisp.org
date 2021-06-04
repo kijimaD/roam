@@ -21,51 +21,51 @@ lispシンボルの実装。
 https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
 
 #+begin_src emacs-lisp
-(type-of 42)
-=>integer
-(type-of 3.14)
-=> float
-(type-of "foo")
-=> string
-(type-of '(1 2))
-=> cons
-(type-of '[1 2])
-=> vector
-(type-of 'foo)
-=> symbol
-(type-of ?a)  ; Cの'a'相当。内部的には数値
-=> integer
+  (type-of 42)
+  =>integer
+  (type-of 3.14)
+  => float
+  (type-of "foo")
+  => string
+  (type-of '(1 2))
+  => cons
+  (type-of '[1 2])
+  => vector
+  (type-of 'foo)
+  => symbol
+  (type-of ?a)  ; Cの'a'相当。内部的には数値
+  => integer
 #+end_src
 
 ** 中で起こってること
 
 ~(setq foo "FOO")~ したとき、symbolオブジェクトは以下のようにセットされます。
 #+begin_src c
-// lisp.h
-struct Lisp_Symbol
+  // lisp.h
+  struct Lisp_Symbol
   {
     struct Lisp_String *name;  => "foo"
-    Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
-    Lisp_Object function;  => 空
-    略
-  };
+      Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
+      Lisp_Object function;  => 空
+      略
+      };
 #+end_src
 
 ↑のように作られているオブジェクトを関数で調べてみます。
 
 #+begin_src emacs-lisp
-(symbolp 'foo)    ; シンボルか否かの判定。tが真。nilが偽。(後述)
-=> t
-(symbol-name 'foo)
-=> "foo"
-(symbol-value 'foo)
-=> "FOO"
-(boundp 'foo)   ; 値セルに値があればt、なければnil
-=> t
-(fboundp 'foo)  ; 関数セルに関数があればt、なければnil
-=> nil
-(symbol-function 'foo)
-; まだ設定していないので、今はエラー
+  (symbolp 'foo)    ; シンボルか否かの判定。tが真。nilが偽。(後述)
+  => t
+  (symbol-name 'foo)
+  => "foo"
+  (symbol-value 'foo)
+  => "FOO"
+  (boundp 'foo)   ; 値セルに値があればt、なければnil
+  => t
+  (fboundp 'foo)  ; 関数セルに関数があればt、なければnil
+  => nil
+  (symbol-function 'foo)
+                                          ; まだ設定していないので、今はエラー
 #+end_src
 
 ** クォートの意味
@@ -75,10 +75,10 @@ struct Lisp_Symbol
 #+end_quote
 
 #+begin_src emacs-lisp
-(type-of 'foo)
-=> symbol
-(type-of foo)
-=> string   ; 評価後、つまり値セルの指すオブジェクトの型が出力されます
+  (type-of 'foo)
+  => symbol
+  (type-of foo)
+  => string   ; 評価後、つまり値セルの指すオブジェクトの型が出力されます
 #+end_src
 
 ~'~ は ~quote~ 関数の略記です。
@@ -102,27 +102,27 @@ struct Lisp_Symbol
 https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L1350
 
 #+begin_src c
-struct Lisp_Cons
-{
-  union
+  struct Lisp_Cons
   {
-    struct
+    union
     {
-      /* Car of this cons cell.  */
-      Lisp_Object car;
-
-      union
+      struct
       {
-    /* Cdr of this cons cell.  */
-    Lisp_Object cdr;
+        /* Car of this cons cell.  */
+        Lisp_Object car;
 
-    /* Used to chain conses on a free list.  */
-    struct Lisp_Cons *chain;
-      } u;
-    } s;
-    GCALIGNED_UNION_MEMBER
-  } u;
-};
+        union
+        {
+          /* Cdr of this cons cell.  */
+          Lisp_Object cdr;
+
+          /* Used to chain conses on a free list.  */
+          struct Lisp_Cons *chain;
+        } u;
+      } s;
+      GCALIGNED_UNION_MEMBER
+    } u;
+  };
 #+end_src
 サイトのときとはコードが変わっているようです。
 - ~union~ って何だろう。
@@ -137,11 +137,11 @@ struct Lisp_Cons
 ~("foo" . "bar")~
 これは内部的に↓
 #+begin_src c
-struct Lisp_Cons
+  struct Lisp_Cons
   {
     Lisp_Object car;  => "foo"文字列オブジェクトを指す
-    Lisp_Object cdr;  => "bar"文字列オブジェクトを指す
-  };
+      Lisp_Object cdr;  => "bar"文字列オブジェクトを指す
+      };
 #+end_src
 
 オブジェクトが2つ組み合わされたもの。
@@ -149,8 +149,8 @@ struct Lisp_Cons
 ** コンスセルの生成
 
 #+begin_src emacs-lisp
-(cons "foo" "bar")
-=> ("foo" . "bar")
+  (cons "foo" "bar")
+  => ("foo" . "bar")
 #+end_src
 
 - consはconstructの略。
@@ -166,10 +166,10 @@ car、cdr以外にコンスセルの中を参照する手段はありません�
 なるほど。
 
 #+begin_src emacs-lisp
-(car '("foo" . "bar"))
-=> "foo"
-(cdr '("foo" . "bar"))
-=> "bar"
+  (car '("foo" . "bar"))
+  => "foo"
+  (cdr '("foo" . "bar"))
+  => "bar"
 #+end_src
 
 #+begin_quote
@@ -190,16 +190,16 @@ Java風に言えば、コンスセルはふたつのprivateフィールドとふ
 ** なんでもオブジェクト
 
 #+begin_src emacs-lisp
-(setq foo '("foo" . 42))  ; carに文字列、cdrに数値のコンスセルを指すシンボルfoo
-=> ("foo" . 42)
-(setq bar '(foo . foo))   ; quoteは全体に効いているので、carとcdrの両方がシンボルfoo
-=> (foo . foo)
-(symbol-value (car bar))
-=> ("foo" . 42)
-(symbol-value (cdr bar))
-=> ("foo" . 42)
-(setq bar `(,foo . foo))  ; backquoteの例
-=> (("foo" . 42) . foo)   ; ,のついたオブジェクトは評価。そうでないオブジェクトは未評価
+  (setq foo '("foo" . 42))  ; carに文字列、cdrに数値のコンスセルを指すシンボルfoo
+  => ("foo" . 42)
+  (setq bar '(foo . foo))   ; quoteは全体に効いているので、carとcdrの両方がシンボルfoo
+  => (foo . foo)
+  (symbol-value (car bar))
+  => ("foo" . 42)
+  (symbol-value (cdr bar))
+  => ("foo" . 42)
+  (setq bar `(,foo . foo))  ; backquoteの例
+  => (("foo" . 42) . foo)   ; ,のついたオブジェクトは評価。そうでないオブジェクトは未評価
 #+end_src
 
 bar -> foo -> "foo" -> 42
@@ -208,63 +208,63 @@ bar -> foo -> "foo" -> 42
 ** cdrが別のコンスセル
 
 #+begin_src emacs-lisp
-(cons "foo" '("bar" . "baz"))
-=> ("foo" "bar" . "baz")
+  (cons "foo" '("bar" . "baz"))
+  => ("foo" "bar" . "baz")
 #+end_src
 
 ~("foo" . "bar" "baz")~ とはならない
 
 #+begin_src emacs-lisp
-'("foo" . ("bar" . "baz"))
-;; => ("foo" "bar" . "baz")
+  '("foo" . ("bar" . "baz"))
+  ;; => ("foo" "bar" . "baz")
 #+end_src
 
 ** リスト化
 
 最期のcdrをnilにするとリストに。
 #+begin_src emacs-lisp
-(cons "foo" '("bar" . nil))
-;; => ("foo" "bar")
+  (cons "foo" '("bar" . nil))
+  ;; => ("foo" "bar")
 #+end_src
 
 nilじゃないとコンスセルになる(前の節の通り)。
 #+begin_src emacs-lisp
-(cons "foo" '("bar" . "aaa"))
-("foo" "bar" . "aaa")
+  (cons "foo" '("bar" . "aaa"))
+  ("foo" "bar" . "aaa")
 #+end_src
 
 ** リスト操作
 
 #+begin_src emacs-lisp
-(car '("foo" "bar" "baz"))
-=> "foo"
-(cdr '("foo" "bar" "baz"))
-=> ("bar" "baz")
-(cdr (cdr '("foo" "bar" "baz")))
-=> ("baz")    ; dotted pair notationで書けば ("baz" . nil)
-(cdr (cdr (cdr '("foo" "bar" "baz"))))
-=> nil
+  (car '("foo" "bar" "baz"))
+  => "foo"
+  (cdr '("foo" "bar" "baz"))
+  => ("bar" "baz")
+  (cdr (cdr '("foo" "bar" "baz")))
+  => ("baz")    ; dotted pair notationで書けば ("baz" . nil)
+  (cdr (cdr (cdr '("foo" "bar" "baz"))))
+  => nil
 #+end_src
 
 面倒だけど、リストの操作が行えることがわかります。
 
 #+begin_src emacs-lisp
-(setq foo "a")
-(setq foo (cons "value" foo))   ; リストfooに要素をprepend
-;; => ("value" . "a")
-(setq foo (cons "value" foo))   ; さらにprepend
-;; => ("value" "value" . "a")
-(setq load-path (cons (expand-file-name "~/elisp") load-path))
+  (setq foo "a")
+  (setq foo (cons "value" foo))   ; リストfooに要素をprepend
+  ;; => ("value" . "a")
+  (setq foo (cons "value" foo))   ; さらにprepend
+  ;; => ("value" "value" . "a")
+  (setq load-path (cons (expand-file-name "~/elisp") load-path))
 
-(list "foo" "bar" "baz")  ; 引数を要素に持つリストを生成
-=> ("foo" "bar" "baz")
+  (list "foo" "bar" "baz")  ; 引数を要素に持つリストを生成
+  => ("foo" "bar" "baz")
 
-(append '("foo" "bar") '("baz"))  ; 連接したリストを生成
-=> ("foo" "bar" "baz")
-(setq load-path (append load-path (list (expand-file-name "~/elisp"))))
+  (append '("foo" "bar") '("baz"))  ; 連接したリストを生成
+  => ("foo" "bar" "baz")
+  (setq load-path (append load-path (list (expand-file-name "~/elisp"))))
 
-(car (nthcdr 1 '("foo" "bar" "baz")))   ; N番目の要素の取得
-=> "bar"
+  (car (nthcdr 1 '("foo" "bar" "baz")))   ; N番目の要素の取得
+  => "bar"
 #+end_src
 
 ** 評価
@@ -283,16 +283,16 @@ nilじゃないとコンスセルになる(前の節の通り)。
   2. リストの後続要素 ~'("foo" "bar") '("baz")~ が引数として呼び出される。quoteがあるので評価されない。リストのときは評価=関数呼び出しを1.と同様に内側→外側の順に行う。
 
 #+begin_src emacs-lisp
-(defun plus1 (n)
-  (+ n 1))
-=> plus1
-(plus1 10)
-=> 11
-(defun my-plus (m n)
-  (+ m n))
-=> my-plus
-(my-plus 2 5)
-=> 7
+  (defun plus1 (n)
+    (+ n 1))
+  => plus1
+  (plus1 10)
+  => 11
+  (defun my-plus (m n)
+    (+ m n))
+  => my-plus
+  (my-plus 2 5)
+  => 7
 #+end_src
 
 #+begin_quote
@@ -311,43 +311,43 @@ defunは、シンボルを作って、その関数セルが関数定義を指す
 シンボルの定義を思い返してみます。
 
 #+begin_src c
-// lisp.h
-struct Lisp_Symbol
+  // lisp.h
+  struct Lisp_Symbol
   {
     struct Lisp_String *name;  => "foo"
-    Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
-    Lisp_Object function;  => 空
-    略
-  };
+      Lisp_Object value;  => "FOO"の値を持つ文字列オブジェクトを指す
+      Lisp_Object function;  => 空
+      略
+      };
 #+end_src
 
 確かに関数定義を指しています。
 
 #+begin_src emacs-lisp
-(defun foo () (message "a"))
-(symbolp 'foo)
-=> t
-(symbol-name 'foo)
-=> "foo"
-(symbol-value 'foo)
-=> error: (void-variable foo)
-(symbol-function 'foo)
-=> (lambda nil (message "a"))
-(boundp 'foo)
-=> nil
-(fboundp 'foo) ; 関数定義
-=> t
+  (defun foo () (message "a"))
+  (symbolp 'foo)
+  => t
+  (symbol-name 'foo)
+  => "foo"
+  (symbol-value 'foo)
+  => error: (void-variable foo)
+  (symbol-function 'foo)
+  => (lambda nil (message "a"))
+  (boundp 'foo)
+  => nil
+  (fboundp 'foo) ; 関数定義
+  => t
 #+end_src
 
 ** 既存関数も同じ
 どれもシンボルで、関数定義を指しています
 #+begin_src emacs-lisp
-(symbol-function 'car)
-=> #<subr car>
-(symbol-function 'defun)
-=> #<subr defun>
-(symbol-function '+)
-=> #<subr +>
+  (symbol-function 'car)
+  => #<subr car>
+  (symbol-function 'defun)
+  => #<subr defun>
+  (symbol-function '+)
+  => #<subr +>
 #+end_src
 
 #+begin_quote
@@ -364,22 +364,22 @@ subrそうだったのか。 ~#<>~ はどういう意味なのだろう。
 #+end_quote
 
 #+begin_src emacs-lisp
-(fset 'my-plus2
-  '(lambda (n) (+ n 2)))   ; defunと同じ
-=> (lambda (n) (+ n 2))
-(my-plus2 10)
-=> 12
+  (fset 'my-plus2
+        '(lambda (n) (+ n 2)))   ; defunと同じ
+  => (lambda (n) (+ n 2))
+  (my-plus2 10)
+  => 12
 #+end_src
 
 関数セルと値セルを確認します。
 
 #+begin_src emacs-lisp
-(setq foo "foo")
-=> "foo"
-(fset 'foo '(lambda (s) (concat s "bar"))) ; 名前とリストの組み合わせ。どちらも未評価で渡す。
-=> (lambda (s) (concat s "bar"))
-(foo foo)
-=> "foobar"
+  (setq foo "foo")
+  => "foo"
+  (fset 'foo '(lambda (s) (concat s "bar"))) ; 名前とリストの組み合わせ。どちらも未評価で渡す。
+  => (lambda (s) (concat s "bar"))
+  (foo foo)
+  => "foobar"
 #+end_src
 
 ** lambda
@@ -387,21 +387,21 @@ subrそうだったのか。 ~#<>~ はどういう意味なのだろう。
 https://github.com/kijimaD/emacs/blob/master/lisp/subr.el#L106
 
 #+begin_src emacs-lisp
-(lambda (引数 ...) (関数本体))
+  (lambda (引数 ...) (関数本体))
 #+end_src
 
 処理の中身。名前と組み合わせると関数になります。
 
 #+begin_src emacs-lisp
-((lambda (m n) (+ m n)) 2 5)
-=> 7
+  ((lambda (m n) (+ m n)) 2 5)
+  => 7
 #+end_src
 
 関数定義。declare(...関数やマクロに関する情報、infoで出てくる文章)の箇所を除くとこれだけです。
 引数cdr(処理したい内容)でコンスセルを作って、関数セルと組み合わせてリストを作ります。なので名前はありません。
 #+begin_src emacs-lisp
-(defmacro lambda (&rest cdr)
-  (list 'function (cons 'lambda cdr)))
+  (defmacro lambda (&rest cdr)
+    (list 'function (cons 'lambda cdr)))
 #+end_src
 
 ** 関数とは何か
@@ -409,12 +409,12 @@ https://github.com/kijimaD/emacs/blob/master/lisp/subr.el#L106
 述語関数から見てます。この方法いいですね。
 
 #+begin_src emacs-lisp
-; subr.el
-(defun functionp (object)
-  "Non-nil if OBJECT is a type of object that can be called as a function."
-  (or (subrp object) (byte-code-function-p object)
-      (eq (car-safe object) 'lambda)
-      (and (symbolp object) (fboundp object))))
+                                          ; subr.el
+  (defun functionp (object)
+    "Non-nil if OBJECT is a type of object that can be called as a function."
+    (or (subrp object) (byte-code-function-p object)
+        (eq (car-safe object) 'lambda)
+        (and (symbolp object) (fboundp object))))
 #+end_src
 
 #+begin_quote
@@ -435,10 +435,10 @@ elispにとって、「関数」とは次の4つのいずれかであること�
 リストがすべてに優先して存在します。
 
 #+begin_src emacs-lisp
-(my-plus 1 3)   ; シンボルであれば関数セルの指す関数を呼び出す
-=> 4
-((lambda (m n) (+ m n)) 1 3)   ; シンボルlambdaで始まるリストも「関数」
-=> 4
+  (my-plus 1 3)   ; シンボルであれば関数セルの指す関数を呼び出す
+  => 4
+  ((lambda (m n) (+ m n)) 1 3)   ; シンボルlambdaで始まるリストも「関数」
+  => 4
 #+end_src
 
 ** funcall
@@ -447,10 +447,10 @@ funcall関数は引数の1番目を関数として呼びます。
 #+end_quote
 
 #+begin_src emacs-lisp
-(funcall 'my-plus 1 3)
-=> 4
-(funcall '(lambda (m n) (+ m n)) 1 3)
-=> 4
+  (funcall 'my-plus 1 3)
+  => 4
+  (funcall '(lambda (m n) (+ m n)) 1 3)
+  => 4
 #+end_src
 
 - ~'(lambda (m n) (+ m n))~ は関数として呼ばれる。
@@ -459,12 +459,12 @@ funcall関数は引数の1番目を関数として呼びます。
 違いは何だっけ。... 評価して渡されるかどうか。この場合は関数なので、評価されるのがいつでも結果は変わらない。
 
 #+begin_src emacs-lisp
-(funcall '(lambda () (+ 1 2)))
-(if (eq 1 (+ 1)) 1) ; 1
-(if (eq 1 '(+ 1)) 1) ; nil
+  (funcall '(lambda () (+ 1 2)))
+  (if (eq 1 (+ 1)) 1) ; 1
+  (if (eq 1 '(+ 1)) 1) ; nil
 
-(+ (+ 1) 1) ; 2
-(+ '(+ 1) 1) ; (wrong-type-argument number-or-marker-p (+ 1))
+  (+ (+ 1) 1) ; 2
+  (+ '(+ 1) 1) ; (wrong-type-argument number-or-marker-p (+ 1))
 #+end_src
 
 ** 値セルにlambda
@@ -472,10 +472,10 @@ funcall関数は引数の1番目を関数として呼びます。
 つまり、値を関数でも呼び出せます。
 
 #+begin_src emacs-lisp
-(setq foo '(lambda (m n) (+ m n)))
-=> (lambda (m n) (+ m n))
-(funcall foo 2 5)
-=> 7
+  (setq foo '(lambda (m n) (+ m n)))
+  => (lambda (m n) (+ m n))
+  (funcall foo 2 5)
+  => 7
 #+end_src
 
 なるほど…。
@@ -492,7 +492,7 @@ funcall関数は引数の1番目を関数として呼びます。
 ** 連想リスト(association list)
 
 #+begin_src emacs-lisp
-'(("foo" . "FOO") ("bar" . "BAR") ("baz" . "BAZ"))
+  '(("foo" . "FOO") ("bar" . "BAR") ("baz" . "BAZ"))
 #+end_src
 
 リストの要素がコンスセル。
@@ -513,36 +513,36 @@ funcall関数は引数の1番目を関数として呼びます。
 #+end_quote
 
 #+begin_src c
-// data.c
-DEFUN ("arrayp", Farrayp, Sarrayp, 1, 1, 0, "Return t if OBJECT is an array (string or vector).")
-  (object)
-     Lisp_Object object;
-{
-  if (VECTORP (object) || STRINGP (object)
-      || CHAR_TABLE_P (object) || BOOL_VECTOR_P (object))
-    return Qt;
-  return Qnil;
-}
+  // data.c
+  DEFUN ("arrayp", Farrayp, Sarrayp, 1, 1, 0, "Return t if OBJECT is an array (string or vector).")
+    (object)
+    Lisp_Object object;
+  {
+    if (VECTORP (object) || STRINGP (object)
+        || CHAR_TABLE_P (object) || BOOL_VECTOR_P (object))
+      return Qt;
+    return Qnil;
+  }
 #+end_src
 
 ベクタ/文字/文字テーブル/ブールベクタであればarray。なんだそりゃ？
 
 #+begin_src emacs-lisp
-(arrayp '(1 2)) ; nil
-(arrayp "aaa")  ; t
+  (arrayp '(1 2)) ; nil
+  (arrayp "aaa")  ; t
 #+end_src
 
 ** ベクタ
 
 #+begin_src emacs-lisp
-[1 3 5]
-=> [1 3 5]
-(vectorp [1 3 5])
-=> t
-(setq foo [1 3 5])    ; quoteしてもしなくても同じ
-=> [1 3 5]
-(vectorp foo)
-=> t
+  [1 3 5]
+  => [1 3 5]
+  (vectorp [1 3 5])
+  => t
+  (setq foo [1 3 5])    ; quoteしてもしなくても同じ
+  => [1 3 5]
+  (vectorp foo)
+  => t
 #+end_src
 
 ** ベクタの操作
@@ -559,11 +559,11 @@ http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
 CARが1, CDRが2のセルは、表記方法では表現できない。
 これを表現するために、ドット対表記が用意されている。
 #+begin_src emacs-lisp
-(cons 1 (cons 2 nil))
-=> (1 2)
+  (cons 1 (cons 2 nil))
+  => (1 2)
 
-(cons 1 2)
-=> (1 . 2)
+  (cons 1 2)
+  => (1 . 2)
 #+end_src
 
 nilで終端しないセルはドット対で表記する。
@@ -581,17 +581,17 @@ nilで終端しないセルはドット対で表記する。
 クオートをつけると評価せずそのまま返す。
 
 #+begin_src emacs-lisp
-(quote (1 2))
-=> (1 2)
+  (quote (1 2))
+  => (1 2)
 
-同じ意味:
-'(1 2)
+  同じ意味:
+  '(1 2)
 
-(setq dog 5)
-dog
-=> 5   ; 評価結果
-'dog
-=> dog ; シンボル自身を表現する
+  (setq dog 5)
+  dog
+  => 5   ; 評価結果
+  'dog
+  => dog ; シンボル自身を表現する
 #+end_src
 
 (setq dog "dog")
@@ -600,23 +600,23 @@ dog
 変数から変数への代入は、ポインタを複製するということ。
 
 #+begin_src emacs-lisp
-(setq x 'dog)
-(setq y 'dog)
-(eq x y)
-=> t
-(setq z y)
-(eq y z)
-=> t
+  (setq x 'dog)
+  (setq y 'dog)
+  (eq x y)
+  => t
+  (setq z y)
+  (eq y z)
+  => t
 #+end_src
 
 #+begin_src emacs-lisp
-(setq x "dog")
-(setq y "dog")
-(eq x y)
-=> nil ; 同じ中身の文字列だが、指しているポインタが異なるため。
-(setq z y)
-(eq y z)
-=> t   ; 指しているポインタが同じため
+  (setq x "dog")
+  (setq y "dog")
+  (eq x y)
+  => nil ; 同じ中身の文字列だが、指しているポインタが異なるため。
+  (setq z y)
+  (eq y z)
+  => t   ; 指しているポインタが同じため
 #+end_src
 
 変数はポインタを格納する箱。
@@ -625,10 +625,10 @@ dog
 ** もう一つの関数定義
 
 #+begin_src emacs-lisp
-(defun double (x) (* x 2))
-#'double ; 関数オブジェクトを得る
+  (defun double (x) (* x 2))
+  #'double ; 関数オブジェクトを得る
 
-#'(lambda (x) (* x 2))
+  #'(lambda (x) (* x 2))
 #+end_src
 
 #+begin_quote
@@ -640,15 +640,15 @@ dog
 - 関数は普通のデータオブジェクト。なので変数が値として関数を持てる。
 
 #+begin_src emacs-lisp
-(setq x #'append)
+  (setq x #'append)
 #+end_src
 
 2つの式は大体同じことをしている:
 #+begin_src emacs-lisp
-(defun double (x) (* x 2))
+  (defun double (x) (* x 2))
 
-(setf (symbol-function 'double)
-      #'(lambda (x) (* x 2)))
+  (setf (symbol-function 'double)
+        #'(lambda (x) (* x 2)))
 #+end_src
 
 手続き定義…名前をコードと関連付ける。
@@ -665,43 +665,43 @@ defunの背後には， もっと一般的な仕組みが隠れている： 関�
 applyは、オブジェクトを関数として実行する。
 
 #+begin_src emacs-lisp
-(+ 1 2)
-(apply #'+ '(1 2))
-(apply (symbol-function '+) '(1 2))
-(apply #'(lambda (x y) (+ x y)) '(1 2))
+  (+ 1 2)
+  (apply #'+ '(1 2))
+  (apply (symbol-function '+) '(1 2))
+  (apply #'(lambda (x y) (+ x y)) '(1 2))
 #+end_src
 ** クロージャ
 #+begin_src emacs-lisp
-(defun make-adder (n)
-  #'(lambda (x) (+ x n)))
+  (defun make-adder (n)
+    #'(lambda (x) (+ x n)))
 #+end_src
 
 は数を取り，「呼ばれると引数にその数を加えるクロージャ」を返す． その足
 し算関数のインスタンスは幾らでも作ることができる：
 
 #+begin_src emacs-lisp
-> (setq add2 (make-adder 2)
-        add10 (make-adder 10))
-#<Interpreted-Function BF162E>
-> (funcall add2 5)
-7
-> (funcall add10 3)
-13
+  > (setq add2 (make-adder 2)
+          add10 (make-adder 10))
+  #<Interpreted-Function BF162E>
+  > (funcall add2 5)
+  7
+  > (funcall add10 3)
+  13
 #+end_src
 
 変数に引数をとった関数を入れる。すごいな。
 
 #+begin_src emacs-lisp
-(defun make-dbms (db)
-  (list
-    #'(lambda (key)
-        (cdr (assoc key db)))
-    #'(lambda (key val)
-        (push (cons key val) db)
-        key)
-    #'(lambda (key)
-        (setf db (delete key db :key #'car))
-        key)))
+  (defun make-dbms (db)
+    (list
+     #'(lambda (key)
+         (cdr (assoc key db)))
+     #'(lambda (key val)
+         (push (cons key val) db)
+         key)
+     #'(lambda (key)
+         (setf db (delete key db :key #'car))
+         key)))
 #+end_src
 ** 末尾再帰
 再帰関数とは自分自身を呼び出す関数だ． そして関数呼び出しの後に行うべき
@@ -709,9 +709,9 @@ applyは、オブジェクトを関数として実行する。
 尾再帰でない．
 
 #+begin_src emacs-lisp :tangle yes
-(defun our-length (lst)
-  (if (null lst)
-      0
+  (defun our-length (lst)
+    (if (null lst)
+        0
       (1+ (our-length (cdr lst)))))
 
 #+end_src
@@ -720,46 +720,46 @@ applyは、オブジェクトを関数として実行する。
 し次の関数は末尾再帰だ．
 
 #+begin_src emacs-lisp :tangle yes
-(defun our-find-if (fn lst)
-  (if (funcall fn (car lst))
-      (car lst)
+  (defun our-find-if (fn lst)
+    (if (funcall fn (car lst))
+        (car lst)
       (our-find-if fn (cdr lst))))
 #+end_src
 ** 抽象化
 #+begin_src emacs-lisp :tangle yes
-(defun 1st (exp) (car exp))
-(defun 2nd (exp) (car (cdr exp)))
-(defun 3rd (exp) (car (cdr (cdr exp))))
+  (defun 1st (exp) (car exp))
+  (defun 2nd (exp) (car (cdr exp)))
+  (defun 3rd (exp) (car (cdr (cdr exp))))
 
-(setq order-func1 '((OP . 2nd) (ARG1 . 1st) (ARG2 . 3rd)))
-(setq order-func2 '((OP . 1st) (ARG1 . 2nd) (ARG2 . 3rd)))
+  (setq order-func1 '((OP . 2nd) (ARG1 . 1st) (ARG2 . 3rd)))
+  (setq order-func2 '((OP . 1st) (ARG1 . 2nd) (ARG2 . 3rd)))
 
-(defun order-func (sym odr-db)
-  (cdr (assq sym odr-db)))
+  (defun order-func (sym odr-db)
+    (cdr (assq sym odr-db)))
 
-(defun op (exp order-db)
-  (funcall (order-func 'OP order-db) exp))
-(defun arg1 (exp order-db)
-  (funcall (order-func 'ARG1 order-db) exp))
-(defun arg2 (exp order-db)
-  (funcall (order-func 'ARG2 order-db) exp))
+  (defun op (exp order-db)
+    (funcall (order-func 'OP order-db) exp))
+  (defun arg1 (exp order-db)
+    (funcall (order-func 'ARG1 order-db) exp))
+  (defun arg2 (exp order-db)
+    (funcall (order-func 'ARG2 order-db) exp))
 
-(setq op-func1 '((+ . +) (- . -) (* . *)))
-(setq op-func2 '((add . +) (sub . -) (mul . *)))
+  (setq op-func1 '((+ . +) (- . -) (* . *)))
+  (setq op-func2 '((add . +) (sub . -) (mul . *)))
 
-(defun op-func (sym op-db)
-  (cdr (assq sym op-db)))
+  (defun op-func (sym op-db)
+    (cdr (assq sym op-db)))
 
-(defun calc (exp op-db odr-db)
-  (cond
-    ((atom exp) exp)
-    (t (funcall
-        (op-func (op exp odr-db) op-db)
-        (calc (arg1 exp odr-db) op-db odr-db)
-        (calc (arg2 exp odr-db) op-db odr-db)))))
+  (defun calc (exp op-db odr-db)
+    (cond
+     ((atom exp) exp)
+     (t (funcall
+         (op-func (op exp odr-db) op-db)
+         (calc (arg1 exp odr-db) op-db odr-db)
+         (calc (arg2 exp odr-db) op-db odr-db)))))
 
-(calc '(1 + (2 * 3)) op-func1 order-func1)
-(calc '(add 1 (mul 2 3)) op-func2 order-func2)
+  (calc '(1 + (2 * 3)) op-func1 order-func1)
+  (calc '(add 1 (mul 2 3)) op-func2 order-func2)
 #+end_src
 ** 関数
 [[http://www.asahi-net.or.jp/~kc7k-nd/onlispjhtml/functions.html][On Lisp --- 関数]]
@@ -796,9 +796,9 @@ rplaca rplacd rotatef shiftf remf remprop remhash
 上は危険。
 
 #+begin_src emacs-lisp
-> (multiple-value-bind (int frac) (truncate 26.21875)
-    (list int frac))
-(26 0.21875)
+  > (multiple-value-bind (int frac) (truncate 26.21875)
+      (list int frac))
+  (26 0.21875)
 #+end_src
 
 多値。
@@ -809,18 +809,18 @@ rplaca rplacd rotatef shiftf remf remprop remhash
 関数的プログラムの 「aと，xの第1要素の2乗から成るリスト
 を返せ．」：
 #+begin_src emacs-lisp :tangle yes
-(defun fun (x)
-  (list 'a (expt (car x) 2)))
+  (defun fun (x)
+    (list 'a (expt (car x) 2)))
 #+end_src
 
 命令的プログラミングではこうだ． 「xの第1要素を求め，それを2乗せよ． そ
 してaと，先程2乗した値から成るリストを返せ．」：
 #+begin_src emacs-lisp :tangle yes
-(defun imp (x)
-  (let (y sqr)
-    (setq y (car x))
-    (setq sqr (expt y 2))
-    (list 'a sqr)))
+  (defun imp (x)
+    (let (y sqr)
+      (setq y (car x))
+      (setq sqr (expt y 2))
+      (list 'a sqr)))
 #+end_src
 
 その方法は，命令的プログラムは関数的プログラムを裏返しにしたものと思う
@@ -855,26 +855,26 @@ Common Lispのオペレータは3種類に分かれる： 関数にマクロ（�
 最初は本屋を検索する関数をこう書いた。
 
 #+begin_src emacs-lisp
-(defun find-books (towns)
-  (if (null towns)
-      nil
+  (defun find-books (towns)
+    (if (null towns)
+        nil
       (let ((shops (bookshops (car towns))))
         (if shops
             (values (car towns) shops)
-            (find-books (cdr towns))))))
+          (find-books (cdr towns))))))
 #+end_src
 
 本当に欲しいのは(val ues (car towns) shops)だ。
 これは一般化できる。
 
 #+begin_src emacs-lisp
-(defun find2 (fn lst)
-  (if (null lst)
-      nil
+  (defun find2 (fn lst)
+    (if (null lst)
+        nil
       (let ((val (funcall fn (car lst))))
         (if val
             (values (car lst) val)
-            (find2 fn (cdr lst))))))
+          (find2 fn (cdr lst))))))
 #+end_src
 
 (find2 #'bookshops towns)
@@ -902,64 +902,64 @@ filterは関数と1個のリストを取り， その関数がリストに適用
 nil値が返されるような要素全てをリストにして返す．
 
 #+begin_src emacs-lisp
-> (filter #'(lambda (x) (if (numberp x) (1+ x)))
-    '(a 1 2 b 3 c d 4))
-(2 3 4 5)
+  > (filter #'(lambda (x) (if (numberp x) (1+ x)))
+            '(a 1 2 b 3 c d 4))
+  (2 3 4 5)
 #+end_src
 
 #+begin_src emacs-lisp
-(defun longer (x y)
-  (labels ((compare (x y)
-                    (and (consp x)
-                         (or (null y)
-                             (compare (cdr x) (cdr y))))))
-    (if (and (listp x) (listp y))
-        (compare x y)
+  (defun longer (x y)
+    (labels ((compare (x y)
+                      (and (consp x)
+                           (or (null y)
+                               (compare (cdr x) (cdr y))))))
+      (if (and (listp x) (listp y))
+          (compare x y)
         (> (length x) (length y)))))
 
-(defun filter (fn lst)
-  (let ((acc nil))
-    (dolist (x lst)
-      (let ((val (funcall fn x)))
-        (if val (push val acc))))
-    (nreverse acc)))
+  (defun filter (fn lst)
+    (let ((acc nil))
+      (dolist (x lst)
+        (let ((val (funcall fn x)))
+          (if val (push val acc))))
+      (nreverse acc)))
 
-(defun group (source n)
-  (if (zerop n) (error "zero length"))
-  (labels ((rec (source acc)
-                (let ((rest (nthcdr n source)))
-                  (if (consp rest)
-                      (rec rest (cons (subseq source 0 n) acc))
+  (defun group (source n)
+    (if (zerop n) (error "zero length"))
+    (labels ((rec (source acc)
+                  (let ((rest (nthcdr n source)))
+                    (if (consp rest)
+                        (rec rest (cons (subseq source 0 n) acc))
                       (nreverse (cons source acc))))))
-    (if source (rec source nil) nil)))
+      (if source (rec source nil) nil)))
 #+end_src
 
 さまざまな検索ユーティリティ。
 
 #+begin_src emacs-lisp
-> (split-if #'(lambda (x) (> x 4))
-            '(1 2 3 4 5 6 7 8 9 10))
-(1 2 3 4)
-(5 6 7 8 9 10)
+  > (split-if #'(lambda (x) (> x 4))
+              '(1 2 3 4 5 6 7 8 9 10))
+  (1 2 3 4)
+  (5 6 7 8 9 10)
 #+end_src
 
 #+begin_src emacs-lisp
-        (defun mapa-b (fn a b &optional (step 1)
-          (map-> fn
-                 a
-                 #'(lambda (x) (> x b))
-                 #'(lambda (x) (+ x step)))
+  (defun mapa-b (fn a b &optional (step 1)
+                    (map-> fn
+                           a
+                           #'(lambda (x) (> x b))
+                           #'(lambda (x) (+ x step)))
 #+end_src
 
 うーむ。急にむずかしくなってよくわからないぞ。
 対応付け関数というのは役立ちそうだが。
 
 #+begin_src emacs-lisp
-(defun map-> (fn start test-fn succ-fn)
-  (do ((i start (funcall succ-fn i))
-       (result nil))
-    ((funcall test-fn i) (nreverse result))
-    (push (funcall fn i) result)))
+  (defun map-> (fn start test-fn succ-fn)
+    (do ((i start (funcall succ-fn i))
+         (result nil))
+        ((funcall test-fn i) (nreverse result))
+      (push (funcall fn i) result)))
 #+end_src
 ** シンボルとストリング
 
@@ -994,10 +994,10 @@ nil値が返されるような要素全てをリストにして返す．
 #+end_quote
 
 #+begin_src emacs-lisp
-(defun joiner (obj)
-  (typecase obj
-    (cons #'append)
-    (number #'+)))
+  (defun joiner (obj)
+    (typecase obj
+      (cons #'append)
+      (number #'+)))
 #+end_src
 
 #+begin_quote
@@ -1008,10 +1008,10 @@ nil値が返されるような要素全てをリストにして返す．
 なるほど。
 
 #+begin_src emacs-lisp
-(defun complement (fn)
-  #'(lambda (&rest args) (not (apply fn args))))
+  (defun complement (fn)
+    #'(lambda (&rest args) (not (apply fn args))))
   > (remove-if (complement #'oddp) '(1 2 3 4 5 6))
-(1 3 5)
+  (1 3 5)
 #+end_src
 
 #+begin_quote
@@ -1044,55 +1044,180 @@ ace-link.elを見ていて、アクションとリンク検索を分けていた
 - (ace-link--info-current) - collectで使われるユーティリティ
 - (ace-link--info-collect) - リンクに番号をふる
 #+begin_src emacs-lisp
-(defun ace-link-info ()
-  "Open a visible link in an `Info-mode' buffer."
-  (interactive)
-  (let ((pt (avy-with ace-link-info
-              (avy-process
-               (mapcar #'cdr
-                       (ace-link--info-collect))
-               (avy--style-fn avy-style)))))
-    (ace-link--info-action pt)))
+  (defun ace-link-info ()
+    "Open a visible link in an `Info-mode' buffer."
+    (interactive)
+    (let ((pt (avy-with ace-link-info
+                (avy-process
+                 (mapcar #'cdr
+                         (ace-link--info-collect))
+                 (avy--style-fn avy-style)))))
+      (ace-link--info-action pt)))
 
-(defun ace-link--info-action (pt)
-  (when (numberp pt)
-    (push-mark)
-    (goto-char pt)
-    (let ((we (window-end)))
-      (while (not (ignore-errors
-                    (Info-follow-nearest-node)))
-        (forward-char 1)
-        (when (> (point) we)
-          (error "Could not follow link"))))))
+  (defun ace-link--info-action (pt)
+    (when (numberp pt)
+      (push-mark)
+      (goto-char pt)
+      (let ((we (window-end)))
+        (while (not (ignore-errors
+                      (Info-follow-nearest-node)))
+          (forward-char 1)
+          (when (> (point) we)
+            (error "Could not follow link"))))))
 
-(declare-function Info-follow-nearest-node "info")
-(declare-function Info-next-reference "info")
-(declare-function Info-try-follow-nearest-node "info")
-(declare-function Info-goto-node "info")
+  (declare-function Info-follow-nearest-node "info")
+  (declare-function Info-next-reference "info")
+  (declare-function Info-try-follow-nearest-node "info")
+  (declare-function Info-goto-node "info")
 
-(defun ace-link--info-current ()
-  "Return the node at point."
-  (cons (cl-letf (((symbol-function #'Info-goto-node)
-                   (lambda (node _) node))
-                  (browse-url-browser-function
-                   (lambda (url &rest _) url)))
-          (Info-try-follow-nearest-node))
-        (point)))
+  (defun ace-link--info-current ()
+    "Return the node at point."
+    (cons (cl-letf (((symbol-function #'Info-goto-node)
+                     (lambda (node _) node))
+                    (browse-url-browser-function
+                     (lambda (url &rest _) url)))
+            (Info-try-follow-nearest-node))
+          (point)))
 
-(defun ace-link--info-collect ()
-  "Collect the positions of visible links in the current `Info-mode' buffer."
-  (let ((end (window-end))
-        points)
-    (save-excursion
-      (goto-char (window-start))
-      (when (ignore-errors (Info-next-reference) t)
-        (push (ace-link--info-current) points)
-        (Info-next-reference)
-        (while (and (< (point) end)
-                    (> (point) (cdar points)))
+  (defun ace-link--info-collect ()
+    "Collect the positions of visible links in the current `Info-mode' buffer."
+    (let ((end (window-end))
+          points)
+      (save-excursion
+        (goto-char (window-start))
+        (when (ignore-errors (Info-next-reference) t)
           (push (ace-link--info-current) points)
-          (Info-next-reference))
-        (nreverse points)))))
+          (Info-next-reference)
+          (while (and (< (point) end)
+                      (> (point) (cdar points)))
+            (push (ace-link--info-current) points)
+            (Info-next-reference))
+          (nreverse points)))))
 #+end_src
 ** マッピング
 (ace-link-setup-default)でマッピングしているところを見つけた。参考になるかもしれない。
+** ディレクトリ探索
+(add-node-modules-path)はディレクトリ探索の参考になる。1つづつ上がって、node_modules/binを探索する。
+コードが短いのも良い。
+** 名前変換
+引数の、関数のsymbolを取得する関数。いいな。
+#+begin_src emacs-lisp
+  (defun all-the-icons--data-name (name)
+    "Get the symbol for an icon family function for icon set NAME."
+    (intern (concat "all-the-icons-" (downcase (symbol-name name)) "-data")))
+#+end_src
+
+↓みたいに使える。
+
+#+begin_src emacs-lisp
+  (funcall (all-the-icons--data-name family))
+#+end_src
+** mapcar
+関数引数の関数はミソ。
+#+begin_src emacs-lisp
+  Function: mapcar function sequence
+
+  この関数は、sequence の各要素に function を適用(訳注：apply)し、その結果のリストを返します。sequence が nil で終るリストでない場合、エラーになります。
+#+end_src
+
+#+begin_src emacs-lisp
+  (mapcar (function car) '((a b) (c d) (e f)))
+  => (a c e)
+#+end_src
+** debugger を起動しないようにする
+何かの拍子に、debugger実行されるようになり、普通に実行できなくなった。
+(debugger-list-functions)
+で関数を確認。adviceされてるとわかったので、
+(advice-remove '登録関数 'debug--implement-debug-on-entry)
+で削除して元に戻った。
+** すべてdebug対象に
+(edebug-all-defs)
+でevalしただけで対象にするように設定する。→ 結局 C-uつけないとできない気が。
+regionを選択して、 C-u M-x eval-region
+すると範囲内すべてが対象に。
+
+オフにするときは(edebug-all-defs)をトグルしてオフにしてから、region指定してM-x eval-region
+** 外部コマンド系パッケージ
+1. ユーザ入力やフラグを通してひたすら引数を収集して、compilation に渡す。
+2. コマンドを実行する。
+3. バッファを作成して外部コマンドの結果をいい感じに出力する。
+** avyの流れ
+#+begin_src emacs-lisp
+  (let ((pt (avy-with ace-link-custom
+              (avy-process
+               (ace-link--custom-collect) ; 元バッファからリンクを収集して((名前1 . 位置1) (名前2 . 位置2)...)リストにする
+               (avy--style-fn avy-style))))) ; リンク文字を表示して操作を待つ。
+    (ace-link--custom-action pt)) ; アクション
+#+end_src
+
+** リストのcustomの例
+
+あとから追加、削除、編集が自由にできる。
+#+begin_src emacs-lisp
+(defcustom devdocs-alist
+  '((c-mode           . "c")
+    (c++-mode         . "c++")
+    (clojure-mode     . "clojure")
+    (coffee-mode      . "CoffeeScript")
+    (common-lisp-mode . "lisp")
+    (cperl-mode       . "perl")
+    (css-mode         . "css")
+    (elixir-mode      . "elixir")
+    (enh-ruby-mode    . "ruby")
+    (erlang-mode      . "erlang")
+    (gfm-mode         . "markdown")
+    (go-mode          . "go")
+    (groovy-mode      . "groovy")
+    (haskell-mode     . "haskell")
+    (html-mode        . "html")
+    (java-mode        . "java")
+    (js2-mode         . "javascript")
+    (js3-mode         . "javascript")
+    (less-css-mode    . "less")
+    (lua-mode         . "lua")
+    (markdown-mode    . "markdown")
+    (perl-mode        . "perl")
+    (php-mode         . "php")
+    (processing-mode  . "processing")
+    (puppet-mode      . "puppet")
+    (python-mode      . "python")
+    (ruby-mode        . "ruby")
+    (sass-mode        . "sass")
+    (scala-mode       . "scala")
+    (tcl-mode         . "tcl"))
+  "Alist which maps major modes to names of DevDocs documentations."
+  :type '(repeat (cons (symbol :tag "Major mode")
+                       (string :tag "DevDocs documentation")))
+  :group 'devdocs)
+#+end_src
+
+使う関数すらcustomにできる。
+
+#+begin_src emacs-lisp
+(defcustom devdocs-build-search-pattern-function
+  'devdocs-build-search-pattern-function
+  "A function to be called by `devdocs-search'.
+It builds search pattern base on some context."
+  :type 'function
+  :group 'devdocs)
+#+end_src
+
+** Gitリポジトリを調べる
+(locate-dominating-file directory file)
+#+begin_src emacs-lisp
+(cl-defun eshell-git-prompt--git-root-dir
+    (&optional (directory default-directory))
+  "Return Git root directory name if exist, otherwise, return nil."
+  (let ((root (locate-dominating-file directory ".git")))
+    (and root (file-name-as-directory root))))
+#+end_src
+** 変数が束縛されていれば、という表現
+#+begin_src emacs-lisp
+(defun eshell-git-prompt-last-command-status ()
+  "Return Eshell last command execution status.
+When Eshell just launches, `eshell-last-command-status' is not defined yet,
+return 0 (i.e., success)."
+  (if (not (boundp 'eshell-last-command-status))
+      0
+    eshell-last-command-status))
+#+end_src
