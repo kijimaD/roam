@@ -2,7 +2,7 @@
 #+author: kijimad
 
 * Emacsパッケージ(#2)を作りました。
-[[https://github.com/kijimaD/create-link][GitHub - kijimaD/create-link: Formatted link generator package for Emacs.]]
+https://github.com/kijimaD/create-link
 * 作ったもの
 ** Chrome拡張CreateLinkをEmacsに移植した
 ~CreateLink~ というChrome拡張があります。
@@ -33,122 +33,123 @@ https://www.google.com ->[Google](https://www.google.com/) みたいな。
 半分くらいはユーザ設定のための決まりきった記述のため、実際は40行ほど。
 
 #+begin_src emacs-lisp
-;;; Code:
+  ;;; Code:
 
-(require 'eww)
-(require 'w3m)
+  (require 'eww)
+  (require 'w3m)
 
-(defgroup create-link nil
-  "Generate a formatted current page link."
-  :group 'convenience
-  :prefix "create-link-")
+  (defgroup create-link nil
+    "Generate a formatted current page link."
+    :group 'convenience
+    :prefix "create-link-")
 
-(defcustom create-link-default-format 'html
-  "Default link format."
-  :group 'create-link
-  :type '(choice (const :tag "html" html)
-                 (const :tag "markdown" markdown)
-                 (other :tag "org" org)
-                 (other :tag "media-wiki" media-wiki)
-                 (other :tag "latex" latex)))
+  (defcustom create-link-default-format 'html
+    "Default link format."
+    :group 'create-link
+    :type '(choice (const :tag "html" html)
+                   (const :tag "markdown" markdown)
+                   (other :tag "org" org)
+                   (other :tag "media-wiki" media-wiki)
+                   (other :tag "latex" latex)))
 
-;; 🌟オプション設定
+  ;; 🌟オプション設定
 
-;; Format keywords:
-;; %url% - http://www.google.com/
-;; %title% - Google
-(defcustom create-link-format-html "<a href='%url%'>%title%</a>"
-  "HTML link format."
-  :group 'create-link
-  :type 'string)
+  ;; Format keywords:
+  ;; %url% - http://www.google.com/
+  ;; %title% - Google
+  (defcustom create-link-format-html "<a href='%url%'>%title%</a>"
+    "HTML link format."
+    :group 'create-link
+    :type 'string)
 
-(defcustom create-link-format-markdown "[%title%](%url%)"
-  "Markdown link format."
-  :group 'create-link
-  :type 'string)
+  (defcustom create-link-format-markdown "[%title%](%url%)"
+    "Markdown link format."
+    :group 'create-link
+    :type 'string)
 
-(defcustom create-link-format-org "[[%url%][%title%]]"
-  "Org-mode link format."
-  :group 'create-link
-  :type 'string)
+  (defcustom create-link-format-org "[[%url%][%title%]]"
+    "Org-mode link format."
+    :group 'create-link
+    :type 'string)
 
-(defcustom create-link-format-media-wiki "[%url% %title%]"
-  "Media Wiki link format."
-  :group 'create-link
-  :type 'string)
+  (defcustom create-link-format-media-wiki "[%url% %title%]"
+    "Media Wiki link format."
+    :group 'create-link
+    :type 'string)
 
-(defcustom create-link-format-latex "\\href{%url%}{%title%}"
-  "Latex link format."
-  :group 'create-link
-  :type 'string)
+  (defcustom create-link-format-latex "\\href{%url%}{%title%}"
+    "Latex link format."
+    :group 'create-link
+    :type 'string)
 
-(defun create-link-raw-format ()
-  "Choose a format type by the custom variable."
-  (pcase create-link-default-format
-    (`html
-     create-link-format-html)
-    (`markdown
-     create-link-format-markdown)
-    (`org
-     create-link-format-org)
-    (`media-wiki
-     create-link-format-media-wiki)
-    (`latex
-     create-link-format-latex)))
+  (defun create-link-raw-format ()
+    "Choose a format type by the custom variable."
+    (pcase create-link-default-format
+      (`html
+       create-link-format-html)
+      (`markdown
+       create-link-format-markdown)
+      (`org
+       create-link-format-org)
+      (`media-wiki
+       create-link-format-media-wiki)
+      (`latex
+       create-link-format-latex)))
 
-(defun create-link-replace-dictionary ()
-  "Convert format keyword to corresponding one."
-  `(("%url%" . ,(cdr (assoc 'url (create-link-get-information))))
-    ("%title%" . ,(cdr (assoc 'title (create-link-get-information))))))
+  (defun create-link-replace-dictionary ()
+    "Convert format keyword to corresponding one."
+    `(("%url%" . ,(cdr (assoc 'url (create-link-get-information))))
+      ("%title%" . ,(cdr (assoc 'title (create-link-get-information))))))
 
-(defun create-link-make-format ()
-  "Fill format keywords."
-  (seq-reduce
-   (lambda (string regexp-replacement-pair)
-     (replace-regexp-in-string
-      (car regexp-replacement-pair)
-      (cdr regexp-replacement-pair)
-      string))
-   (create-link-replace-dictionary)
-   (create-link-raw-format))) ;; <a href='%url%'>%title%</a> とか。ループのinitial value。
+  (defun create-link-make-format ()
+    "Fill format keywords."
+    (seq-reduce
+     (lambda (string regexp-replacement-pair)
+       (replace-regexp-in-string
+        (car regexp-replacement-pair)
+        (cdr regexp-replacement-pair)
+        string))
+     (create-link-replace-dictionary)
+     (create-link-raw-format))) ;; <a href='%url%'>%title%</a> とか。ループのinitial value。
 
-;; <a href='%url%'>%title%</a>
-;; <a href='https://...'>%title%</a> 前の値を保持
-;; <a href='https://...'>Google</a> さらに置換
+  ;; <a href='%url%'>%title%</a>
+  ;; <a href='https://...'>%title%</a> 前の値を保持
+  ;; <a href='https://...'>Google</a> さらに置換
 
-#+begin_comment
-;; ここを綺麗に書くのが一番むずかしかった。...複数の文字列置換
-;; 一つの置換(replace-regexp-in-string)は関数があるが、複数指定はできない。
+  ,#+begin_comment
+  ;; ここを綺麗に書くのが一番むずかしかった。...複数の文字列置換
+  ;; 一つの置換(replace-regexp-in-string)は関数があるが、複数指定はできない。
 
-;; (seq-reduce)の第一引数はコードブロックに相当するところ。ループ一回で何をするか。
-;; stringはraw-format(<a href='%url%'>%title%</a>など)を受け取り、regexp-replacement-pairはreplace-dictionaryのイテレーション分が入る。ブロック引数。
-#+end_comment
+  ;; (seq-reduce)の第一引数はコードブロックに相当するところ。ループ一回で何をするか。
+  ;; stringはraw-format(<a href='%url%'>%title%</a>など)を受け取る。
+  ;; regexp-replacement-pairはreplace-dictionaryのイテレーション分が入る。ブロック引数。
+  ,#+end_comment
 
-;; 🌟ブラウザやその他をラップしてtitle, urlを返す！
-(defun create-link-get-information ()
-  "Get keyword information on your browser."
-  (cond ((string-match-p "eww" (buffer-name))
-         `((title . ,(plist-get eww-data :title))
-           (url . ,(plist-get eww-data :url))))
-        ((string-match-p "w3m" (buffer-name))
-         `((title . ,w3m-current-title)
-           (url . ,w3m-current-url)))
-        ;; otherwise, create-link to the file-buffer
-        (t
-         `((title . ,(buffer-name))
-           (url . ,(buffer-file-name))))))
+  ;; 🌟ブラウザやその他をラップしてtitle, urlを返す！
+  (defun create-link-get-information ()
+    "Get keyword information on your browser."
+    (cond ((string-match-p "eww" (buffer-name))
+           `((title . ,(plist-get eww-data :title))
+             (url . ,(plist-get eww-data :url))))
+          ((string-match-p "w3m" (buffer-name))
+           `((title . ,w3m-current-title)
+             (url . ,w3m-current-url)))
+          ;; otherwise, create-link to the file-buffer
+          (t
+           `((title . ,(buffer-name))
+             (url . ,(buffer-file-name))))))
 
-;; 🌟エントリーポイント
-;;;###autoload
-(defun create-link ()
-  "Create formatted link."
-  (interactive)
-  (message "Copied! %s" (create-link-make-format))
-  (kill-new (create-link-make-format)))
+  ;; 🌟エントリーポイント
+  ;;;###autoload
+  (defun create-link ()
+    "Create formatted link."
+    (interactive)
+    (message "Copied! %s" (create-link-make-format))
+    (kill-new (create-link-make-format)))
 
-(provide 'create-link)
+  (provide 'create-link)
 
-;;; create-link.el ends here
+  ;;; create-link.el ends here
 #+end_src
 * 知見
 ** 短くても問題なし
@@ -158,10 +159,14 @@ https://www.google.com ->[Google](https://www.google.com/) みたいな。
 
 たとえば:
 
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/add-node-modules-path-20210305.312/add-node-modules-path.el][add-node-modules-path.el]] - node環境の読み込み 86行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/org-bullets-20200317.1740/org-bullets.el][org-bullets.el]] - リストをいい感じに表示する 109行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/define-word-20210103.1812/define-word.el][define-word.el]] - オンライン辞書 132行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/rubocop-20210309.1241/rubocop.el][rubocop.el]] - rubocopをいい感じに 267行
+add-node-modules-path.el
+- node環境の読み込み 86行
+[[/home/kijima/.emacs.d/.cask/27.1/elpa/org-bullets-20200317.1740/org-bullets.el][org-bullets.el]]
+- リストをいい感じに表示する 109行
+[[/home/kijima/.emacs.d/.cask/27.1/elpa/define-word-20210103.1812/define-word.el][define-word.el]]
+- オンライン辞書 132行
+[[/home/kijima/.emacs.d/.cask/27.1/elpa/rubocop-20210309.1241/rubocop.el][rubocop.el]]
+- rubocopをいい感じに 267行
 
 - 重要なのは一つのことをうまくやること。
 ** 他の人に使ってもらえるとうれしい
