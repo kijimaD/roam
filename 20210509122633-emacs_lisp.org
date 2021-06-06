@@ -10,11 +10,9 @@ http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
 
 データ型定義のやり方。型述語の実装。
 https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/ring.el#L47
-
 ** eww
 
 https://github.com/kijimaD/emacs/blob/master/lisp/net/eww.el#L1
-
 ** lisp.h
 
 lispシンボルの実装。
@@ -36,7 +34,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
   (type-of ?a)  ; Cの'a'相当。内部的には数値
   => integer
 #+end_src
-
 ** 中で起こってること
 
 ~(setq foo "FOO")~ したとき、symbolオブジェクトは以下のようにセットされます。
@@ -67,7 +64,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
   (symbol-function 'foo)
                                           ; まだ設定していないので、今はエラー
 #+end_src
-
 ** クォートの意味
 
 #+begin_quote
@@ -82,7 +78,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
 #+end_src
 
 ~'~ は ~quote~ 関数の略記です。
-
 ** シンボルのまとめ
 
 #+begin_quote
@@ -92,7 +87,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L798
 シンボルの値セルは任意のオブジェクトを指す (symbol-value関数で確認可能)
 シンボルの指すオブジェクトの型はtype-ofで確認可能
 #+end_quote
-
 ** コンスセルの表記
 
 #+begin_quote
@@ -131,7 +125,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L1350
 #+begin_quote
 後述するように、コンスセルのcdrが別のコンスセルを指すことで、リスト構造を作ります。コンスセルで作るリスト処理こそがLisp(LISt Processing)の名前の由来でもあります。
 #+end_quote
-
 ** コンスセルの表記
 
 ~("foo" . "bar")~
@@ -145,7 +138,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L1350
 #+end_src
 
 オブジェクトが2つ組み合わされたもの。
-
 ** コンスセルの生成
 
 #+begin_src emacs-lisp
@@ -154,7 +146,6 @@ https://github.com/kijimaD/emacs/blob/master/src/lisp.h#L1350
 #+end_src
 
 - consはconstructの略。
-
 ** コンスセルの値
 
 コンスセルの値にアクセスするには ~car~ と ~cdr~ だけ使える。getterメソッドみたいなもの。
@@ -175,7 +166,6 @@ car、cdr以外にコンスセルの中を参照する手段はありません�
 #+begin_quote
 Java風に言えば、コンスセルはふたつのprivateフィールドとふたつのアクセサを持つだけの軽いオブジェクトです。
 #+end_quote
-
 ** プログラム自体がオブジェクト
 
 #+begin_quote
@@ -186,7 +176,6 @@ Java風に言えば、コンスセルはふたつのprivateフィールドとふ
 
 - シリアライズ化?
 - データとプログラムの区別がない…真髄的なところだということはわかる。
-
 ** なんでもオブジェクト
 
 #+begin_src emacs-lisp
@@ -218,7 +207,6 @@ bar -> foo -> "foo" -> 42
   '("foo" . ("bar" . "baz"))
   ;; => ("foo" "bar" . "baz")
 #+end_src
-
 ** リスト化
 
 最期のcdrをnilにするとリストに。
@@ -232,7 +220,6 @@ nilじゃないとコンスセルになる(前の節の通り)。
   (cons "foo" '("bar" . "aaa"))
   ("foo" "bar" . "aaa")
 #+end_src
-
 ** リスト操作
 
 #+begin_src emacs-lisp
@@ -266,7 +253,6 @@ nilじゃないとコンスセルになる(前の節の通り)。
   (car (nthcdr 1 '("foo" "bar" "baz")))   ; N番目の要素の取得
   => "bar"
 #+end_src
-
 ** 評価
 #+begin_quote
 コンスセルの評価は次のように行います。
@@ -338,7 +324,6 @@ defunは、シンボルを作って、その関数セルが関数定義を指す
   (fboundp 'foo) ; 関数定義
   => t
 #+end_src
-
 ** 既存関数も同じ
 どれもシンボルで、関数定義を指しています
 #+begin_src emacs-lisp
@@ -357,7 +342,6 @@ subr(subroutineの略)は、Cで書かれた関数を意味しています。
 #+end_quote
 
 subrそうだったのか。 ~#<>~ はどういう意味なのだろう。
-
 ** fset
 #+begin_quote
 値セルにsetqやsetがあったように、関数セルにはfsetがあります(fsetqはありません)。
@@ -381,7 +365,6 @@ subrそうだったのか。 ~#<>~ はどういう意味なのだろう。
   (foo foo)
   => "foobar"
 #+end_src
-
 ** lambda
 
 https://github.com/kijimaD/emacs/blob/master/lisp/subr.el#L106
@@ -403,7 +386,6 @@ https://github.com/kijimaD/emacs/blob/master/lisp/subr.el#L106
   (defmacro lambda (&rest cdr)
     (list 'function (cons 'lambda cdr)))
 #+end_src
-
 ** 関数とは何か
 
 述語関数から見てます。この方法いいですね。
@@ -425,7 +407,6 @@ elispにとって、「関数」とは次の4つのいずれかであること�
 - シンボルlambdaで始まるリスト
 - 関数セルが空ではないシンボル
 #+end_quote
-
 ** 関数呼び出し
 
 #+begin_quote
@@ -440,7 +421,6 @@ elispにとって、「関数」とは次の4つのいずれかであること�
   ((lambda (m n) (+ m n)) 1 3)   ; シンボルlambdaで始まるリストも「関数」
   => 4
 #+end_src
-
 ** funcall
 #+begin_quote
 funcall関数は引数の1番目を関数として呼びます。
@@ -466,7 +446,6 @@ funcall関数は引数の1番目を関数として呼びます。
   (+ (+ 1) 1) ; 2
   (+ '(+ 1) 1) ; (wrong-type-argument number-or-marker-p (+ 1))
 #+end_src
-
 ** 値セルにlambda
 
 つまり、値を関数でも呼び出せます。
@@ -479,7 +458,6 @@ funcall関数は引数の1番目を関数として呼びます。
 #+end_src
 
 なるほど…。
-
 ** 明示的に空にする
 
 #+begin_quote
@@ -488,7 +466,6 @@ funcall関数は引数の1番目を関数として呼びます。
 (fmakunbound 'foo)  ;関数セルを空にする
 => foo
 #+end_quote
-
 ** 連想リスト(association list)
 
 #+begin_src emacs-lisp
@@ -496,7 +473,6 @@ funcall関数は引数の1番目を関数として呼びます。
 #+end_src
 
 リストの要素がコンスセル。
-
 ** 配列
 
 #+begin_quote
@@ -531,7 +507,6 @@ funcall関数は引数の1番目を関数として呼びます。
   (arrayp '(1 2)) ; nil
   (arrayp "aaa")  ; t
 #+end_src
-
 ** ベクタ
 
 #+begin_src emacs-lisp
@@ -544,7 +519,6 @@ funcall関数は引数の1番目を関数として呼びます。
   (vectorp foo)
   => t
 #+end_src
-
 ** ベクタの操作
 
 #+begin_src emacs-lisp
@@ -1021,7 +995,6 @@ nil値が返されるような要素全てをリストにして返す．
 #+end_quote
 
 文言のところどころを読んだ覚えがあるのだが、コードは全然覚えてない…。
-
 * memo
 ** 必須ではない依存パッケージの書き方
 変数なら
@@ -1149,7 +1122,6 @@ regionを選択して、 C-u M-x eval-region
                (avy--style-fn avy-style))))) ; リンク文字を表示して操作を待つ。
     (ace-link--custom-action pt)) ; アクション
 #+end_src
-
 ** リストのcustomの例
 
 あとから追加、削除、編集が自由にできる。
@@ -1201,7 +1173,6 @@ It builds search pattern base on some context."
   :type 'function
   :group 'devdocs)
 #+end_src
-
 ** Gitリポジトリを調べる
 (locate-dominating-file directory file)
 #+begin_src emacs-lisp

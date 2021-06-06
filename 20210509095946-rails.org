@@ -2,18 +2,22 @@
 * 単発メモ
 ** factorybot
 create_list - factorybot
-** ネストしたvalidate
+** ネストしたvalidateは反応しない
  特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要があります。
 #+begin_src ruby
 validates :term_date, date: { after: proc { Time.zone.now } }, if: proc { |p| p.term_date? && p.sellable?  }
 #+end_src
-
-** `includes`
- N+1問題を回避するために用います。
-** キャスト
+** N+1問題
+includes
+N+1問題を回避するために用います。
+** 文字列で返ってくる真偽値をbooleanオブジェクトに変換する
 文字列で返ってくる真偽値を、booleanオブジェクトとして扱いとき。ActiveModelのmoduleを使用する。
 言われてみるとDBでは意識せずに使える。
 
 #+begin_src ruby
 ActiveModel::Type::Boolean.new.cast(value) == true
+#+end_src
+** 子のデータが存在するとき関連削除しないようにする
+#+begin_src ruby
+  has_many :contents, dependent: :restrict_with_error
 #+end_src
