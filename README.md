@@ -4,7 +4,7 @@ Notes using Emacs package: https://github.com/org-roam/org-roam
 
 ## lint
 ```shell
-yarn install
+npm install
 
-yarn textlint *.org
+npx textlint *.org
 ```
