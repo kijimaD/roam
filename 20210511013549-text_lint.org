@@ -3,7 +3,8 @@
 text-lintをorg-modeに対応させたい。
 単にテキストからのAST変換…構文解析してオブジェクトに変換する…の部分ができればすべてうまくいくはずだ。
 
-* 勉強
+* text-lint
+** 勉強
 https://azu.github.io/JavaScript-Plugin-Architecture/JavaScript-Plugin-Architecture.pdf
 - lintは直に文字列を比較しているわけではない。ASTを比較してる。確かに文字列比較している箇所はなかった。
 
@@ -48,7 +49,7 @@ module.exports = {
 
 - read向け。writeは競合変更などに対応しにくい。
 - 走査が一回なので性能がよい
-* 誤字
+*** 誤字
 - 実際に利⽤するため際は
 - 制御することのは難しい
 - Getting Started with Redux - Course by @dan_abramov @eggheadio (リンク切れ)
@@ -57,3 +58,60 @@ module.exports = {
 - middleware が直接的に結果(State)を直接書き換えることはできません。(直接が2回)
 - test/prh-rule.yaml(リンク切れ)
 - conventional-changelog/angular.md at master · ajoslin/conventional-changelog(リンク切れ)
+** plugin-org
+
+ああ、すでにある！思ってcloneして動かしてみる…動かない…4年前のWIPだった。
+1コミットだけのをフォークしてしまった。
+実行もテストも何もできない状態。importすらできず、地獄。
+それでも1からやるよりはマシだったかもしれない…ほぼサンプルのコピペはされてたので。
+
+type: "module"にすればよいとの意見多数だったが、依存パッケージが壊れるのでできなかった。
+コンパイルすることに。babel。バージョンの違いで苦しみ、なんとかすべて最新の状態に(自分のグローバルインストールのnodeなんかも超古かった)。
+
+そして…とりあえず単体で動くように。本体のtext-lintの中では動かないが、とりあえずプラグイン認識はしてくれてる。
+どこか悪いのか判別つかないのでとりあえず単体テストをやる。
+テストもめちゃくちゃで、とりあえず全部消してコンパイル設定とかやって一応動きはするように。
+
+無テストでCIだけ立ち上げる。今までの困難とは裏腹に簡単に成功。パッケージ管理メンドいけど、こういうところがメリットだとわかる。
+** htmlのASTとの比較
+html-to-astとorgaの出力の比較。
+けっこう違うな。
+
+#+begin_src json
+  {
+      type: 'Document',
+      children: [
+          {
+              type: 'Html',
+              tagName: 'h2',
+              properties: {},
+              children: [Array],
+              loc: [Object],
+              range: [Array],
+              raw: '<h2>hello</h2>'
+          },
+          type: 'UNKNOWN'
+      ],
+      loc: { start: { line: 1, column: 0 }, end: { line: 1, column: 14 } },
+      range: [ 0, 14 ],
+      raw: '<h2>hello</h2>'
+  }
+#+end_src
+
+#+begin_src json
+  s<ref *1> {
+    type: 'document',
+    properties: {},
+    children: [
+      {
+        type: 'paragraph',
+        children: [Array],
+        attributes: {},
+        position: [Object],
+        parent: [Circular *1]
+      }
+    ],
+    position: { start: { line: 1, column: 1 }, end: { line: 1, column: 13 } }
+  }
+#+end_src
+** Converting circular structure to JSON
