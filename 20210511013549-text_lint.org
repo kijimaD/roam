@@ -48,7 +48,7 @@ module.exports = {
 #+end_quote
 
 - read向け。writeは競合変更などに対応しにくい。
-- 走査が一回なので性能がよい
+- 走査が1回なので性能がよい
 *** 誤字
 - 実際に利⽤するため際は
 - 制御することのは難しい
@@ -60,19 +60,20 @@ module.exports = {
 - conventional-changelog/angular.md at master · ajoslin/conventional-changelog(リンク切れ)
 ** plugin-org
 
-ああ、すでにある！思ってcloneして動かしてみる…動かない…4年前のWIPだった。
+ああ、すでにある、思ってcloneして動かしてみる…動かない…4年前のWIPだった。
 1コミットだけのをフォークしてしまった。
-実行もテストも何もできない状態。importすらできず、地獄。
-それでも1からやるよりはマシだったかもしれない…ほぼサンプルのコピペはされてたので。
+実行・テスト何もできない状態。importすらできず、地獄。
+それでも1からやるよりはマシだった可能性はある…ほぼサンプルのコピペはされてたので。
 
 type: "module"にすればよいとの意見多数だったが、依存パッケージが壊れるのでできなかった。
 コンパイルすることに。babel。バージョンの違いで苦しみ、なんとかすべて最新の状態に(自分のグローバルインストールのnodeなんかも超古かった)。
 
 そして…とりあえず単体で動くように。本体のtext-lintの中では動かないが、とりあえずプラグイン認識はしてくれてる。
-どこか悪いのか判別つかないのでとりあえず単体テストをやる。
+どこが悪いのか判別つかないのでとりあえず単体テストをやる。
 テストもめちゃくちゃで、とりあえず全部消してコンパイル設定とかやって一応動きはするように。
 
-無テストでCIだけ立ち上げる。今までの困難とは裏腹に簡単に成功。パッケージ管理メンドいけど、こういうところがメリットだとわかる。
+無テストでCIだけ立ち上げる。今までの困難とは裏腹に成功。
+パッケージ管理メンドいけど、こういうところがメリットだとわかる。
 ** htmlのASTとの比較
 html-to-astとorgaの出力の比較。
 けっこう違うな。
@@ -115,3 +116,48 @@ html-to-astとorgaの出力の比較。
   }
 #+end_src
 ** Converting circular structure to JSON
+循環参照が含まれているのがだめらしい。
+↑でいうとparent: [Circular *1]のところか。
+
+Note how [Circular ~] shows the path to the referenced object.
+なるほど。
+
+** 出力がかっこいい
+テストの出力がかっこいい。わかりやすいし。
+power-assert
+https://github.com/power-assert-js/power-assert
+
+#+begin_src
+  1) Array #indexOf() should return index when the value is present:
+     AssertionError: # path/to/test/mocha_node.js:10
+
+  assert(ary.indexOf(zero) === two)
+         |   |       |     |   |
+         |   |       |     |   2
+         |   -1      0     false
+         [1,2,3]
+
+  [number] two
+  => 2
+  [number] ary.indexOf(zero)
+  => -1
+#+end_src
+
+#+begin_src
+  OrgProcessor-test
+    #parse
+      ✓ should return AST
+      ✓ begin_src should CodeBlock
+      ✓ text should Paragraph
+      ✓ begin_comment should block
+      ✓ ~~ should text.code
+    OrgPlugin
+      when target file is a Org
+        ✓ should report lint error
+        ✓ should not comma check inside the code block.
+#+end_src
+
+** マッピング
+~* header~
+はorgaだと(section) => (star) + (headline) みたいになる。
+だから1階層下ってheadlineにマッピングしてやる必要がある。
