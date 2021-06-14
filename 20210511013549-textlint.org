@@ -50,15 +50,6 @@ module.exports = {
 
 - read向け。writeは競合変更などに対応しにくい。
 - 走査が1回なので性能がよい
-*** 誤字
-- 実際に利⽤するため際は
-- 制御することのは難しい
-- Getting Started with Redux - Course by @dan_abramov @eggheadio (リンク切れ)
-- test/prh-rule.yaml (リンク切れ)
-- staltz.com/unidirectional-user-interface-architectures.htmlo(右端にoがついてる)
-- middleware が直接的に結果(State)を直接書き換えることはできません。(直接が2回)
-- test/prh-rule.yaml(リンク切れ)
-- conventional-changelog/angular.md at master · ajoslin/conventional-changelog(リンク切れ)
 ** plugin-org
 
 作成した。
@@ -170,3 +161,48 @@ https://github.com/power-assert-js/power-assert
 * textlint-plugin-org
 [[file:20210508234743-emacs.org][Emacs]] org-modeに対応してなかったので対応させた。
 https://github.com/kijimaD/textlint-plugin-org
+
+** 返り値の型をつけられない問題
+あきらかにTxtNodeなのでそう指定するのだが、エラー。
+
+#+begin_src typescript
+export function parse(org: string): TxtNode {
+#+end_src
+
+#+begin_quote
+src/org-to-ast.ts:52:5 - error TS2739: Type 'Document' is missing the following properties from type 'TxtNode': raw, range, loc
+#+end_quote
+
+astオブジェクト。
+
+#+begin_src json
+{
+  type: 'Document',
+  properties: {},
+  children: [
+    {
+      type: 'UNKNOWN',
+      level: 1,
+      properties: {},
+      children: [Array],
+      loc: [Object],
+      range: [Array],
+      raw: '* Max comma check\n' +
+        '#+begin_src\n' +
+        'aaaaa,aaaaa,aaaaa,aaaaa,aaaaa,aaaaa\n' +
+        '#+end_src\n'
+    },
+    type: 'UNKNOWN'
+  ],
+  loc: { start: { line: 1, column: 0 }, end: { line: 4, column: 10 } },
+  range: [ 0, 76 ],
+  raw: '* Max comma check\n' +
+    '#+begin_src\n' +
+    'aaaaa,aaaaa,aaaaa,aaaaa,aaaaa,aaaaa\n' +
+    '#+end_src\n'
+}
+#+end_src
+
+うむむ。
+Type 'Document'がプロパティを持ってないとのことだが、必要な値を持っているように見える。
+ast-testでもパスするし、何よりプラグインとしてうまく動いてるのだが。
