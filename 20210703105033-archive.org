@@ -1,0 +1,197 @@
+#+title: archive
+* textlint-plugin-orgプラグイン発表用スライド<2021-07-02 金>
+[[https://github.com/kijimaD/textlint-plugin-org][GitHub - kijimaD/textlint-plugin-org]]
+[[https://github.com/textlint/textlint#supported-file-formats][GitHub - textlint/textlint]]
+
+textlintのプラグインを作成しました。
+npmに登録＋公式のREADMEにリンクしました。
+~npm install textlint-plugin-org~
+
+orgファイル(Emacs独自のアウトライン形式)で使えるようにしました。
+(orgデモ)
+** TextLintの説明
+TextLintはその名の通り自然言語用のLintです。
+単純な間違いや、わかりづらい言い回し、語数制限などを検知してくれます。たくさんルールがあって面白いです。
+
+Markdownは標準、ほかにもHTMLなどは対応してます。
+
+対応してないフォーマットの場合、たとえば見出しで ~。~ がないとか、コードブロックに対して検知をしてまともに使用できません。
+
+*どうしても* orgで使いたかったので作成することにしました。
+** 作った流れ
+*** Lintについて学ぶ
+https://azu.github.io/JavaScript-Plugin-Architecture/
+
+中段の動作イメージがとてもわかりやすい。
+
+AST変換というのが重要だということがわかります。
+
+#+begin_quote
+ESLintはコードをパースしてASTにして、そのASTをJavaScriptで書いたルールを使いチェックするという大まかな仕組みは分かりました。
+#+end_quote
+
+textlint-plugin-org/test/OrgProcessor-test.ts
+テストから実際にASTオブジェクトの中身を見てみます。
+#+begin_src javascript
+    it('heading should Header', () => {
+      const result = parse(`
+,** Heading
+      `);
+      const section = result.children[0];
+      const header = section.children[0];
+      assert.equal(header.type, Syntax.headline);
+    });
+#+end_src
+
+~console.log(section)~ ↓
+#+begin_src javascript
+  {
+      type: 'UNKNOWN',
+      level: 2,
+      properties: {},
+      children: [
+          {
+              type: 'Header',
+              actionable: false,
+              content: 'Heading',
+              children: [Array],
+              level: 2,
+              loc: [Object],
+              range: [Array],
+              raw: '** Heading\n'
+          },
+          type: 'UNKNOWN'
+      ],
+      loc: { start: { line: 2, column: 0 }, end: { line: 3, column: 0 } },
+      range: [ 1, 12 ],
+      raw: '** Heading\n'
+  }
+#+end_src
+
+~console.log(header)~ ↓
+#+begin_src javascript
+  {
+      type: 'Header',
+      actionable: false,
+      content: 'Heading',
+      children: [
+          {
+              type: 'UNKNOWN',
+              level: 2,
+              loc: [Object],
+              range: [Array],
+              raw: '**'
+          },
+          {
+              type: 'Str',
+              value: 'Heading',
+              loc: [Object],
+              range: [Array],
+              raw: 'Heading'
+          },
+          { type: 'UNKNOWN', loc: [Object], range: [Array], raw: '\n' },
+          type: 'UNKNOWN'
+      ],
+      level: 2,
+      loc: { start: { line: 2, column: 0 }, end: { line: 3, column: 0 } },
+      range: [ 1, 12 ],
+      raw: '** Heading\n'
+  }
+#+end_src
+
+Lintは、このASTオブジェクトのTypeに基づいてそれぞれのルールを適用してます。
+なので見出しの星は対象外にできます。
+*** AST変換器を調べる
+- ファイル形式の文字列 → (ここが必要) → AST → Lint
+
+やる必要があるのは、オブジェクトの形式を揃えることです。
+typeの名前がtextlintに対応したシンボルへマッピングします。
+
+変換器はすでにあります。
+- orgajs :: https://github.com/orgapp/orgajs
+
+なので、本質的に必要なことはこのマッピングです(ほかにも位置や範囲を付加する必要がありますが、HTMLとかとほぼ同じ)。
+#+begin_src javascript
+export const nodeTypes = {
+  document: ASTNodeTypes.Document,
+  paragraph: ASTNodeTypes.Paragraph,
+  list: ASTNodeTypes.List,
+  'list.item': ASTNodeTypes.ListItem,
+  headline: ASTNodeTypes.Header,
+  block: ASTNodeTypes.CodeBlock,
+  hr: ASTNodeTypes.HorizontalRule,
+  // inline block
+  'text.plain': ASTNodeTypes.Str,
+  'text.code': ASTNodeTypes.Code,
+  'text.bold': ASTNodeTypes.Emphasis,
+  link: ASTNodeTypes.Link,
+  footnote: 'FootnoteReference',
+};
+#+end_src
+*** テストを書く
+orgajsがどんな名前で出力するかは実行しないとわからなかったので、ちゃんとすべてテストを書いて調べました。上流の不慮の変更も検知できます。
+
+ということで使えるようになりました🎉。
+
+便利です。
+** まとめ
+Emacsエコシステムを少し広げることができました。
+* digger発表用スライド<2021-07-02 金>
+** やっていること(途中)
+[[https://github.com/kijimaD/digger][GitHub - kijimaD/digger]]
+CLIのゲームを作っています(WIP)。
+
+(デモ)
+
+まだ移動しかできない。
+** 前回の反省を踏まえた要件
+- *画像表示はあきらめる or 見下ろし*
+- ターン制にする。リアルタイムではなく。
+- テストを書く(*テストが書ける構造にする*)
+** 利点
+時代に逆行した開発ですが、よいところもあります。
+
+- 真のRubyだけに集中できる(ライブラリすら必要ではない。CLI用のCursesくらい)
+- オブジェクト指向をやらなければならない状況。ゲームそのものがゲームオブジェクトの相互作用なので、オブジェクト指向でないと条件ありすぎて死ぬ。フツーに命令的に書けるプログラムが二者間だとしたら、ゲームは三者間。
+
++ 例 :: 壁に当たるのは自キャラだけでない。敵キャラや銃弾も当たる。各オブジェクトに判断してもらわないといけない。
++ 例 :: 弾がヒットしたら、誰のスコアになるのか => その銃弾オブジェクトを生成したキャラクターオブジェクト。みたいな。
++ 例 :: 毎ターンフィールドにあるすべてのオブジェクトを更新＋新描画したい => すべて入れ物オブジェクトに入れておいて、mapですべてを一括処理しよう、とか。
+** まとめ
+1ヶ月くらい頑張ってみます(宣言)。
+** ボツ
+ローグライクになる予定です。↓みたいなゲーム。超好きなジャンルです。
+
+- [[https://github.com/CleverRaven/Cataclysm-DDA][Cataclysm-DDA]] :: ゾンビサバイバル
+  [[https://www.google.com/search?q=cataclysm+dark+days+ahead+&tbm=isch&ved=2ahUKEwir1caPhcLxAhVBxosBHUPJCfwQ2-cCegQIABAA&oq=cataclysm+dark+days+ahead+&gs_lcp=CgNpbWcQAzICCAAyAggAMgIIADICCAAyAggAMgIIADICCAAyAggAMgIIADICCAA6BAgAEBhQtsMFWPDFBWCxxwVoAHAAeACAAbUBiAHHApIBAzIuMZgBAKABAaoBC2d3cy13aXotaW1nwAEB&sclient=img&ei=eMvdYKu5B8GMr7wPw5Kn4A8&bih=733&biw=1451#imgrc=NRZZLClw8123FM][参考]]
+
+- [[http://www.bay12games.com/dwarves/][Dwarf Fortress]] :: サバイバル/シミュレーション
+  [[https://www.google.com/search?q=dwarf+fortress+gif&tbm=isch&ved=2ahUKEwi3lIiphMLxAhVvzYsBHQ5zAiUQ2-cCegQIABAA&oq=dwarf+fortress+gif&gs_lcp=CgNpbWcQAzICCAA6BAgAEEM6BAgAEBhQ_ZkDWLqcA2CgngNoAHAAeACAAXeIAY4DkgEDMi4ymAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=ocrdYPe_C--ar7wPjuaJqAI&bih=733&biw=1451#imgrc=pWyEfsGw-tobeM&imgdii=LjqvyOp9B09twM][参考]]
+
+- Elona :: RPG風
+  [[https://www.google.com/search?q=elona&tbm=isch&ved=2ahUKEwjR1oDUhcLxAhXNDN4KHVI7CTEQ2-cCegQIABAA&oq=elona&gs_lcp=CgNpbWcQAzICCAAyBAgAEEMyBAgAEEMyAggAMgIIADIECAAQQzICCAAyAggAMgQIABBDMgIIAFCP9gFYk_0BYJH-AWgAcAB4AIABXogB1gKSAQE0mAEAoAEBqgELZ3dzLXdpei1pbWfAAQE&sclient=img&ei=B8zdYJG3Kc2Z-AbS9qSIAw&bih=733&biw=1451#imgrc=pLVXzgxlaxCVDM][参考]]
+
+これらは商業的な作品ではなく、貧弱なグラフィックですが、超濃密なゲーム世界を作り上げています。
+個人がめざす(めざせる)のはこういう方向性だと考えてます。
+** 前回の反省
+仕事につく前、何度か作りはじめては挫折してきました。
+
+直近だと去年開発してましたが、開発が進まなくなってやめました↓。
+- [[https://github.com/kijimaD/ban-ban-don][GitHub - kijimaD/ban-ban-don]] :: rubyのゲームライブラリGosuを使った、シューティングゲーム。
+(本に載ってたコードをベースに開発しました。根本部分のコード構造はほとんどオリジナル性ないです)
+
+
+これの問題点、挫折した理由...。
+
+- 要件を高望みしすぎた。
+  - 疑似3Dにした。座標に、ひし形の画像を敷き詰めると疑似3Dができます…画面確認が大変だった。特に重なりとか、接触判定が…。
+  - アニメーションする画像の用意が大変すぎた。方向分の画像を作る必要がある。
+  - リアルタイムなので再現しにくい。
+  - パフォーマンスを考えないとまともに動かなくなる。黒魔術がある(四分木とか)。
+
+- つらい目視確認開発。
+  - 新機能を作るときも、いちいち起動して該当箇所までいって開発していた。
+  - テストがない、lintがない(まだ知らなかった)
+  - いつのまにかどこかが壊れて動かなくなること多数
+
+=> ムリ ~＼(^o^)／~
