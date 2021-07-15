@@ -51,3 +51,28 @@ elsif item.is_a?(String)
 ...
 #+end_src
 をcaseに書き換えるには一番上の書き方でよい。たぶん。
+** singletonをクリーンにテストする
+singletonをそのまま使うと状況依存のテストになるため、毎回newする必要がある。
+
+https://stackoverflow.com/questions/1909181/how-to-test-a-singleton-class
+
+#+begin_src ruby
+def self.instance
+  @instance ||= new
+end
+
+private_class_method :new
+#+end_src
+
+So you can bypass the memoization altogether by calling the private method new using send
+
+#+begin_src ruby
+let(:instance) { GlobalClass.send(:new) }
+#+end_src
+A nice benefit of this way is that no global state is modified as a result of your tests running.
+
+Probably a better way, from this answer:
+
+#+begin_src ruby
+let(:instance) { Class.new(GlobalClass).instance }
+#+end_src
