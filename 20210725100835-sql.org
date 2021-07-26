@@ -1,0 +1,147 @@
+#+title: SQL
+* 学習方法
+いいテーマさえ決まれば、習熟するのは確実だ。ほかのプログラミング言語やフレームワークでは、ゲームとかサイトを作れば一通り学べるだろう。
+SQLはほかと比較して、テーマ設定が難しいように思える。
+データが必要だからだ。データの使いみちを知らないといけない。練習にもデータが必要で面倒くさい。
+** 条件
+いい環境を用意するのが大切だ。
+- データを用意できる。
+- 結果がビジュアルで出てくる。
+ブラウザ出力とか。コンソールの出力じゃ見てられない。
+- (できれば)バージョン管理できる。
+- MySQL, Postgresの勉強とは別にするべき。
+
+https://www.dataquest.io/blog/sql-intermediate/
+** インストール
+#+begin_src shell
+  sudo passwd postgres
+  su postgres
+  psql
+
+  # role作成も必要そう
+  # userとdb作成
+  postgres=# createuser kijima
+  postgres=# createdb kijima
+
+  # 元のコンソールに戻って、ログインできる
+  psql -U kijima
+#+end_src
+
+#+begin_src sql
+\copy credit_card_complaints (date_received, product, sub_product, issue, sub_issue, consumer_complaint_narrative, company_public_response, company, state, zip_code, tags, consumer_consent_provided, submitted_via, date_sent, company_response_to_consumer, timely_response, consumer_disputed, complaint_id)
+FROM './Downloads/Credit_Card_Complaints.csv'
+WITH CSV HEADER;
+#+end_src
+** インポート
+日付形式が違ってエラーになった。 ~07/27/2020~ みたいな形式。
+変更する。
+#+begin_src sql
+  SHOW datestyle;
+  SET datestyle TO MDY;
+#+end_src
+* 達人に学ぶSQL徹底指南書
+[[https://www.amazon.co.jp/s?k=sql&__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&ref=nb_sb_noss][Amazon.co.jp : sql]]
+** カラムにない項目で集計する
+重複してださい方法。
+#+begin_src sql
+-- 人口階級ごとに地方名に再分類する
+SELECT CASE WHEN population < 100 THEN '01'
+       WHEN population >= 100 AND population < 200 THEN '02'
+       WHEN population >= 200 AND population < 300 THEN '03'
+       WHEN population >= 300 THEN '04'
+       ELSE NULL END AS pop_class,
+       COUNT(*) AS cnt
+  FROM PopTbl
+ GROUP BY CASE WHEN population < 100 THEN '01'
+          WHEN population >= 100 AND population < 200 THEN '02'
+          WHEN population >= 200 AND population < 300 THEN '03'
+          WHEN population >= 300 THEN '04'
+          ELSE NULL END;
+#+end_src
+
+DBによっては名前をつけて参照できる。
+#+begin_src sql
+-- 県名を地方名に分類する
+SELECT CASE pref_name
+       WHEN '徳島' THEN '四国'
+       WHEN '香川' THEN '四国'
+       WHEN '愛媛' THEN '四国'
+       WHEN '高知' THEN '四国'
+       WHEN '福岡' THEN '九州'
+       WHEN '佐賀' THEN '九州'
+       WHEN '長崎' THEN '九州'
+       ELSE 'その他' END AS district,
+       SUM(population)
+  FROM PopTbl
+ GROUP BY district;
+#+end_src
+** 条件を指定して集計する
+where句で異なる条件を記述して2回SQLを発行するような場面。
+#+begin_src sql
+  -- 男性の人口
+SELECT pref_name,
+       population
+  FROM PopTbl2
+ WHERE sex = '1';
+
+-- 女性の人口
+SELECT pref_name,
+       population
+  FROM PopTbl2
+ WHERE sex = '2';
+
+#+end_src
+
+case句で便利に書くとこう。
+#+begin_src sql
+SELECT pref_name,
+  -- 男性の人口
+       SUM(CASE WHEN sex = '1' THEN population ELSE 0 END) AS cnt_m,
+  -- 女性の人口
+       SUM(CASE WHEN sex = '2' THEN population ELSE 0 END) AS cnt_f
+  FROM PopTbl2
+ GROUP BY pref_name;
+#+end_src
+SUM関数を必要性をチェックしてみる。
+** 複数の列の条件関係を定義する
+CHECK制約。
+
+↓条件法。
+#+begin_src sql
+CONSTRAINT check_salary CHECK
+  (CASE WHEN sex = '2'
+    THEN CASE WHEN salary <= 200000
+      THEN 1 ELSE 0 END
+  ELSE 1 END = 1)
+#+end_src
+
+↓論理積。
+#+begin_src sql
+CONSTRAINT CHECK_salary CHECK
+  (sex = '2' AND salary <= 200000)
+#+end_src
+
+条件法はゆるい。
+** UPDATEの順番で結果が変わるとき
+1回目のupdateをした結果、2回目の条件に入ってしまうような場合。
+caseをつかって1度に処理しないといけない。
+#+begin_src sql
+UPDATE Personnel
+   SET salary = CASE WHEN salary >= 300000
+       THEN salary * 0.9
+       WHEN salary >= 250000 AND salary < 280000
+       THEN salary * 1.2
+       ELSE salary END;
+#+end_src
+
+主キーを入れ替えることもできる。普通にUPDATE3回だと退避させる必要があるが、whenだと一気にできる。
+#+begin_src sql
+-- CASE式で主キーを入れ替える
+UPDATE SomeTable
+   SET p_key = CASE WHEN p_key = 'a'
+       THEN 'b'
+       WHEN p_key = 'b'
+       THEN 'a'
+       ELSE p_key END
+       WHERE p_key IN ('a', 'b');
+#+end_src
