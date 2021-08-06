@@ -1,0 +1,49 @@
+#+title: docker
+* 各種コマンド
+** docker外に公開
+Dockerfileで。
+#+begin_src shell
+  CMD bundle exec rails server -b 0.0.0.0
+#+end_src
+
+などと書いておくと、外部(Docker外)からアクセスできるようになる。
+左が公開、右がコンテナ内。だからブラウザでポート8000アクセスできるようになる。
+#+begin_src shell
+  docker run -p 8000:3000 -it bdd92ace66ec
+#+end_src
+** ログ確認
+#+begin_src shell
+docker ps -a # id確認
+docker logs 1111... # idを入れる
+#+end_src
+** Mysqlエラー
+- copyしてくるdocker-compose.ymlファイルが間違っていた。なので変更が反映されていなかった。
+- docker-compose ps で見ると、mysqlがfailしていた。つまり起動後すぐMysqlがシャットダウンしてるのでアクセスできない。ログを見てみるとたくさんエラーが出ていたがよくわからない。バージョンを変えると起動できた。
+** トークンエラー無視
+トークンエラーになったので対応。もちろんこのままではだめなので対応する必要がある。
+#+begin_src ruby
+skip_before_action :verify_authenticity_token
+#+end_src
+** 周辺コンテナとの疎通
+エラー内容を確認する。
+コンテナ間で通信したいのに、127.0.0.1になっていたらローカルのやつと通信しようとしている。
+
+- redisエラーになった。確かに立ち上がってはいるのだが、railsからはアクセスできていない。
+URLを環境変数でコンテナを指定した。
+
+- memcachedエラーになった。特にブラウザにエラーは出ないがサーバでエラーが出てる。
+127.0.0.1を見ているよう。ホストが指定できてないんだな。同様に環境変数を設定して接続できるようになった。
+** 削除
+使ってないイメージを削除する。
+#+begin_src shell
+  docker images prone
+#+end_src
+
+一気に全部削除する。
+#+begin_src shell
+docker stop $(docker ps -q)
+docker rm $(docker ps -aq)
+docker rmi $(docker images -q)
+#+end_src
+** LinuxのDockerで rails new したときの権限がrootになる問題
+[[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
