@@ -5,22 +5,8 @@
 - システム設定をリポジトリで管理できる。
 - ロールバックできる。
 - 端末により設定を変えられる
-* セットアップ
-** システム
-#+begin_src shell
-sudo guix install glibc-locales
-sudo emacs /root/.profile
-# export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"
-# を追加する
-#+end_src
-
-システムレベルなのでsudoでやる必要がある。普通はなしでインストールする。
-
-システムのguixをアップグレードするとき。
-#+begin_src shell
-sudo -i guix pull
-sudo -i guix pull --news
-#+end_src
+* Guix
+configファイルに書いておけばいちいちinstallしなくていいはずだが、わからないのでとりあえず書いておく。
 ** 普段のコマンド
 #+begin_src shell
 guix pull --news
@@ -32,9 +18,39 @@ guix package --switch-generation=42
 #+end_src
 
 どうやってEmacsのパッケージ管理をすればいいのだろう。
-** Certificate
-git cloneが認証エラーになった。
+** 解説動画
+~https://www.youtube.com/watch?v=oSy-TmoxG_Y~
 
+usbメモリーからインストールする方法をわかりやすく解説。
+** git clone
+git cloneをできるようにする。
+
+#+begin_src shell
+guix install git openssh
+#+end_src
+** 日本語入力
+#+begin_quote
+https://debbugs.gnu.org/cgi/bugreport.cgi?bug=35610#38
+#+end_quote
+
+言語設定を日本語にしただけでは入力や表示ができない。手動で設定する必要がある。
+#+begin_src shell
+  guix package -i ibus ibus-anthy font-adobe-source-han-sans
+#+end_src
+
+~.bash_profile~ などに追加。
+#+begin_src emacs-lisp
+  export GUIX_GTK2_IM_MODULE_FILE="$HOME/.guix-profile/lib/gtk-2.0/2.10.0/immodules-gtk2.cache"
+  export GUIX_GTK3_IM_MODULE_FILE="$HOME/.guix-profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache"
+#+end_src
+
+再起動する。
+Region & Language →　Add input(+)　→　Japanese。
+一覧にJapanese(Anthy)が追加されているので、選択する。
+
+- インプットメソッド切り替えはKeyboard Shortcutからできる。
+- ibus設定画面はGNOME検索には出てこない。言語選択のJapanese(Anthy)歯車から設定できる。
+** vterm
 #+begin_src sh
 guix install nss-certs
 export SSL_CERT_DIR="$HOME/.guix-profile/etc/ssl/certs"
@@ -46,24 +62,22 @@ export CURL_CA_BUNDLE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
 結果が変わらないので、エラーをよく見てみるとcloneする方法がhttps://github.com/... であることに気づいた。
 ~git@github.com:neovim/libvterm.git~ みたいな感じではない。なので、cloneするほうを変えることにした。
 vterm-20210409.1558/CMakeLists.txt から該当箇所を見つけて、書き換えたらうまくいった。
-* フルinstall
-** 解説動画
-~https://www.youtube.com/watch?v=oSy-TmoxG_Y~
-
-usbメモリーからインストールする方法をわかりやすく解説。
+** caps入れ替え
+system.scm書き換えでできるはずだが、反映させる方法がわからない。
+gnomeのコマンドを1回打って代用する。
+#+begin_src shell
+  gsettings set org.gnome.desktop.input-sources xkb-options "['ctrl:swapcaps']"
+#+end_src
+** syncthing
+#+begin_src shell
+  guix install syncthing
+#+end_src
 * 設定
-guix install syncthing
-guix install font-adobe-source-han-sans
-guix install openssh
-
-- キー設定(caps入れ替え)
-- フォントインストール
-
+- キー設定(caps入れ替え) ✔
+- フォントインストール ✔
 - git ✔
 - ssh ✔
 - .emacs.d ✔
 - dotfiles
-- syncthing
-* TODOリスト
-- guix sshができない...なのでgit cloneができなくて困る。
-- 日本語入力できるようにする
+- syncthing ✔
+- 日本語入力 ✔
