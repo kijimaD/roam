@@ -7,6 +7,8 @@
 - 端末により設定を変えられる
 * Guix
 configファイルに書いておけばいちいちinstallしなくていいはずだが、わからないのでとりあえず書いておく。
+** 最初のインストール
+
 ** 普段のコマンド
 #+begin_src shell
 guix pull --news
@@ -22,12 +24,32 @@ guix package --switch-generation=42
 ~https://www.youtube.com/watch?v=oSy-TmoxG_Y~
 
 usbメモリーからインストールする方法をわかりやすく解説。
-** git clone
-git cloneをできるようにする。
+** 詳しい設定
+https://github.com/daviwil/dotfiles/blob/master/Systems.org (動画)
+https://systemcrafters.cc/craft-your-system-with-guix/full-system-install/ (↑メモ)
+
+- ブートusb用意
+- インストール(TTY作業)
+- ログイン(以後、GUI)
+- パスワード設定
+- guix設定ファイル準備(etcから移す)
 
 #+begin_src shell
-guix install git openssh
+mkdir -p ~/.config/guix
+cd ~/.config/guix
+cp /etc/channels.scm .
+cp /etc/config.scm ./system.scm
+chmod +w channels.scm
 #+end_src
+
+- commit削除
+- アップデート
+
+#+begin_src shell
+guix pull
+sudo -E guix system reconfigure ~/.config/guix/system.scm
+#+end_src
+
 ** 日本語入力
 #+begin_quote
 https://debbugs.gnu.org/cgi/bugreport.cgi?bug=35610#38
@@ -44,6 +66,11 @@ https://debbugs.gnu.org/cgi/bugreport.cgi?bug=35610#38
   export GUIX_GTK3_IM_MODULE_FILE="$HOME/.guix-profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache"
 #+end_src
 
+ibusのキャッシュを削除する(重要)。
+#+begin_src shell
+  rm -rf ~/.cache/ibus
+#+end_src
+
 再起動する。
 Region & Language →　Add input(+)　→　Japanese。
 一覧にJapanese(Anthy)が追加されているので、選択する。
@@ -51,6 +78,11 @@ Region & Language →　Add input(+)　→　Japanese。
 - インプットメソッド切り替えはKeyboard Shortcutからできる。
 - ibus設定画面はGNOME検索には出てこない。言語選択のJapanese(Anthy)歯車から設定できる。
 ** vterm
+vtermのコンパイルにCmakeが必要。
+#+begin_src shell
+guix install cmake
+#+end_src
+
 #+begin_src sh
 guix install nss-certs
 export SSL_CERT_DIR="$HOME/.guix-profile/etc/ssl/certs"
@@ -68,11 +100,25 @@ gnomeのコマンドを1回打って代用する。
 #+begin_src shell
   gsettings set org.gnome.desktop.input-sources xkb-options "['ctrl:swapcaps']"
 #+end_src
-** syncthing
+** 各種インストールしたもの
 #+begin_src shell
-  guix install syncthing
+guix package -m ~/.dotfiles/guix/manifests/desktop.scm
 #+end_src
-* 設定
+** システムビルド時にインストールさせたい
+パッケージ群をまとめてインストールするにはdotfileをcloneして実行すればいい。が、それをするためにsyncthingやgitをインストールする必要がある。
+ビルド時にインストールさせたい。
+** フローメモ
+ctrl入れ替え → syncthingインストールと設定 → ssh鍵 → sshインストール。
+gitインストール → dotfilesをclone。
+* Todo
+** 未完了
+- vtermのコンパイルができない
+- emacsqlが利用できない
+- インストールディスクを作成する(いちいち最初からするのが面倒なので)
+- パッケージリストから一気にインストールできるようにする。あるいはそれまでのつなぎで完全クローンを作成しておく。
+- syncthingなどの自動起動
+- org-roamが使えない
+** archive
 - キー設定(caps入れ替え) ✔
 - フォントインストール ✔
 - git ✔
