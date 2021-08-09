@@ -2,14 +2,11 @@
 
 [[file:20210615222732-project.org][Project]]
 パッケージ管理システム。
-- システム設定をリポジトリで管理できる。
-- ロールバックできる。
+- システム設定をリポジトリで管理できる
+- ロールバックできる
 - 端末により設定を変えられる
 * Guix
-configファイルに書いておけばいちいちinstallしなくていいはずだが、わからないのでとりあえず書いておく。
-** 最初のインストール
-
-** 普段のコマンド
+** 基本のコマンド
 #+begin_src shell
 guix pull --news
 guix install {package}
@@ -20,13 +17,14 @@ guix package --switch-generation=42
 #+end_src
 
 どうやってEmacsのパッケージ管理をすればいいのだろう。
-** 解説動画
-~https://www.youtube.com/watch?v=oSy-TmoxG_Y~
-
-usbメモリーからインストールする方法をわかりやすく解説。
 ** 詳しい設定
+usbメモリーからインストールする方法をわかりやすく解説。
+
+#+begin_quote
 https://github.com/daviwil/dotfiles/blob/master/Systems.org (動画)
+https://www.youtube.com/watch?v=oSy-TmoxG_Y
 https://systemcrafters.cc/craft-your-system-with-guix/full-system-install/ (↑メモ)
+#+end_quote
 
 - ブートusb用意
 - インストール(TTY作業)
@@ -72,7 +70,7 @@ ibusのキャッシュを削除する(重要)。
 #+end_src
 
 再起動する。
-Region & Language →　Add input(+)　→　Japanese。
+Region & Language → Add input(+) → Japanese。
 一覧にJapanese(Anthy)が追加されているので、選択する。
 
 - インプットメソッド切り替えはKeyboard Shortcutからできる。
@@ -90,10 +88,6 @@ export SSL_CERT_FILE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
 export GIT_SSL_CAINFO="$SSL_CERT_FILE"
 export CURL_CA_BUNDLE="$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"
 #+end_src
-
-結果が変わらないので、エラーをよく見てみるとcloneする方法がhttps://github.com/... であることに気づいた。
-~git@github.com:neovim/libvterm.git~ みたいな感じではない。なので、cloneするほうを変えることにした。
-vterm-20210409.1558/CMakeLists.txt から該当箇所を見つけて、書き換えたらうまくいった。
 ** caps入れ替え
 system.scm書き換えでできるはずだが、反映させる方法がわからない。
 gnomeのコマンドを1回打って代用する。
@@ -102,7 +96,7 @@ gnomeのコマンドを1回打って代用する。
 #+end_src
 ** 各種インストールしたもの
 #+begin_src shell
-guix package -m ~/.dotfiles/guix/manifests/desktop.scm
+  guix package -m ~/dotfiles/guix/manifests/desktop.scm
 #+end_src
 ** システムビルド時にインストールさせたい
 パッケージ群をまとめてインストールするにはdotfileをcloneして実行すればいい。が、それをするためにsyncthingやgitをインストールする必要がある。
@@ -110,20 +104,55 @@ guix package -m ~/.dotfiles/guix/manifests/desktop.scm
 ** フローメモ
 ctrl入れ替え → syncthingインストールと設定 → ssh鍵 → sshインストール。
 gitインストール → dotfilesをclone。
+** 自動起動
+ファイルを配置して自動実行されるようにする。
+
+サービス系の自動起動はguixが利用しているサービスマネージャ[[https://www.gnu.org/software/shepherd/][GNU Shepherd]]で行う。
+https://github.com/kijimaD/dotfiles/blob/develop/.config/shepherd/init.scm
+このように追加しておくと自動で実行する。
+ただし、shepherd自体が自動で起動しないよう。デスクトップ環境に合わせて、自動実行させるようにする。
+https://github.com/kijimaD/dotfiles/blob/develop/.config/autostart/gnome.desktop
+実行権限をつけること。
 * Todo
-** 未完了
-- vtermのコンパイルができない
-- emacsqlが利用できない
-- インストールディスクを作成する(いちいち最初からするのが面倒なので)
-- パッケージリストから一気にインストールできるようにする。あるいはそれまでのつなぎで完全クローンを作成しておく。
-- syncthingなどの自動起動
-- org-roamが使えない
-** archive
-- キー設定(caps入れ替え) ✔
-- フォントインストール ✔
-- git ✔
-- ssh ✔
-- .emacs.d ✔
-- dotfiles
-- syncthing ✔
-- 日本語入力 ✔
+** インストールディスクを作成する(いちいち最初からするのが面倒なので)
+** パッケージリストから一気にインストールできるようにする。あるいはそれまでのつなぎで完全クローンを作成しておく。
+** org-roamが使えない
+* Archive
+** DONE キー設定(caps入れ替え)
+CLOSED: [2021-08-08 Sun 23:31]
+一度Gnomeコマンドを打つ必要がある。
+システムレベルで入れ替えたいができてない。
+** DONE フォントインストール
+CLOSED: [2021-08-08 Sun 23:31]
+dotfilesと統合して簡単に。
+** DONE git
+CLOSED: [2021-08-08 Sun 23:32]
+gitをインストール。
+** DONE ssh
+CLOSED: [2021-08-08 Sun 23:32]
+open-sshをインストール。
+** DONE .emacs.d
+CLOSED: [2021-08-08 Sun 23:32]
+セットアップ完了。
+** DONE dotfiles
+CLOSED: [2021-08-08 Sun 23:32]
+stowインストール、セットアップ完了。
+** DONE syncthing
+CLOSED: [2021-08-08 Sun 23:32]
+単にインストールするだけ、コード。
+** DONE 日本語入力
+CLOSED: [2021-08-08 Sun 23:32]
+anthyをインストール、コード化。
+** DONE syncthingなどの自動起動
+CLOSED: [2021-08-08 Sun 23:32]
+shepherdでやるように。コード化。
+** DONE vtermのコンパイルができない
+CLOSED: [2021-08-08 Sun 23:36]
+guixインストールした。
+** DONE emacsqlが利用できない
+CLOSED: [2021-08-08 Sun 23:35]
+guixインストールするように
+** DONE migemoが使えない
+CLOSED: [2021-08-09 Mon 11:02]
+インストールされてない環境では読み込まない、などの対応が必要。
+コピペしたぽいコードはちゃんと対応されてたが、対応コードの外側でrequireしたためどの環境でも読み込むようになっていた。修正した。
