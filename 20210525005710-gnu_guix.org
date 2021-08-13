@@ -184,17 +184,24 @@ https://github.com/pjotrp/guix-notes/blob/master/RUBY.org
 System Crafters.
 https://www.youtube.com/channel/UCAiiOTio8Yu69c3XnR7nQBQ
 https://github.com/daviwil/dotfiles
-* Todo
-** インストールディスクを作成する(いちいち最初からするのが面倒なので)
+* Task
+** TODO インストールディスクを作成する(いちいち最初からするのが面倒なので)
 すべて整備された状態でクリーンインストールできるようにしたい。
 どうやってやるのかよくわからない。
 またあのインストール作業をやりたくはない。面倒だからな。
-** あるいはそれまでのつなぎで完全クローンを作成しておく
+** TODO あるいはそれまでのつなぎで完全クローンを作成しておく
 少なくとも今はうまく動いてるので。
-** 使えないきーがある
+** TODO 使えないキーがある
 たとえばM+<が使えない。単に ~<~ 入力と判定されてしまう。
-** i3のmod keyを変更する
+alt+shiftが奪われてた問題と共通してるように見える。
+** TODO i3のmod keyを変更する
 AltとSuperの位置が近すぎて、workspaceを打ち間違う。
+** TODO ほかのパッケージシステムをどう使えばいいのか
+gemとかnpmを使うときにどうしたらいいのか。
+#+begin_src shell
+  guix environment -C guix --network --ad-hoc ruby ruby-sinatra
+#+end_src
+みたく、仮想環境が作れるのだが、実際どう使えばいいのかわからない。
 * Archive
 ** DONE キー設定(caps入れ替え)
 CLOSED: [2021-08-08 Sun 23:31]
@@ -247,3 +254,36 @@ CLOSED: [2021-08-11 Wed 23:26]
 org-roamのバージョンが上がったためだった。コマンドが変わっていた。
 逆にMintの方が古いままになっているので、そっちを直す必要がある。
 もう大体同じことができるので乗り換えてもいい。
+** DONE サービスが起動しないことがある
+CLOSED: [2021-08-13 Fri 14:37]
+ibus、syncthingが起動直後は動いているのにいつのまにか止まっている。
+
+1. i3ではshepherdを実行してなかった。
+2.ログをとってみてみると、 ~ibus-daemon -d~ はダメで、 ~ibus-daemon~ とする必要がある。つまりふつうに実行してそこでコンソールが止まる形式で実行する必要がある。
+** DONE 画面ロック
+CLOSED: [2021-08-13 Fri 14:38]
+時間経過で自動画面ロックしてくれないことに気づいた。
+xautolockを入れることで解決した。
+** DONE Emacsで日本語入力
+CLOSED: [2021-08-14 Sat 00:37]
+i3-wm + ibus-anthy + Emacsで日本語入力ができない問題。
+この組み合わせでだけ起きる。
+
+Emacsだけならともかく、ほかのブラウザなどの操作と一貫性がなくなるのを避けたい。
+ほかにも発生する人がいた。だいたい同じ環境変数の定義を示していて、いくつか試すなかでなんとかうまくいった。
+
+https://raawaa.github.io/2016/05/05/input-with-ibus-on-emacs/
+
+#+begin_src shell
+export LC_CTYPE=ja_JP.UTF-8
+export GTK_IM_MODULE=ibus
+export QT_IM_MODULE=ibus
+export XMODIFIERS=@im=ibus
+#+end_src
+
+重要なのは、この環境変数が評価されているセッションでEmacsを実行すること。
+ibus側の設定ではなく、Emacs側にinput methodを教えてあげる環境変数、ということだ。
+上をターミナルで実行してそのままemacsを実行すると、たぶんうまくいく。
+
+それを確かめてから、あとは ~.bashrc~ に書き込む。ターミナルでemacsを起動すると日本語が打てる。
+ランチャーから起動すると打てないので、ランチャー側を少しいじる必要がある。
