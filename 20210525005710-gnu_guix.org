@@ -8,6 +8,7 @@
 - システム設定をリポジトリで管理できる
 - ロールバックできる
 - マシンによって設定を変えることも可能
+- 依存性に対する完全なコントロール。完全に再現できる
 * GNU Guix
 ** 基本のコマンド
 #+begin_src shell
@@ -107,6 +108,8 @@ gnomeのコマンドを1回打って代用する。
 #+begin_src shell
   gsettings set org.gnome.desktop.input-sources xkb-options "['ctrl:swapcaps']"
 #+end_src
+
+デスクトップ環境関係なくできるのでxmodmapでやるのがよさそう。
 ** パッケージを一括インストール
 #+begin_src shell
   guix package -m ~/dotfiles/.config/guix/manifests/desktop.scm
@@ -169,6 +172,12 @@ gnome使いたくないな。
 anthyにC-c C-jが奪われるようになった。設定で変えても変更が反映されない。
 まあ、英語に切り替えてからやればいいか。
 クリーンインストールすると解決する問題か。
+** Ruby環境
+Guixがgemをサポートしているので、RVM, rbenv, bundlerは必要ないよう。
+https://git.genenetwork.org/pjotrp/guix-notes/src/branch/master/RUBYGEMS-Nokogiri.org#headline-33
+
+だがよくわからない。ひどく面倒そうな環境変数を追加しているのを見て、これは間違ったアプローチだと思った。
+npmでlintは普通にできたので、同じようにできると思ったのだが。
 * 参考リンク
 概念がわかりやすいPDF。
 https://archive.fosdem.org/2016/schedule/event/deployments_with_gnu_guix/attachments/slides/1086/export/events/attachments/deployments_with_gnu_guix/slides/1086/reproducible_deployments_gnu_guix.pdf
@@ -184,7 +193,11 @@ https://github.com/pjotrp/guix-notes/blob/master/RUBY.org
 System Crafters.
 https://www.youtube.com/channel/UCAiiOTio8Yu69c3XnR7nQBQ
 https://github.com/daviwil/dotfiles
+
+guix-works。開発環境として使うための情報が豊富。
+https://www.draketo.de/software/guix-work.html
 * Task
+** TODO suspendできるようにする
 ** TODO インストールディスクを作成する(いちいち最初からするのが面倒なので)
 すべて整備された状態でクリーンインストールできるようにしたい。
 どうやってやるのかよくわからない。
@@ -196,13 +209,26 @@ https://github.com/daviwil/dotfiles
 alt+shiftが奪われてた問題と共通してるように見える。
 ** TODO i3のmod keyを変更する
 AltとSuperの位置が近すぎて、workspaceを打ち間違う。
-** TODO ほかのパッケージシステムをどう使えばいいのか
+** TODO 仮想環境の使い方
 gemとかnpmを使うときにどうしたらいいのか。
 #+begin_src shell
   guix environment -C guix --network --ad-hoc ruby ruby-sinatra
 #+end_src
 みたく、仮想環境が作れるのだが、実際どう使えばいいのかわからない。
+** TODO ibus設定をconfigで
+日本語入力のときのスペースが全角になってうざい。
+configで挙動を変更できないのか。
+** TODO ibusは透過させないようにする
+見えにくいので。
 * Archive
+** DONE npmパーケージ
+CLOSED: [2021-08-15 Sun 22:38]
+#+begin_src shell
+  guix install node
+  npm install npm
+  npm install
+  npx textlint .*org
+#+end_src
 ** DONE キー設定(caps入れ替え)
 CLOSED: [2021-08-08 Sun 23:31]
 一度Gnomeコマンドを打つ必要がある。
