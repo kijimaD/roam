@@ -71,6 +71,16 @@ create_list - factorybot
 #+begin_src ruby
 allow_any_instance_of(ActionDispatch::Request).to receive(:session).and_return({})
 #+end_src
+** たまに失敗するパターン
+並び順に依存したテストの危険性。
+同じ秒数に作成されたとき、createした順番に並ばない可能性がある。
+#+begin_src ruby
+  model1 = create(:model)
+  model2 = create(:model)
+#+end_src
+created_atでソートして表示しているとして、この作成順にソートされるわけではない。
+秒数が同じときはidなどがソートに使われるだろう。
+1つcreateするのにはわずかな時間なので、たまに失敗するだけで気づきにくい。
 * ActiveRecord
 ** ネストしたvalidateは反応しない
  特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要があります。
