@@ -72,7 +72,12 @@ create_list - factorybot
 allow_any_instance_of(ActionDispatch::Request).to receive(:session).and_return({})
 #+end_src
 ** たまに失敗するパターン
-並び順に依存したテストの危険性。
+system specではよくある。
+*** 読み込み前に検証して失敗する
+#+begin_src ruby
+  expect(page).to have_text 'aaa', wait: 5 #発見できなかったときの最大待ち時間を伸ばす
+#+end_src
+*** 並び順に依存したテスト
 同じ秒数に作成されたとき、createした順番に並ばない可能性がある。
 #+begin_src ruby
   model1 = create(:model)
@@ -81,6 +86,12 @@ allow_any_instance_of(ActionDispatch::Request).to receive(:session).and_return({
 created_atでソートして表示しているとして、この作成順にソートされるわけではない。
 秒数が同じときはidなどがソートに使われるだろう。
 1つcreateするのにはわずかな時間なので、たまに失敗するだけで気づきにくい。
+*** チェックボックス
+チェックに少し時間がかかるのでたまにチェックせずに送信して失敗する。
+#+begin_src ruby
+  check aaa
+  expect(page).to have_checked_field(aaa), wait 5 # チェックを確認する
+#+end_src
 * ActiveRecord
 ** ネストしたvalidateは反応しない
  特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要があります。
