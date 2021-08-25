@@ -5,34 +5,21 @@
 
 Emacsはテキストエディタの1つ。
 [[id:c7e81fac-9f8b-4538-9851-21d4ff3c2b08][Emacs Lisp]]で柔軟に設定を変更できる。
-* 👀記憶したい
-** projectile-switch-to-buffer (C-c p b)
+* 記憶
+** TODO projectile-switch-to-buffer (C-c p b)
 プロジェクトファイル限定のswitch-buffer。
-** <F1> b
+** TODO <F1> b
 キーバインドの一覧を表示します。
-** projectile-ag (~C-c p s s~)
+** TODO projectile-ag (~C-c p s s~)
 プロジェクトをag検索します。検索結果をバッファで得たいときに。
-** projectile-multi-occur (~C-c p o~)
-プロジェクトで ~occur~ します。
-occurの特徴はeでedit-modeに入れる点。一覧にして複数ファイルをそのまま置換できます。
-** projectile-toggle-between-implementation-and-test (~C-c p t~)
-テストとプロダクトコードを切り替えます。
-** org-mode のキーバインド
+** TODO org-mode のキーバインド
 見出し移動とか。
 https://qiita.com/takaxp/items/a5a3383d7358c58240d0
-** (magit-topic)
-一覧でPRとIssueにアクセスできると行き来がしやすそう。
-Forgeのトピック間移動がhelmでできたらいいのにな。
-** counsel-find-fileで新しいファイル
-補完選択になってしまって新しくファイルが作れないとき。
-C-M-jで新規作成できる。そんなのわかるか…。
-READMEの最後に書かれてた、(setq ivy-use-selectable-prompt t)をしとくと上下選択できるようになる。
-選択一覧にはでないのでわかりにくい。
-* ✍Tasks
+* Tasks
 ** TODO vtermで括弧補完が使えない
 なのでカッコ関係はコピペする羽目になる。
 ** TODO autosaveが出てきてうざい
-自動セーブすると毎回プロンプトが出てくる。
+Guixでは編集すると毎回プロンプトが出てくる。
 #+begin_src emacs-lisp
   (defun ask-user-about-supersession-threat (fn)
     "blatantly ignore files that changed on disk"
@@ -45,12 +32,18 @@ READMEの最後に書かれてた、(setq ivy-use-selectable-prompt t)をしと�
 
   (setq revert-without-query '(".*"))
 #+end_src
-を実行したが、変わらない。
+を実行したが、変わらなかった。
+
+↓できた。
+#+begin_src emacs-lisp
+(setq auto-save-timeout 2)
+(setq auto-save-visited-interval 2)
+(setq auto-save-no-message t)
+(auto-save-visited-mode)
+#+end_src
 ** TODO コピペしたときにおかしい
 ~highlight-indent-guides-mode~ がコピペしたときに表示がおかしい。
 faceまでコピーするから仕方ないのかな。
-** TODO 使用パッケージで分岐するとき、どうやってbyte-compileエラーを回避するのか
-たとえばhelmを使ってるときはこれ、ivyのときはこれとかでrequireするものは変わるものだが。既存パッケージはどうしているのだろう。
 ** TODO Projectileの幅がせまくて見づらい
 ほかのcompletionは幅いっぱいにハイライトされるが、projectileは文字のあるところしかハイライトされないので短い検索のときに見えにくい。たとえば ~counsel-find-file~ とか ~counsel-find-file~ と比べるとわかる。
 
@@ -61,7 +54,111 @@ org-refileでも同じような感じ。要調査。
 共通点は、右側にアノテーションが出ないときか。そのときはfaceが設定されないので右側まで伸びない。
 ** TODO vtermでコピーしたときにキルリングに入らない
 ** TODO GTAGSを使えるようにする
-* ✔Archive
+読むときにたどれないと不便。
+** TODO roamリポジトリをサイト公開する
+どうにかして静的ページとして公開できるはず。
+かっこいいのがなければ作る。
+* Memo
+** パッケージメモ
+- [[id:815a2c31-7ddb-40ad-bae0-f84e1cfd8de1][roam]]
+- mermaid-mode
+- alert.el
+- writeroom-mode
+- [[id:8c81068f-0e51-4d6d-bd1f-392ce8cb3a21][current-word-highlight]]
+- [[id:f0cefeef-6f99-4ce2-bff7-db6e508f2c84][create-link]]
+** ソースメモ
+*** org-lint
+https://github.com/kijimaD/emacs/blob/master/lisp/org/org-lint.el#L124
+*** interactive
+https://github.com/kijimaD/emacs/blob/master/src/callint.c#L37
+*** defun
+https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/byte-run.el#L280
+https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/cl-macs.el#L339
+*** markdown-to-ast
+textlintはorg-modeに対応していません。txtファイルとして処理できますが、見出しでも丸をつけなさいとか、コードブロック内で大文字にしろとか言われます。これは、org用のAST変換を作れば解決します。
+https://github.com/kijimaD/textlint/blob/master/packages/@textlint/markdown-to-ast/README.md#L1
+オブジェクトから取り出して、マッピングしている。
+
+https://github.com/remarkjs/remark-frontmatter
+文字列Markdownはこれで変換してる。
+** projectile-toggle-between-implementation-and-test (~C-c p t~)
+テストとプロダクトコードを切り替えます。
+** projectile-multi-occur (~C-c p o~)
+プロジェクトで ~occur~ します。
+occurの特徴はeでedit-modeに入れる点。一覧にして複数ファイルをそのまま置換できます。
+** (magit-topic)
+一覧でPRとIssueにアクセスできると行き来がしやすそう。
+Forgeのトピック間移動がhelmでできたらいいのにな。
+** sqlと接続する
+#+begin_src
+M-x customize-variable RET sql-connection-alist RET ...
+M-x sql-connect
+open buffer...
+M-x sql-mode
+M-x sql-set-sqli-buffer RET
+sql-send-buffer (C-c C-b)
+sqlup-capitalize-keywords-in-region (C-c u)
+#+end_src
+** Macでの置換
+- Macでは ~query-replace~ (~M-%~)が奪われて押せないので、 ~query-replace-regexp~ (~C-M-%~)します。
+** spring rspec
+いつのまにかEmacsでspringが動かなくなっていました。コマンドでは ~spring rspec~ などで動かせるが、Emacsではふつうの ~bundle exec ...~ になっていました。前は早くできていたはず。ネットの記事を参考にします。
+
+#+begin_quote
+emacsのrspec-modeで、上記のようにしてspringを使うと、自動ではspringがONにならない。 これはtmpにpidファイルが作られないため。 強制的にspringを使うには、次のように設定する。
+#+end_quote
+
+  #+begin_src emacs-lisp
+  (require 'rspec-mode)
+  (defun rspec-spring-p ()
+    (and rspec-use-spring-when-possible
+         (stringp (executable-find "spring"))))
+  #+end_src
+
+springを自動で検出してくれるらしいのですが(何より今までできてた)。
+- ~spring status~ でspringが動いてるかチェックする。動いてなかったら ~spring rspec~ する。
+** デバッグ起動
+#+begin_src shell
+$ emacs -q
+# init読み込まない
+$ emacs --debug-init
+# デバッグモードで起動する
+#+end_src
+** ivy化
+[[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
+** System Crafters IRC
+#+begin_quote
+erc-tls
+irc.libera.chat
+6697
+/join #systemcrafters
+#+end_quote
+** 脚注
+脚注使えるのは知らなかったな。[fn:1]
+
+[fn:1] The link is: https://orgmode.org
+** mermaid jsをEmacsで使うhttps://github.com/abrochard/mermaid-mode
+#+begin_src shell
+npm install -g @mermaid-js/mermaid-cli
+#+end_src
+して、C-cで画像にコンパイルできる。
+** LinuxをEmacs風キーバインドにする
+https://linuxfan.info/linux-emacs-keybindings-matome
+
+#+begin_src shell
+  # gnome
+  gsettings set org.gnome.desktop.interface gtk-key-theme Emacs
+  # MATE
+  gsettings set org.mate.interface gtk-key-theme Emacs
+  # Cinnamon
+  gsettings set org.cinnamon.desktop.interface gtk-key-theme Emacs
+#+end_src
+** counsel-find-fileで新しいファイル
+補完選択になってしまって新しくファイルが作れないとき。
+C-M-jで新規作成できる。そんなのわかるか…。
+READMEの最後に書かれてた、(setq ivy-use-selectable-prompt t)をしとくと上下選択できるようになる。
+選択一覧にはでないのでわかりにくい。
+* Archive
 ** DONE undo履歴を保持しないときがある
 CLOSED: [2021-08-17 火 09:41]
 3つくらいしか戻れないときがあり、原因は不明。
@@ -114,91 +211,17 @@ vterm上で、eshellなどのように自由に動き回るモードです。
 CLOSED: [2021-07-26 月 09:41]
 https://orgmode.org/manual/Refile-and-Copy.html#Refile-and-Copy
 見出しの移動。
-* メモ
-** パッケージメモ
-- [[id:815a2c31-7ddb-40ad-bae0-f84e1cfd8de1][roam]]
-- mermaid-mode
-- alert.el
-- writeroom-mode
-- [[id:8c81068f-0e51-4d6d-bd1f-392ce8cb3a21][current-word-highlight]]
-- [[id:f0cefeef-6f99-4ce2-bff7-db6e508f2c84][create-link]]
-** ソースメモ
-*** org-lint
-https://github.com/kijimaD/emacs/blob/master/lisp/org/org-lint.el#L124
-*** interactive
-https://github.com/kijimaD/emacs/blob/master/src/callint.c#L37
-*** defun
-https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/byte-run.el#L280
-https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/cl-macs.el#L339
-*** markdown-to-ast
-textlintはorg-modeに対応していません。txtファイルとして処理できますが、見出しでも丸をつけなさいとか、コードブロック内で大文字にしろとか言われます。これは、org用のAST変換を作れば解決します。
-https://github.com/kijimaD/textlint/blob/master/packages/@textlint/markdown-to-ast/README.md#L1
-オブジェクトから取り出して、マッピングしている。
+** DONE 使用パッケージで分岐するとき、どうやってbyte-compileエラーを回避するのか
+CLOSED: [2021-08-21 Sat 23:47]
+たとえばhelmを使ってるときはこれ、ivyのときはこれとかでrequireするものは変わるものだが。既存パッケージはどうしているのだろう。
 
-https://github.com/remarkjs/remark-frontmatter
-文字列Markdownはこれで変換してる。
-** 未分類
-*** sqlと接続する
-#+begin_src
-M-x customize-variable RET sql-connection-alist RET ...
-M-x sql-connect
-open buffer...
-M-x sql-mode
-M-x sql-set-sqli-buffer RET
-sql-send-buffer (C-c C-b)
-sqlup-capitalize-keywords-in-region (C-c u)
+↓とかやった。外部のコマンドは最初に定義しておいた。
+#+begin_src emacs-lisp
+(defvar w3m-current-url)
+(declare-function w3m-current-title "ext:w3m-util")
 #+end_src
-*** Macでの置換
-- Macでは ~query-replace~ (~M-%~)が奪われて押せないので、 ~query-replace-regexp~ (~C-M-%~)します。
-*** spring rspec
-いつのまにかEmacsでspringが動かなくなっていました。コマンドでは ~spring rspec~ などで動かせるが、Emacsではふつうの ~bundle exec ...~ になっていました。前は早くできていたはず。ネットの記事を参考にします。
+** CLOSE Emacsをビルドしてみる
+CLOSED: [2021-08-25 Wed 22:31]
+https://systemcrafters.net/live-streams/august-20-2021/
 
-#+begin_quote
-emacsのrspec-modeで、上記のようにしてspringを使うと、自動ではspringがONにならない。 これはtmpにpidファイルが作られないため。 強制的にspringを使うには、次のように設定する。
-#+end_quote
-
-  #+begin_src emacs-lisp
-  (require 'rspec-mode)
-  (defun rspec-spring-p ()
-    (and rspec-use-spring-when-possible
-         (stringp (executable-find "spring"))))
-  #+end_src
-
-springを自動で検出してくれるらしいのですが(何より今までできてた)。
-- ~spring status~ でspringが動いてるかチェックする。動いてなかったら ~spring rspec~ する。
-*** デバッグ起動
-#+begin_src shell
-$ emacs -q
-# init読み込まない
-$ emacs --debug-init
-# デバッグモードで起動する
-#+end_src
-*** ivy化
-[[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
-*** System Crafters IRC
-#+begin_quote
-erc-tls
-irc.libera.chat
-6697
-/join #systemcrafters
-#+end_quote
-*** 脚注
-脚注使えるのは知らなかったな。[fn:1]
-
-[fn:1] The link is: https://orgmode.org
-*** mermaid jsをEmacsで使うhttps://github.com/abrochard/mermaid-mode
-#+begin_src shell
-npm install -g @mermaid-js/mermaid-cli
-#+end_src
-して、C-cで画像にコンパイルできる。
-*** LinuxをEmacs風キーバインドにする
-https://linuxfan.info/linux-emacs-keybindings-matome
-
-#+begin_src shell
-  # gnome
-  gsettings set org.gnome.desktop.interface gtk-key-theme Emacs
-  # MATE
-  gsettings set org.mate.interface gtk-key-theme Emacs
-  # Cinnamon
-  gsettings set org.cinnamon.desktop.interface gtk-key-theme Emacs
-#+end_src
+この通りにやって簡単にできた。
