@@ -33,6 +33,31 @@ roamのデフォルトディレクトリを作成して、そこでファイル�
   (define-key org-mode-map (kbd "C-c n i") 'org-roam-insert)
   (define-key org-mode-map (kbd "C-c n I") 'org-roam-insert-immediate)
 #+end_src
+
+* publish
+#+begin_quote
+Unable to resolve link
+#+end_quote
+になる。
+
+(setq org-id-track-globally t)
+
+(setq org-id-link-to-org-use-id t)
+(setq org-id-method 'ts)
+(setq org-roam-prefer-id-links t)
+
+(defun ngm/org-hide-properties ()
+  "Hide org headline's properties using overlay."
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward
+            "^ *:PROPERTIES:\n\\( *:.+?:.*\n\\)+ *:END:\n" nil t)
+      (overlay-put (make-overlay
+                    (match-beginning 0) (match-end 0))
+                   'display ""))))
+
+(add-hook 'org-mode-hook #'ngm/org-hide-properties)
+(org-export-with-broken-links)
 * キーバインド
  - find(C-c n f)
  - バックリンク(C-c n l)
@@ -42,5 +67,11 @@ roamのデフォルトディレクトリを作成して、そこでファイル�
 https://www.youtube.com/watch?v=AyhPmypHDEw
 https://www.mhatta.org/wp/2021/02/20/org-mode-101-9/#org125e180
 #+end_quote
+
+作者サイトのマニュアル。
+https://blog.jethro.dev/posts/introducing_org_roam/
+
+org-modeのワークフロー。
+https://blog.jethro.dev/posts/org_mode_workflow_preview/
 * 脚注
 [fn:1] https://roamresearch.com/ 元となったRoam Researchは、Webでのアウトラインツール。
