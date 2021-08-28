@@ -35,9 +35,9 @@
        (list "kijima:roam"
              :recursive t
              :base-extension "org"
-             :base-directory "~/roam"
+             :base-directory "./"
              :publishing-function #'org-html-publish-to-html
-             :publishing-directory "~/roam/public"
+             :publishing-directory "./public"
              :with-timestamps nil
              :with-title nil)))
 
