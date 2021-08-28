@@ -123,7 +123,7 @@
                       (div (@ (class "row align-items-center justify-content-between"))
                            (div (@ (class "col-sm-12 col-md-12"))
                                 (nav (@ (class "nav"))
-                                     (a (@ (class "nav-link") (href "/")) "Insomnia") " "
+                                     (a (@ (class "nav-link") (href "/roam")) "Insomnia") " "
                                      (a (@ (class "nav-link") (href "https://github.com/kijimaD")) "kijimad")))))))))))
 
 (defun dw/site-footer (info)
@@ -136,7 +136,7 @@
                 (div (@ (class "col-sm col-md text-sm-left text-md-right text-lg-right text-xl-right"))
                      (p "Made with " ,(plist-get info :creator)))))))
    (sxml-to-xml
-    `(script (@ (src "/js/bootstrap.bundle.min.js"))))))
+    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
 
 (defun get-article-output-path (org-file pub-dir)
   (let ((article-dir (concat pub-dir
@@ -164,13 +164,11 @@
             (meta (@ (name "viewport")
                      (content "width=device-width, initial-scale=1, shrink-to-fit=no")))
             (link (@ (rel "stylesheet")
-                     (href "/css/bootstrap.min.css")))
+                     (href "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css")))
             (link (@ (rel "stylesheet")
                      (href "/css/code.css")))
             (link (@ (rel "stylesheet")
                      (href "/css/site.css")))
-            (link (@ (rel "stylesheet")
-                     (href "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")))
             (title ,(concat (org-export-data (plist-get info :title) info) " - Insomnia")))
            (body
              ,(dw/site-header info)

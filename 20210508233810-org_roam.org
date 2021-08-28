@@ -40,6 +40,41 @@ roamのidがhtmlに変換できないよう。
 Unable to resolve link
 #+end_quote
 になる。
+
+#+begin_src emacs-lisp
+  (setq org-hugo-base-dir ".")
+  (setq org-export-with-broken-links t)
+#+end_src
+するとできるが、idリンクを辿れない。
+ほかのサイトではidがあってもできてるように見える。
+https://hugocisneros.com/blog/my-org-roam-notes-workflow/
+orgのバージョンを最新にしたが変わらず。
+
+公式で言及。
+https://github.com/org-roam/org-roam/wiki/Hitchhiker's-Rough-Guide-to-Org-roam-V2#export
+
+#+begin_src emacs-lisp
+(setq org-id-link-to-org-use-id t)
+(setq org-id-extra-files (org-roam--list-files org-roam-directory))
+#+end_src
+↓で設定していた。これを設定すると成功した。
+https://hugocisneros.com/org-config/#configuration
+
+https://gist.github.com/hugcis/1f2d2ad4b98b07ee543f10232ba1b025
+#+begin_src emacs-lisp
+  (require 'find-lisp)
+  (defun hugcis/publish-note (file)
+    "Publish a note in FILE."
+    (interactive)
+    (with-current-buffer (find-file-noselect file)
+      (projectile-mode -1)
+      (setq org-hugo-section "notes"
+            org-hugo-base-dir "."
+            citeproc-org-org-bib-header "* Bibliography\n<ol class=\"biblio-list\">"
+            citeproc-org-org-bib-footer "</ol>")
+      (let ((org-id-extra-files (find-lisp-find-files org-roam-directory "\.org$")))
+          (org-hugo-export-wim-to-md))))
+#+end_src
 * キーバインド
  - find(C-c n f)
  - バックリンク(C-c n l)
