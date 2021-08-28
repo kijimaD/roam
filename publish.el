@@ -92,7 +92,7 @@
      (format yt-iframe-format
              path (or desc "")))))
 
-(setq dw/site-title   "System Crafters")
+(setq dw/site-title   "Insomnia")
 (setq dw/site-tagline "")
 
 (setq org-publish-use-timestamps-flag t
@@ -114,9 +114,6 @@
       `(div (div (@ (class "blog-header"))
                  (div (@ (class "container"))
                       (div (@ (class "row align-items-center justify-content-between"))
-                           (div (@ (class "col-sm-12 col-md-8"))
-                                (div (@ (class "blog-title"))
-                                     ,dw/site-title))
                            (div (@ (class "col-sm col-md"))
                                 (div (@ (class "blog-description text-sm-left text-md-right text-lg-right text-xl-right"))
                                      ,dw/site-tagline)))))
@@ -126,12 +123,8 @@
                       (div (@ (class "row align-items-center justify-content-between"))
                            (div (@ (class "col-sm-12 col-md-12"))
                                 (nav (@ (class "nav"))
-                                     (a (@ (class "nav-link") (href "/")) "Home") " "
-                                     ;; (a (@ (class "nav-link") (href "/articles")) "Articles")
-                                     (a (@ (class "nav-link") (href "/videos")) "Videos") " "
-                                     (a (@ (class "nav-link") (href "https://wiki.systemcrafters.cc")) "Wiki") " "
-                                     (a (@ (class "nav-link") (href "https://store.systemcrafters.net?utm_source=sc-site-nav")) "Merch Store") " "
-                                     (a (@ (class "nav-link") (href "/support-the-channel")) "Support The Channel")))))))))))
+                                     (a (@ (class "nav-link") (href "/")) "Insomnia") " "
+                                     (a (@ (class "nav-link") (href "https://github.com/kijimaD")) "kijimad")))))))))))
 
 (defun dw/site-footer (info)
   (concat
@@ -141,8 +134,7 @@
       (div (@ (class "container"))
            (div (@ (class "row"))
                 (div (@ (class "col-sm col-md text-sm-left text-md-right text-lg-right text-xl-right"))
-                     (p "Made with " ,(plist-get info :creator))
-                     (p (a (@ (href "privacy-policy/")) "Privacy Policy")))))))
+                     (p "Made with " ,(plist-get info :creator)))))))
    (sxml-to-xml
     `(script (@ (src "/js/bootstrap.bundle.min.js"))))))
 
@@ -168,30 +160,23 @@
            (head
             "<!-- " ,(org-export-data (org-export-get-date info "%Y-%m-%d") info) " -->"
             (meta (@ (charset "utf-8")))
-            (meta (@ (author "David Wilson")))
+            (meta (@ (author "Kijima Daigo")))
             (meta (@ (name "viewport")
                      (content "width=device-width, initial-scale=1, shrink-to-fit=no")))
             (link (@ (rel "stylesheet")
                      (href "/css/bootstrap.min.css")))
             (link (@ (rel "stylesheet")
-                     (href "/fonts/iosevka-aile/iosevka-aile.css")))
-            (link (@ (rel "stylesheet")
-                     (href "/fonts/jetbrains-mono/jetbrains-mono.css")))
-            (link (@ (rel "stylesheet")
                      (href "/css/code.css")))
             (link (@ (rel "stylesheet")
                      (href "/css/site.css")))
-            (script (@ (defer "defer")
-                       (data-domain "systemcrafters.net")
-                       (src "https://plausible.io/js/plausible.js"))
-                    ;; Empty string to cause a closing </script> tag
-                    "")
-            (title ,(concat (org-export-data (plist-get info :title) info) " - System Crafters")))
+            (link (@ (rel "stylesheet")
+                     (href "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css")))
+            (title ,(concat (org-export-data (plist-get info :title) info) " - Insomnia")))
            (body
              ,(dw/site-header info)
              (div (@ (class "container"))
-                  (div (@ (class "row"))
-                       (div (@ (class "col-sm-12 blog-main"))
+                  (div (@ (class "row justify-content-center"))
+                       (div (@ (class "col-sm-8 blog-main"))
                             (div (@ (class "blog-post"))
                                  (h1 (@ (class "blog-post-title"))
                                      ,(org-export-data (plist-get info :title) info))
@@ -207,16 +192,7 @@
                                                         ;; (format "<a href=\"/tags/%s/\">%s</a>" tag tag))
                                                       (plist-get info :filetags)
                                                       ", "))))
-                                 ,(when (equal "article" (plist-get info :page-type))
-                                    ;; TODO: Link to mailing list
-                                    "<script src=\"https://utteranc.es/client.js\"
-                                              repo=\"daviwil/harmonicschemes.com\"
-                                              issue-term=\"title\"
-                                              label=\"comments\"
-                                              theme=\"photon-dark\"
-                                              crossorigin=\"anonymous\"
-                                              async>
-                                     </script>")))))
+                                 ,(when (equal "article" (plist-get info :page-type)))))))
 
              ,(dw/site-footer info))))))
 
@@ -264,7 +240,7 @@
      (when (and container (not (string= "" container)))
        (format "<%s%s>" container (if container-class (format " class=\"%s\"" container-class) "")))
      (if (not (org-export-low-level-p headline info))
-         (format "<h%d%s><a id=\"%s\" class=\"anchor\" href=\"#%s\">¶</a>%s</h%d>%s"
+         (format "<h%d%s><a id=\"%s\" class=\"anchor\" href=\"#%s\"></a>%s</h%d>%s"
                  level
                  (or attributes "")
                  anchor-name
@@ -346,14 +322,7 @@
              :publishing-function '(org-html-publish-to-html)
              :publishing-directory "./public"
              :with-timestamps t
-             :with-title nil)
-       (list "systemcrafters:gemini"
-             :recursive t
-             :base-extension "org"
-             :base-directory "./content"
-             :publishing-function '(dw/org-gemini-publish-to-gemini)
-             :publishing-directory "./gemini"
-             :with-timestamps t)))
+             :with-title nil)))
 
 (defun dw/publish ()
   (interactive)
