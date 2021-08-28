@@ -316,12 +316,11 @@
        (list "kijima:roam"
              :recursive t
              :base-extension "org"
-             :base-directory "."
+             :base-directory "./"
              :publishing-function '(org-html-publish-to-html)
              :publishing-directory "./public"
              :with-timestamps t
              :with-title nil)))
 
 (defun dw/publish ()
-  (interactive)
   (org-publish-all t))
