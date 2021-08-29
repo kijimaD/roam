@@ -79,7 +79,7 @@
            (div (@ (class "row"))
                 (div (@ (class "col-sm col-md text-sm-left text-md-right text-lg-right text-xl-right"))
                      (nav (@ (class "navbar navbar-light"))
-                          (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) "kijimad")
+                          (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) "@kijimad")
                           ))))))
    (sxml-to-xml
     `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
@@ -246,8 +246,7 @@
       :html-link-up ""
       :html-link-home ""
       :with-timestamps nil
-      :with-toc nil
-      :with-title nil)))
+      :with-toc nil)))
 
 (defun kd/publish ()
   (org-publish-all t))
