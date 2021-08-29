@@ -241,6 +241,12 @@
       org-html-validation-link nil
       org-html-doctype "html5")
 
+(setq my-blog-extra-head
+      (concat
+       "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' />"
+       "<link rel='stylesheet' href='/css/site.css' />"
+       "<link rel='stylesheet' href='/css/code.css' />"))
+
 ;; Compile
 (setq org-publish-project-alist
       (list
@@ -250,7 +256,17 @@
              :base-directory "./"
              :publishing-function #'org-html-publish-to-html
              :publishing-directory "./public"
+
+             :html-link-home "/"
+             :html-head nil ;; cleans up anything that would have been in there.
+             :html-head-extra my-blog-extra-head
+             :html-head-include-default-style nil
+             :html-head-include-scripts nil
+
+             :html-link-up ""
+             :html-link-home ""
              :with-timestamps nil
+             :with-toc nil
              :with-title nil)))
 
 (defun kd/publish ()
