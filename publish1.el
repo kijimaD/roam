@@ -223,8 +223,8 @@
 (setq my-blog-extra-head
       (concat
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' />"
-       "<link rel='stylesheet' href='/css/site.css' />"
-       "<link rel='stylesheet' href='/css/code.css' />"))
+       "<link rel='stylesheet' href='css/site.css' />"
+       "<link rel='stylesheet' href='css/code.css' />"))
 
 ;; Compile
 (setq org-publish-project-alist
