@@ -56,30 +56,23 @@
   (let* ((file (plist-get info :output-file)))
     (concat
      (sxml-to-xml
-      `(div (div (@ (class "blog-header"))
-                 (div (@ (class "container"))
-                      (div (@ (class "row align-items-center justify-content-between"))
-                           (div (@ (class "col-sm col-md"))
-                                (div (@ (class "blog-description text-sm-left text-md-right text-lg-right text-xl-right"))
-                                     ,dw/site-tagline)))))
-
-            (div (@ (class "blog-masthead"))
+      `(div (div (@ (class "header"))
                  (div (@ (class "container"))
                       (div (@ (class "row align-items-center justify-content-between"))
                            (div (@ (class "col-sm-12 col-md-12"))
                                 (nav (@ (class "navbar navbar-light"))
-                                     (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia") " "))))))))))
+                                     (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia")))))))))))
 
 (defun dw/site-footer (info)
   (concat
    ;; "</div></div>"
    (sxml-to-xml
-    `(footer (@ (class "blog-footer"))
+    `(footer (@ (class "footer mt-auto py-3 fixed-bottom"))
       (div (@ (class "container"))
            (div (@ (class "row"))
-                (div (@ (class "col-sm col-md text-sm-left text-md-right text-lg-right text-xl-right"))
+                (div (@ (class "col-sm col-md text-md-right"))
                      (nav (@ (class "navbar navbar-light"))
-                          (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) "@kijimad")
+                          ;; (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) "")
                           ))))))
    (sxml-to-xml
     `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
