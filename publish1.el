@@ -67,9 +67,8 @@
                  (div (@ (class "container"))
                       (div (@ (class "row align-items-center justify-content-between"))
                            (div (@ (class "col-sm-12 col-md-12"))
-                                (nav (@ (class "nav"))
-                                     (a (@ (class "nav-link") (href "/roam")) "Insomnia") " "
-                                     (a (@ (class "nav-link") (href "https://github.com/kijimaD")) "kijimad")))))))))))
+                                (nav (@ (class "navbar navbar-light"))
+                                     (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia") " "))))))))))
 
 (defun dw/site-footer (info)
   (concat
@@ -79,7 +78,9 @@
       (div (@ (class "container"))
            (div (@ (class "row"))
                 (div (@ (class "col-sm col-md text-sm-left text-md-right text-lg-right text-xl-right"))
-                     (p "Made with " ,(plist-get info :creator)))))))
+                     (nav (@ (class "navbar navbar-light"))
+                          (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) "kijimad")
+                          ))))))
    (sxml-to-xml
     `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
 
@@ -209,28 +210,6 @@
   '((:page-type "PAGE-TYPE" nil nil t)
     (:html-use-infojs nil nil nil)))
 
-;; (defun org-html-publish-to-html (plist filename pub-dir)
-;;   "Publish an org file to HTML, using the FILENAME as the output directory."
-;;   (let ((article-path (get-article-output-path filename pub-dir)))
-;;     (cl-letf (((symbol-function 'org-export-output-file-name)
-;;                (lambda (extension &optional subtreep pub-dir)
-;;                  (concat article-path "index" extension))))
-;;       (org-publish-org-to 'site-html
-;;                           filename
-;;                           (concat "." (or (plist-get plist :html-extension)
-;;                                           "html"))
-;;                           plist
-;;                           article-path))))
-
-(defun org-html-publish-to-html (plist filename pub-dir)
-  (org-publish-org-to 'html filename
-		      (concat (when (> (length org-html-extension) 0) ".")
-			      (or (plist-get plist :html-extension)
-				  org-html-extension
-				  "html"))
-		      plist pub-dir))
-
-
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
       org-html-metadata-timestamp-format "%Y-%m-%d"
@@ -249,25 +228,26 @@
 
 ;; Compile
 (setq org-publish-project-alist
-      (list
-       (list "kijima:roam"
-             :recursive t
-             :base-extension "org"
-             :base-directory "./"
-             :publishing-function #'org-html-publish-to-html
-             :publishing-directory "./public"
+  `(
+     ("kijima:roam"
+      :recursive t
+      :base-extension "org"
+      :base-directory "./"
+      ;; :publishing-function #'org-html-publish-to-html
+      :publishing-function org-html-publish-to-html
+      :publishing-directory "./public"
 
-             :html-link-home "/"
-             :html-head nil ;; cleans up anything that would have been in there.
-             :html-head-extra my-blog-extra-head
-             :html-head-include-default-style nil
-             :html-head-include-scripts nil
+      :html-link-home "/"
+      :html-head nil ;; cleans up anything that would have been in there.
+      :html-head-extra ,my-blog-extra-head
+      :html-head-include-default-style nil
+      :html-head-include-scripts nil
 
-             :html-link-up ""
-             :html-link-home ""
-             :with-timestamps nil
-             :with-toc nil
-             :with-title nil)))
+      :html-link-up ""
+      :html-link-home ""
+      :with-timestamps nil
+      :with-toc nil
+      :with-title nil)))
 
 (defun kd/publish ()
   (org-publish-all t))
