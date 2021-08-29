@@ -239,7 +239,11 @@
       :html-link-up ""
       :html-link-home ""
       :with-timestamps nil
-      :with-toc nil)))
+      :with-toc nil
+
+      :auto-sitemap t ; generate sitemap.org automagically
+      :sitemap-filename "index.org"
+      )))
 
 (defun kd/publish ()
   (org-publish-all t))
