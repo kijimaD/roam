@@ -74,9 +74,10 @@
                 (div (@ (class "col-md-4")) "")
                 (div (@ (class "col-sm col-md"))
                      (nav (@ (class "navbar"))
-                          (a (@ (class "nav-link text-secondary small") (href "/roam")) "Insomnia")
+                          (a (@ (class "nav-link text-secondary small") (href "/")) "Insomnia")
+                          (a (@ (class "nav-link text-secondary small") (href "/sitemap.html")) "Sitemap")
                           (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD/roam")) "Repository")
-                              (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD")) "@kijimaD")))
+                          (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD")) "@kijimaD")))
                 (div (@ (class "col-md-4")) "")))))
    (sxml-to-xml
     `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
@@ -119,8 +120,18 @@
       :with-toc nil
 
       :auto-sitemap t ; generate sitemap.org automagically
-      :sitemap-filename "index.org"
       )))
+
+(defun org-roam-graph-save ()
+  (interactive)
+  (setq org-roam-graph-viewer nil)
+  (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
+  (org-roam-graph)
+  (shell-command (concat "cp"
+                         " "
+                         (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
+                         " "
+                         "./public/graph.svg")))
 
 (defun kd/publish ()
   (org-publish-all t))
