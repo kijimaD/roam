@@ -58,10 +58,11 @@
      (sxml-to-xml
       `(div (div (@ (class "header"))
                  (div (@ (class "container"))
-                      (div (@ (class "row align-items-center justify-content-between"))
+                      (div (@ (class "row"))
                            (div (@ (class "col-sm-12 col-md-12"))
                                 (nav (@ (class "navbar navbar-light"))
-                                     (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia")))))))))))
+                                     ;; (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia")
+                                     ))))))))))
 
 (defun dw/site-footer (info)
   (concat
@@ -69,13 +70,14 @@
    (sxml-to-xml
     `(footer (@ (class "footer mt-auto py-3"))
       (div (@ (class "container"))
-           (div (@ (class "row"))
+           (div (@ (class "row "))
+                (div (@ (class "col-md-4")) "")
                 (div (@ (class "col-sm col-md"))
-                     (nav (@ (class "navbar navbar-light mr-auto"))
-                          (ul (@ (class "navbar-nav mr-auto"))
-                              (a (@ (class "nav-link text-dark") (href "https://github.com/kijimaD")) ""))
-                          (ul (@ (class "navbar-nav"))
-                              (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD")) "@kijimaD"))))))))
+                     (nav (@ (class "navbar"))
+                          (a (@ (class "nav-link text-secondary small") (href "/roam")) "Insomnia")
+                          (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD/roam")) "Repository")
+                              (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD")) "@kijimaD")))
+                (div (@ (class "col-md-4")) "")))))
    (sxml-to-xml
     `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
 
