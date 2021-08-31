@@ -1,0 +1,41 @@
+:PROPERTIES:
+:ID:       afccf86d-70b8-44c0-86a8-cdac25f7dfd3
+:END:
+#+title: RSpec
+* 概要
+RSpecは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]で書かれたテストフレームワーク。
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]でもよく使われる。
+* Memo
+** request specでsessionメソッドを使う
+#+begin_src ruby
+allow_any_instance_of(ActionDispatch::Request).to receive(:session).and_return({})
+#+end_src
+** simplecovカバレッジ
+#+begin_src shell
+  COVERAGE=true bundle exec rspec spec/requests/user_spec.rb
+  open coverage/index.html
+#+end_src
+* たまに失敗するパターン
+system specではよくある。
+** 読み込み前に検証して失敗する
+#+begin_src ruby
+  expect(page).to have_text 'aaa', wait: 5 #発見できなかったときの最大待ち時間を伸ばす
+#+end_src
+** 並び順に依存したテスト
+同じ秒数に作成されたとき、createした順番に並ばない可能性がある。
+#+begin_src ruby
+  model1 = create(:model)
+  model2 = create(:model)
+#+end_src
+created_atでソートして表示しているとして、この作成順にソートされるわけではない。
+秒数が同じときはidなどがソートに使われるだろう。
+1つcreateするのにはわずかな時間なので、たまに失敗するだけで気づきにくい。
+** チェックボックス
+チェックに少し時間がかかるのでたまにチェックせずに送信して失敗する。
+#+begin_src ruby
+  check aaa
+  expect(page).to have_checked_field(aaa), wait 5 # チェックを確認する
+#+end_src
+* Tasks
+* Archives
+* Reference
