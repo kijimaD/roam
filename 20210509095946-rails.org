@@ -3,115 +3,68 @@
 :END:
 #+title: Rails
 
-* shell
+* 概要
+Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
+* Memo
 ** rails cできないとき
+まずspringを止めて確認する。
 #+begin_src shell
 bundle exec spring stop
 #+end_src
+springはキャッシュを保存して次のコマンド実行を早くするgem。
+テストも高速化できるので便利だが、たまに壊れて反映しなくなったりする。
 ** system specでTCP error がでるとき
+テストがある程度の長さを超えると、メモリの量が足りなくなってエラーを出す。
+特にMacだと起こるよう。
 #+begin_src shell
 ulimit -n 1024
 #+end_src
 ** どのメソッドか調べる
+どのgemのメソッドかわからないときに ~source_location~ が便利。
+https://docs.ruby-lang.org/ja/latest/method/Method/i/source_location.html
 #+begin_src ruby
 character.method(:draw).source_location
 #+end_src
 ** DBリセット
-テスト環境。
+環境を指定して、リセットを行う。
 #+begin_src shell
   RAILS_ENV=test bundle exec rake db:migrate:reset
   rake db:seed_fu
 #+end_src
 
-develop環境。
+初期データを投入する。
 #+begin_src shell
   bundle exec rails db:migrate:reset && rails db:seed_fu
 #+end_src
-** デイリー
-bundle install && bundle exec rails db:migrate
-* 環境構築
-LinuxでのRails環境構築。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][docker]]を使う。
-** mysql error
-bundle installするとmysql2のインストールで詰まる。
-Linuxでは↓が必要。
+** デイリーでやること
+gemのupgradeやマイグレーションが起きたときは必須。
+決まったことは定型化してまとめておく。
 #+begin_src shell
-sudo apt-get install libmysqlclient-dev
-#+end_src
-https://stackoverflow.com/questions/3608287/error-installing-mysql2-failed-to-build-gem-native-extension
-** ffi error
-対応するffiバージョンが見つからないエラー。違うバージョンを見てたりするらしい。
-https://ksmxxxxxx.hatenablog.com/entry/2021/02/06/134943
-#+begin_src shell
-  bundle config build.ffi --enable-system-libffi
-  bundle config build.ffi --disable-system-libffi
-#+end_src
-うまくいかないので、rbenv, bundlerを入れ直した。
-
-#+begin_src shell
-sudo apt-get install libmagick++-dev
-#+end_src
-** rake error
-#+begin_quote
-Bundler::GemNotFound: Could not find rake-13.0.6 in any of the sources
-#+end_quote
-
-#+begin_src shell
-gem install rake -v 13.0.6
-gem install bundler:2.2.25
-#+end_src
-* RSpec
-** カバレッジ
-#+begin_src shell
-COVERAGE=true bundle exec rspec spec/requests/admin/user_spec.rb
-open coverage/index.html
-#+end_src
-** factorybot
-create_list - factorybot
-** request specでsessionメソッドを使う
-#+begin_src ruby
-allow_any_instance_of(ActionDispatch::Request).to receive(:session).and_return({})
-#+end_src
-** たまに失敗するパターン
-system specではよくある。
-*** 読み込み前に検証して失敗する
-#+begin_src ruby
-  expect(page).to have_text 'aaa', wait: 5 #発見できなかったときの最大待ち時間を伸ばす
-#+end_src
-*** 並び順に依存したテスト
-同じ秒数に作成されたとき、createした順番に並ばない可能性がある。
-#+begin_src ruby
-  model1 = create(:model)
-  model2 = create(:model)
-#+end_src
-created_atでソートして表示しているとして、この作成順にソートされるわけではない。
-秒数が同じときはidなどがソートに使われるだろう。
-1つcreateするのにはわずかな時間なので、たまに失敗するだけで気づきにくい。
-*** チェックボックス
-チェックに少し時間がかかるのでたまにチェックせずに送信して失敗する。
-#+begin_src ruby
-  check aaa
-  expect(page).to have_checked_field(aaa), wait 5 # チェックを確認する
+  bundle install && bundle exec rails db:migrate
 #+end_src
 * ActiveRecord
 ** ネストしたvalidateは反応しない
- 特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要があります。
+ 特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要がある。
 #+begin_src ruby
 validates :term_date, date: { after: proc { Time.zone.now } }, if: proc { |p| p.term_date? && p.sellable?  }
 #+end_src
 ** N+1問題
-includes
-N+1問題を回避するために用います。
+[[id:8b69b8d4-1612-4dc5-8412-96b431fdd101][SQL]]がたくさん実行されて遅くなること。ループしているとレコードの数だけSQLが発行され、一気に遅くなる。
+includesを使うと少ないSQLにまとめられる。
+https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 ** 子のデータが存在するとき関連削除しないようにする
 #+begin_src ruby
   has_many :contents, dependent: :restrict_with_error
 #+end_src
 ** 文字列で返ってくる真偽値をbooleanオブジェクトに変換する
 文字列で返ってくる真偽値を、booleanオブジェクトとして扱いとき。ActiveModelのmoduleを使用する。
-言われてみるとDBでは意識せずに使える。
+言われてみるとDBでは文字列かをあまり意識せずに使える。
 #+begin_src ruby
 ActiveModel::Type::Boolean.new.cast(value) == true
 #+end_src
 * slim
+slimはViewテンプレート。HTMLのようなタグが必要なく、インデントが階層を表現する。
+外観がすっきり書けるが、やや柔軟性に欠ける。
 ** 条件分岐
 [[https://qiita.com/mishiwata1015/items/407e924263d698ddeaae][【Rails】Slimで入れ子になっている要素の親タグのみを分岐させる - Qiita]]
 閉じタグがないため階層の上だけ条件分岐するためには特殊な書き方が必要になる。
@@ -124,6 +77,8 @@ ActiveModel::Type::Boolean.new.cast(value) == true
   - args = [:section]
 = content_tag(*args)
 #+end_export
-* Mailer
-プレビュー
+* Action Mailer
+Railsでメールを送るのに使う。Railsの主要Mailer。
+** プレビュー
+previewを準備しておくといちいち送信せずとも、ローカルで中身を確認できる。
 http://localhost:3000/rails/mailers/
