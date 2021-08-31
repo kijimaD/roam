@@ -127,7 +127,7 @@
   (setq org-roam-graph-viewer nil)
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (org-roam-graph)
-  (sleep-for 2)
+  (sleep-for 5)
   (shell-command (concat "mv"
                          " "
                          (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
