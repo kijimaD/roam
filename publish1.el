@@ -126,14 +126,14 @@
   (interactive)
   (setq org-roam-graph-viewer nil)
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
-  (org-roam-db-sync)
   (org-roam-graph)
-  (shell-command "rm /tmp/*.dot")
+  (sleep-for 2)
   (shell-command (concat "mv"
                          " "
                          (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
                          " "
-                         "./public/graph.svg")))
+                         "./public/graph.svg"))
+  (shell-command "rm /tmp/*.dot"))
 
 (defun kd/publish ()
   (org-publish-all t))
