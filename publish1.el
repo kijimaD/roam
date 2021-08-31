@@ -75,7 +75,7 @@
                 (div (@ (class "col-sm col-md"))
                      (nav (@ (class "navbar"))
                           (a (@ (class "nav-link text-secondary small") (href "/")) "Insomnia")
-                          (a (@ (class "nav-link text-secondary small") (href "/sitemap.html")) "Sitemap")
+                          (a (@ (class "nav-link text-secondary small") (href "./sitemap.html")) "Sitemap")
                           (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD/roam")) "Repository")
                           (a (@ (class "nav-link text-secondary small") (href "https://github.com/kijimaD")) "@kijimaD")))
                 (div (@ (class "col-md-4")) "")))))
