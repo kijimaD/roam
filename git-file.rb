@@ -21,3 +21,5 @@ Dir.chdir(BASE) do
     system('git checkout main >& /dev/null')
   end
 end
+
+system('git checkout main >& /dev/null')
