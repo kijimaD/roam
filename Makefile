@@ -7,3 +7,6 @@ counter-graph:
 file-graph:
 	ruby git-file.rb > git-file.dat
 	gnuplot git-file.plot
+line-graph:
+	ruby git-line.rb > git-line.dat
+	gnuplot git-line.plot
