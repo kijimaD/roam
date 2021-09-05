@@ -1,3 +1,5 @@
+server:
+	cd ./public; python -m SimpleHTTPServer 8000
 build:
 	emacs --batch -l ./publish1.el --funcall kd/publish
 roam-graph:

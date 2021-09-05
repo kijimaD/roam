@@ -38,6 +38,7 @@
 (require 'ox-publish)
 
 (setq make-backup-files nil)
+(setq org-export-with-smart-quotes t)
 
 ;; View
 (setq dw/site-title   "Insomnia")
