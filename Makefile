@@ -10,3 +10,5 @@ file-graph:
 line-graph:
 	ruby git-line.rb > git-line.dat
 	gnuplot git-line.plot
+count-table:
+	ruby file-count.rb >> ./index.org
