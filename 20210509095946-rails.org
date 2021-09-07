@@ -7,12 +7,13 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 ** rails cできないとき
+springはキャッシュを保存して次のコマンド実行を早くするgem。
+テストも高速化できるので便利だが、たまに壊れて反映しなくなったりする。
+
 まずspringを止めて確認する。
 #+begin_src shell
 bundle exec spring stop
 #+end_src
-springはキャッシュを保存して次のコマンド実行を早くするgem。
-テストも高速化できるので便利だが、たまに壊れて反映しなくなったりする。
 ** system specでTCP error がでるとき
 テストがある程度の長さを超えると、メモリの量が足りなくなってエラーを出す。
 特にMacだと起こるよう。
@@ -42,7 +43,18 @@ gemのupgradeやマイグレーションが起きたときは必須。
 #+begin_src shell
   bundle install && bundle exec rails db:migrate
 #+end_src
-* ActiveRecord
+** scope
+scopeはクラスメソッド的なやつ。インスタンスには使えない。 ~User.scope...~
+[[https://railsguides.jp/active_record_querying.html#%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97][Active Record クエリインターフェイス - Railsガイド]]
+
+#+begin_quote
+スコープを設定することで、関連オブジェクトやモデルへのメソッド呼び出しとして参照される、よく使用されるクエリを指定することができます。
+#+end_quote
+** validation
+~valid?~ はAction Modelのバリデーションメソッド。
+[[https://devdocs.io/rails~6.1/activemodel/validations#method-i-valid-3F][Ruby on Rails 6.1 / ActiveModel::Validations#valid? — DevDocs]]
+引っかかってたらfalseになる。
+上書きしてしまいそうになるメソッド名なのに注意。
 ** ネストしたvalidateは反応しない
  特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要がある。
 #+begin_src ruby
@@ -53,6 +65,8 @@ validates :term_date, date: { after: proc { Time.zone.now } }, if: proc { |p| p.
 includesを使うと少ないSQLにまとめられる。
 https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 ** 子のデータが存在するとき関連削除しないようにする
+~dependent: destroy~ だと子のデータもすべて破壊して整合性を保つ。
+それでは具合が悪いときもあるので、消さないようにする。
 #+begin_src ruby
   has_many :contents, dependent: :restrict_with_error
 #+end_src
