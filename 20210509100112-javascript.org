@@ -7,13 +7,134 @@
 JavaScriptはブラウザ上で動作するのを特徴とする[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 WEB開発に多用される。多くの実装、フレームワーク、パッケージが存在する。
 
-JavaScriptおよび取り巻く環境の難しいところ。
-- 膨大な関連パッケージ(例: 標準の書き方はどれ)
-- 多くの方言、フレームワーク(例: Reactをやろうとすると、同時にいくつも学ぶ必要がある)
+進歩が早いため、古い本だと書き方が古くなってたり最悪動かなかったりする。
+最新のコードを読んでもよくわからない、ということも多い。
+書籍を買うときは発行年度を確かめることが必要。
+
+以前JSやってたので[[id:dc50d818-d7d1-48a8-ad76-62ead617c670][React]],[[id:ad1527ee-63b3-4a9b-a553-10899f57c234][TypeScript]]にいって大丈夫だろう、は罠。
+学ぶ前に最新のJSをキャッチアップしておかないと、理解しにくい。
 * Memo
 新しく追加された構文などもあって、ややこしい。
-** spread
+** promise method
+非同期のアクセス処理を行う関数。
+アクセスに時間がかかる間待ってるのは無駄なので、平行処理させる。
+#+begin_src javascript
+  fetch("https://google.com") // promiseオブジェクトが返ってくるだけ
 
+  fetch("https://google.com").then(res =>
+      res.json() // 非同期処理した結果が返ってくる
+  )
+#+end_src
+
+#+begin_src javascript
+  fetch("https://google.com")
+    .then(res => res.json())
+    .then(json => json.results)
+    .then(console.log)
+    .catch(console.error);
+#+end_src
+** spread syntax
+~...~ : スプレッド構文。いくつかの用途がある。
+
+- 配列の連結に使用される。
+#+begin_src javascript
+  const peaks = ["Tallac", "Ralston", "Rose"];
+  const canyons = ["Ward", "Blackwood"];
+  const tahoe = [...peaks, ...canyons];
+
+  console.log(tahoe.join(", ")); // Tallac, Ralston, Rose, Ward, Blackwood
+#+end_src
+
+- 配列のコピー作成
+#+begin_src javascript
+  const peaks = ["Tallac", "Ralton", "Rose"];
+  const [last] = [...peaks].reverse(); // peaksがreverse()で破壊するのを防ぐため、コピーを作成する。そして配列の最初の要素をlastに代入する。
+
+  console.log(last); // Rose
+  console.log(peaks.join(", ")); // Tallac, Ralston, Rose => 破壊してない
+#+end_src
+
+- 配列の「残り全部」を表現する
+#+begin_src javascript
+  const num = [1, 2, 3]
+  const [first, ...others] = nums;
+  console.log(others.join(", ")); // 2, 3
+#+end_src
+
+- 関数の引数を配列として受け取る
+#+begin_src javascript
+  funciton directions(...args) {
+      let [start, ...remaining] = args;
+      let [finish, ...stops] = remaining.reverse();
+
+      args.length
+      start
+      finish
+      stops.length
+  }
+
+  directions("Truckee", "Tahoe City", "Sunnyside") // 任意の引数を受け取れる
+#+end_src
+
+- オブジェクトの連結
+
+  #+begin_src javascript
+    const morning = {
+      breakfast: "oatmeal",
+      lunch: "peanut butter and jelly"
+    };
+
+    const dinner = "mac and cheese";
+    const backpackingMeals = {
+      ...morning,
+      dinner
+    };
+
+    console.log(backpackingMeals);
+
+    // {
+    //     breakfast: "oatmeals",
+    //     lunch: "peanut butter and jelly",
+    //     dinner: "mac and cheese"
+    // }
+  #+end_src
+** object literal
+変数をオブジェクトのプロパティ名として記述する場合、プロパティ名を省略できる。
+#+begin_src javascript
+  const name = "Alice";
+  const age = 9;
+
+  const person = { name, age };
+  console.log(person); // { name: "Alice", age: 9 }
+#+end_src
+
+関数もオブジェクトリテラル内に記述することが可能。
+#+begin_src javascript
+  const name = "Alice";
+  const age = 9;
+  const print = function() {
+    console.log(`${this.name}` is `${this.age} years old.`)
+  }
+
+  const person = { name, age, print };
+  person.print(); // "Alice is 9 years old."
+#+end_src
+
+オブジェクトリテラル内に関数を記述する際に、functionキーワードを省略できる。
+#+begin_src javascript
+  const skier = {
+      name,
+      sound,
+      powderYell() {
+          let yell = this.sound.toUpperCase();
+          console.log(`${yell} ${yell} ${yell}`);
+      },
+      speed(mph) {
+          this.speed = mph;
+          console.log("speed:", mph);
+      }
+  }
+#+end_src
 ** destructuring
 必要なプロパティのみを取捨選択して、代入できる機能。
 #+begin_src javascript
@@ -336,6 +457,20 @@ nでバージョンしても、読んでるのはnvmだったりする。.bash_p
 #+begin_src shell
 npm test -- --watch
 #+end_src
+** npm publishのやりかた
+- npm publishはローカルのファイルをアップロードして公開するので、ブランチ、 ~git status~ に気をつける。
+
+#+begin_src javascript
+  # タグ付けとコミットを行う。package.jsonも更新される。
+  npm version [ major | minor | patch ]
+  npm publish
+  git push --follow-tags
+#+end_src
+
+- [[https://qiita.com/akameco/items/de7718c6e10dc22be5b0][npm publishの流れとそれを1コマンド行うnp - Qiita]]
+- [[https://ja.wikipedia.org/wiki/%E3%82%BB%E3%83%9E%E3%83%B3%E3%83%86%E3%82%A3%E3%83%83%E3%82%AF%E3%83%90%E3%83%BC%E3%82%B8%E3%83%A7%E3%83%8B%E3%83%B3%E3%82%B0][セマンティックバージョニング - Wikipedia]]
+- [[https://semver.org/lang/ja/][セマンティック バージョニング 2.0.0 | Semantic Versioning]]
+- [[https://github.com/semver/semver][semver/semver: Semantic Versioning Specification]]
 * Tasks
 ** TODO 実際にinstallしてCIで確かめる
 プラグイン本体でテストしてるが、実際にnpm installするわけではないので依存パッケージ検知できないことがある。
