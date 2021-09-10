@@ -1,17 +1,19 @@
 [![textlint](https://github.com/kijimaD/roam/actions/workflows/lint.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/lint.yml)
 # roam note
-Notes using Emacs package: https://github.com/org-roam/org-roam
+
+- Notes using Emacs package: Org Roam https://github.com/org-roam/org-roam
+- published by Emacs.
 
 ## build
 ```
 make build # build site
 
-make graph # generate graph
+make roam-graph # generate graph
 ```
 
 ## lint
 ```shell
 npm install
 
-npx textlint *.org
+make lint
 ```
