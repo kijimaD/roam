@@ -168,7 +168,7 @@ https://github.com/kijimaD/textlint-plugin-org
 mdでは反応しないのでtext-lint-orgに原因がある。
 orgaが対応してない模様。コードに生URLのテストはなかった。そもそもorg的にはそういう文法の可能性。
 だるいのでルールをオフにするか、PR送るかだな。
-** 返り値の型をつけていない
+** TODO 返り値の型をつけていない
 Typescriptなのにanyのままにしている。
 あきらかにTxtNodeなので↓指定するのだが、エラー。
 #+begin_src typescript
@@ -212,5 +212,30 @@ astオブジェクト。
 うむむ。
 Type 'Document'がプロパティを持ってないとのことだが、必要な値を持っているように見える。
 ast-testでもパスするし、何よりプラグインとしてうまく動いてるのだが。
-** バグ
+** TODO ファイルが空のときエラー
 ファイルが空のとき、エラーになるような。positionがないエラー。
+** TODO 日付指定が含まれているとエラー
+日本語で挿入されたときにだめなようだ。
+アップデート前はできてたが対応しなくなったと。
+#+begin_quote
+Cannot destructure property 'value' of 'eat(...)' as it is undefined.
+#+end_quote
+
+これはorgファイルの側を英語にして解決させた。
+
+新たなエラーが出現。todoアイテムが見出しの直後にあると発生する。
+#+begin_quote
+TypeError: Cannot redefine property: parent
+at /home/kijima/Project/textlint-plugin-org/test/fixtures/lint-error.org
+    at Function.defineProperty (<anonymous>)
+    at Controller.enter (/home/kijima/Project/textlint-plugin-org/node_modules/@textlint/kernel/lib/src/task/textlint-core-task.js:125:24)
+    at Controller.__execute (/home/kijima/Project/textlint-plugin-org/node_modules/@textlint/ast-traverse/lib/src/index.js:43:31)
+    at Controller.traverse (/home/kijima/Project/textlint-plugin-org/node_modules/@textlint/ast-traverse/lib/src/index.js:114:28)
+    at TextLintCoreTask.startTraverser (/home/kijima/Project/textlint-plugin-org/node_modules/@textlint/kernel/lib/src/task/textlint-core-task.js:122:28)
+    at TextLintCoreTask.start (/home/kijima/Project/textlint-plugin-org/node_modules/@textlint/kernel/lib/src/task/linter-task.js:22:14)
+    at /home/kijima/Project/textlint-plugin-org/node_modules/@textlint/kernel/lib/src/task/task-runner.js:27:18
+#+end_quote
+
+ASTからtimestampを消すとテスト用のtextlint-kernelではエラーが出なくなった。
+前後で比較したから間違いない。
+が、本番のtextlintでは以前として出たままで、解決できない。のですべてrevertした。
