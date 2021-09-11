@@ -15,6 +15,153 @@ WEB開発に多用される。多くの実装、フレームワーク、パッ�
 学ぶ前に最新のJSをキャッチアップしておかないと、理解しにくい。
 * Memo
 新しく追加された構文などもあって、ややこしい。
+** 関数の合成
+関数型プログラミングでは小さい関数を定義する。
+それらを合成して、目的を達成する。
+
+- 返り値を工夫してメソッドチェーンにする。
+
+~replace~ は引数、返り値が文字列なので…。
+#+begin_src javascript
+  const template = "hh:mm:ss tt";
+  const clockTime = template
+        .replace("hh", "03")
+        .replace("mm", "33")
+        .replace("ss", "33")
+        .replace("tt", "PM");
+  console.log(clockTime);
+#+end_src
+といったことができる。
+
+- 高階関数を利用する([[https://www.oreilly.co.jp/books/9784873119380/][O'Reilly Japan - Reactハンズオンラーニング 第2版]] p.62)
+関数を集約させるところに注目。
+~compose~ で非破壊の関数をまとめて順番に評価している。
+#+begin_src javascript
+  const oneSecond = () => 1000;
+  const getCurrentTime = () => new Date();
+  const clear = () => console.clear();
+  const log = message => console.log(message);
+
+  const serializeClockTime = date => ({
+      hours: date.getHours(),
+      minutes: date.getMinutes(),
+      seconds: date.getSeconds()
+  });
+
+  const civilianHours = clockTime => ({
+      ...clockTime,
+      hours: clockTime.hours > 12 ? clockTime.hours - 12 : clockTime.hours
+  });
+
+  const appendAMPM = clockTime => ({
+      ...clockTime,
+      ampm: clockTime.hours >= 12 ? "PM" : "AM"
+  })
+
+  const display = target => time => target(time);
+
+  const formatClock = format => time =>
+        format
+        .replace("hh", time.hours)
+        .replace("mm", time.minutes)
+        .replace("ss", time.seconds)
+        .replace("tt", time.ampm);
+
+  const prependZero = key => clockTime => ({
+      ...clockTime,
+      [key]: clockTime[key] < 10 ? "0" + clockTime[key] : "" + clockTime[key]
+  });
+
+  const compose = (...fns) => arg =>
+        fns.reduce((conposed, f) => f(composed), arg);
+  // reduceの第一引数はコールバック関数、第二引数は初期値。
+  // 配列内の最初の関数は引数argで呼び出され、それ以降は前の関数の戻り値が次の関数の引数として渡される。
+  // 配列内の関数は順に呼び出され、最後の関数の戻り値が最終的に戻り値として返される。
+
+  const convertToCivilianTime = clockTime =>
+        compose(
+            appendAMPM,
+            civilianHours
+        )(clockTime);
+
+  const doubleDigits = civilianTime =>
+        compose(
+            prependZero("hours"),
+            prependZero("minutes"),
+            prependZero("seconds")
+        )(civilianTime);
+
+  const startTicking = () =>
+        setInterval(
+            compose(
+                clear,
+                getCurrentTime,
+                serializeClockTime,
+                convertToCivilianTime,
+                doubleDigits,
+                formatClock("hh:mm:ss tt"),
+                display(log)
+            ),
+            oneSecond()
+        );
+
+  startTicking();
+#+end_src
+** 再帰
+自身を呼び出す。非同期処理と組み合わさったときに真価を発揮する。
+また、データ構造の探索に用いられる。
+#+begin_src javascript
+  const countdown = (value, fn) => {
+      fn(value);
+      return value > 0 ? countdown(value - 1, fn) : value;
+  };
+
+  countdown(10, value => console.log(value));
+#+end_src
+** 高階関数/カリー化
+- ~userLogs~ 関数を定義。
+- ~userLogs~ に引数を渡して ~logs~ 関数を定義。
+- ~logs~ 関数に値を渡す。すべてのコンソールの先頭に"grandpa23"が出る。
+#+begin_src javascript
+  const userLogs = userName => message =>
+        console.log(`${userName} -> ${message}`);
+  const log = userLogs("grandpa23");
+  log("attempted to load 20 fake members");
+  getFakeMembers(20).then(
+      members => log(`successfully loaded ${members.length} members`)
+  ).catch(
+      error => log("encountered an error loading members")
+  );
+  // grandpa23 -> attempted to load 20 fake members
+  // grandpa23 -> successfully loaded 20 members
+  // grandpa23 -> attempted to load 20 fake members
+  // grandpa23 -> encountered an error loading members
+#+end_src
+** reduce
+配列を単一の値へ変換する。
+
+#+begin_src javascript
+  const ages = [21, 18, 42, 40, 64, 63, 34];
+  const maxAge = ages.reduce((max, age) => {
+      console.log(`${age} > ${max} = ${age > max}`);
+      if (age > max) {
+          return age;
+      } else {
+          return max;
+      }
+  }, 0);
+
+  console.log("maxAge", maxAge);
+
+  // 21 > 0 = true
+  // 18 > 21 = false
+  // 42 > 21 = true
+  // 40 > 42 = false
+  // 64 > 42 = true
+  // 63 > 64 = false
+  // 34 > 64 = false
+  // maxAge 64
+#+end_src
 ** 命令形 vs. 宣言型
 - [[https://www.oreilly.co.jp/books/9784873119380/][O'Reilly Japan - Reactハンズオンラーニング 第2版]] p39
 #+begin_quote
