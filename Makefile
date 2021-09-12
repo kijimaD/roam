@@ -14,3 +14,7 @@ count-table:
 	ruby file-count.rb >> ./index.org
 lint:
 	npx textlint *.org
+dev:
+	make build
+	make roam-graph
+	make lint
