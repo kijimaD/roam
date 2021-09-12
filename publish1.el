@@ -137,6 +137,31 @@
                          "./public/graph.svg"))
   (shell-command "rm /tmp/*.dot"))
 
+(setq org-agenda-exporter-settings
+      '((ps-number-of-columns 2)
+        (ps-landscape-mode t)
+        (org-agenda-add-entry-text-maxlines 0)
+        (org-agenda-show-log nil)
+        (org-agenda-with-colors t)
+        (org-agenda-remove-tags t)
+        (htmlize-output-type 'css)))
+
+(setq org-agenda-prefix-format
+      '((agenda . " %i %-12:c%?-12t% s")
+       (todo . " %i %-12:c")
+       (tags . " %i %-12:c")
+       (search . " %i %-12:c")))
+
+(setq org-agenda-custom-commands
+      '(("X" agenda ""
+         ((org-agenda-add-entry-text-maxlines 1))
+         ("./agenda.html"))))
+
+(defun org-agenda-export ()
+  (org-agenda nil "X")
+  (org-batch-store-agenda-views))
+(org-agenda-export)
+
 (defun kd/publish ()
   (org-publish-all t))
 
