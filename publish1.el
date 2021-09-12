@@ -157,6 +157,27 @@
          ((org-agenda-add-entry-text-maxlines 1))
          ("./agenda.html"))))
 
+(setq org-agenda-prefix-format
+      `((agenda . " %i %-12(vulpea-agenda-category)%?-12t% s")
+        (todo . " %i %-12(vulpea-agenda-category) ")
+        (tags . " %i %-12(vulpea-agenda-category) ")
+        (search . " %i %-12(vaulpea-agenda-category) ")))
+
+;; original -> https://d12frosted.io/posts/2020-06-24-task-management-with-roam-vol2.html
+(defun vulpea-agenda-category ()
+  (let* ((title (vulpea-buffer-prop-get "title")))
+    title))
+
+(defun vulpea-buffer-prop-get (name)
+  "Get a buffer property called NAME as a string."
+  (org-with-point-at 1
+    (if (re-search-forward (concat "^#\\+" name ": \\(.*\\)")
+                             (point-max) t)
+        (buffer-substring-no-properties
+         (match-beginning 1)
+         (match-end 1))
+      "")))
+
 (defun org-agenda-export ()
   (org-agenda nil "X")
   (org-batch-store-agenda-views))
