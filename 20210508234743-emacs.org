@@ -18,10 +18,15 @@ Emacsはテキストエディタの1つ。
 
 の機能を、共通の効率的なキーボード操作で扱える。
 * Tasks
+** TODO popper(emacs package)
+ウィンドウの出る方法を設定できるパッケージ。
+** TODO shackle.el設定
+** TODO EmacsとレプリカDB接続
+ローカルではできるが、SSHを使う方法がわかっていない。
+SQLを打つ時に不便なので。
+** TODO 踏み台SSH接続をEmacsでできるように
 ** TODO lsp-mode が何かと競合する
 消したときに近くの矩形が消されてしまう謎の挙動。
-** TODO Vterm settings
-- prompt settings
 ** TODO プロジェクトファイル限定のswitch-buffer。
 projectile-switch-to-buffer (C-c p b)
 ** TODO キーバインドの一覧を表示
@@ -40,8 +45,13 @@ faceまでコピーするから仕方ないのかな。
 一度読み取り専用バッファにして、コピーしないといけない。
 ** TODO GTAGSを使えるようにする
 読むときにたどれないと不便。
+** TODO 使ってないコマンドを開拓するパッケージ
+最初にコマンド一覧をどこからか出力する。
+それから、何かコマンドを打つごとに数を保存する。
+そうしてしばらく使っていくと、使ったことのないコマンドが明らかになる。
+カバレッジ率的にやっても面白そうだろう。
 * Memo
-** ~company-documentation~
+** company-documentation
 Read document on complementation list.
 ~Ctrl + Shift + h~
 ** interworking with vterm and shell
@@ -54,13 +64,6 @@ if [[ "$INSIDE_EMACS" = 'vterm' ]] \
 fi
 #+end_src
 [[https://naokton.hatenablog.com/entry/2020/12/08/150130][vterm-modeを使う - technokton]]
-** パッケージメモ
-- [[id:815a2c31-7ddb-40ad-bae0-f84e1cfd8de1][roam]]
-- mermaid-mode
-- alert.el
-- writeroom-mode
-- [[id:8c81068f-0e51-4d6d-bd1f-392ce8cb3a21][current-word-highlight]]
-- [[id:f0cefeef-6f99-4ce2-bff7-db6e508f2c84][create-link]]
 ** ソースメモ
 - org-lint
 https://github.com/kijimaD/emacs/blob/master/lisp/org/org-lint.el#L124
@@ -107,15 +110,13 @@ emacsのrspec-modeで、上記のようにしてspringを使うと、自動で�
 
 springを自動で検出してくれるらしい(何より今までできてた)。
 ~spring status~ でspringが動いてるかチェックする。動いてなかったら ~spring rspec~ する。
-** デバッグ起動
+** デバッグ起動する
 #+begin_src shell
 $ emacs -q
 # init読み込まない
 $ emacs --debug-init
 # デバッグモードで起動する
 #+end_src
-** ivy化
-[[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
 ** System Crafters IRC
 #+begin_quote
 erc-tls
@@ -123,14 +124,18 @@ irc.libera.chat
 6697
 /join #systemcrafters
 #+end_quote
-** mermaid jsをEmacsで使うhttps://github.com/abrochard/mermaid-mode
+** mermaid jsをEmacsで使う
 mermaidはプレーンテキストで図を作れるツール。[[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]で書かれている。
+これをEmacsで扱えるようにするのがmermaid-mode。
+
+- https://github.com/abrochard/mermaid-mode
+
 #+begin_src shell
 npm install -g @mermaid-js/mermaid-cli
 #+end_src
 して、C-cで画像にコンパイルできる。
-** LinuxをEmacs風キーバインドにする
-https://linuxfan.info/linux-emacs-keybindings-matome
+** 各Window managerでEmacs風キーバインドにする
+- https://linuxfan.info/linux-emacs-keybindings-matome
 
 #+begin_src shell
   # gnome
@@ -140,12 +145,31 @@ https://linuxfan.info/linux-emacs-keybindings-matome
   # Cinnamon
   gsettings set org.cinnamon.desktop.interface gtk-key-theme Emacs
 #+end_src
-** counsel-find-fileで新しいファイル
-補完選択になってしまって新しくファイルが作れないとき。
-C-M-jで新規作成できる。そんなのわかるか…。
-READMEの最後に書かれてた、(setq ivy-use-selectable-prompt t)をしとくと上下選択できるようになる。
+** counsel-find-fileで新しいファイルを作る
+補完選択になってしまって新しくファイルが作れないときは、C-M-jで新規作成できる。
+
+counselのリポジトリのREADMEの最後に書かれてた。
+#+begin_src emacs-lisp
+(setq ivy-use-selectable-prompt t)
+#+end_src
+をすると上下選択できるようになる。
 選択一覧にはでないのでわかりにくい。
-* Archives
+* Archive
+** DONE ivy化
+CLOSED: [2021-09-12 Sun 13:02]
+[[https://qiita.com/takaxp/items/2fde2c119e419713342b][helm を背に ivy の門を叩く - Qiita]]
+** DONE esh-autosuggestを導入する
+CLOSED: [2021-09-12 Sun 12:47]
+履歴を自動入力。
+#+begin_src emacs-lisp
+  (use-package esh-autosuggest
+    :hook (eshell-mode . esh-autosuggest-mode)
+    :config
+    (setq esh-autosuggest-delay 0.5)
+    (set-face-foreground 'company-preview-common "#4b5668")
+    (set-face-background 'company-preview nil))
+#+end_src
+[2021-09-07 火]
 ** DONE undo履歴を保持しないときがある
 CLOSED: [2021-08-17 Tue 09:41]
 3つくらいしか戻れないときがあり、原因は不明。
@@ -277,6 +301,9 @@ https://deno.land/#installation
 3. Add lsp settings to init.el
 
 - reference :: [[https://takeokunn.xyz/blog/post/emacs-lsp-mode][emacsにlsp-mode入れた - takeokunn's blog]]
+** DONE Vterm settings
+CLOSED: [2021-09-12 Sun 13:05]
+- prompt settings
 * References
 - org-modeのキーバインド :: https://qiita.com/takaxp/items/a5a3383d7358c58240d0
 - ブログ :: https://endlessparentheses.com/about.html
