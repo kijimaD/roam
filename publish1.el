@@ -137,6 +137,9 @@
                          "./public/graph.svg"))
   (shell-command "rm /tmp/*.dot"))
 
+;; (setq org-agenda-span 14)
+;; (setq org-agenda-start-day "-7d")
+
 (setq org-agenda-exporter-settings
       '((ps-number-of-columns 2)
         (ps-landscape-mode t)
@@ -144,18 +147,13 @@
         (org-agenda-show-log nil)
         (org-agenda-with-colors t)
         (org-agenda-remove-tags t)
-        (htmlize-output-type 'css)))
-
-(setq org-agenda-prefix-format
-      '((agenda . " %i %-12:c%?-12t% s")
-       (todo . " %i %-12:c")
-       (tags . " %i %-12:c")
-       (search . " %i %-12:c")))
+        (htmlize-output-type 'inline-css)))
 
 (setq org-agenda-custom-commands
       '(("X" agenda ""
-         ((org-agenda-add-entry-text-maxlines 1))
-         ("./agenda.html"))))
+         ((org-agenda-span 14)
+          (org-agenda-start-day "-7d"))
+         ("./public/agenda.html"))))
 
 (setq org-agenda-prefix-format
       `((agenda . " %i %-12(vulpea-agenda-category)%?-12t% s")
