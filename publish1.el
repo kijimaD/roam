@@ -137,9 +137,6 @@
                          "./public/graph.svg"))
   (shell-command "rm /tmp/*.dot"))
 
-;; (setq org-agenda-span 14)
-;; (setq org-agenda-start-day "-7d")
-
 (setq org-agenda-exporter-settings
       '((ps-number-of-columns 2)
         (ps-landscape-mode t)
@@ -153,6 +150,7 @@
       '(("X" agenda ""
          ((org-agenda-span 14)
           (org-agenda-start-day "-7d")
+          (org-agenda-start-with-log-mode t)
           (org-agenda-files '("./")))
          ("./public/agenda.html"))))
 
