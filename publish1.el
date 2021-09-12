@@ -152,7 +152,8 @@
 (setq org-agenda-custom-commands
       '(("X" agenda ""
          ((org-agenda-span 14)
-          (org-agenda-start-day "-7d"))
+          (org-agenda-start-day "-7d")
+          (org-agenda-files '("./")))
          ("./public/agenda.html"))))
 
 (setq org-agenda-prefix-format
