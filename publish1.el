@@ -137,6 +137,13 @@
                          "./public/graph.svg"))
   (shell-command "rm /tmp/*.dot"))
 
+(setq org-todo-keywords '((type "TODO" "WAIT" "|" "DONE" "CLOSE")))
+(setq org-todo-keyword-faces
+      '(("TODO" . (:foreground "orange" :weight bold))
+        ("WAIT" . (:foreground "HotPink2" :weight bold))
+        ("DONE" . (:foreground "green" :weight bold))
+        ("CLOSE" . (:foreground "DarkOrchid" :weight bold))))
+
 (setq org-agenda-exporter-settings
       '((ps-number-of-columns 2)
         (ps-landscape-mode t)
