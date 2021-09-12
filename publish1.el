@@ -182,12 +182,9 @@
          (match-end 1))
       "")))
 
-(defun org-agenda-export ()
+(defun kd/publish ()
+  (org-publish-all t)
   (org-agenda nil "X")
   (org-batch-store-agenda-views))
-(org-agenda-export)
-
-(defun kd/publish ()
-  (org-publish-all t))
 
 (provide 'publish)
