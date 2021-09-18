@@ -235,7 +235,7 @@ Probably a better way, from this answer:
 #+begin_src ruby
 let(:instance) { Class.new(GlobalClass).instance }
 #+end_src
-** 評価結果アノテーションを付与するxmp
+** 評価結果アノテーションを付与するxmpfilter
 便利ツールを集めた https://github.com/rcodetools/rcodetools というgemがある。
 そのなかにインラインで実行した結果を表示するスクリプトがある。
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]用のコードもある。https://github.com/rcodetools/rcodetools/blob/master/misc/rcodetools.el rubykitch氏作成。
@@ -244,16 +244,37 @@ let(:instance) { Class.new(GlobalClass).instance }
 #+end_src
 というように、irbのように挿入してくれる。とても便利。
 * Tasks
-** TODO rubocop issue
+** TODO rubocop issue(allow multiline)
 :LOGBOOK:
+CLOCK: [2021-09-16 Thu 23:04]--[2021-09-16 Thu 23:29] =>  0:25
+:END:
+https://github.com/rubocop/rubocop/issues/9365
+どうにかなりそうではある。コメントルールをマルチラインに対応させる。
+
+#+begin_src ruby
+  # これは検知される
+  foo(
+    # aaaa
+
+    22
+  )
+
+  # これはセーフ。これで間に合うように感じる。
+  foo(
+    # bbbb
+    22
+  )
+#+end_src
+
+コメントのあとは空白行を無視したいらしいが、あまり意味を感じない。実装はできるが、目的があまりよくないように思える。
+** TODO rubocop issue(yoda expression)
+:LOGBOOK:
+CLOCK: [2021-09-14 Tue 23:00]--[2021-09-14 Tue 23:25] =>  0:25
 CLOCK: [2021-09-14 Tue 00:10]--[2021-09-14 Tue 00:35] =>  0:25
 CLOCK: [2021-09-13 Mon 22:57]--[2021-09-13 Mon 23:22] =>  0:25
 CLOCK: [2021-09-13 Mon 22:26]--[2021-09-13 Mon 22:51] =>  0:25
 CLOCK: [2021-09-13 Mon 21:42]--[2021-09-13 Mon 22:07] =>  0:25
 :END:
-https://github.com/rubocop/rubocop/issues/9365
-どうにかなりそうではある。コメントルールをマルチラインに対応させる。
-
 https://github.com/rubocop/rubocop/issues/9222
 New cop for yoda expressions.
 
@@ -274,6 +295,16 @@ TSLintにすでにあるので、実装の参考にすればいい。
     # b -> rhs
   end
 #+end_src
+
+conditionの方と合体させてもよさそう。TSLintはそうしてる。共通しているところは多い。
+全く別のcopにする方針で一応書けたが、本質的にcondition operatorとやってることは同じだ。
+
+方式が違うので難しいな。
+明らかにTSLintのやり方が簡潔に書かれているように見える。rubocopの方はゴテゴテと条件が多い。単に対応オペレータを増やすだけだが、よくわからない。conditionを前提に書かれているところも難しい。
+
+ちょっとやってどうにかなるものでなさそう。追加されないのには、理由があった。
+まず既存のがごちゃついてるので、それを整理する必要がある。
+1ヶ月くらいかけて取り組んでみる。
 ** TODO Practical Ruby Project
 Rubyでの面白いプロジェクトを紹介している。
 - Lispを実装。
