@@ -182,6 +182,12 @@
          (match-end 1))
       "")))
 
+(defun kd/update-index-table ()
+  "update index.org table"
+  (let ((org-agenda-files '("./")))
+    (find-file "index.org")
+    (org-dblock-update t)))
+
 (defun kd/publish ()
   (org-publish-all t)
   (org-agenda nil "X")

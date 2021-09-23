@@ -1,6 +1,7 @@
 server:
 	cd ./public; python -m SimpleHTTPServer 8000
 build:
+	emacs --batch -l ./publish1.el --funcall kd/update-index-table
 	emacs --batch -l ./publish1.el --funcall kd/publish
 roam-graph:
 	emacs --batch -l ./publish1.el --funcall org-roam-graph-save
