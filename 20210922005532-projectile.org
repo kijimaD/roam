@@ -8,6 +8,59 @@ projectileは[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] packageの1つ�
 
 - Repository :: [[https://github.com/bbatsov/projectile][bbatsov/projectile]]
 * Memo
+** projectile issue#1709
+- [[https://github.com/bbatsov/projectile/issues/1709][projectile-switch-buffers with prefix argument plus k also kills current buffer · Issue #1709 · bbatsov/projectile]]
+
+~projectile-project-buffer-p~ が誤検知してる。現在のバッファがプロジェクトでないのにプロジェクト判定し、それで消すときに含まれてしまう。
+#+begin_src emacs-lisp
+  (defun projectile-project-buffer-p (buffer project-root)
+  "Check if BUFFER is under PROJECT-ROOT."
+  (with-current-buffer buffer
+    (and (not (string-prefix-p " " (buffer-name buffer)))
+         (not (projectile-ignored-buffer-p buffer))
+         default-directory ;; これが怪しい。どこから取ってる？
+         (string-equal (file-remote-p default-directory)
+                       (file-remote-p project-root))
+         (not (string-match-p "^http\\(s\\)?://" default-directory))
+         (string-prefix-p project-root (file-truename default-directory) (eq system-type 'windows-nt)))))
+#+end_src
+
+~default-directory~ が、switch先のdirectoryを指している。なのでtrueになる。
+つまり消そうとしているdirectoryではないがtrueを返し誤って消される。
+
+初回のループで変数 ~default-directory~ が引数のbufferと合っていない。現在開いているバッファが入り、現在開いているものまで消してしまう。
+無理やり ~(cd ...)~ とすれば変更できるが、いかしてない。
+
+~default-directory~ を使わない方法でやるとこうなる。
+ほかにも変更が必要そうだな。
+
+#+begin_src emacs-lisp
+  (defun projectile-project-buffer-p (buffer project-root)
+    "Check if BUFFER is under PROJECT-ROOT."
+    (with-current-buffer buffer
+      (and (not (string-prefix-p " " (buffer-name buffer)))
+           (not (projectile-ignored-buffer-p buffer))
+           (file-name-directory buffer-file-name)
+           (string-equal (file-remote-p (file-name-directory buffer-file-name))
+                         (file-remote-p project-root))
+           (not (string-match-p "^http\\(s\\)?://" (file-name-directory buffer-file-name)))
+           (string-prefix-p project-root (file-truename (file-name-directory buffer-file-name)) (eq system-type 'windows-nt)))))
+#+end_src
+
+これは合ってなさそうだ。別の場所が動かなくなった。
+
+取得できない理由。current buffer以外にセットされているから。
+ループを進んだ後はなぜできてるのか。
+
+- [[https://stackoverflow.com/questions/28196228/emacs-how-to-get-directory-of-current-buffer][elisp - Emacs, how to get directory of current buffer? - Stack Overflow]]
+
+#+begin_quote
+Sometimes default-directory for the current buffer may be set to something other than the current directory of the file the buffer is currently visiting, in which case the solution above wouldn't give what the asker was looking for.
+
+In such cases, you can use the file-name-directory method, like so: (file-name-directory buffer-file-name)
+#+end_quote
+
+初回以降の ~default-directory~ を変えている要素は何だ。何か変わっているはずだが、単なるループで他の条件は一切変わってないようだな…。
 * Tasks
 * Reference
 * Archive

@@ -975,59 +975,21 @@ nil値が返されるような要素全てをリストにして返す。
 
 文言のところどころを読んだ覚えがあるのだが、コードは全然覚えてない…。
 * memo
-** projectile issue#1709
-- [[https://github.com/bbatsov/projectile/issues/1709][projectile-switch-buffers with prefix argument plus k also kills current buffer · Issue #1709 · bbatsov/projectile]]
+** ~format-spec~ で設定の幅を広げる
+~(format-spec)~ で文字と関数をマッピングして、ユーザが設定しやすくできる。
 
-~projectile-project-buffer-p~ が誤検知してる。現在のバッファがプロジェクトでないのにプロジェクト判定し、それで消すときに含まれてしまう。
+- https://github.com/magit/magit/blob/f805f6a7720aeb894e9a58f0b36769ebdb53dd7c/lisp/magit-mode.el#L921
 #+begin_src emacs-lisp
-  (defun projectile-project-buffer-p (buffer project-root)
-  "Check if BUFFER is under PROJECT-ROOT."
-  (with-current-buffer buffer
-    (and (not (string-prefix-p " " (buffer-name buffer)))
-         (not (projectile-ignored-buffer-p buffer))
-         default-directory ;; これが怪しい。どこから取ってる？
-         (string-equal (file-remote-p default-directory)
-                       (file-remote-p project-root))
-         (not (string-match-p "^http\\(s\\)?://" default-directory))
-         (string-prefix-p project-root (file-truename default-directory) (eq system-type 'windows-nt)))))
+  (format-spec
+       magit-buffer-name-format ;; "%x%M%v: %t%x"
+       `((?m . ,m)
+         (?M . ,(if (eq mode 'magit-status-mode) "magit" m))
+         (?v . ,(or v ""))
+         (?V . ,(if v (concat " " v) ""))
+         (?t . ,n)
+         (?x . ,(if magit-uniquify-buffer-names "" "*"))
+         (?T . ,(if magit-uniquify-buffer-names n (concat n "*")))))
 #+end_src
-
-~default-directory~ が、switch先のdirectoryを指している。なのでtrueになる。
-つまり消そうとしているdirectoryではないがtrueを返し誤って消される。
-
-初回のループで変数 ~default-directory~ が引数のbufferと合っていない。現在開いているバッファが入り、現在開いているものまで消してしまう。
-無理やり ~(cd ...)~ とすれば変更できるが、いかしてない。
-
-~default-directory~ を使わない方法でやるとこうなる。
-ほかにも変更が必要そうだな。
-
-#+begin_src emacs-lisp
-  (defun projectile-project-buffer-p (buffer project-root)
-    "Check if BUFFER is under PROJECT-ROOT."
-    (with-current-buffer buffer
-      (and (not (string-prefix-p " " (buffer-name buffer)))
-           (not (projectile-ignored-buffer-p buffer))
-           (file-name-directory buffer-file-name)
-           (string-equal (file-remote-p (file-name-directory buffer-file-name))
-                         (file-remote-p project-root))
-           (not (string-match-p "^http\\(s\\)?://" (file-name-directory buffer-file-name)))
-           (string-prefix-p project-root (file-truename (file-name-directory buffer-file-name)) (eq system-type 'windows-nt)))))
-#+end_src
-
-これは合ってなさそうだ。別の場所が動かなくなった。
-
-取得できない理由。current buffer以外にセットされているから。
-ループを進んだ後はなぜできてるのか。
-
-- [[https://stackoverflow.com/questions/28196228/emacs-how-to-get-directory-of-current-buffer][elisp - Emacs, how to get directory of current buffer? - Stack Overflow]]
-
-#+begin_quote
-Sometimes default-directory for the current buffer may be set to something other than the current directory of the file the buffer is currently visiting, in which case the solution above wouldn't give what the asker was looking for.
-
-In such cases, you can use the file-name-directory method, like so: (file-name-directory buffer-file-name)
-#+end_quote
-
-初回以降の ~default-directory~ を変えている要素は何だ。何か変わっているはずだが、単なるループで他の条件は一切変わってないようだな…。
 ** 必須ではない依存パッケージの書き方
 変数なら
 (defvar w3m-current-url)
