@@ -10,19 +10,52 @@ Emacsのkiller appの一角で、根強い人気がある。
 - 脚注
 - PDFをはじめ各種形式への変換
 * Memo
+** org-protocolの設定
+:LOGBOOK:
+CLOCK: [2021-09-26 Sun 09:45]--[2021-09-26 Sun 09:55] =>  0:10
+:END:
+<2021-09-26 Sun>
+
+- [[https://github.com/sprig/org-capture-extension][sprig/org-capture-extension: A Chrome and firefox extension facilitating org-capture in emacs]]
+Chrome拡張としてある。ここのReadmeに書いてあるコマンドを実行する。
+
+- emacsclientをorg-protocolのハンドラとして登録する。たぶんプロトコルと対応するアプリケーションを選ぶ、という処理だろう。httpのときはブラウザを起動する、みたいな。
+#+begin_src shell
+cat > "${HOME}/.local/share/applications/org-protocol.desktop" << EOF
+[Desktop Entry]
+Name=org-protocol
+Exec=emacsclient %u
+Type=Application
+Terminal=false
+Categories=System;
+MimeType=x-scheme-handler/org-protocol;
+EOF
+#+end_src
+
+そして↓。Linux MintでもOKだった。
+
+#+begin_src shell
+update-desktop-database ~/.local/share/applications/
+#+end_src
+
+OSの設定は完了。
+Emacsの設定を追加する。
+template名をちゃんと設定しないと、起動しない。
+
+#+begin_src emacs-lisp
+(setq org-capture-templates `(
+    ("p" "Protocol" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+        "* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?")
+    ("L" "Protocol Link" entry (file+headline ,(concat org-directory "notes.org") "Inbox")
+        "* %? [[%:link][%:description]] \nCaptured On: %U")
+))
+#+end_src
+
+Chromeに拡張機能をインストールしてクリックすると、Emacsが立ち上がる。
 ** メモを取るのにはorg-captureを使う
-タスクが発生もしくは何かメモすることがあれば、 ~org-capture~ でまず簡単に記録、放り込んでおく。
 ** エクスポートしないタグ
 ~C-c C-q~ で ~noexport~ を指定するとその場所はエクスポートされない。
 * Tasks
-** TODO org-pomodoro効果音追加
-** TODO exampleを完成させる
-どういう意味なのか、全く思い出せない。
-** TODO org-captureでメモ元リンクを記録しないようにする
-** TODO org-pomodoro完了後メモを残すように設定を復活
-:LOGBOOK:
-CLOCK: [2021-09-19 Sun 15:37]--[2021-09-19 Sun 16:02] =>  0:25
-:END:
 * Example
 ** チェックリスト
 ~C-c~ でチェックできる。
@@ -37,4 +70,18 @@ CLOCK: [2021-09-19 Sun 15:37]--[2021-09-19 Sun 16:02] =>  0:25
 
 [fn:1] The link is: https://orgmode.org
 * Reference
-* Archives
+* Archive
+** CLOSE exampleを完成させる
+CLOSED: [2021-09-26 Sun 09:41]
+どういう意味なのか、全く思い出せない。
+ああ、org-modeの使用例のページを作るということか。
+別にいらないだろう。実際の例で示せばいい。
+** DONE org-captureでメモ元リンクを記録しないようにする
+CLOSED: [2021-09-26 Sun 09:41]
+** CLOSE org-pomodoro完了後メモを残すように設定を復活
+CLOSED: [2021-09-26 Sun 09:42]
+:LOGBOOK:
+CLOCK: [2021-09-19 Sun 15:37]--[2021-09-19 Sun 16:02] =>  0:25
+:END:
+
+別に見ないから不要だろう。
