@@ -10,6 +10,13 @@ projectileは[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] packageの1つ�
 * Memo
 * Tasks
 ** TODO projectile issue#1709
+:LOGBOOK:
+CLOCK: [2021-09-28 Tue 10:21]--[2021-09-28 Tue 10:50] =>  0:29
+CLOCK: [2021-09-28 Tue 09:28]--[2021-09-28 Tue 09:43] =>  0:15
+CLOCK: [2021-09-28 Tue 00:36]--[2021-09-28 Tue 01:11] =>  0:35
+CLOCK: [2021-09-27 Mon 23:51]--[2021-09-28 Tue 00:05] =>  0:14
+CLOCK: [2021-09-27 Mon 08:16]--[2021-09-27 Mon 10:37] =>  2:21
+:END:
 - [[https://github.com/bbatsov/projectile/issues/1709][projectile-switch-buffers with prefix argument plus k also kills current buffer · Issue #1709 · bbatsov/projectile]]
 
 ~projectile-project-buffer-p~ が誤検知してる。現在のバッファがプロジェクトでないのにプロジェクト判定し、それで消すときに含まれてしまう。
@@ -48,8 +55,6 @@ projectileは[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] packageの1つ�
            (string-prefix-p project-root (file-truename (file-name-directory buffer-file-name)) (eq system-type 'windows-nt)))))
 #+end_src
 
-これは合ってなさそうだ。別の場所が動かなくなった。
-
 取得できない理由。current buffer以外にセットされているから。
 ループを進んだ後はなぜできてるのか。
 
@@ -62,5 +67,30 @@ In such cases, you can use the file-name-directory method, like so: (file-name-d
 #+end_quote
 
 初回以降の ~default-directory~ を変えている要素は何だ。何か変わっているはずだが、単なるループで他の条件は一切変わってないようだな…。
+
+テストで再現できない。
+
+project-root: ~/home/kijima/.emacs.d/~
+buffer: projectile.el
+default-directory: .emacs.d → これがおかしい。
+
+projectile-switch-project → projectile-switch-project-by-name(名前で選択) → アクション選択
+projectile-project-buffers → projectile-project-buffer-p
+
+#+begin_src emacs-lisp
+  (it "ensures the buffer is switched immediately"
+        (let ((projectile-switch-project-action
+               (lambda () (switch-to-buffer (find-file-noselect "file" t)))))
+          (projectile-test-with-sandbox
+           (projectile-test-with-files
+            ("project/"
+             "project/file")
+            (projectile-add-known-project (file-name-as-directory (expand-file-name "project")))
+            (projectile-switch-project-by-name (file-name-as-directory (expand-file-name "project")))
+
+            (expect (current-buffer) :to-be (get-file-buffer "project/file"))))))
+#+end_src
+
+テストでprojectバッファを開いてる状態にするにはどうしたらいいんだ。
 * Reference
 * Archive
