@@ -1,0 +1,637 @@
+:PROPERTIES:
+:ID:       5ddcb141-1520-4d9e-9cb2-64e5f5c1cc82
+:END:
+#+title: 100knocks
+
+* 概要
+[[https://github.com/The-Japan-DataScientist-Society/100knocks-preprocess][データサイエンス100本ノック（構造化データ加工編）]]はデータ解析を各種言語([[id:8b69b8d4-1612-4dc5-8412-96b431fdd101][SQL]], R, [[id:a6c9c9ad-d9b1-4e13-8992-75d8590e464c][Python]])で練習するためのリポジトリ。
+環境構築、データのセットが[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]で簡単に準備できる。
+* 環境構築
+[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] / [[id:7e85e3f3-a6b9-447e-9826-307a3618dac8][org-mode]] で実行できるようにする。
+
+- repository :: - [[https://github.com/The-Japan-DataScientist-Society/100knocks-preprocess][データサイエンス100本ノック]]
+
+- READMEの通りに ~docker-compose~ を実行する。
+- 標準のJupyter Notebookで問題なくアクセスできることを確認する。
+- init.elに追加。babelでSQLをロードする。これをしないと実行できない。
+#+begin_src emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)))
+#+end_src
+- 実行したいorgファイル見出しにDB接続設定を追加。100本ノックの[[id:752d725e-b834-4784-8110-c58f89bd4fa2][PostgreSQL]]のデフォルト設定になっている。
+  #+begin_src emacs-lisp
+  :PROPERTIES:
+    :header-args+: :results table
+    :header-args+: :engine postgresql
+    :header-args+: :dbhost localhost
+    :header-args+: :dbuser postgres
+    :header-args+: :dbpassword postgres12345
+    :header-args+: :database dsdojo_db
+  :END:
+  #+end_src
+- コードブロックで ~C-c C-c~ で実行できる。
+#+begin_quote
+#+begin_src sql
+  SELECT COUNT(1) FROM store CROSS JOIN product;
+#+end_src
+
+#+RESULTS:
+|  count |
+|--------|
+| 531590 |
+#+end_quote
+
+* Memo
+:PROPERTIES:
+  :header-args+: :results table
+  :header-args+: :engine postgresql
+  :header-args+: :dbhost localhost
+  :header-args+: :dbuser postgres
+  :header-args+: :dbpassword postgres12345
+  :header-args+: :database dsdojo_db
+  :header-args+: :eval yes
+:END:
+** 等しい場合は同一順位: RANK
+#+begin_quote
+S-019: レシート明細テーブル（receipt）に対し、1件あたりの売上金額（amount）が高い順にランクを付与し、先頭10件を抽出せよ。項目は顧客ID（customer_id）、売上金額（amount）、付与したランクを表示させること。なお、売上金額（amount）が等しい場合は同一順位を付与するものとする。
+#+end_quote
+
+#+begin_src sql
+  SELECT customer_id, amount, RANK() OVER(ORDER BY amount DESC) AS ranking
+  FROM receipt
+  LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_id    | amount | ranking |
+|----------------+--------+---------|
+| CS011415000006 |  10925 |       1 |
+| ZZ000000000000 |   6800 |       2 |
+| CS028605000002 |   5780 |       3 |
+| ZZ000000000000 |   5480 |       4 |
+| ZZ000000000000 |   5480 |       4 |
+| CS015515000034 |   5480 |       4 |
+| CS021515000089 |   5440 |       7 |
+| ZZ000000000000 |   5440 |       7 |
+| CS020515000102 |   5280 |       9 |
+| CS021515000089 |   5280 |       9 |
+** 等しい場合でも別順位: ROW_NUMBER
+#+begin_quote
+S-020: レシート明細テーブル（receipt）に対し、1件あたりの売上金額（amount）が高い順にランクを付与し、先頭10件を抽出せよ。項目は顧客ID（customer_id）、売上金額（amount）、付与したランクを表示させること。なお、売上金額（amount）が等しい場合でも別順位を付与すること。
+#+end_quote
+
+#+begin_src sql
+  SELECT customer_id, amount, ROW_NUMBER() OVER(ORDER BY amount DESC) AS ranking
+  FROM receipt
+  LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_id    | amount | ranking |
+|----------------+--------+---------|
+| CS011415000006 |  10925 |       1 |
+| ZZ000000000000 |   6800 |       2 |
+| CS028605000002 |   5780 |       3 |
+| CS015515000034 |   5480 |       4 |
+| ZZ000000000000 |   5480 |       5 |
+| ZZ000000000000 |   5480 |       6 |
+| ZZ000000000000 |   5440 |       7 |
+| CS021515000089 |   5440 |       8 |
+| ZZ000000000000 |   5280 |       9 |
+| CS009415000038 |   5280 |      10 |
+** ユニーク件数
+#+begin_quote
+S-022: レシート明細テーブル（receipt）の顧客ID（customer_id）に対し、ユニーク件数をカウントせよ。
+#+end_quote
+
+#+begin_src sql
+  SELECT count(distinct customer_id) FROM receipt
+#+end_src
+
+#+RESULTS:
+| count |
+|-------|
+|  8307 |
+** GROUP BY, 日付でのMAX
+#+begin_quote
+S-024: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに最も新しい売上日（sales_ymd）を求め、10件表示せよ。
+#+end_quote
+
+#+begin_src sql
+  SELECT customer_id, MAX(sales_ymd)
+  FROM receipt
+  GROUP BY customer_id
+  LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_id    |      max |
+|----------------+----------|
+| CS001311000059 | 20180211 |
+| CS004614000122 | 20181228 |
+| CS003512000043 | 20180106 |
+| CS011615000061 | 20190503 |
+| CS029212000033 | 20180621 |
+| CS007515000119 | 20190511 |
+| CS034515000123 | 20190708 |
+| CS004315000058 | 20170517 |
+| CS026414000014 | 20190720 |
+| CS001615000099 | 20170729 |
+
+** 集計結果に対する条件: HAVING
+#+begin_quote
+S-026: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに最も新しい売上日（sales_ymd）と古い売上日を求め、両者が異なるデータを10件表示せよ。
+#+end_quote
+
+#+begin_src sql
+SELECT customer_id, MAX(sales_ymd), MIN(sales_ymd)
+FROM receipt
+GROUP BY customer_id
+HAVING MAX(sales_ymd) != MIN(sales_ymd)
+LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_id    |      max |      min |
+|----------------+----------+----------|
+| CS029212000033 | 20180621 | 20170318 |
+| CS007515000119 | 20190511 | 20170201 |
+| CS034515000123 | 20190708 | 20170527 |
+| CS026414000014 | 20190720 | 20170718 |
+| CS010515000082 | 20181204 | 20180518 |
+| CS019315000045 | 20170920 | 20170423 |
+| CS008513000099 | 20190308 | 20170722 |
+| CS007615000070 | 20191025 | 20170929 |
+| CS025415000155 | 20191026 | 20170314 |
+| CS016414000063 | 20190617 | 20170109 |
+
+** 中央値: PERCENTILE_CONT
+#+begin_quote
+S-028: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の中央値を計算し、降順でTOP5を表示せよ。
+#+end_quote
+
+#+begin_src sql
+  SELECT
+  store_cd,
+  PERCENTILE_CONT(0.5) WITHIN GROUP(ORDER BY amount) as amount_50per
+  FROM receipt
+  GROUP BY store_cd
+  ORDER BY amount_50per desc
+  LIMIT 5
+#+end_src
+
+#+RESULTS:
+| store_cd | amount_50per |
+|----------+--------------|
+| S13052   |          190 |
+| S14010   |          188 |
+| S14050   |          185 |
+| S13003   |          180 |
+| S13018   |          180 |
+
+** サブクエリ: WITH
+#+begin_quote
+S-029: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに商品コード（product_cd）の最頻値を求めよ。
+#+end_quote
+
+#+begin_src sql
+  WITH product_mode AS (
+      SELECT store_cd,product_cd, COUNT(1) as mode_cnt,
+          RANK() OVER(PARTITION BY store_cd ORDER BY COUNT(1) DESC) AS rnk
+      FROM receipt
+      GROUP BY store_cd,product_cd
+  )
+  SELECT store_cd,product_cd, mode_cnt
+  FROM product_mode
+  WHERE rnk = 1
+  ORDER BY store_cd,product_cd;
+#+end_src
+
+#+RESULTS:
+| store_cd | product_cd | mode_cnt |
+|----------+------------+----------|
+| S12007   | P060303001 |       72 |
+| S12013   | P060303001 |      107 |
+| S12014   | P060303001 |       65 |
+| S12029   | P060303001 |       92 |
+| S12030   | P060303001 |      115 |
+| S13001   | P060303001 |       67 |
+| S13002   | P060303001 |       78 |
+| S13003   | P071401001 |       65 |
+| S13004   | P060303001 |       88 |
+| S13005   | P040503001 |       36 |
+| S13008   | P060303001 |       77 |
+| S13009   | P060303001 |       64 |
+| S13015   | P071401001 |       34 |
+| S13016   | P071102001 |       32 |
+| S13017   | P060101002 |       31 |
+| S13018   | P071401001 |       47 |
+| S13019   | P071401001 |       70 |
+| S13020   | P071401001 |       79 |
+| S13031   | P060303001 |      115 |
+| S13032   | P060303001 |       85 |
+| S13035   | P040503001 |       39 |
+| S13037   | P060303001 |       88 |
+| S13038   | P060303001 |       41 |
+| S13039   | P071401001 |       36 |
+| S13041   | P071401001 |       70 |
+| S13043   | P060303001 |       56 |
+| S13044   | P060303001 |       96 |
+| S13051   | P050102001 |        5 |
+| S13051   | P071003001 |        5 |
+| S13051   | P080804001 |        5 |
+| S13052   | P050101001 |        4 |
+| S14006   | P060303001 |       70 |
+| S14010   | P060303001 |       68 |
+| S14011   | P060101001 |       51 |
+| S14012   | P060303001 |      142 |
+| S14021   | P060101001 |       30 |
+| S14022   | P060303001 |       71 |
+| S14023   | P071401001 |       70 |
+| S14024   | P060303001 |       96 |
+| S14025   | P060303001 |       46 |
+| S14026   | P071401001 |       40 |
+| S14027   | P060303001 |      152 |
+| S14028   | P060303001 |      140 |
+| S14033   | P071401001 |       68 |
+| S14034   | P060303001 |       71 |
+| S14036   | P040503001 |       19 |
+| S14036   | P060101001 |       19 |
+| S14040   | P060303001 |       80 |
+| S14042   | P050101001 |       34 |
+| S14045   | P060303001 |       33 |
+| S14046   | P060303001 |       71 |
+| S14047   | P060303001 |       36 |
+| S14048   | P050101001 |       17 |
+| S14049   | P060303001 |       55 |
+| S14050   | P060303001 |        9 |
+
+** 標本分散: VAR_SAMP
+#+begin_quote
+S-030: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の標本分散を計算し、降順でTOP5を表示せよ。
+#+end_quote
+
+#+begin_src sql
+SELECT store_cd, var_samp(amount) as vars_amount
+FROM receipt
+GROUP BY store_cd
+ORDER BY vars_amount desc
+LIMIT 5
+#+end_src
+
+#+RESULTS:
+| store_cd |         vars_amount |
+|----------+---------------------|
+| S13052   | 441863.252526233968 |
+| S14011   | 306442.242431568709 |
+| S14034   | 297068.392740060738 |
+| S13001   | 295558.842617712478 |
+| S13015   | 295427.197085853584 |
+
+** 標本標準偏差: STDDEV_SAMP
+#+begin_quote
+S-031: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の標本標準偏差を計算し、降順でTOP5を表示せよ。
+#+end_quote
+
+#+begin_src sql
+SELECT store_cd, stddev_samp(amount) as stds_amount
+FROM receipt
+GROUP BY store_cd
+ORDER BY stds_amount desc
+LIMIT 5
+#+end_src
+
+#+RESULTS:
+| store_cd |      stds_amount |
+|----------+------------------|
+| S13052   | 664.727953772244 |
+| S14011   | 553.572255836190 |
+| S14034   | 545.039808399406 |
+| S13001   | 543.653237475610 |
+| S13015   | 543.532149082144 |
+** %刻み: PERCENTILE_CONT
+#+begin_quote
+S-032: レシート明細テーブル（receipt）の売上金額（amount）について、25％刻みでパーセンタイル値を求めよ。
+#+end_quote
+
+#+begin_src sql
+SELECT
+    PERCENTILE_CONT(0.25) WITHIN GROUP(ORDER BY amount) as amount_25per,
+    PERCENTILE_CONT(0.50) WITHIN GROUP(ORDER BY amount) as amount_50per,
+    PERCENTILE_CONT(0.75) WITHIN GROUP(ORDER BY amount) as amount_75per,
+    PERCENTILE_CONT(1.0) WITHIN GROUP(ORDER BY amount) as amount_100per
+FROM receipt
+#+end_src
+
+#+RESULTS:
+| amount_25per | amount_50per | amount_75per | amount_100per |
+|--------------+--------------+--------------+---------------|
+|          102 |          170 |          288 |         10925 |
+
+** サブクエリ: WITH
+#+begin_quote
+S-034: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに売上金額（amount）を合計して全顧客の平均を求めよ。ただし、顧客IDが"Z"から始まるのものは非会員を表すため、除外して計算すること。
+#+end_quote
+
+#+begin_src sql
+WITH customer_amount AS (
+    SELECT customer_id, SUM(amount) AS sum_amount
+    FROM receipt
+    WHERE customer_id not like 'Z%'
+    GROUP BY customer_id
+)
+SELECT AVG(sum_amount) from customer_amount
+#+end_src
+
+#+RESULTS:
+|                   avg |
+|-----------------------|
+| 2547.7422345292559595 |
+
+** WHEREの条件に集約関数を使う
+#+begin_quote
+S-035: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに売上金額（amount）を合計して全顧客の平均を求め、平均以上に買い物をしている顧客を抽出せよ。ただし、顧客IDが"Z"から始まるのものは非会員を表すため、除外して計算すること。なお、データは10件だけ表示させれば良い。
+#+end_quote
+
+#+begin_src sql
+WITH customer_amount AS (
+    SELECT customer_id, SUM(amount) AS sum_amount
+    FROM receipt
+    WHERE customer_id not like 'Z%'
+    GROUP BY customer_id
+)
+SELECT customer_id, sum_amount
+FROM customer_amount
+WHERE sum_amount >= (SELECT AVG(sum_amount) from customer_amount)
+limit 10
+#+end_src
+
+#+RESULTS:
+| customer_id    | sum_amount |
+|----------------+------------|
+| CS029212000033 |       3604 |
+| CS007515000119 |       7157 |
+| CS034515000123 |       3699 |
+| CS026414000014 |       6671 |
+| CS007615000070 |       2975 |
+| CS016414000063 |       6207 |
+| CS012514000018 |       2562 |
+| CS029515000142 |       3420 |
+| CS015215000021 |       3090 |
+| CS039814000011 |       8031 |
+
+** 結合のスマートな書き方
+#+begin_quote
+S-036: レシート明細テーブル（receipt）と店舗テーブル（store）を内部結合し、レシート明細テーブルの全項目と店舗テーブルの店舗名（store_name）を10件表示させよ。
+#+end_quote
+
+#+begin_src sql
+SELECT r.*, s.store_name
+FROM receipt r
+JOIN store s
+ON r.store_cd = s.store_cd
+LIMIT 10
+#+end_src
+
+#+RESULTS:
+| sales_ymd | sales_epoch | store_cd | receipt_no | receipt_sub_no | customer_id    | product_cd | quantity | amount | store_name |
+|-----------+-------------+----------+------------+----------------+----------------+------------+----------+--------+------------|
+|  20181103 |  1541203200 | S14006   |        112 |              1 | CS006214000001 | P070305012 |        1 |    158 | 葛が谷店   |
+|  20181118 |  1542499200 | S13008   |       1132 |              2 | CS008415000097 | P070701017 |        1 |     81 | 成城店     |
+|  20170712 |  1499817600 | S14028   |       1102 |              1 | CS028414000014 | P060101005 |        1 |    170 | 二ツ橋店   |
+|  20190205 |  1549324800 | S14042   |       1132 |              1 | ZZ000000000000 | P050301001 |        1 |     25 | 新山下店   |
+|  20180821 |  1534809600 | S14025   |       1102 |              2 | CS025415000050 | P060102007 |        1 |     90 | 大和店     |
+|  20190605 |  1559692800 | S13003   |       1112 |              1 | CS003515000195 | P050102002 |        1 |    138 | 狛江店     |
+|  20181205 |  1543968000 | S14024   |       1102 |              2 | CS024514000042 | P080101005 |        1 |     30 | 三田店     |
+|  20190922 |  1569110400 | S14040   |       1102 |              1 | CS040415000178 | P070501004 |        1 |    128 | 長津田店   |
+|  20170504 |  1493856000 | S13020   |       1112 |              2 | ZZ000000000000 | P071302010 |        1 |    770 | 十条仲原店 |
+|  20191010 |  1570665600 | S14027   |       1102 |              1 | CS027514000015 | P071101003 |        1 |    680 | 南藤沢店   |
+
+** 値がないときのデフォルト値: COALESCE
+#+begin_quote
+S-038: 顧客テーブル（customer）とレシート明細テーブル（receipt）から、各顧客ごとの売上金額合計を求めよ。ただし、売上実績がない顧客については売上金額を0として表示させること。また、顧客は性別コード（gender_cd）が女性（1）であるものを対象とし、非会員（顧客IDが'Z'から始まるもの）は除外すること。なお、結果は10件だけ表示させれば良い。
+#+end_quote
+
+#+begin_src sql
+WITH customer_amount AS (
+    SELECT customer_id, SUM(amount) AS sum_amount
+    FROM receipt
+    GROUP BY customer_id
+)
+SELECT c.customer_id, COALESCE(a.sum_amount,0)
+FROM customer c
+LEFT JOIN customer_amount a
+ON c.customer_id = a.customer_id
+WHERE c.gender_cd = '1'
+      and c.customer_id not like 'Z%'
+LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_id    | coalesce |
+|----------------+----------|
+| CS021313000114 |        0 |
+| CS031415000172 |     5088 |
+| CS028811000001 |        0 |
+| CS001215000145 |      875 |
+| CS015414000103 |     3122 |
+| CS033513000180 |      868 |
+| CS035614000014 |        0 |
+| CS011215000048 |     3444 |
+| CS009413000079 |        0 |
+| CS040412000191 |      210 |
+
+** 複数のWITH
+#+begin_quote
+S-039: レシート明細テーブル（receipt）から売上日数の多い顧客の上位20件と、売上金額合計の多い顧客の上位20件を抽出し、完全外部結合せよ。ただし、非会員（顧客IDが'Z'から始まるもの）は除外すること。
+#+end_quote
+
+#+begin_src sql
+WITH customer_days AS (
+    select customer_id, count(distinct sales_ymd) come_days
+    FROM receipt
+    WHERE customer_id NOT LIKE 'Z%'
+    GROUP BY customer_id
+    ORDER BY come_days DESC LIMIT 20
+),
+customer_amount AS (
+    SELECT customer_id, sum(amount) buy_amount
+    FROM receipt
+    WHERE customer_id NOT LIKE 'Z%'
+    GROUP BY customer_id
+    ORDER BY buy_amount DESC LIMIT 20
+)
+SELECT COALESCE(d.customer_id, a.customer_id), d.come_days, a.buy_amount
+FROM customer_days d
+FULL JOIN customer_amount a
+ON d.customer_id = a.customer_id;
+#+end_src
+
+#+RESULTS:
+| coalesce       | come_days | buy_amount |
+|----------------+-----------+------------|
+| CS040214000008 |        23 |            |
+| CS015415000185 |        22 |      20153 |
+| CS010214000010 |        22 |      18585 |
+| CS028415000007 |        21 |      19127 |
+| CS010214000002 |        21 |            |
+| CS017415000097 |        20 |      23086 |
+| CS016415000141 |        20 |      18372 |
+| CS021514000045 |        19 |            |
+| CS022515000226 |        19 |            |
+| CS031414000051 |        19 |      19202 |
+| CS039414000052 |        19 |            |
+| CS014214000023 |        19 |            |
+| CS021515000172 |        19 |            |
+| CS031414000073 |        18 |            |
+| CS007515000107 |        18 |            |
+| CS014415000077 |        18 |            |
+| CS021515000056 |        18 |            |
+| CS032415000209 |        18 |            |
+| CS021515000211 |        18 |            |
+| CS022515000028 |        18 |            |
+| CS011415000006 |           |      16094 |
+| CS016415000101 |           |      16348 |
+| CS030415000034 |           |      15468 |
+| CS021515000089 |           |      17580 |
+| CS034415000047 |           |      16083 |
+| CS006515000023 |           |      18372 |
+| CS038415000104 |           |      17847 |
+| CS015515000034 |           |      15300 |
+| CS032414000072 |           |      16563 |
+| CS011414000106 |           |      18338 |
+| CS001605000009 |           |      18925 |
+| CS009414000059 |           |      15492 |
+| CS035414000024 |           |      17615 |
+| CS007514000094 |           |      15735 |
+
+** 直積: CROSS JOIN
+#+begin_quote
+S-040: 全ての店舗と全ての商品を組み合わせると何件のデータとなるか調査したい。店舗（store）と商品（product）を直積した件数を計算せよ。
+#+end_quote
+
+#+begin_src sql
+SELECT COUNT(1) FROM store CROSS JOIN product;
+#+end_src
+
+#+RESULTS:
+|  count |
+|--------|
+| 531590 |
+
+** 差分: LAG
+#+begin_quote
+S-041: レシート明細テーブル（receipt）の売上金額（amount）を日付（sales_ymd）ごとに集計し、前日からの売上金額増減を計算せよ。なお、計算結果は10件表示すればよい。
+#+end_quote
+
+#+begin_src sql
+WITH sales_amount_by_date AS (
+    SELECT sales_ymd, SUM(amount) as amount FROM receipt
+    GROUP BY sales_ymd
+    ORDER BY sales_ymd
+)
+SELECT sales_ymd, LAG(sales_ymd, 1) OVER(ORDER BY sales_ymd) lag_ymd,
+    amount,
+    LAG(amount, 1) OVER(ORDER BY sales_ymd) as lag_amount,
+    amount - LAG(amount, 1) OVER(ORDER BY sales_ymd) as diff_amount
+FROM sales_amount_by_date
+LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| sales_ymd |  lag_ymd | amount | lag_amount | diff_amount |
+|-----------+----------+--------+------------+-------------|
+|  20170101 |          |  33723 |            |             |
+|  20170102 | 20170101 |  24165 |      33723 |       -9558 |
+|  20170103 | 20170102 |  27503 |      24165 |        3338 |
+|  20170104 | 20170103 |  36165 |      27503 |        8662 |
+|  20170105 | 20170104 |  37830 |      36165 |        1665 |
+|  20170106 | 20170105 |  32387 |      37830 |       -5443 |
+|  20170107 | 20170106 |  23415 |      32387 |       -8972 |
+|  20170108 | 20170107 |  24737 |      23415 |        1322 |
+|  20170109 | 20170108 |  26718 |      24737 |        1981 |
+|  20170110 | 20170109 |  20143 |      26718 |       -6575 |
+
+** 複数のJOIN条件
+#+begin_quote
+S-042: レシート明細テーブル（receipt）の売上金額（amount）を日付（sales_ymd）ごとに集計し、各日付のデータに対し、１日前、２日前、３日前のデータを結合せよ。結果は10件表示すればよい。
+#+end_quote
+
+#+begin_src sql
+WITH sales_amount_by_date AS (
+    SELECT sales_ymd, SUM(amount) as amount FROM receipt
+    GROUP BY sales_ymd
+    ORDER BY sales_ymd
+),
+sales_amount_lag_date AS (
+    SELECT sales_ymd,
+        COALESCE(LAG(sales_ymd, 3) OVER (ORDER BY sales_ymd),
+        MIN(sales_ymd) OVER (PARTITION BY NULL)) as lag_date_3,
+        amount
+    FROM sales_amount_by_date
+)
+SELECT a.sales_ymd, b.sales_ymd as lag_ymd,
+    a.amount as amount, b.amount as lag_amount
+FROM sales_amount_lag_date a
+JOIN sales_amount_lag_date b
+ON b.sales_ymd >= a.lag_date_3
+    and b.sales_ymd < a.sales_ymd
+ORDER BY sales_ymd, lag_ymd
+LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| sales_ymd |  lag_ymd | amount | lag_amount |
+|-----------+----------+--------+------------|
+|  20170102 | 20170101 |  24165 |      33723 |
+|  20170103 | 20170101 |  27503 |      33723 |
+|  20170103 | 20170102 |  27503 |      24165 |
+|  20170104 | 20170101 |  36165 |      33723 |
+|  20170104 | 20170102 |  36165 |      24165 |
+|  20170104 | 20170103 |  36165 |      27503 |
+|  20170105 | 20170102 |  37830 |      24165 |
+|  20170105 | 20170103 |  37830 |      27503 |
+|  20170105 | 20170104 |  37830 |      36165 |
+|  20170106 | 20170103 |  32387 |      27503 |
+
+** 日付の変換
+#+begin_quote
+S-045: 顧客テーブル（customer）の生年月日（birth_day）は日付型でデータを保有している。これをYYYYMMDD形式の文字列に変換し、顧客ID（customer_id）とともに抽出せよ。データは10件を抽出すれば良い。
+#+end_quote
+
+#+begin_src sql
+SELECT customer_id, TO_CHAR(birth_day, 'YYYYMMDD') FROM customer LIMIT 10;
+#+end_src
+
+#+RESULTS:
+| customer_id    |  to_char |
+|----------------+----------|
+| CS021313000114 | 19810429 |
+| CS037613000071 | 19520401 |
+| CS031415000172 | 19761004 |
+| CS028811000001 | 19330327 |
+| CS001215000145 | 19950329 |
+| CS020401000016 | 19740915 |
+| CS015414000103 | 19770809 |
+| CS029403000008 | 19730817 |
+| CS015804000004 | 19310502 |
+| CS033513000180 | 19620711 |
+** 練習用
+#+begin_src sql
+
+#+end_src
+* Tasks
+** TODO 1~50問
+DEADLINE: <2021-10-31 Sun>
+:LOGBOOK:
+CLOCK: [2021-10-02 Sat 15:49]
+CLOCK: [2021-10-02 Sat 00:34]--[2021-10-02 Sat 00:55] =>  0:21
+CLOCK: [2021-10-01 Fri 21:23]--[2021-10-01 Fri 22:28] =>  1:05
+CLOCK: [2021-10-01 Fri 09:49]--[2021-10-01 Fri 11:00] =>  1:11
+CLOCK: [2021-10-01 Fri 00:17]--[2021-10-01 Fri 01:08] =>  0:51
+CLOCK: [2021-09-30 Thu 23:08]--[2021-10-01 Fri 00:06] =>  0:58
+CLOCK: [2021-09-25 Sat 18:07]--[2021-09-25 Sat 19:14] =>  1:07
+:END:
+* Reference
+* Archive
