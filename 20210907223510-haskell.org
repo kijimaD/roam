@@ -1,26 +1,37 @@
 :PROPERTIES:
 :ID:       c4c3816f-e03f-41a8-9a97-ddcfd3d738ff
+:header-args+: :results output
 :END:
 #+title: Haskell
+
 * 概要
 Haskellは純粋関数型[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
-** 基本的文法
-*** 前置引数
+** stack
+stackはHaskellの開発ツール。
+- [[https://docs.haskellstack.org/en/stable/README/][Home - The Haskell Tool Stack]]
+** REPL
+対話実行環境を立ち上げる。
+#+begin_src haskell
+  ghci
+  >> :load -- ファイル読み込み
+  >> :quit -- ghci終了
+#+end_src
+** 前置引数
 #+begin_src haskell
   (+) 2 2
 #+end_src
 
 #+RESULTS:
 : 4
-*** マイナス演算子
+** マイナス演算子
 #+begin_src haskell
   2 + (- 1)
 #+end_src
 
 #+RESULTS:
 : 1
-*** :infoコマンド
+** :infoコマンド
 ~infixl~ が演算子の優先順位。
 #+begin_src haskell
   :info (+)
@@ -44,14 +55,14 @@ Haskellは純粋関数型[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming 
 :   ...
 :   	-- Defined in ‘GHC.Num’
 : infixl 7 *
-*** 定数
+** 定数
 #+begin_src haskell
   pi
 #+end_src
 
 #+RESULTS:
 : 3.141592653589793
-*** 代入
+** 代入
 #+begin_src haskell
   let e = exp 1
   (e ** pi) - pi
@@ -59,14 +70,14 @@ Haskellは純粋関数型[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming 
 
 #+RESULTS:
 : 19.99909997918947
-*** リスト
+** リスト
 #+begin_src haskell
 ["foo", "bar", "baz"]
 #+end_src
 
 #+RESULTS:
 | foo | bar | baz |
-*** 列挙表記
+** 列挙表記
 #+begin_src haskell
 [1..10]
 #+end_src
@@ -80,57 +91,506 @@ Haskellは純粋関数型[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming 
 
 #+RESULTS:
 | 1.0 | 1.25 | 1.5 | 1.75 | 2.0 |
-*** リスト結合
+** リスト結合
 #+begin_src haskell
 [3,1,3] ++ [3,7]
 #+end_src
 
 #+RESULTS:
 | 3 | 1 | 3 | 3 | 7 |
-*** cons
+** cons
 #+begin_src haskell :results output
   1 : [2, 3]
 #+end_src
 
 #+RESULTS:
-*** 型情報
-#+begin_src haskell
-Prelude> :set +t
-Prelude> 'c'
-'c'
-it :: Char
-Prelude> "foo"
-"foo"
-it :: [Char]
+: [1,2,3]
+** 型情報
+⚠babelで実行すると実行されなくなるので、GHCIだけで試すこと。
+#+begin_src haskell :eval never
+  Prelude> :set +t
+  Prelude> 'c'
+  'c'
+  it :: Char
+
+  Prelude> :unset +t
 #+end_src
-** stack
-stackはHaskellの開発ツール。
-- [[https://docs.haskellstack.org/en/stable/README/][Home - The Haskell Tool Stack]]
-** REPL
-対話実行環境を立ち上げる。
+** 型エラー
 #+begin_src haskell
-  ghci
-  >> :load -- ファイル読み込み
-  >> :quit -- ghci終了
+1.2 % 3.4
 #+end_src
+
+#+RESULTS:
+: <interactive>:39:5: error:
+:     Variable not in scope: (%) :: Double -> Double -> t
+** :type
+#+begin_src haskell
+:type 1
+#+end_src
+
+#+RESULTS:
+: 1 :: Num p => p
+
+#+begin_src haskell
+:type "abc"
+#+end_src
+
+#+RESULTS:
+: "abc" :: [Char]
+
+#+begin_src haskell
+:type it
+#+end_src
+
+#+RESULTS:
+: it :: [Char]
+** いくつかの数値型関数
+#+begin_src haskell
+succ 6
+#+end_src
+
+#+RESULTS:
+: 7
+
+#+begin_src haskell
+pred 9
+#+end_src
+
+#+RESULTS:
+: 8
+
+#+begin_src haskell
+sin (pi / 2)
+#+end_src
+
+#+RESULTS:
+: 1.0
+
+#+begin_src haskell
+truncate pi
+#+end_src
+
+#+RESULTS:
+: 3
+
+#+begin_src haskell
+round 3.4
+#+end_src
+
+#+RESULTS:
+: 3
+** ~:?~ コマンド
+#+begin_src haskell
+:?
+#+end_src
+
+#+RESULTS:
+#+begin_example
+display this list of commands
+   :info[!] [<name> ...]       display information about the given names
+                               (!: do not filter instances)
+   :issafe [<mod>]             display safe haskell information of module <mod>
+   :kind[!] <type>             show the kind of <type>
+                               (!: also print the normalised type)
+   :load[!] [*]<module> ...    load module(s) and their dependents
+                               (!: defer type errors)
+   :main [<arguments> ...]     run the main function with the given arguments
+   :module [+/-] [*]<mod> ...  set the context for expression evaluation
+   :quit                       exit GHCi
+   :reload[!]                  reload the current module set
+                               (!: defer type errors)
+   :run function [<arguments> ...] run the function with the given arguments
+   :script <file>              run the script <file>
+   :type <expr>                show the type of <expr>
+   :type +d <expr>             show the type of <expr>, defaulting type variables
+   :type +v <expr>             show the type of <expr>, with its specified tyvars
+   :unadd <module> ...         remove module(s) from the current target set
+   :undef <cmd>                undefine user-defined command :<cmd>
+   :!<command>                 run the shell command <command>
+
+ -- Commands for debugging:
+
+   :abandon                    at a breakpoint, abandon current computation
+   :back [<n>]                 go back in the history N steps (after :trace)
+   :break [<mod>] <l> [<col>]  set a breakpoint at the specified location
+   :break <name>               set a breakpoint on the specified function
+   :continue                   resume after a breakpoint
+   :delete <number>            delete the specified breakpoint
+   :delete *                   delete all breakpoints
+   :force <expr>               print <expr>, forcing unevaluated parts
+   :forward [<n>]              go forward in the history N step s(after :back)
+   :history [<n>]              after :trace, show the execution history
+   :list                       show the source code around current breakpoint
+   :list <identifier>          show the source code for <identifier>
+   :list [<module>] <line>     show the source code around line number <line>
+   :print [<name> ...]         show a value without forcing its computation
+   :sprint [<name> ...]        simplified version of :print
+   :step                       single-step after stopping at a breakpoint
+   :step <expr>                single-step into <expr>
+   :steplocal                  single-step within the current top-level binding
+   :stepmodule                 single-step restricted to the current module
+   :trace                      trace after stopping at a breakpoint
+   :trace <expr>               evaluate <expr> with tracing on (see :history)
+
+ -- Commands for changing settings:
+
+   :set <option> ...           set options
+   :seti <option> ...          set options for interactive evaluation only
+   :set args <arg> ...         set the arguments returned by System.getArgs
+   :set prog <progname>        set the value returned by System.getProgName
+   :set prompt <prompt>        set the prompt used in GHCi
+   :set prompt-cont <prompt>   set the continuation prompt used in GHCi
+   :set prompt-function <expr> set the function to handle the prompt
+   :set prompt-cont-function <expr>set the function to handle the continuation prompt
+   :set editor <cmd>           set the command used for :edit
+   :set stop [<n>] <cmd>       set the command to run when a breakpoint is hit
+   :unset <option> ...         unset options
+
+  Options for ':set' and ':unset':
+
+    +m            allow multiline commands
+    +r            revert top-level expressions after each evaluation
+    +s            print timing/memory stats after each evaluation
+    +t            print type after evaluation
+    +c            collect type/location info after loading modules
+    -<flags>      most GHC command line flags can also be set here
+                         (eg. -v2, -XFlexibleInstances, etc.)
+                    for GHCi-specific flags, see User's Guide,
+                    Flag reference, Interactive-mode options
+
+ -- Commands for displaying information:
+
+   :show bindings              show the current bindings made at the prompt
+   :show breaks                show the active breakpoints
+   :show context               show the breakpoint context
+   :show imports               show the current imports
+   :show linker                show current linker state
+   :show modules               show the currently loaded modules
+   :show packages              show the currently active package flags
+   :show paths                 show the currently active search paths
+   :show language              show the currently active language flags
+   :show targets               show the current set of targets
+   :show <setting>             show value of <setting>, which is one of
+                                  [args, prog, editor, stop]
+   :showi language             show language flags for interactive evaluation
+#+end_example
+** 型推論
+式の後ろに書く::と型の組み合わせのことを ~型シグネチャ~ という。
+
+#+begin_src haskell
+  :type 'a'
+  'a' :: Char
+#+end_src
+
+#+RESULTS:
+: 'a' :: Char
+: 'a'
+
+#+begin_src haskell
+  [1, 2, 3] :: Int
+#+end_src
+
+#+RESULTS:
+: In an equation for ‘it’: it = [1, 2, 3] :: Int
+** 関数適用
+#+begin_src haskell
+odd 3
+#+end_src
+
+#+RESULTS:
+: True
+
+#+begin_src haskell
+odd 6
+#+end_src
+
+#+RESULTS:
+: False
+
+#+begin_src haskell
+compare 3 3
+#+end_src
+
+#+RESULTS:
+: EQ
+
+#+begin_src haskell
+compare 3 2
+#+end_src
+
+#+RESULTS:
+: GT
+
+#+begin_src haskell
+  (compare 2 3) == LT
+  compare 2 3 == LT
+#+end_src
+
+#+RESULTS:
+: True
+: True
+
+#+begin_src haskell
+  compare (sqrt 3) (sqrt 6)
+#+end_src
+
+#+RESULTS:
+: LT
+** 合成データ型: リスト
+合成データ型は他のデータ型から構成する。よく使う合成データ型はリスト(可変長)とタプル(固定長)。
+
+リスト型は ~多相的~ である。多相型を書く場合には ~型変数~ を使う。
+~head :: [a] -> a~ は「どんな型の値を含むかはわからないが、その型の値のリストは作れる」と言っている。
+#+begin_src haskell
+  :type head
+  head [1,2,3,4]
+  head ['a','b','c']
+  tail [1,2,3,4]
+  tail [True,False]
+#+end_src
+
+#+RESULTS:
+: head :: [a] -> a
+: 1
+: 'a'
+: [2,3,4]
+: [False]
+
+#+begin_src haskell
+:type [[True],[False,False]]
+#+end_src
+
+#+RESULTS:
+: [[True],[False,False]] :: [[Bool]]
+
+異なる型ではエラー。
+
+#+begin_src haskell
+:type [1, 'a']
+#+end_src
+
+#+RESULTS:
+: <interactive>:1:2: error:
+:     • No instance for (Num Char) arising from the literal ‘1’
+:     • In the expression: 1
+:       In the expression: [1, 'a']
+
+** 合成データ型: タプル
+リストと違ってタプルは型が異なっていてもOK。
+
+#+begin_src haskell
+  (1964, "Labyrinths")
+  ()
+#+end_src
+
+#+RESULTS:
+: (1964,"Labyrinths")
+: ()
+
+#+begin_src haskell
+:type (True, "hello")
+#+end_src
+
+#+RESULTS:
+: (True, "hello") :: (Bool, [Char])
+
+#+begin_src haskell
+:type (4, ['a', 'm'], (16, True))
+#+end_src
+
+#+RESULTS:
+: (4, ['a', 'm'], (16, True))
+:   :: (Num a1, Num a2) => (a1, [Char], (a2, Bool))
+
+タプルの型は数/位置/その位置に含まれる要素の型、で表す。
+含まれている要素の型や数が異なれば別の型。
+
+#+begin_src haskell
+  :type (False, 'a')
+#+end_src
+
+#+RESULTS:
+: (False, 'a') :: (Bool, Char)
+
+#+begin_src haskell
+  :type ('a', False)
+#+end_src
+
+#+RESULTS:
+: ('a', False) :: (Char, Bool)
+
+#+begin_src haskell
+  :type (False, 'a')
+#+end_src
+
+#+RESULTS:
+: (False, 'a') :: (Bool, Char)
+** 関数
+#+begin_src haskell
+take 2 [1,2,3,4,5]
+#+end_src
+
+#+RESULTS:
+: [1,2]
+
+#+begin_src haskell
+drop 3 [1,2,3,4,5]
+#+end_src
+
+#+RESULTS:
+: [4,5]
+
+⚠ ~fst(1,'a')~ と空白なしで書くと、引数2つに見えるが、違うことに注意。
+単一のペアへの関数の適用である。
+
+#+begin_src haskell
+fst (1,'a')
+#+end_src
+
+#+RESULTS:
+: 1
+
+#+begin_src haskell
+snd (1,'a')
+#+end_src
+
+#+RESULTS:
+: 'a'
+** 関数の型
+#+begin_src haskell
+:type lines
+#+end_src
+
+#+RESULTS:
+: lines :: String -> [String]
+
+#+begin_src haskell
+lines "the quick\nbrown for\njumps"
+#+end_src
+
+#+RESULTS:
+: ["the quick","brown for","jumps"]
+
+副作用がある関数で結果の型は ~IO~ ではじまる。
+
+#+begin_src haskell
+:type readFile
+#+end_src
+
+#+RESULTS:
+: readFile :: FilePath -> IO String
+** 関数定義
+Haskellのコードの中では、記号 ~=~ は「〜を意味する」ということ。左辺の名前は右辺の式であると定義される。
+変数は式に名前をつける手段。
+
+#+begin_quote
+命令形言語を使ってきたのなら、変数は、異なる辞典で、異なる値を格納し得るメモリの番地(またはそれに類するもの)を特定する方法と考えるのが自然かもしれません。命令形言語では、いつでも変数の値を変更することが可能です。したがって、その変数のメモリ番地を確認するたびに違う結果になりえます。
+変数に対する、この2つの概念には決定的な違いがあります。Haskellでは、式にいったん束縛した変数は、いつでも元の式に置き換えても良いのです。変数の値は変わらないからです。命令形言語はこの置き換え可能性を保持していません。
+#+end_quote
+
+#+begin_src haskell
+  add a b = a + b
+  add 1 2
+#+end_src
+
+#+RESULTS:
+:
+: 3
+
+#+begin_src haskell
+  drop 2 "foobar"
+  drop 4 "foobar"
+  drop 4 [1, 2]
+  drop 0 [1, 2]
+  drop 7 []
+  drop (-2) "foo"
+#+end_src
+
+#+RESULTS:
+: obar
+: ar
+: []
+: [1,2]
+: []
+: foo
+** myDrop関数
+インデントによって既存の定義が継続する。
+org-babelでは1行ごとで新しいセッションになってしまうよう。 ~:{~ と ~}:~ を使って複数行評価されるようにする。
+
+変数名 ~xs~ は ~x~ の複数形という意味。
+
+式指向のためelseが必須(elseに入ったとき結果や型がないという事態になるため)。
+#+begin_src haskell
+  :{
+    myDrop n xs = if n <= 0 || null xs
+                  then xs
+                  else myDrop (n - 1) (tail xs)
+  :}
+
+  myDrop 2 "foobar"
+  myDrop 4 "foobar"
+  myDrop 4 [1, 2]
+  myDrop 0 [1, 2]
+  myDrop 7 []
+  myDrop(-2) "foo"
+#+end_src
+
+#+RESULTS:
+:
+: obar
+: ar
+: []
+: [1,2]
+: []
+: foo
+
+論理演算子。
+#+begin_src haskell
+  :type null
+  :type (||)
+#+end_src
+
+#+RESULTS:
+: null :: Foldable t => t a -> Bool
+: (||) :: Bool -> Bool -> Bool
+** 遅延評価
+正格評価: 関数を適用する前に関数への引数を評価する。
+*非正格評価(遅延評価)*: 評価せず、値が必要になったとき計算する「プロミス」を作る。未評価の式を追跡するのに使うレコードを *サンク* という。式の結果が使われないなら、値は計算されない。
+
+#+begin_src haskell
+  isOdd n = mod n 2 == 1
+  isOdd 3
+#+end_src
+
+#+RESULTS:
+:
+: True
 * Tasks
+** TODO org-babelでhaskellを実行できなくなる
+~:set +t~ を評価すると使えなくなる。
 ** TODO xmpfilterのHaskell版を探す or 作る
 なければ簡易版で作る。
 いちいちロード、コンパイルは学習に不便。既存のがあるはずだが、調べ方がわからない。
-** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]]
+** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]] [0%]
 :LOGBOOK:
-CLOCK: [2021-10-02 Sat 23:12]--[2021-10-03 Sun 00:16] =>  1:04
+CLOCK: [2021-10-04 Mon 10:13]
 :END:
 <2021-10-15 Fri>
 
 *** TODO 100
+:LOGBOOK:
+CLOCK: [2021-10-03 Sun 20:22]--[2021-10-03 Sun 21:53] =>  1:31
+CLOCK: [2021-10-03 Sun 16:41]--[2021-10-03 Sun 17:29] =>  0:48
+CLOCK: [2021-10-03 Sun 15:15]--[2021-10-03 Sun 15:23] =>  0:08
+CLOCK: [2021-10-02 Sat 23:12]--[2021-10-03 Sun 00:16] =>  1:04
+:END:
 <2021-10-03 Sun>
-*** 200
-*** 300
-*** 400
-*** 500
-*** 600
-*** 700
+*** TODO 200
+*** TODO 300
+*** TODO 400
+*** TODO 500
+*** TODO 600
+*** TODO 700
 * Reference
 ** [[https://www.infoq.com/jp/articles/Understanding-Monads-guide-for-perplexed/][モナドを理解する - 迷える者への手引き]]
 Haskellのモナドの解説。
