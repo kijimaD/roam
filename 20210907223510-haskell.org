@@ -17,6 +17,12 @@ stackはHaskellの開発ツール。
   >> :load -- ファイル読み込み
   >> :quit -- ghci終了
 #+end_src
+
+#+RESULTS:
+: <interactive>:972:1-4: error: Variable not in scope: ghci
+: <interactive>:973:1-2: error: parse error on input ‘>>’
+: <interactive>:974:1-2: error: parse error on input ‘>>’
+
 ** 前置引数
 #+begin_src haskell
   (+) 2 2
@@ -69,6 +75,7 @@ stackはHaskellの開発ツール。
 #+end_src
 
 #+RESULTS:
+:
 : 19.99909997918947
 ** リスト
 #+begin_src haskell
@@ -76,28 +83,28 @@ stackはHaskellの開発ツール。
 #+end_src
 
 #+RESULTS:
-| foo | bar | baz |
+: ["foo","bar","baz"]
 ** 列挙表記
 #+begin_src haskell
 [1..10]
 #+end_src
 
 #+RESULTS:
-| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+: [1,2,3,4,5,6,7,8,9,10]
 
 #+begin_src haskell
 [1.0,1.25..2.0]
 #+end_src
 
 #+RESULTS:
-| 1.0 | 1.25 | 1.5 | 1.75 | 2.0 |
+: [1.0,1.25,1.5,1.75,2.0]
 ** リスト結合
 #+begin_src haskell
 [3,1,3] ++ [3,7]
 #+end_src
 
 #+RESULTS:
-| 3 | 1 | 3 | 3 | 7 |
+: [3,1,3,3,7]
 ** cons
 #+begin_src haskell :results output
   1 : [2, 3]
@@ -121,7 +128,7 @@ stackはHaskellの開発ツール。
 #+end_src
 
 #+RESULTS:
-: <interactive>:39:5: error:
+: <interactive>:999:5: error:
 :     Variable not in scope: (%) :: Double -> Double -> t
 ** :type
 #+begin_src haskell
@@ -537,7 +544,7 @@ org-babelでは1行ごとで新しいセッションになってしまうよう�
 
 #+RESULTS:
 :
-: obar
+: Prelude> "obar"
 : ar
 : []
 : [1,2]
@@ -565,6 +572,294 @@ org-babelでは1行ごとで新しいセッションになってしまうよう�
 #+RESULTS:
 :
 : True
+
+#+begin_src haskell
+  print (myDrop 2 "abcd")
+
+  :type 2 <= 0 || null "abcd"
+  null "abcd"
+#+end_src
+
+#+RESULTS:
+: cd
+: Prelude> 2 <= 0 || null "abcd" :: Prelude.Bool
+: False
+** 型変数
+#+begin_src haskell
+  last [1,2,3]
+  last "baz"
+  :type last
+#+end_src
+
+#+RESULTS:
+: 3
+: 'z'
+: last :: [a] -> a
+
+この ~a~ が型変数。
+型シグネチャに型変数を持つ時には引数のいくつかはどのような型にでもなれることを示している。→ 多相的である。
+** 多相関数
+#+begin_src haskell
+  :type fst
+#+end_src
+
+#+RESULTS:
+: fst :: (a, b) -> a
+
+#+begin_src haskell
+:type take
+#+end_src
+
+#+RESULTS:
+: take :: Int -> [a] -> [a]
+
+これは実際にはこういうこと↓。
+
+~take :: Int -> ([a] -> [a])~
+** 純粋性
+#+begin_src haskell
+:type not
+#+end_src
+
+#+RESULTS:
+: not :: Bool -> Bool
+** 型定義
+
+↓ BookInfoを ~型構成子~ という。
+続く Bookは ~値構成子~ という。
+Int, String, [String]は ~構成要素~ という。
+
+#+begin_src haskell
+  :{
+  data BookInfo = Book Int String [String]
+                  deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+同じ構造を持っていても、2つの型を区別する。型構成子と値構成子の名前が違うから。
+
+#+begin_src haskell
+  :{
+  data MagazineInfo = Magazine Int String [String]
+                      deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :info BookInfo
+
+  myInfo = Book 9780135072455 "Algebra of Programming" ["Richard Bird", "Oege de Moor"]
+  myInfo
+  :type myInfo
+  :type Book
+#+end_src
+
+#+RESULTS:
+: data BookInfo = Book Int String [String]
+:   	-- Defined at <interactive>:1534:1
+: instance [safe] Show BookInfo -- Defined at <interactive>:1535:27
+: Prelude> Prelude> Book 9780135072455 "Algebra of Programming" ["Richard Bird","Oege de Moor"]
+: myInfo :: BookInfo
+: Book :: Int -> String -> [String] -> BookInfo
+** 型シノニム
+型シノニムはコードを読みやすくするだけのもの。
+
+#+begin_src haskell
+  type CustomerID = Int
+  type ReviewBody = String
+  data BetterReview = BetterReview BookInfo CustomerID ReviewBody
+#+end_src
+
+#+RESULTS:
+** 代数データ型
+値構成子が2つある。 *選択肢* あるいは *ケース* という。
+
+#+begin_src haskell
+  data Bool = False | True
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  type CardHolder = String
+  type CardNumber = String
+  type Address = [String]
+
+  :{
+  data BillingInfo = CreditCard CardNumber CardHolder Address
+                     | CashOnDelivery
+                     | Invoice CustomerID
+                       deriving (Show)
+  :}
+  :info BillingInfo
+#+end_src
+
+#+RESULTS:
+:
+: Prelude> Prelude> Prelude> Prelude| Prelude| Prelude| Prelude| Prelude| Prelude> data BillingInfo
+:   = CreditCard CardNumber CardHolder Address
+:   | CashOnDelivery
+:   | Invoice CustomerID
+:   	-- Defined at <interactive>:1636:1
+: instance [safe] Show BillingInfo
+:   -- Defined at <interactive>:1639:32
+: Prelude> CreditCard :: CardNumber -> CardHolder -> Address -> BillingInfo
+
+#+begin_src haskell
+  :type CreditCard
+  CreditCard "2901650221064486" "Thomas Gradgrind"  ["Dickens", "England"]
+#+end_src
+
+#+RESULTS:
+: CreditCard :: CardNumber -> CardHolder -> Address -> BillingInfo
+: CreditCard "2901650221064486" "Thomas Gradgrind" ["Dickens","England"]
+
+#+begin_src haskell
+  :type it
+#+end_src
+
+#+RESULTS:
+: it :: [Char]
+
+#+begin_src haskell
+  :type Invoice
+  Invoice 2222
+#+end_src
+
+#+RESULTS:
+: Invoice :: CustomerID -> BillingInfo
+: Invoice 2222
+
+** タプルと代数データ型
+#+begin_src haskell
+  Book 2 "The Wealth of Networks" ["Yochai Benkler"]
+  (2, "The Wealth of Networks", ["Yochai Benkler"])
+#+end_src
+
+#+RESULTS:
+: Book 2 "The Wealth of Networks" ["Yochai Benkler"]
+: (2,"The Wealth of Networks",["Yochai Benkler"])
+
+↓構造的に同一なので同じ型。
+
+#+begin_src haskell
+  a = ("Porpoise", "Gray")
+  b = ("Table", "Oak")
+#+end_src
+
+↓別の名前なので別の型。
+
+#+begin_src haskell
+  data Cetacean = Cetacean String String
+  data Furniture = Furniture String String
+
+  c = Cetacean "Porpoise" "Gray"
+  d = Furniture "Table" "Oak"
+#+end_src
+
+#+RESULTS:
+
+座標。
+
+#+begin_src haskell
+  :{
+  -- x, yの座標
+  data Cartesian2D = Cartesian2D Double Double
+                     deriving (Eq, Show)
+
+  -- 偏角と長さ
+  data Polar2D = Polar2D Double Double
+                 deriving (Eq, Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+~==~ 演算子は引数が同じ型でないといけないのでエラー。
+
+#+begin_src haskell
+  Cartesian2D (sqrt 2) (sqrt 2) == Polar2D (pi / 4) 2
+#+end_src
+
+#+RESULTS:
+: <interactive>:1737:34-51: error:
+:     • Couldn't match expected type ‘Cartesian2D’
+:                   with actual type ‘Polar2D’
+:     • In the second argument of ‘(==)’, namely ‘Polar2D (pi / 4) 2’
+:       In the expression:
+:         Cartesian2D (sqrt 2) (sqrt 2) == Polar2D (pi / 4) 2
+:       In an equation for ‘it’:
+:           it = Cartesian2D (sqrt 2) (sqrt 2) == Polar2D (pi / 4) 2
+: Prelude> False
+
+タプルの場合判断しようがないのでチェックが効かない。
+
+#+begin_src haskell
+(1, 2) == (1, 2)
+#+end_src
+
+#+RESULTS:
+: True
+
+- 複合型をコードの中で広く使う場合には ~data~ 宣言を使う
+- 規模が小さく、局所的にしか使わない場合はタプルでいい
+
+** 他の言語との類似
+
+#+begin_src C
+  struct book_info {
+    int id;
+    char *name;
+    char **authors;
+  };
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :{
+  data BookInfo = Book Int String [String]
+                    deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+** 列挙型
+
+#+begin_src C
+  enum roygbiv {
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet,
+  };
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :{
+  data Roygbiv = Red
+               | Orange
+               | Yellow
+               | Green
+               | Blue
+               | Indigo
+               | Violet
+                 deriving (Eq, Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
 * Tasks
 ** TODO org-babelでhaskellを実行できなくなる
 ~:set +t~ を評価すると使えなくなる。
@@ -572,13 +867,14 @@ org-babelでは1行ごとで新しいセッションになってしまうよう�
 なければ簡易版で作る。
 いちいちロード、コンパイルは学習に不便。既存のがあるはずだが、調べ方がわからない。
 ** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]] [0%]
-:LOGBOOK:
-CLOCK: [2021-10-04 Mon 10:13]
-:END:
 <2021-10-15 Fri>
 
 *** TODO 100
 :LOGBOOK:
+CLOCK: [2021-10-05 Tue 22:08]--[2021-10-05 Tue 23:37] =>  1:29
+CLOCK: [2021-10-05 Tue 09:48]--[2021-10-05 Tue 10:54] =>  1:06
+CLOCK: [2021-10-05 Tue 09:22]--[2021-10-05 Tue 09:31] =>  0:09
+CLOCK: [2021-10-04 Mon 10:13]--[2021-10-04 Mon 11:03] =>  0:50
 CLOCK: [2021-10-03 Sun 20:22]--[2021-10-03 Sun 21:53] =>  1:31
 CLOCK: [2021-10-03 Sun 16:41]--[2021-10-03 Sun 17:29] =>  0:48
 CLOCK: [2021-10-03 Sun 15:15]--[2021-10-03 Sun 15:23] =>  0:08
