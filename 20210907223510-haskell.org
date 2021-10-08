@@ -831,6 +831,8 @@ Int, String, [String]は ~構成要素~ という。
 
 ** 列挙型
 
+[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]ではこう書く。
+
 #+begin_src C
   enum roygbiv {
     red,
@@ -856,9 +858,328 @@ Int, String, [String]は ~構成要素~ という。
                | Violet
                  deriving (Eq, Show)
   :}
+  :type Yellow
+  :type Red
+  Red == Yellow
+  Green == Green
 #+end_src
 
 #+RESULTS:
+:
+: Yellow :: Roygbiv
+: Red :: Roygbiv
+: False
+: True
+
+haskellのenumは型が厳密。
+#+begin_src haskell
+  take 3 "foobar"
+  take Red "foobar"
+#+end_src
+
+#+RESULTS:
+: foo
+: <interactive>:1854:6-8: error:
+:     • Couldn't match expected type ‘Int’ with actual type ‘Roygbiv’
+:     • In the first argument of ‘take’, namely ‘Red’
+:       In the expression: take Red "foobar"
+:       In an equation for ‘it’: it = take Red "foobar"
+
+** union
+代数データ型が複数の選択肢を持つ場合は [[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]の ~union~ と同じ。
+#+begin_src haskell
+  type Vector = (Double, Double)
+  :{
+  data Shape = Circle Vector Double
+             | Poly [Vector]
+  :}
+  :info Shape
+#+end_src
+
+#+RESULTS:
+:
+: Prelude| Prelude| Prelude| Prelude> data Shape = Circle Vector Double | Poly [Vector]
+:   	-- Defined at <interactive>:1888:1
+: <interactive>:1:1-5: error: Data constructor not in scope: Shape
+
+** パターンマッチ
+
+↓2つの関数というわけではない。
+同一関数の異なる入力パターンに対する振る舞いを定義している。
+
+#+begin_src haskell
+  myNot True = False
+  myNot False = True
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  sumList (x:xs) = x + sumList xs
+  sumList [] = 0
+
+  sum [1,2]
+#+end_src
+
+#+RESULTS:
+:
+: Prelude> Prelude> 3
+
+タプルのパターンマッチ。
+
+#+begin_src haskell
+  complicated (True, a, x:xs, 5) = (a, xs)
+  complicated (True, 1, [1,2,3], 5)
+#+end_src
+
+#+RESULTS:
+:
+: (1,[2,3])
+
+ぴったり一致しないと成功しない。
+すべてのパターンマッチが失敗すると実行時エラー。
+
+#+begin_src haskell
+complicated (False, 1, [1,2,3], 5)
+#+end_src
+
+#+RESULTS:
+: *** Exception: <interactive>:1963:1-40: Non-exhaustive patterns in function complicated
+
+
+BookInfo型の場合。
+パターンマッチをセット。
+
+#+begin_src haskell
+  bookID (Book id title authors) = id
+  bookTitle (Book id title authors) = title
+  bookAuthors (Book id title authors) = authors
+#+end_src
+
+#+RESULTS:
+
+アクセスできる。
+
+#+begin_src haskell
+  bookID (Book 3 "Probability Theory" ["E.T.H. Jaynes"])
+  bookTitle (Book 3 "Probability Theory" ["E.T.H. Jaynes"])
+  bookAuthors (Book 3 "Probability Theory" ["E.T.H. Jaynes"])
+#+end_src
+
+#+RESULTS:
+: 3
+: Probability Theory
+: ["E.T.H. Jaynes"]
+
+構成子に基づいて、アクセサ関数の型を推論できる。
+
+#+begin_src haskell
+  :type bookID
+  :type bookTitle
+  :type bookAuthors
+#+end_src
+
+#+RESULTS:
+: bookID :: BookInfo -> Int
+: bookTitle :: BookInfo -> String
+: bookAuthors :: BookInfo -> [String]
+** ワイルドカード
+この類のコードをボイラープレートという。
+
+#+begin_src haskell
+  nicerID (Book id _ _ ) = id
+  nicerTitle (Book _ title _) = title
+  nicerAuthors (Book _ _ authors) = authors
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  goodExample (x:xs) = x + goodExample xs
+  goodExample _ = 0
+  goodExample []
+  goodExample [1, 2]
+#+end_src
+
+#+RESULTS:
+:
+: Prelude> 0
+: 0
+** レコード構文
+#+begin_src haskell
+  :{
+    data Customer = Customer {
+       customerID :: CustomerID
+     , customerName :: String
+     , customerAddress :: Address
+       } deriving (Show)
+  :}
+  :type customerID
+#+end_src
+
+#+RESULTS:
+:
+: customerID :: Customer -> CustomerID
+
+#+begin_src haskell
+  :{
+  customer2 = Customer {
+      customerID = 271828
+    , customerAddress = ["1048576 Disk Drive",
+                        "Milpitas, CA 95134",
+                        "USA"]
+    , customerName = "Jane Q. Citizen"
+    }
+  :}
+  customer2
+  cities
+#+end_src
+
+#+RESULTS:
+:
+: Customer {customerID = 271828, customerName = "Jane Q. Citizen", customerAddress = ["1048576 Disk Drive","Milpitas, CA 95134","USA"]}
+: Book 173 "Use of weapons" ["Iain M. Banks"]
+
+レコード構文によって使えるアクセサ関数は、通常のHaskellの関数。
+
+#+begin_src haskell
+  :type customerName
+  customerName customer2
+#+end_src
+
+#+RESULTS:
+: customerName :: Customer -> String
+: Jane Q. Citizen
+** パラメータ化された型
+独自に定義する型も多相型にできる。型宣言に型変数を導入する。
+
+↓この変数は型変数。
+#+begin_src haskell
+  :{
+  data Maybe a = Just a
+               | Nothing
+  :}
+  :info Maybe
+#+end_src
+
+#+RESULTS:
+:
+: data Maybe a = Just a | Nothing 	-- Defined at <interactive>:2300:1
+
+これによって任意の型上の ~Maybe~ 型を使える。
+
+#+begin_src haskell
+  someBool = Just True
+  :type someBool
+  someString = Just "something"
+  :type someString
+  :type Just "Invisible bike"
+#+end_src
+
+#+RESULTS:
+:
+: someBool :: Maybe Bool
+: Prelude> someString :: Maybe [Char]
+: Just "Invisible bike" :: Maybe [Char]
+
+#+begin_src haskell
+  wrapped = Just (Just "wrapped")
+  :type wrapped
+#+end_src
+
+#+RESULTS:
+:
+: wrapped :: Maybe (Maybe [Char])
+** 再帰型
+リスト型は再帰型。定義に自身が含まれる。
+#+begin_src haskell
+  :{
+  data List a = Cons a (List a)
+              | Nil
+                deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+確かめる。
+#+begin_src haskell
+  Nil
+  Cons 0 Nil
+  Cons 1 it
+  Cons 2 it
+  Cons 3 it
+#+end_src
+
+#+RESULTS:
+: Nil
+: Cons 0 Nil
+: Cons 1 (Cons 0 Nil)
+: Cons 2 (Cons 1 (Cons 0 Nil))
+: Cons 3 (Cons 2 (Cons 1 (Cons 0 Nil)))
+
+二分木。
+
+#+begin_src haskell
+  :{
+  data Tree a = Node a (Tree a) (Tree a)
+              | Empty
+                deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  fromList (x:xs) = Cons x (fromList xs)
+  fromList [] = Nil
+  fromList "durian"
+  fromList [Just True, Nothing, Just False]
+#+end_src
+
+本と違ってなぜかエラーになる。
+
+#+RESULTS:
+:
+: Prelude> *** Exception: <interactive>:2452:1-17: Non-exhaustive patterns in function fromList
+: *** Exception: <interactive>:2452:1-17: Non-exhaustive patterns in function fromList
+
+[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]の例(クラス定義)。
+#+begin_src java
+  class Tree<A>
+  {
+      A value;
+      Tree<A> left;
+      Tree<B> right;
+
+      public Tree(A v, Tree<A> l, Tree<A> r)
+      {
+          value = v;
+          left = l;
+          right = r;
+      }
+  }
+#+end_src
+
+葉を構成する関数。
+
+#+begin_src java
+  class Example
+  {
+      static Tree<String> simpleTree()
+      {
+          return new Tree<String>(
+                                  "parent",
+                                  new Tree<String>("left leaf", null, null),
+                                  new Tree<String>("right leaf", null, null));
+      }
+  }
+#+end_src
+
+#+begin_src haskell
+  simpleTree = Node "parent" (Node "left child" Empty Empty)
+                             (Node "right child" Empty Empty)
+#+end_src
 
 * Tasks
 ** TODO org-babelでhaskellを実行できなくなる
@@ -866,11 +1187,18 @@ Int, String, [String]は ~構成要素~ という。
 ** TODO xmpfilterのHaskell版を探す or 作る
 なければ簡易版で作る。
 いちいちロード、コンパイルは学習に不便。既存のがあるはずだが、調べ方がわからない。
+
+~org-babel~ でよさそう。
 ** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]] [0%]
 <2021-10-15 Fri>
 
 *** TODO 100
 :LOGBOOK:
+CLOCK: [2021-10-07 Thu 09:58]--[2021-10-07 Thu 10:57] =>  0:59
+CLOCK: [2021-10-07 Thu 09:24]--[2021-10-07 Thu 09:34] =>  0:10
+CLOCK: [2021-10-06 Wed 22:25]--[2021-10-07 Thu 00:07] =>  1:42
+CLOCK: [2021-10-06 Wed 08:47]--[2021-10-06 Wed 09:18] =>  0:31
+CLOCK: [2021-10-06 Wed 00:05]--[2021-10-06 Wed 00:55] =>  0:50
 CLOCK: [2021-10-05 Tue 22:08]--[2021-10-05 Tue 23:37] =>  1:29
 CLOCK: [2021-10-05 Tue 09:48]--[2021-10-05 Tue 10:54] =>  1:06
 CLOCK: [2021-10-05 Tue 09:22]--[2021-10-05 Tue 09:31] =>  0:09

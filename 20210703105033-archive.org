@@ -19,7 +19,103 @@
         (font-spec :family "Hiragino Sans")))
 #+end_export
 * Memo
-*** textlint-plugin-orgプラグイン発表用スライド <2021-07-02 金>
+** Tech Nightスライド <2021-10-08 Fri>
+:LOGBOOK:
+CLOCK: [2021-10-04 Mon 00:00]--[2021-10-04 Mon 00:50] =>  0:50
+CLOCK: [2021-10-03 Sun 22:31]--[2021-10-04 Mon 00:02] =>  1:31
+:END:
+#+begin_src emacs-lisp
+  (org-timer-set-timer 5)
+#+end_src
+
+発表用フォントサイズ。
+#+begin_export emacs-lisp
+(progn
+       (set-face-attribute 'default nil
+                           :font "Fira Mono"
+                           :weight 'regular
+                           :height 220)
+       (set-fontset-font
+        nil 'japanese-jisx0208
+        (font-spec :family "Hiragino Sans")))
+#+end_export
+*** ★伝えたいこと★
+コードのメモをするとき、 *コメント/コード/実行結果を1つにまとめる* とわかりやすい。
+
+→ うまくやるための道具があります。
+*** 自己紹介
+#+begin_quote
+貴島 大悟
+資格スクエア プログラマー
+#+end_quote
+
+外観は ~もう中学生~ (吉本興業のお笑い芸人)に似ているようです。
+*** 2つの方法
+2つの方法があります。
+
+- gem(ライブラリ)
+- 外部ツール
+*** gem編 ~xmpfilter~ で実行結果を出力する方法
+- [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]には実行結果をコードに出力するgemがある
+- Ruby gem [[https://github.com/rcodetools/rcodetools][rcodetools/rcodetools]] に同梱されている
+
+#+begin_src ruby
+  names = %w[aaa bbb]             # => ["aaa", "bbb"]
+  e = names.to_enum               # => #<Enumerator: ["aaa", "bbb"]:each>
+  e.class                         # => Enumerator
+#+end_src
+*** 外部ツール編
+
+(Markdownに読み替えても同じことができるはずです)
+
+- クラスが定義するインスタンスメソッドを調べる方法
+#+begin_src ruby
+  p Enumerable.instance_methods.sort
+#+end_src
+
+#+RESULTS:
+: [:all?, :any?, :chain, :chunk, :chunk_while, :collect, :collect_concat, :count, :cycle, :detect, :drop, :drop_while, :each_cons, :each_entry, :each_slice, :each_with_index, :each_with_object, :entries, :filter, :filter_map, :find, :find_all, :find_index, :first, :flat_map, :grep, :grep_v, :group_by, :include?, :inject, :lazy, :map, :max, :max_by, :member?, :min, :min_by, :minmax, :minmax_by, :none?, :one?, :partition, :reduce, :reject, :reverse_each, :select, :slice_after, :slice_before, :slice_when, :sort, :sort_by, :sum, :take, :take_while, :tally, :to_a, :to_h, :uniq, :zip]
+*** SQLもわかりやすくなる
+:PROPERTIES:
+  :header-args+: :engine postgresql
+  :header-args+: :dbhost localhost
+  :header-args+: :dbuser postgres
+  :header-args+: :dbpassword postgres12345
+  :header-args+: :database dsdojo_db
+  :header-args+: :results table
+:END:
+
++ (とくにSQLは実行結果が出ないとコードを把握しにくい感じがします)
+
+- ~TO_CHAR~ を使って日付→文字列へ変換する
+
+#+begin_src sql
+  SELECT customer_name, customer_id, TO_CHAR(birth_day, 'YYYY年MM月DD日')
+  FROM customer
+  LIMIT 10
+#+end_src
+
+#+RESULTS:
+| customer_name | customer_id    | to_char        |
+|---------------+----------------+----------------|
+| 大野 あや子   | CS021313000114 | 1981年04月29日 |
+| 六角 雅彦     | CS037613000071 | 1952年04月01日 |
+| 宇多田 貴美子 | CS031415000172 | 1976年10月04日 |
+| 堀井 かおり   | CS028811000001 | 1933年03月27日 |
+| 田崎 美紀     | CS001215000145 | 1995年03月29日 |
+| 宮下 達士     | CS020401000016 | 1974年09月15日 |
+| 奥野 陽子     | CS015414000103 | 1977年08月09日 |
+| 釈 人志       | CS029403000008 | 1973年08月17日 |
+| 松谷 米蔵     | CS015804000004 | 1931年05月02日 |
+| 安斎 遥       | CS033513000180 | 1962年07月11日 |
+*** まとめ
+- コードのメモは文脈がなく、後から見て意味不明、ということがよくある
+- ~メモ~ 、 ~実行コード~ 、 ~実行結果~ を同じ場所に書くとわかりやすい
+- だが普通にやるとめんどくさい
+- ツールでかんたんにできる
+*** ࿐おわり࿐
+ご清聴ありがとうございました。
+** textlint-plugin-orgプラグイン発表用スライド <2021-07-02 金>
 
 [[id:d3394774-aba5-4167-bd18-f194eb2bd9ed][TextLint]]
 [[https://github.com/kijimaD/textlint-plugin-org][GitHub - kijimaD/textlint-plugin-org]]
@@ -31,7 +127,7 @@ npmに登録＋公式のREADMEにリンクしました。
 
 orgファイル(Emacs独自のアウトライン形式)で使えるようにしました。
 (orgデモ)
-**** TextLintの説明
+*** TextLintの説明
 TextLintはその名の通り自然言語用のLintです。
 単純な間違いや、わかりづらい言い回し、語数制限などを検知してくれます。たくさんルールがあって面白いです。
 
@@ -40,7 +136,7 @@ Markdownは標準、ほかにもHTMLなどは対応してます。
 対応してないフォーマットの場合、たとえば見出しで ~。~ がないとか、コードブロックに対して検知をしてまともに使用できません。
 
 *どうしても* orgで使いたかったので作成することにしました。
-**** Lintについて学ぶ
+*** Lintについて学ぶ
 https://azu.github.io/JavaScript-Plugin-Architecture/
 
 中段の動作イメージがとてもわかりやすい。
@@ -122,7 +218,7 @@ textlint-plugin-org/test/OrgProcessor-test.ts
 
 Lintは、このASTオブジェクトのTypeに基づいてそれぞれのルールを適用してます。
 なので見出しの星は対象外にできます。
-**** AST変換器を調べる
+*** AST変換器を調べる
 - ファイル形式の文字列 → (ここが必要) → AST → Lint
 
 やる必要があるのは、オブジェクトの形式を揃えることです。
@@ -149,28 +245,28 @@ export const nodeTypes = {
   footnote: 'FootnoteReference',
 };
 #+end_src
-**** テストを書く
+*** テストを書く
 orgajsがどんな名前で出力するかは実行しないとわからなかったので、ちゃんとすべてテストを書いて調べました。上流の不慮の変更も検知できます。
 
 ということで使えるようになりました🎉。
 
 便利です。
-**** まとめ
+*** まとめ
 Emacsエコシステムを少し広げることができました。
-*** digger発表用スライド <2021-07-02 金>
+** digger発表用スライド <2021-07-02 金>
 [[id:70f249a8-f8c8-4a7e-978c-8ff04ffd09c0][digger]]
-**** やっていること(途中)
+*** やっていること(途中)
 [[https://github.com/kijimaD/digger][GitHub - kijimaD/digger]]
 CLIのゲームを作っています(WIP)。
 
 (デモ)
 
 まだ移動しかできない。
-**** 前回の反省を踏まえた要件
+*** 前回の反省を踏まえた要件
 - *画像表示はあきらめる or 見下ろし*
 - ターン制にする。リアルタイムではなく。
 - テストを書く(*テストが書ける構造にする*)
-**** 利点
+*** 利点
 時代に逆行した開発ですが、よいところもあります。
 
 - 真のRubyだけに集中できる(ライブラリすら必要ではない。CLI用のCursesくらい)
@@ -179,9 +275,9 @@ CLIのゲームを作っています(WIP)。
 + 例 :: 壁に当たるのは自キャラだけでない。敵キャラや銃弾も当たる。各オブジェクトに判断してもらわないといけない。
 + 例 :: 弾がヒットしたら、誰のスコアになるのか => その銃弾オブジェクトを生成したキャラクターオブジェクト。みたいな。
 + 例 :: 毎ターンフィールドにあるすべてのオブジェクトを更新＋新描画したい => すべて入れ物オブジェクトに入れておいて、mapですべてを一括処理しよう、とか。
-**** まとめ
+*** まとめ
 1ヶ月くらい頑張ってみます(宣言)。
-**** ボツ
+*** ボツ
 ローグライクになる予定です。↓みたいなゲーム。超好きなジャンルです。
 
 - [[https://github.com/CleverRaven/Cataclysm-DDA][Cataclysm-DDA]] :: ゾンビサバイバル
@@ -195,7 +291,7 @@ CLIのゲームを作っています(WIP)。
 
 これらは商業的な作品ではなく、貧弱なグラフィックですが、超濃密なゲーム世界を作り上げています。
 個人がめざす(めざせる)のはこういう方向性だと考えてます。
-**** 前回の反省
+*** 前回の反省
 仕事につく前、何度か作りはじめては挫折してきました。
 
 直近だと去年開発してましたが、開発が進まなくなってやめました↓。
