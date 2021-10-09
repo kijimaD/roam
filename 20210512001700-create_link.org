@@ -2,282 +2,11 @@
 :ID:       f0cefeef-6f99-4ce2-bff7-db6e508f2c84
 :END:
 #+title: create-link
-#+author: kijimad
 #+filetags: Project
 
 * 概要
 create-linkは簡単にリンクを各形式に変換する[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] package。
 [[id:c7e81fac-9f8b-4538-9851-21d4ff3c2b08][Emacs Lisp]]で書かれている。
-* 発表
-** [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]パッケージ(#2)を作りました。
-https://github.com/kijimaD/create-link
-** 作ったもの
-*** Chrome拡張CreateLinkをEmacsに移植した
-~CreateLink~ というChrome拡張があります。
-
-それのEmacs版を作成しました。
-公式パッケージ集での審査中(まだ返信来ない)。
-*** 元になったCreateLinkの説明🔗
-現在のページの名前のついたリンクを取得する拡張です。GitHubとかSlackに貼り付けるとき、便利なやつです。
-
-- CreateLinkのリンク(Chromeウェブストア)
-~https://chrome.google.com/webstore/detail/create-link/gcmghdmnkfdbncmnmlkkglmnnhagajbm?hl=ja~
-
-- 例: Markdownリンクだと、
-https://www.google.com ->[Google](https://www.google.com/) みたいな。
-
-(ブラウザのデモ)
-*** 作成したcreate-linkの紹介
-- Emacs上の各種ブラウザeww, w3m
-- 各種フォーマットHTML(default), LaTeX, Markdown, MediaWiki, Org-mode
-- ブラウザ以外のときはローカルファイルのパスを取得する
-
-に対応してます。
-
-(実行・オプション操作のデモ)
-** コード
-ライセンスの部分を除くと、90行くらいしかありません。
-
-半分くらいはユーザ設定のための決まりきった記述のため、実際は40行ほど。
-
-#+begin_src emacs-lisp
-  ;;; Code:
-
-  (require 'eww)
-  (require 'w3m)
-
-  (defgroup create-link nil
-    "Generate a formatted current page link."
-    :group 'convenience
-    :prefix "create-link-")
-
-  (defcustom create-link-default-format 'html
-    "Default link format."
-    :group 'create-link
-    :type '(choice (const :tag "html" html)
-                   (const :tag "markdown" markdown)
-                   (other :tag "org" org)
-                   (other :tag "media-wiki" media-wiki)
-                   (other :tag "latex" latex)))
-
-  ;; 🌟オプション設定
-
-  ;; Format keywords:
-  ;; %url% - http://www.google.com/
-  ;; %title% - Google
-  (defcustom create-link-format-html "<a href='%url%'>%title%</a>"
-    "HTML link format."
-    :group 'create-link
-    :type 'string)
-
-  (defcustom create-link-format-markdown "[%title%](%url%)"
-    "Markdown link format."
-    :group 'create-link
-    :type 'string)
-
-  (defcustom create-link-format-org "[[%url%][%title%]]"
-    "Org-mode link format."
-    :group 'create-link
-    :type 'string)
-
-  (defcustom create-link-format-media-wiki "[%url% %title%]"
-    "Media Wiki link format."
-    :group 'create-link
-    :type 'string)
-
-  (defcustom create-link-format-latex "\\href{%url%}{%title%}"
-    "Latex link format."
-    :group 'create-link
-    :type 'string)
-
-  (defun create-link-raw-format ()
-    "Choose a format type by the custom variable."
-    (pcase create-link-default-format
-      (`html
-       create-link-format-html)
-      (`markdown
-       create-link-format-markdown)
-      (`org
-       create-link-format-org)
-      (`media-wiki
-       create-link-format-media-wiki)
-      (`latex
-       create-link-format-latex)))
-
-  (defun create-link-replace-dictionary ()
-    "Convert format keyword to corresponding one."
-    `(("%url%" . ,(cdr (assoc 'url (create-link-get-information))))
-      ("%title%" . ,(cdr (assoc 'title (create-link-get-information))))))
-
-  (defun create-link-make-format ()
-    "Fill format keywords."
-    (seq-reduce
-     (lambda (string regexp-replacement-pair)
-       (replace-regexp-in-string
-        (car regexp-replacement-pair)
-        (cdr regexp-replacement-pair)
-        string))
-     (create-link-replace-dictionary)
-     (create-link-raw-format))) ;; <a href='%url%'>%title%</a> とか。ループのinitial value。
-
-  ;; <a href='%url%'>%title%</a>
-  ;; <a href='https://...'>%title%</a> 前の値を保持
-  ;; <a href='https://...'>Google</a> さらに置換
-
-  ,#+begin_comment
-  ;; ここを綺麗に書くのが一番むずかしかった。...複数の文字列置換
-  ;; 一つの置換(replace-regexp-in-string)は関数があるが、複数指定はできない。
-
-  ;; (seq-reduce)の第一引数はコードブロックに相当するところ。ループ一回で何をするか。
-  ;; stringはraw-format(<a href='%url%'>%title%</a>など)を受け取る。
-  ;; regexp-replacement-pairはreplace-dictionaryのイテレーション分が入る。ブロック引数。
-  ,#+end_comment
-
-  ;; 🌟ブラウザやその他をラップしてtitle, urlを返す！
-  (defun create-link-get-information ()
-    "Get keyword information on your browser."
-    (cond ((string-match-p "eww" (buffer-name))
-           `((title . ,(plist-get eww-data :title))
-             (url . ,(plist-get eww-data :url))))
-          ((string-match-p "w3m" (buffer-name))
-           `((title . ,w3m-current-title)
-             (url . ,w3m-current-url)))
-          ;; otherwise, create-link to the file-buffer
-          (t
-           `((title . ,(buffer-name))
-             (url . ,(buffer-file-name))))))
-
-  ;; 🌟エントリーポイント
-  ;;;###autoload
-  (defun create-link ()
-    "Create formatted link."
-    (interactive)
-    (message "Copied! %s" (create-link-make-format))
-    (kill-new (create-link-make-format)))
-
-  (provide 'create-link)
-
-  ;;; create-link.el ends here
-#+end_src
-** 知見
-*** 短くても問題なし
-大きなパッケージに比べてこれはゴミみたいなもんだな、と思ってました。
-
-でもコードやアイデアの参考にするため使っているパッケージのコードを眺めていて、こういう短いものでも自分が日々使ってたり、多くの人に使われているパッケージはけっこうあることに気づきました。
-
-たとえば。
-
-add-node-modules-path.el
-- node環境の読み込み 86行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/org-bullets-20200317.1740/org-bullets.el][org-bullets.el]]
-- リストをいい感じに表示する 109行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/define-word-20210103.1812/define-word.el][define-word.el]]
-- オンライン辞書 132行
-[[/home/kijima/.emacs.d/.cask/27.1/elpa/rubocop-20210309.1241/rubocop.el][rubocop.el]]
-- rubocopをいい感じに 267行
-
-- 重要なのは1つのことをうまくやること。
-*** 他の人に使ってもらえるとうれしい
-使ってくれた＋PRが来ました。
-褒めてくれてテンション上がる。
-https://github.com/kijimaD/create-link/pull/7
-
-#+begin_quote
-I like this package, is simple and useful.
-#+end_quote
-
-審査にむけてやったこと。
-
-- わかりやすいコンセプト。
-- 空気を読んだ動作をする、限られたインタフェース(create-link)という関数1つで、複数フォーマット・ブラウザに対応できる。
-- ちゃんとドキュメントを用意した [[https://github.com/kijimaD/create-link][kijimaD/create-link]]
-- オプションを用意した。フォーマットの種類やブラウザを増やすのは、とても簡単です。
-** ロードマップ
-フォーマットリンクを取得するだけのシンプルなコードではありますが、拡張はいろいろ考えられます。
-*** 入出力のバリエーションを増やす
-**** DONE エクスポート形式増加 HTML,LaTeX,Markdown,MediaWiki,Org-mode
-CLOSED: [2021-05-14 Fri 10:52]
-**** DONE ユーザ定義のフィルター … chromeの拡張の方にはある
-CLOSED: [2021-05-14 Fri 10:52]
-**** DONE PDF(ページを取ることはできそう。リンクでページ番号を表現できるか)
-CLOSED: [2021-05-19 Wed 22:22]
-やらない。
-*** コンテクストによる動作のバリエーションを増やす
-**** DONE テキスト選択中だと、タイトルに選択したところを入れる
-CLOSED: [2021-05-14 Fri 10:53]
-**** DONE 選択URLにアクセスして、Titleをスクレイピング。リンクを完成させる
-CLOSED: [2021-05-16 Sun 14:28]
-**** DONE 手動で形式選択できるように
-CLOSED: [2021-05-19 Wed 09:26]
-helmから選べたらベスト。選択をどうやってやればいいのかよくわからない
-org-roamのファイル選択で出てくるhelmなど参考になりそう。
-**** DONE とりあえず標準のcompletionだけ追加
-CLOSED: [2021-05-16 Sun 08:40]
-**** DONE checkdocをCIで走らせるようにする
-CLOSED: [2021-05-19 Wed 09:26]
-elisp-checkはcask環境のためうまくできない。
-なので、elisp-check.elを直に読み込んで実行するようにすればよさそう。
-
-elisp-lintというパッケージに同梱されてたのでそれで一気にできるようになった。
-**** DONE テスト追加 + CI
-CLOSED: [2021-05-15 Sat 20:57]
-*** ユーザの拡張性を増やす
-**** DONE フックを追加…たとえばリンク生成 → {フック} → コピー前としておく。
-CLOSED: [2021-05-19 Wed 22:19]
-フックでは式が使えるのでなんでもできる。動的にタイムスタンプを加えたり、連番を振ったりとか。単なる文字列フィルターよりはるかに強力。誰かがもっと便利な使い方を編み出してくれる。
-
-make-formatと、message+killの前にフックを差し込むか。
-でも、文字列を受け取れないからあまり意味ない気がしてきた。
-フックはその処理に追加するというより、別の処理を差し込むためのものだ(ある関数を実行すると、別の全く関係ない)モードをオンにするとか。その意味でいうと、フックする処理はまったく思いつかない。
-**** DONE リンク変換
-CLOSED: [2021-05-21 Fri 22:28]
-別のフォーマットに変換するのもあっていいな。
-すでに書式があるから、そこからURL, Titleを取り出せればいい。
-- 判定関数
-thing-at-pointの拡張だな。フォーマットリンク上にカーソルがある場合、タイトルとURLを取得して変換…。
-どのフォーマットか判定できれば、タイトルとURLを取れる。
-markdown-mode.elの(markdown-kill-thing-at-point)が参考になりそう。
-
-別に独自実装しなくても、各modeのregexpを使えばいいかな。いや、フル装備でめちゃくちゃ複雑だし、いろんな依存(5つも増えるのはさすがに…)があるので独自でやろう。
-https://ayatakesi.github.io/emacs/25.1/Regexps.html
-**** DONE フォーマットごとの特殊ルールを追加する
-CLOSED: [2021-05-31 Mon 19:26]
-たとえばlatexの場合、ファイルリンクにはプレフィクスrun:がつくらしい。
-今のコードだとファイルリンクだという検知はget-informationでしかできないのでそこに書くしかない。
-一般的関数に特定のファイルフォーマットの処理が挟まれると非常に醜い。
-なので、最終的な個別変換を分離する。そうするとhtmlがついてないときはrunをつけるとか、好きに追加できるだろう。
-**** Magit(Gitクライアント)の場合。(すでにGitHubリンクの生成はある)
-~git-link~ の整形バージョン。
-そこまではちょっとやりすぎ感。依存が増えすぎるのも微妙な感じか。でも欲しいよな…。
-各PRまではいいけど、少なくともリポジトリのホームページくらいならいいかな。
-**** シェルだったらカレントディレクトリを取る
-ブラウザみたく、変数が用意されてはない模様。まあこれについてはあまりいらないか。
-パスを取得したいときはあるけど、それをhtmlリンクにしたいってあまりないしな。
-
-パスはdefault-directoryで取れる。
-**** タイトルはないときバージョンを作るか
-つまりパスだけ。
-主題とはずれる気がする。シェルとかだとタイトルの取りようがないのでこれを追加するのが必要。
-**** Gitリポジトリのときは、相対ディレクトリを取得するオプション
-リポジトリからリンクを辿れるようになる。でもEmacs上でどうなんだろう。
-辿れないけど、人にディレクトリを示すときには使える。今は絶対パスで取って前のを削除している。めんど
-い。
-うむむ。リモートリポジトリのURLがわかるなら意味はありそう。git-linkとあまり変わらないけどな。
-git-linkのコードを見てるけど、まだあまりよくわからない。
-**** ホームディレクトリを~で出すようにする
-今は ~/home/kijima...~ で出てるからな。汎用性があまりよくない。あとで絶対変わるし、ほかで使えない。
-**** 実行関数を出力
-たとえばivyのinfoページにいたとする。(info "ivy") を出力する。
-これを実行するとivyに飛べるので、リンクといえそう。環境も関係ない。
-
-infoバッファからの検索キーワードの割り出し方…
-実行ディレクトリをdefault-directoryか何かで取る。(.*).infoというファイルがあるはずなのでそのファイル名をinfoの引数に渡す。
-*** まとめ
-0. 移植技を覚えました。要件が明確＋元ソースを読むことができると楽。プログラムに集中できて美味しい。
-1. ちょっとした不便さは少ないコードで解決できる。
-2. ごく単純なコンセプトでも、拡張の方向性は意外と多いです。
-
-おわり。
 * Memo
 ** アクセスを待つ必要がある
 ブラウザでのテストは、(sit-for) で待つ必要があります。
@@ -358,3 +87,83 @@ info用とか、custom用のリンク抽出も考えられる。
 ファイルだと依存するからな。Emacsで実行するのが前提のを生成するというわけだ。
 
 npm install date-fns @types/date-fns
+
+* Tasks
+** Magit(Gitクライアント)の場合。(すでにGitHubリンクの生成はある)
+~git-link~ の整形バージョン。
+そこまではちょっとやりすぎ感。依存が増えすぎるのも微妙な感じか。でも欲しいよな…。
+各PRまではいいけど、少なくともリポジトリのホームページくらいならいいかな。
+
+これができるとメモるとき便利なんだよな。
+** シェルだったらカレントディレクトリを取る
+ブラウザみたく、変数が用意されてはない模様。まあこれについてはあまりいらないか。
+パスを取得したいときはあるけど、それをhtmlリンクにしたいってあまりないしな。
+
+パスはdefault-directoryで取れる。
+** タイトルはないときバージョンを作るか
+つまりパスだけ。
+主題とはずれる気がする。シェルとかだとタイトルの取りようがないのでこれを追加するのが必要。
+** Gitリポジトリのときは、相対ディレクトリを取得するオプション
+リポジトリからリンクを辿れるようになる。でもEmacs上でどうなんだろう。
+辿れないけど、人にディレクトリを示すときには使える。今は絶対パスで取って前のを削除している。めんど
+い。
+うむむ。リモートリポジトリのURLがわかるなら意味はありそう。git-linkとあまり変わらないけどな。
+git-linkのコードを見てるけど、まだあまりよくわからない。
+** ホームディレクトリを~で出すようにする
+今は ~/home/kijima...~ で出てるからな。汎用性があまりよくない。あとで絶対変わるし、ほかで使えない。
+** 実行関数を出力
+たとえばivyのinfoページにいたとする。(info "ivy") を出力する。
+これを実行するとivyに飛べるので、リンクといえそう。環境も関係ない。
+
+infoバッファからの検索キーワードの割り出し方…
+実行ディレクトリをdefault-directoryか何かで取る。(.*).infoというファイルがあるはずなのでそのファイル名をinfoの引数に渡す。
+* Archives
+** DONE フックを追加…たとえばリンク生成 → {フック} → コピー前としておく。
+CLOSED: [2021-05-19 Wed 22:19]
+フックでは式が使えるのでなんでもできる。動的にタイムスタンプを加えたり、連番を振ったりとか。単なる文字列フィルターよりはるかに強力。誰かがもっと便利な使い方を編み出してくれる。
+
+make-formatと、message+killの前にフックを差し込むか。
+でも、文字列を受け取れないからあまり意味ない気がしてきた。
+フックはその処理に追加するというより、別の処理を差し込むためのものだ(ある関数を実行すると、別の全く関係ない)モードをオンにするとか。その意味でいうと、フックする処理はまったく思いつかない。
+** DONE リンク変換
+CLOSED: [2021-05-21 Fri 22:28]
+別のフォーマットに変換するのもあっていいな。
+すでに書式があるから、そこからURL, Titleを取り出せればいい。
+- 判定関数
+thing-at-pointの拡張だな。フォーマットリンク上にカーソルがある場合、タイトルとURLを取得して変換…。
+どのフォーマットか判定できれば、タイトルとURLを取れる。
+markdown-mode.elの(markdown-kill-thing-at-point)が参考になりそう。
+
+別に独自実装しなくても、各modeのregexpを使えばいいかな。いや、フル装備でめちゃくちゃ複雑だし、いろんな依存(5つも増えるのはさすがに…)があるので独自でやろう。
+https://ayatakesi.github.io/emacs/25.1/Regexps.html
+** DONE フォーマットごとの特殊ルールを追加する
+CLOSED: [2021-05-31 Mon 19:26]
+たとえばlatexの場合、ファイルリンクにはプレフィクスrun:がつくらしい。
+今のコードだとファイルリンクだという検知はget-informationでしかできないのでそこに書くしかない。
+一般的関数に特定のファイルフォーマットの処理が挟まれると非常に醜い。
+なので、最終的な個別変換を分離する。そうするとhtmlがついてないときはrunをつけるとか、好きに追加できるだろう。
+** DONE テキスト選択中だと、タイトルに選択したところを入れる
+CLOSED: [2021-05-14 Fri 10:53]
+** DONE 選択URLにアクセスして、Titleをスクレイピング。リンクを完成させる
+CLOSED: [2021-05-16 Sun 14:28]
+** DONE 手動で形式選択できるように
+CLOSED: [2021-05-19 Wed 09:26]
+helmから選べたらベスト。選択をどうやってやればいいのかよくわからない
+org-roamのファイル選択で出てくるhelmなど参考になりそう。
+** DONE とりあえず標準のcompletionだけ追加
+CLOSED: [2021-05-16 Sun 08:40]
+** DONE checkdocをCIで走らせるようにする
+CLOSED: [2021-05-19 Wed 09:26]
+elisp-checkはcask環境のためうまくできない。
+なので、elisp-check.elを直に読み込んで実行するようにすればよさそう。
+
+elisp-lintというパッケージに同梱されてたのでそれで一気にできるようになった。
+** DONE テスト追加 + CI
+CLOSED: [2021-05-15 Sat 20:57]
+** DONE エクスポート形式増加 HTML,LaTeX,Markdown,MediaWiki,Org-mode
+CLOSED: [2021-05-14 Fri 10:52]
+** DONE ユーザ定義のフィルター … chromeの拡張の方にはある
+CLOSED: [2021-05-14 Fri 10:52]
+** DONE PDF(ページを取ることはできそう。リンクでページ番号を表現できるか)
+CLOSED: [2021-05-19 Wed 22:22]
+やらない。

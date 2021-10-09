@@ -1177,10 +1177,235 @@ BookInfo型の場合。
 #+end_src
 
 #+begin_src haskell
+  :{
   simpleTree = Node "parent" (Node "left child" Empty Empty)
                              (Node "right child" Empty Empty)
+  :}
+  :type simpleTree
 #+end_src
 
+#+RESULTS:
+:
+: simpleTree :: Tree [Char]
+** エラー報告表示
+listの要素が1つのときはエラー表示を出す。
+
+#+begin_src haskell
+  :{
+  mySecond :: [a] -> a
+  mySecond xs = if null (tail xs)
+                then error ("list too short")
+                else head (tail xs)
+  :}
+  mySecond "xi"
+  mySecond [2, 3]
+  mySecond [2]
+#+end_src
+
+#+RESULTS:
+:
+: 'i'
+: 3
+: *** Exception: list too short
+: CallStack (from HasCallStack):
+:   error, called at <interactive>:2664:20 in interactive:Ghci1539
+
+ちゃんとエラーメッセージが出ている。
+** エラーの可能性, Maybe
+#+begin_src haskell
+  :{
+  safeSecond :: [a] -> Maybe a
+  safeSecond [] = Nothing
+  safeSecond xs = if null (tail xs)
+                  then Nothing
+                  else Just (head (tail xs))
+  :}
+  safeSecond [1, 2] -- なぜかできない。
+  --
+#+end_src
+
+#+RESULTS:
+
+パターンマッチを使って改善。
+
+#+begin_src haskell
+  tidySecond :: [a] -> Maybe a
+
+  tidySecond (_:x:_) = Just x
+  tidySecond _       = Nothing
+#+end_src
+
+#+RESULTS:
+** 局所変数
+#+begin_src haskell
+  :{
+  lend amount balance = let reserve = 100
+                            newBalance = balance - amount
+                        in if balance < reserve
+                           then Nothing
+                           else Just newBalance
+  :}
+#+end_src
+
+#+RESULTS:
+
+** シャドウ
+内側の ~x~ が外側の ~x~ を隠す。
+#+begin_src haskell
+  :{
+  bar = let x = 1
+        in ((let x = "foo" in x), x)
+  :}
+  bar
+#+end_src
+
+#+RESULTS:
+:
+: ("foo",1)
+** where節
+#+begin_src haskell
+  :{
+  lend2 amount balance = if amount < reserve * 0.5
+                         then Just newBalance
+                         else Nothing
+        where reserve  = 100
+              newBalance = balance - amount
+  :}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :{
+  pluralise :: String -> [Int] -> [String]
+  pluralise word counts = map plural counts
+      where plural 0 = "no " ++ word ++ "s"
+            plural 1 = "one " ++ word
+            plural n = show n ++ " " ++ word ++ "s"
+  :}
+  pluralise "car" [0]
+  pluralise "car" [1]
+  pluralise "car" [2]
+#+end_src
+
+#+RESULTS:
+:
+: ["no cars"]
+: ["one car"]
+: ["2 cars"]
+** case式
+#+begin_src haskell
+  :{
+  fromMaybe defval wrapped =
+    case wrapped of
+      Nothing -> defval
+      Just value -> value
+  :}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :{
+    data Fruit = Apple | Orange
+    betterFruit f = case f of
+                    "apple" -> Apple
+                    "orange" -> Orange
+  :}
+#+end_src
+
+#+RESULTS:
+** ガード
+#+begin_src haskell
+  :{
+  nodesAreSame (Node a _ _) (Node b _ _)
+      | a == b     = Just a
+  nodesAreSame _ _ = Nothing
+  :}
+#+end_src
+
+#+RESULTS:
+
+lend関数を書き直す。
+#+begin_src haskell
+  :{
+  lend3 amount balance
+       | amount <= 0            = Nothing
+       | amount > reserve * 0.5 = Nothing
+       | otherwise              = Just newBalance
+      where reserve    = 100
+            newBalance = balance - amount
+  :}
+#+end_src
+
+#+RESULTS:
+
+myDrop関数を書き直す。
+元コード。
+#+begin_src haskell
+  :{
+  myDrop n xs = if n <= 0 || null xs
+                then xs
+                else myDrop (n - 1) (tail xs)
+   :}
+  myDrop 2 "abcd"
+#+end_src
+
+#+RESULTS:
+:
+: cd
+
+#+begin_src haskell
+  :{
+  niceDrop n xs | n <= 0 = xs
+  niceDrop _ []          = []
+  niceDrop n (_:xs)      = niceDrop (n - 1) xs
+  :}
+  niceDrop 2 "abcd"
+#+end_src
+
+#+RESULTS:
+:
+: cd
+** テキスト行分割
+#+begin_src haskell
+  :type lines
+  lines "line 1\nline 2"
+  lines "foo\n\nbar\n"
+#+end_src
+
+#+RESULTS:
+: lines :: String -> [String]
+: ["line 1","line 2"]
+: ["foo","","bar"]
+
+#+begin_src haskell
+  break odd [2,4,5,6,8]
+  :module +Data.Char
+  break isUpper "isUpper"
+#+end_src
+
+#+begin_src haskell
+  :{
+    a `plus` b = a + b
+    data a `Pair` b = a `Pair` b
+               deriving (Show)
+    foo = Pair 1 2
+    bar = True `Pair` "quux"
+  :}
+  1 `plus` 2
+  plus 1 2
+  Pair "a" "a"
+  "a" `Pair` "a"
+#+end_src
+
+#+RESULTS:
+:
+: 3
+: 3
+: a" `Pair` "a
+: a" `Pair` "a
+** リストの処理
 * Tasks
 ** TODO org-babelでhaskellを実行できなくなる
 ~:set +t~ を評価すると使えなくなる。
@@ -1194,6 +1419,9 @@ BookInfo型の場合。
 
 *** TODO 100
 :LOGBOOK:
+CLOCK: [2021-10-09 Sat 22:21]--[2021-10-09 Sat 23:48] =>  1:27
+CLOCK: [2021-10-09 Sat 19:34]--[2021-10-09 Sat 20:06] =>  0:32
+CLOCK: [2021-10-08 Fri 22:23]--[2021-10-09 Sat 00:07] =>  1:44
 CLOCK: [2021-10-07 Thu 09:58]--[2021-10-07 Thu 10:57] =>  0:59
 CLOCK: [2021-10-07 Thu 09:24]--[2021-10-07 Thu 09:34] =>  0:10
 CLOCK: [2021-10-06 Wed 22:25]--[2021-10-07 Thu 00:07] =>  1:42
@@ -1208,7 +1436,6 @@ CLOCK: [2021-10-03 Sun 16:41]--[2021-10-03 Sun 17:29] =>  0:48
 CLOCK: [2021-10-03 Sun 15:15]--[2021-10-03 Sun 15:23] =>  0:08
 CLOCK: [2021-10-02 Sat 23:12]--[2021-10-03 Sun 00:16] =>  1:04
 :END:
-<2021-10-03 Sun>
 *** TODO 200
 *** TODO 300
 *** TODO 400
