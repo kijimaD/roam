@@ -3,7 +3,6 @@
 :header-args+: :results output
 :END:
 #+title: Haskell
-
 * 概要
 Haskellは純粋関数型[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
@@ -1220,8 +1219,7 @@ listの要素が1つのときはエラー表示を出す。
                   then Nothing
                   else Just (head (tail xs))
   :}
-  safeSecond [1, 2] -- なぜかできない。
-  --
+  safeSecond [1,2] -- なぜかできない。
 #+end_src
 
 #+RESULTS:
@@ -1406,6 +1404,516 @@ myDrop関数を書き直す。
 : a" `Pair` "a
 : a" `Pair` "a
 ** リストの処理
+
+#+begin_src haskell
+  :type length
+  length []
+  length [1,2,3]
+  null []
+  head [1,2]
+  tail "foo"
+  last "bar"
+#+end_src
+
+#+RESULTS:
+: length :: Foldable t => t a -> Int
+: 0
+: 3
+: True
+: 1
+: oo
+: 'r'
+
+連結関数。
+
+#+begin_src haskell
+  :type (++)
+  "foo" ++ "bar"
+  [] ++ [1,2,3]
+  [1] ++ []
+#+end_src
+
+#+RESULTS:
+: (++) :: [a] -> [a] -> [a]
+: foobar
+: [1,2,3]
+: [1]
+
+~concat~ 連結して1つのリストにする。
+
+#+begin_src haskell
+  :type concat
+  concat [[1,2,3], [4,5,6]]
+  concat [[[1,2],[3]], [[4],[5],[6]]]
+  concat (concat [[1,2],[3]], [[4],[5],[6]])
+#+end_src
+
+#+RESULTS:
+: concat :: Foldable t => t [a] -> [a]
+: [1,2,3,4,5,6]
+: [[1,2],[3],[4],[5],[6]]
+: [[4],[5],[6]]
+
+~reverse~ 逆順にする。
+
+#+begin_src haskell
+  :type reverse
+  reverse "foo"
+#+end_src
+
+#+RESULTS:
+: reverse :: [a] -> [a]
+: oof
+
+便利な条件判定、 ~all~ と ~any~ 。
+
+#+begin_src haskell
+  :type all
+  all odd [1,3,5]
+  all odd [3,1,4]
+  all odd []
+  :type any
+  any even [3,1,4]
+  any even []
+#+end_src
+
+#+RESULTS:
+: all :: Foldable t => (a -> Prelude.Bool) -> t a -> Prelude.Bool
+: True
+: False
+: True
+: any :: Foldable t => (a -> Prelude.Bool) -> t a -> Prelude.Bool
+: True
+: False
+
+部分リスト。
+
+#+begin_src haskell
+  :type take
+  take 3 "foobar"
+  take 2 [1]
+  :type drop
+  drop 3 "xyzzy"
+  drop 1 []
+#+end_src
+
+#+RESULTS:
+: take :: Int -> [a] -> [a]
+: foo
+: [1]
+: drop :: Int -> [a] -> [a]
+: zy
+: []
+
+~splitAt~ インデックスで分割したリストのペアを返す。
+#+begin_src haskell
+  :type splitAt
+  splitAt 3 "foobar"
+#+end_src
+
+#+RESULTS:
+: splitAt :: Int -> [a] -> ([a], [a])
+: ("foo","bar")
+
+~span~ 条件に合うもの、以外でリストを返す。
+
+#+begin_src haskell
+  :type span
+  span even [2,4,6,7,9,10,11]
+  :type break
+  break even [1,3,5,6,8,9,10]
+#+end_src
+
+#+RESULTS:
+: span :: (a -> Prelude.Bool) -> [a] -> ([a], [a])
+: ([2,4,6],[7,9,10,11])
+: break :: (a -> Prelude.Bool) -> [a] -> ([a], [a])
+: ([1,3,5],[6,8,9,10])
+
+~elem~ 値がリスト中に存在するかどうか示す。
+
+#+begin_src haskell
+  :type elem
+  2 `elem` [5,3,2,1,1]
+  2 `notElem` [5,3,2,1,1]
+#+end_src
+
+#+RESULTS:
+: elem :: (Foldable t, Eq a) => a -> t a -> Prelude.Bool
+: True
+: False
+
+~filter~ 条件に合うリストを返す。
+
+#+begin_src haskell
+  :type filter
+   filter odd [2,4,1,3,6,8,5,7]
+#+end_src
+
+#+RESULTS:
+: filter :: (a -> Prelude.Bool) -> [a] -> [a]
+: [1,3,5,7]
+
+~isPrefixOf~ 部分リストがより大きなリストの中にあるか調べる。
+
+#+begin_src haskell
+  :module +Data.List
+  :type isPrefixOf
+  "foo" `isPrefixOf` "foobar"
+  [1,2] `isPrefixOf` []
+#+end_src
+
+#+RESULTS:
+:
+: isPrefixOf :: Eq a => [a] -> [a] -> Prelude.Bool
+: True
+: False
+
+~zip~ 2つのリストをペアのリストにする。
+
+#+begin_src haskell
+  :type zip
+  zip [12,72,93] "zippity"
+#+end_src
+
+#+RESULTS:
+: zip :: [a] -> [b] -> [(a, b)]
+: [(12,'z'),(72,'i'),(93,'p')]
+
+~zipWith~ 2つのリストのペア毎に関数を適用する。
+
+#+begin_src haskell
+  :type zipWith
+  zipWith (+) [1,2,3] [4,5,6]
+#+end_src
+
+#+RESULTS:
+: zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+: [5,7,9]
+
+可変長引数はHaskellの型システムのうえでは難しい。
+複数のリストを閉じ合わせるには ~zip3~ 〜 ~zip7`~ を使う。
+** リストのいけてる扱い方
+haskellにおいてはほかの言語と同じように、扱えない部分がある。
+~length~ はリスト全体を辿らないといけないが、無限リストである可能性がある。
+
+#+begin_src haskell
+  :{
+    mySmartExample xs = if not (null xs)
+                        then head xs
+                        else 'Z'
+    myOtherExample (x:_) = x
+    myOtherExample [] = 'Z'
+  :}
+  mySmartExample "head"
+  mySmartExample []
+#+end_src
+
+#+RESULTS:
+:
+: 'h'
+: 'Z'
+** 部分関数
+正当な入力の部分集合の値に対してのみ値を返す関数のことを部分関数という。
+入力の全定義域に対して正しい結果を返す関数のことを全関数という。
+** 文字列専用の関数
+#+begin_src haskell
+  lines "foo\nbar"
+  unlines ["foo", "bar"]
+#+end_src
+
+#+RESULTS:
+: ["foo","bar"]
+: foo\nbar\n
+
+~words~ は入力文字を任意の空白で区切る。
+
+#+begin_src haskell
+  words "the \r quick \t brown\n\n\nfox"
+  unwords ["jumps", "over", "the", "lazy", "dog"]
+#+end_src
+
+#+RESULTS:
+: ["the","quick","brown","fox"]
+: jumps over the lazy dog
+** ループ
+Haskellには、 ~for~ ループ、 ~while~ ループはない。
+
+[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]の例。
+こんなふうにはできないので末尾再帰を使う。
+
+#+begin_src C
+  int as_int(char *str)
+  {
+    int acc;
+    for (acc = 0; isdigit(*str); str++) {
+      acc = acc * 10 + (*str - '0');
+    }
+
+    return acc;
+  }
+#+end_src
+
+配列の中のすべての要素を2乗する。
+
+#+begin_src C
+  void square(double *out, const double *in, size_t length)
+  {
+    for (size_t i = 0; i < length; i++) {
+      out[i] = in[i] * in[i];
+    }
+  }
+#+end_src
+
+#+begin_src haskell
+  :{
+   square :: [Double] -> [Double]
+   square (x:xs) = x*x : square xs
+   square []     = []
+  :}
+  square [1,2]
+  square []
+#+end_src
+
+#+RESULTS:
+:
+: [1.0,4.0]
+: []
+
+大文字化。
+
+#+begin_src haskell
+  :{
+  upperCase :: String -> String
+
+  upperCase (x:xs) = toUpper x : upperCase xs
+  upperCase []     = []
+  :}
+  upperCase "hello"
+#+end_src
+
+#+RESULTS:
+:
+: HELLO
+
+~map~ は関数を引数としてとり、リストのすべての要素に適用する。
+
+#+begin_src haskell
+  upperCase2 xs = map toUpper xs
+  upperCase2 "hello"
+#+end_src
+
+#+RESULTS:
+:
+: HELLO
+
+~map~ を書き直してみる。
+
+#+begin_src haskell
+  :{
+    myMap :: (a -> b) -> [a] -> [b]
+    myMap f (x:xs) = f x : myMap f xs
+    myMap _ _      = []
+  :}
+    upperCase3 xs = myMap toUpper xs
+    upperCase3 "hello"
+#+end_src
+
+#+RESULTS:
+: "HELLO"
+** フィルター
+#+begin_src haskell
+  :{
+  oddList :: [Int] -> [Int]
+
+  oddList (x:xs) | odd x = x : oddList xs
+                 | otherwise = oddList xs
+  oddList _                  = []
+  :}
+  oddList [1,2,3,4,5,6,7,8,9,10]
+#+end_src
+
+#+RESULTS:
+:
+: [1,3,5,7,9]
+
+~helper~ は末尾再帰の関数で、蓄積変数 ~acc~ を使ってリストのその時点での部分和を保持する。
+
+#+begin_src haskell
+  :{
+  mySum xs = helper 0 xs
+    where helper acc (x:xs) = helper (acc + x) xs
+          helper acc _      = acc
+  :}
+  mySum [1,2,3,4]
+#+end_src
+
+#+RESULTS:
+:
+: 10
+** 畳み込み
+畳み込み: リストのすべての要素に何かを行い、蓄積変数を更新していって、終わったところで蓄積変数を返す。
+
+#+begin_src haskell
+  :{
+  foldl :: (a -> b -> a) -> a -> [b] -> a
+
+  foldl step zero (x:xs) = foldl step (step zero x) xs
+  foldl _    zero []     = zero
+  :}
+#+end_src
+
+#+RESULTS:
+
+#+begin_src haskell
+  :{
+  niceSum :: [Integer] -> Integer
+  niceSum xs = foldl (+) 0 xs
+  :}
+  niceSum [1,2,3,4,5]
+#+end_src
+
+#+RESULTS:
+:
+: 15
+
+問題を2つに単純化することで、すっきり書けるようになった。
+蓄積値の初期値をどうするかと、蓄積変数の更新。
+
+明示的再帰は綿密に読む必要があり、わかりづらい。
+畳み込みを使えば再帰を理解しやすい。
+
+右側からの畳み込み。
+#+begin_src haskell
+  foldr :: (a -> b -> b) -> b -> [a] -> b
+  foldr step zero (x:xs) = step x (foldr step zero xs)
+  foldr _    zero []     = 0
+#+end_src
+
+#+RESULTS:
+** 再帰と畳み込みの比較
+#+begin_src haskell
+  :{
+  filter :: (a -> Bool) -> [a] -> [a]
+  filter p [] = []
+  filter p (x:xs)
+    | p x = x : filter p xs
+    | otherwise = filter p xs
+  :}
+#+end_src
+
+#+begin_src haskell
+  :{
+  myFilter p xs = foldr step [] xs
+    where step x ys | p x = x : ys
+                    | otherwise = ys
+  :}
+  myFilter (+) [1,2]
+#+end_src
+** 無名関数
+普通に書く例。
+#+begin_src haskell
+  :{
+  isInAny needle haystack = any inSequence haystack
+      where inSequence s = needle `isInfixOf` s
+  :}
+#+end_src
+
+#+RESULTS:
+
+無名関数を使う例。
+
+#+begin_src haskell
+isInAny2 needle haystack = any (\s -> needle `isInfixOf` s) haystack
+#+end_src
+
+#+RESULTS:
+** 部分適用
+#+begin_src haskell
+:type dropWhile
+#+end_src
+
+#+RESULTS:
+: dropWhile :: (a -> Prelude.Bool) -> [a] -> [a]
+
+->の意味…左側の型を引数に取り、右側の型の値を返す関数。
+
+Haskellにおいては、 *すべての関数は1つしか引数を取らない* 。
+1つ渡すと型シグネチャから1つ削られたことがわかる。
+
+#+begin_src haskell
+  :type dropWhile
+  :type dropWhile isSpace
+  map (dropWhile isSpace) [" a", "f", "    e"]
+#+end_src
+
+#+RESULTS:
+: dropWhile :: (a -> Prelude.Bool) -> [a] -> [a]
+: dropWhile isSpace :: [Char] -> [Char]
+: ["a","f","e"]
+
+#+begin_src haskell
+  :type zip3
+  zip3 "foo" "bar" "quux"
+#+end_src
+
+#+RESULTS:
+: zip3 :: [a] -> [b] -> [c] -> [(a, b, c)]
+: [('f','b','q'),('o','a','u'),('o','r','u')]
+
+#+begin_src haskell
+  :type zip3 "foo"
+  let zip3foo = zip3 "foo"
+  :type zip3foo
+  zip3foo "aaa" "bbb"
+#+end_src
+
+#+RESULTS:
+: zip3 "foo" :: [b] -> [c] -> [(Char, b, c)]
+: Prelude Data.Char Data.List Data.Char Data.Char> zip3foo :: [b] -> [c] -> [(Char, b, c)]
+: [('f','a','b'),('o','a','b'),('o','a','b')]
+
+関数が受け入れ可能な数よりも少ない数の引数を渡すことを関数の部分適用という(~カリー化~)。
+
+#+begin_src haskell
+  isInAny3 needle haystack = any (isInfixOf needle) haystack
+#+end_src
+
+#+RESULTS:
+
+カリー化の例。
+使う前。
+#+begin_src haskell
+  niceSum :: [Integer] -> Integer
+  niceSum xs = foldl (+) 0 xs
+#+end_src
+
+完全に適用せずに、省略できる。
+#+begin_src haskell
+  niceSum :: [Integer] -> Integer
+  niceSum = foldl (+) 0
+#+end_src
+
+#+RESULTS:
+** セクション
+括弧で中置スタイルの関数の部分適用を書ける。
+#+begin_src haskell
+  (1+) 2
+  map (*3) [24,36]
+  map (2^) [3,5,7,9]
+#+end_src
+
+#+RESULTS:
+: 3
+: [72,108]
+: [8,32,128,512]
+
+#+begin_src haskell
+:type (`elem` ['a'..'z'])
+#+end_src
+
+#+RESULTS:
+: (`elem` ['a'..'z']) :: Char -> Prelude.Bool
 * Tasks
 ** TODO org-babelでhaskellを実行できなくなる
 ~:set +t~ を評価すると使えなくなる。
@@ -1414,11 +1922,14 @@ myDrop関数を書き直す。
 いちいちロード、コンパイルは学習に不便。既存のがあるはずだが、調べ方がわからない。
 
 ~org-babel~ でよさそう。
-** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]] [0%]
+** TODO [[https://www.oreilly.co.jp/books/9784873114231/][O'Reilly Japan - Real World Haskell]] [14%]
 <2021-10-15 Fri>
-
-*** TODO 100
+*** DONE 100
+CLOSED: [2021-10-10 Sun 21:58]
 :LOGBOOK:
+CLOCK: [2021-10-10 Sun 21:08]--[2021-10-10 Sun 21:58] =>  0:50
+CLOCK: [2021-10-10 Sun 11:38]--[2021-10-10 Sun 12:04] =>  0:26
+CLOCK: [2021-10-10 Sun 10:29]--[2021-10-10 Sun 10:59] =>  0:30
 CLOCK: [2021-10-09 Sat 22:21]--[2021-10-09 Sat 23:48] =>  1:27
 CLOCK: [2021-10-09 Sat 19:34]--[2021-10-09 Sat 20:06] =>  0:32
 CLOCK: [2021-10-08 Fri 22:23]--[2021-10-09 Sat 00:07] =>  1:44
@@ -1437,12 +1948,17 @@ CLOCK: [2021-10-03 Sun 15:15]--[2021-10-03 Sun 15:23] =>  0:08
 CLOCK: [2021-10-02 Sat 23:12]--[2021-10-03 Sun 00:16] =>  1:04
 :END:
 *** TODO 200
+:LOGBOOK:
+CLOCK: [2021-10-11 Mon 09:55]--[2021-10-11 Mon 10:25] =>  0:30
+:END:
 *** TODO 300
 *** TODO 400
 *** TODO 500
 *** TODO 600
 *** TODO 700
 * Reference
+** [[http://www.allureofthestars.com/play/][Allure of the Stars]]
+Haskellのブラウザローグライクゲーム。
 ** [[https://www.infoq.com/jp/articles/Understanding-Monads-guide-for-perplexed/][モナドを理解する - 迷える者への手引き]]
 Haskellのモナドの解説。
 ** [[https://ja.wikipedia.org/wiki/Haskell][Haskell - Wikipedia]]
