@@ -14,7 +14,7 @@ stackはHaskellの開発ツール。
 #+begin_src haskell :eval never
   ghci
   >> :load -- ファイル読み込み
-  >> :reload -- 再読込
+  >> :reload -- 再読込。org-babelがおかしくなったときに使える
   >> :quit -- ghci終了
 #+end_src
 
@@ -2636,7 +2636,6 @@ Color型だけでなく、BasicEq3のインスタンスとして宣言したあ�
 #+RESULTS:
 #+begin_results
 #+end_results
-
 ** Show
 #+begin_src haskell
 :type show
@@ -2689,6 +2688,370 @@ Hi, \"Jane\"
 #+end_results
 
 自分で定義した型に対して ~Show~ インスタンスを定義する。
+#+begin_src haskell
+  instance Show Color where
+      show Red   = "Red"
+      show Green = "Green"
+      show Blue  = "Blue"
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+** Read
+#+begin_src haskell
+:type read
+#+end_src
+
+#+RESULTS:
+#+begin_results
+read :: Read a => String -> a
+#+end_results
+
+エラーが出てうまくいかない...。
+#+begin_src haskell
+  :{
+  main = do
+      putStrLn "Please enter a Double:"
+      inpStr <- getLine
+      let inpDouble = (read inpStr)::Double
+      putStrLn ("Twice " ++ show inpDouble ++ " is " ++ show (inpDouble * 2))
+  :}
+#+end_src
+
+#+begin_src haskell
+read "5"
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Exception: Prelude.read: no parse
+#+end_results
+
+型の ~a~ は、それぞれのReadのインスタンスのこと。
+
+#+begin_src haskell
+:type (read "5")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(read "5") :: Read a => a
+#+end_results
+
+実際に呼ばれる特定の関数はreadの返り値から期待される型で決まる。
+
+#+begin_src haskell
+(read "5")::Integer
+(read "5")::Double
+#+end_src
+
+#+RESULTS:
+#+begin_results
+5
+5.0
+#+end_results
+
+#+begin_src haskell
+  :{
+  instance Read Color where
+     readsPrec _ value =
+         -- ペアは文字列と欲しい返り値
+         tryParse [("Red", Red), ("Green", Green), ("Blue", Blue)]
+         where tryParse [] = []
+               tryParse ((attempt, result):xs) =
+                   if (take (length attempt) value) == attempt
+                      then [(result, drop (length attempt) value)]
+                      else tryParse xs
+  :}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+なぜかstack overflowでできない。
+
+#+begin_src haskell
+  (read "Red")::Color
+  (read "Green")::Color
+  (read "Blue")::Color
+  (read "[Red]")::Color
+  (read "[Red,Red,Blue]")::Color
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Exception: stack overflow
+#+end_results
+** シリアライズ
+#+begin_src haskell
+  let d1 = [Just 5, Nothing, Nothing, Just 8, Just 9]::[Maybe Int]
+  :type show
+  :type show d1
+  putStrLn (show d1)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+show :: Show a => a -> String
+show d1 :: String
+[Just 5,Nothing,Nothing,Just 8,Just 9]
+#+end_results
+
+ファイルに書き込み。
+
+#+begin_src haskell
+  writeFile "test" (show d1)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+再度読み込み。
+~d2~ に明示的に型を与えるのがポイント。
+
+#+begin_src haskell
+  input <- readFile "test"
+  let d2 = (read input) ::[Maybe Int]
+  print d1
+  print d2
+  d1 == d2
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+GHCi> [Just 5,Nothing,Nothing,Just 8,Just 9]
+[Just 5,Nothing,Nothing,Just 8,Just 9]
+True
+#+end_results
+
+showにほかの引数を与えてみる。
+
+#+begin_src haskell
+putStrLn $ show [("hi", 1), ("there", 3)]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[("hi",1),("there",3)]
+#+end_results
+
+#+begin_src haskell
+putStrLn $ show [[1, 2, 3], [4, 0, 1], [], [503]]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[[1,2,3],[4,0,1],[],[503]]
+#+end_results
+
+#+begin_src haskell
+putStrLn $ show [Left 5, Right "there", Left 0, Right "nine"]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[Left 5,Right "there",Left 0,Right "nine"]
+#+end_results
+
+#+begin_src haskell
+putStrLn $ show [Left 0, Right [1, 2, 3], Left 5, Right []]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[Left 0,Right [1,2,3],Left 5,Right []]
+#+end_results
+** 数値型
+強力な数値型がある。
+Haskellの演算子は関数にすぎない。
+演算子を関数とみなす場合には括弧で囲む。
+
+#+begin_src haskell
+  :{
+  data Color = Red | Green | Blue
+         deriving (Read, Show, Eq, Ord)
+  :}
+  show Red
+  (read "Red")::Color
+  (read "[Red,Red,Blue]")::[Color]
+  (read "[Red, Red, Blue]")::[Color]
+  Red == Red
+  Red == Blue
+  Data.List.sort [Blue,Green,Blue,Red]
+  Red < Blue
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+Red
+Red
+[Red,Red,Blue]
+[Red,Red,Blue]
+True
+False
+[Red,Green,Blue,Blue]
+True
+#+end_results
+
+型が参照している型が、やはりその型クラスのインスタンスであると宣言しないといけない。
+
+CannotShow が Show のインスタンスではないので、エラー。
+#+begin_src haskell
+  :{
+  data CannotShow = CannotShow
+  data CannotDeriveShow = CannotDeriveShow CannotShow
+                          deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Prelude Data.Char Data.List Data.Char Data.Char| Prelude Data.Char Data.List Data.Char Data.Char| Prelude Data.Char Data.List Data.Char Data.Char| Prelude Data.Char Data.List Data.Char Data.Char|
+<interactive>:7599:35-38: error:
+    • No instance for (Show CannotShow)
+        arising from the first field of ‘CannotDeriveShow’
+          (type ‘CannotShow’)
+      Possible fix:
+        use a standalone 'deriving instance' declaration,
+          so you can specify the instance context yourself
+    • When deriving the instance for (Show CannotDeriveShow)
+#+end_results
+
+#+begin_src haskell
+  :{
+  data OK = OK
+  instance Show OK where
+      show _ = "OK"
+  data ThisWorks = ThisWorks OK
+                   deriving (Show)
+  :}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+Haskell では異なる型の値を含むリストはサポートされてないので、JSONオブジェクトを直接表現できない。
+代わりにデータ構成子でそれぞれの値を含む必要がある。
+
+#+begin_src haskell
+  type JSONError = String
+
+  class JSON a where
+      toJValue :: a -> JValue
+      fromJValue :: JValue -> Either JSONError a
+
+  instance JSON JValue where
+      toJValue = id
+      fromJValue = Right
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+よりよいエラー文。
+
+#+begin_src haskell
+  data Maybe a = Nothing
+               | Just a
+                 deriving (Eq, Ord, Read, Show)
+
+  data Either a b = Left a
+                  | Right b
+                    deriving (Eq, Ord, Read, Show)
+#+end_src
+
+#+begin_src haskell
+  instance JSON Bool where
+      toJValue = JBool
+      fromJValue (JBool b) = Right b
+      fromJValue _ = Left "not a JSON boolean"
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+特殊なコメントで制限回避。プラグマというコンパイラ指令。
+
+#+begin_src haskell
+{-# LANGUAGE TypeSynonymInstances #-}
+#+end_src
+** 型クラスとインスタンス
+
+新しいインスタンスはどこででも追加できる。型クラスを定義したモジュール内のみに限定されてない。
+型クラスは開世界仮説に基づいている。
+
+#+begin_src haskell
+  doubleToJValue :: (Double -> a) -> JValue -> Either JSONError a
+  doubleToJValue f (JNumber v) = Right (f v)
+  doubleToJValue _ _ = Left "not a JSON number"
+
+  instance JSON Int where
+      toJValue = JNumber . realToFrac
+      fromJValue = doubleToJValue round
+
+  instance JSON Integer where
+      toJValue = JNumber . realToFrac
+      fromJValue = doubleToJValue round
+
+  instance JSON Double where
+      toJValue = JNumber
+      fromJValue = doubleToJValue id
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+インスタンスの重複。
+リストをJSONの配列に変換する例。
+
+#+begin_src haskell
+  instance (JSON a) => JSON [a] where
+      toJValue = undefined
+      fromJValue = undefined
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+begin_src haskell
+  instance (JSON a) => JSON [(String, a)] where
+      toJValue = undefined
+      fromJValue = undefined
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+begin_src haskell
+  {-# LANGUAGE FlexibleInstances #-}
+  class Borked a where
+      bork :: a -> String
+
+  instance Borked Int where
+      bork = show
+
+  instance Borked (Int, Int) where
+      bork (a, b) = bork a ++ ", " ++ bork b
+
+  instance (Borked a, Borked b) => Borked (a, b) where
+      bork (a, b) = ">>" ++ bork a ++ " " ++ bork b ++ "<<"
+#+end_src
+
+GHC は保守的で、使える可能性のあるインスタンスは1つだけであるべきとする。
+なのでbork を使おうとするとエラーになる。
+** 型クラスに関する制約の緩和
 * Tasks
 ** TODO org-babelでhaskellを実行できなくなる
 ~:set +t~ を評価すると使えなくなる。
@@ -2724,7 +3087,10 @@ CLOCK: [2021-10-02 Sat 23:12]--[2021-10-03 Sun 00:16] =>  1:04
 :END:
 *** TODO 200
 :LOGBOOK:
-CLOCK: [2021-10-13 Wed 19:18]
+CLOCK: [2021-10-15 Fri 09:22]--[2021-10-15 Fri 09:45] =>  0:23
+CLOCK: [2021-10-14 Thu 09:40]--[2021-10-14 Thu 10:14] =>  0:34
+CLOCK: [2021-10-13 Wed 22:22]--[2021-10-13 Wed 23:34] =>  1:12
+CLOCK: [2021-10-13 Wed 19:18]--[2021-10-13 Wed 22:03] =>  2:45
 CLOCK: [2021-10-13 Wed 18:49]--[2021-10-13 Wed 19:09] =>  0:20
 CLOCK: [2021-10-13 Wed 12:51]--[2021-10-13 Wed 13:50] =>  0:59
 CLOCK: [2021-10-13 Wed 10:04]--[2021-10-13 Wed 10:53] =>  0:49
