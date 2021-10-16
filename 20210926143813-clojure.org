@@ -439,7 +439,7 @@ true
 #+end_results
 
 述語一覧。
-#+begin_src clojure :results output
+#+begin_src clojure :results output :evel never
 (find-doc #"\?$")
 #+end_src
 
@@ -1166,7 +1166,7 @@ cider.nrepl.middleware.util.instrument/contains-recur?
   Return true if form is not a `loop` or a `fn` and a `recur` is found in it.
 -------------------------
 cider.nrepl.middleware.util.instrument/dont-break?
-([[name :as form]])
+(~[[name :as form]]~)
   Return true if it's NOT ok to wrap form in a breakpoint.
   Expressions we don't want to wrap are those listed in
   `dont-break-forms` and anything containing a `recur`
@@ -1184,6 +1184,78 @@ cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.inspect
   Pretty wild, right?
 #+end_results
 ** マップ/キーワード/レコード
+マップ。
+#+begin_src clojure
+(def inventors {"Lisp" "McCarthy" "Clojure" "Hickey"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/inventors
+#+end_results
+
+みやすさのためにコロンを置くこともできる。
+#+begin_src clojure
+(def inventors {"Lisp" "McCarthy", "Clojure" "Hickey"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/inventors
+#+end_results
+
+マップは関数としても動作する。
+#+begin_src clojure
+  (inventors "Lisp")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+McCarthy
+#+end_results
+
+~get~ 関数も使える。存在しない場合の値を指定できる。
+#+begin_src clojure
+  (get inventors "Lisp" "not find")
+  (get inventors "Foo" "not find")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| "McCarthy" |
+| "not find" |
+#+end_results
+
+~キーワード~ はシンボルに似ているが、コロンで始まる。評価されると自分自身を返す。
+#+begin_src clojure
+:foo
+#+end_src
+
+#+RESULTS:
+#+begin_results
+:foo
+#+end_results
+
+シンボルとは異なる。シンボルは評価されるとそれに結び付けられた何かを返そうとする。
+#+begin_src clojure
+foo
+#+end_src
+
+#+RESULTS:
+#+begin_results
+class clojure.lang.Compiler$CompilerException
+#+end_results
+
+キーワードをキーにして書き直す。
+#+begin_src clojure
+(def inventors {:Lisp "McCarthy" :Clojure "Hickey"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/inventors
+#+end_results
+
 * Tasks
 ** TODO プログラミングClojure
 :LOGBOOK:
