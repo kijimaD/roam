@@ -1256,13 +1256,1123 @@ class clojure.lang.Compiler$CompilerException
 #'user/inventors
 #+end_results
 
+~defrecord~ を使って構造体を定義することで、各マップがどういうキーを取りうるか明示し、強制できる。
+#+begin_src clojure
+  (defrecord Book [title author])
+  (->Book "title" "author")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| user.Book                                    |
+| #user.Book{:title "title", :author "author"} |
+#+end_results
+
+マップと同じように扱える。
+#+begin_src clojure
+  (def b (->Book "Anathem" "Neal Stephenson"))
+  (:title b)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/b  |
+| "Anathem" |
+#+end_results
+** リーダマクロ
+Clojureのフォームはリーダによって読まれて、テキストからClojureのデータに変換される。
+リーダマクロは前置される特定のマクロ文字によって起動される、リーダの特殊な動作。
+コメントのセミコロンや、評価抑制のクォートもリーダマクロ。
+** 関数
+関数呼び出しは単に最初の要素が関数を指すようなリストである。
+自分で関数を定義するには ~defn~ を使う( ~def~ ではない)。
+
+#+begin_src clojure
+  (defn greeting
+    "Returns a greeting of the form 'Hello, username.'"
+    [username]
+    (str "Hello, " username))
+  (greeting "world")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/greeting |
+| "Hello, world"  |
+#+end_results
+
+同名の関数で受け取る引数が違うものを呼び出す。
+ゼロ引数の ~greeting~ は1引数の ~greeting~ に渡して移譲できる。
+ #+begin_src clojure
+   (defn greeting
+     "Returns a greeting of the form 'Hello, username.'
+        Default username is 'world'."
+     ([] (greeting "world"))
+     ([username] (str "Hello, " username)))
+
+   (greeting)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/greeting |
+| "Hello, world"  |
+#+end_results
+
+フィルタ。
+まず述語を定義する。
+#+begin_src clojure
+  (defn indexable-word? [word]
+    (> (count word) 2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/indexable-word?
+#+end_results
+
+適用する。
+#+begin_src clojure
+  (require '[clojure.string :as str])
+  (filter indexable-word? (str/split "A fine day it is" #"\W+"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| fine | day |
+#+end_results
+
+無名関数バージョン。
+#+begin_src clojure
+  (filter (fn [w] (> (count w) 2)) (str/split "A fine day" #"\W+"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| fine | day |
+#+end_results
+
+#+begin_src clojure
+  (defn make-greeter [greeting-prefix]
+    (fn [username] (str greeting-prefix ", " username)))
+
+  (def hello-greeting (make-greeter "Hello"))
+  (hello-greeting "world")
+
+  (def aloha-greeting (make-greeter "Aloha"))
+  (aloha-greeting "Hawaii")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/make-greeter   |
+| #'user/hello-greeting |
+| "Hello, world"        |
+| #'user/aloha-greeting |
+| "Aloha, Hawaii"       |
+#+end_results
+
+名前を与えなくてもいい。
+
+#+begin_src clojure
+((make-greeter "Howdy") "pardner")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Howdy, pardner
+#+end_results
+** var、束縛、名前空間
+オブジェクトを ~def~ ~defn~ で定義すると、オブジェクトはClojureの ~var~ に格納される。
+
+リーダマクロで user/foo に結び付けられた ~var~ を見る。
+#+begin_src clojure
+  (def foo 10)
+  #'foo
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/foo |
+| #'user/foo |
+#+end_results
+
+実引数と仮引数のnumberが束縛される。
+#+begin_src clojure
+  (defn triple [number] (* 3 number))
+  (triple 10)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/triple |
+|            30 |
+#+end_results
+
+関数の引数束縛はレキシカルスコープ…関数本体の中だけから見える。
+
+コレクション全体を変数に束縛する。
+姓と名を両方とも保存するけど、名だけが必要な場合。
+↓引数authorを取るが、必要なのは名だけで、ちょっとわかりにくい。
+#+begin_src clojure
+  (defn greet-author-1 [author]
+    (println "Hello," (:first-name author)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/greet-author-1
+#+end_results
+
+必要な部分だけを束縛する。
+#+begin_src clojure
+  (defn greet-author-2 [{fname :first-name}]
+    (println "Hello," fname))
+#+end_src
+
+アンダースコアは慣用的に値を気にしない束縛を示すのに使う。
+#+begin_src clojure
+(let [[_ _ z] [1 2 3]] z)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3
+#+end_results
+
+~as~ でコレクション自体に名前をつけることもできる。
+#+begin_src clojure
+  (let [[x y :as coords] [1 2 3 4 5 6]]
+    (str "x: " x ", y: " y ", total dimensions " (count coords)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+x: 1, y: 2, total dimensions 6
+#+end_results
+
+分配束縛を使う。
+[w1 w2 w3] への分配束縛によって最初の3つの単語が取り出される。
+#+begin_src clojure
+  (require '[clojure.string :as str])
+  (defn ellipsize [words]
+    (let [[w1 w2 w3] (str/split words #"\s+")]
+      (str/join " " [w1 w2 w3 "..."])))
+
+  (ellipsize "The quick brown fox jumps over the lazy dogs.")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/ellipsize      |
+| "The quick brown ..." |
+#+end_results
+
+#+begin_src clojure
+  (resolve 'foo)
+  (in-ns 'myapp)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/foo        |
+| #namespace[myapp] |
+#+end_results
+
+#+begin_src clojure
+  (clojure.core/use 'clojure.core)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+** [[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]を呼び出す
+#+begin_src clojure
+(new java.util.Random)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#object[java.util.Random 0x499982f7 "java.util.Random@499982f7"]
+#+end_results
+
+#+begin_src clojure
+  (def rnd (new java.util.Random))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/rnd
+#+end_results
+
+#+begin_src clojure
+  (. rnd nextInt)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1468370734
+#+end_results
+
+#+begin_src clojure
+(. rnd nextInt 10)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+9
+#+end_results
+
+~.~ はインスタンスのメソッドだけでなく、クラスメンバへのアクセスにも使える。
+#+begin_src clojure
+(. Math PI)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3.141592653589793
+#+end_results
+
+ブラウザで該当ドキュメントに移動する。
+#+begin_src clojure
+(javadoc java.net.URL)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+true
+#+end_results
+** フロー制御
+#+begin_src clojure
+  (defn is-small? [number]
+    (if (< number 100) "yes" "no"))
+
+  (is-small? 50)
+  (is-small? 101)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/is-small? |
+| "yes"            |
+| "no"             |
+#+end_results
+
+分岐後に複数のアクションを起こす、には ~do~ を使う。
+~do~ は副作用をもたらすという明示になる。
+#+begin_src clojure
+  (defn is-small? [number]
+    (if (< number 100)
+      "yes"
+      (do
+        (println "Saw a big number" number)
+        "no")))
+  (is-small? 200)
+#+end_src
+
+~loop~ を使っての再帰。
+#+begin_src clojure
+  (loop [result [] x 5]
+    (if (zero? x)
+      result
+      (recur (conj result x) (dec x))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 5 | 4 | 3 | 2 | 1 |
+#+end_results
+
+#+begin_src clojure
+  (defn countdown [result x]
+    (if (zero? x)
+      result
+      (recur (conj result x) (dec x))))
+
+  (countdown [] 5)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/countdown |
+| [5 4 3 2 1]      |
+#+end_results
+
+さまざまなカウントダウン。
+#+begin_src clojure
+(into [] (take 5 (iterate dec 5)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 5 | 4 | 3 | 2 | 1 |
+#+end_results
+
+#+begin_src clojure
+(into [] (drop-last (reverse (range 6))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 5 | 4 | 3 | 2 | 1 |
+#+end_results
+
+#+begin_src clojure
+(vec (reverse (rest (range 6))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 5 | 4 | 3 | 2 | 1 |
+#+end_results
+
+#+begin_src clojure
+  (defn indexed [coll] (map-indexed vector coll))
+  (indexed "abcde")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/indexed                       |
+| ([0 \a] [1 \b] [2 \c] [3 \d] [4 \e]) |
+#+end_results
+
+#+begin_src clojure
+(indexed "abcde")
+#+end_src
+
+clojureの ~for~ はループではなく、シーケンスの内包表記である。
+#+begin_src clojure
+  (defn index-filter [pred coll]
+    (when pred
+      (for [[idx elt] (indexed coll) :when (pred elt)] idx)))
+  (index-filter #{\a \b} "abcdbbb")
+  (index-filter #{\a \b} "xyz")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/index-filter |
+| (0 1 4 5 6)         |
+| ()                  |
+#+end_results
+
+#+begin_src clojure
+  (defn index-of-any [pred coll]
+    (first (index-filter pred coll)))
+  (index-of-any #{\z \a} "zzabyycdxx")
+  (index-of-any #{\b \y} "zzabyycdxx")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/index-of-any |
+|                   0 |
+|                   3 |
+#+end_results
+** メタデータ
+#+begin_src clojure
+(meta #'str)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+'(:added "1.0"  :ns #namespace(clojure.core)  :name str  :file "clojure/core.clj"  :static true  :column 1  :line 544  :tag java.lang.String  :arglists (() (x) (x & ys))  :doc "With no args, returns the empty string. With one arg x, returns\\n  x.toString().  (str ) returns the empty string. With more than\\n  one arg, returns the concatenation of the str values of the args.")
+#+end_results
+
+#+begin_src clojure
+  (defn ^{:tag String} shout [^{:tag String} s] (.toUpperCase s))
+  (meta #'shout)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/shout                                                                                                                                    |
+| {:tag java.lang.String, :arglists ([s]), :line 1, :column 1, :file "*cider-repl ~/roam:localhost:40825(clj)*", :name shout, :ns #namespace[user]} |
+#+end_results
+
+あるいは略記法で書ける。
+#+begin_src clojure
+  (defn ^String shout [^String s] (.toUpperCase s))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/shout
+#+end_results
+** シーケンス
+シーケンスはいろんなデータ構造の抽象。
+
+#+begin_src clojure
+(class (rest [1 2 3]))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+clojure.lang.PersistentVector$ChunkedSeq
+#+end_results
+
+#+begin_src clojure
+  (first ["a" "b"])
+  (rest ["a" "b"])
+  (cons "a" "b")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| "a"      |
+| ("b")    |
+| ("a" \b) |
+#+end_results
+
+マップはキー/値のペアを要素とするシーケンスとして扱える。
+#+begin_src clojure
+  (first {:fname "Aaron" :lname "Bedra"})
+  (rest {:fname "Aaron" :lname "Bedra"})
+  (cons [:mname "James"] {:fname "Aaron" :lname "Bedra"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| [:fname "Aaron"]                                     |
+| ([:lname "Bedra"])                                   |
+| ([:mname "James"] [:fname "Aaron"] [:lname "Bedra"]) |
+#+end_results
+
+~conj~ と ~info~ は効率的に追加できる位置に要素を加える。
+対象となるデータ構造について一番効率の良い操作をしてくれるので、具体的な実装に結び付けなくても効率的なコードが書ける。
+#+begin_src clojure
+(conj '(1 2 3) :a)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| :a | 1 | 2 | 3 |
+#+end_results
+
+#+begin_src clojure
+(into '(1 2 3) '(:a :b :c))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| :c | :b | :a | 1 | 2 | 3 |
+#+end_results
+** シーケンスライブラリ
+*** シーケンスを生成する関数
+#+begin_src clojure
+  (range 10)
+  (range 10 20)
+  (range 10 20 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| (0 1 2 3 4 5 6 7 8 9)           |
+| (10 11 12 13 14 15 16 17 18 19) |
+| (10 12 14 16 18)                |
+#+end_results
+
+↓なぜか実行できない。
+#+begin_src clojure
+(repeat 5 "x")
+#+end_src
+
+シーケンスは無限に続くので取り出しが必要。
+#+begin_src clojure
+(take 10 (iterate inc 1))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 |
+#+end_results
+
+#+begin_src clojure
+(defn whole-numbers [] (iterate inc 1))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#'user/whole-numbers
+#+end_results
+
+#+begin_src clojure
+(take 4 (repeat 1))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 1 | 1 | 1 |
+#+end_results
+
+#+begin_src clojure
+(take 10 (cycle (range 3)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 0 | 1 | 2 | 0 | 1 | 2 | 0 | 1 | 2 | 0 |
+#+end_results
+
+#+begin_src clojure
+(interpose "," ["apple" "banana" "grapes"])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| apple | , | banana | , | grapes |
+#+end_results
+
+#+begin_src clojure
+  (use '[clojure.string :only (join)])
+  (join \, ["apples" "banana", "grapes"])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+apples,banana,grapes
+#+end_results
+*** シーケンスをフィルタする関数
+#+begin_src clojure
+(take 10 (filter even? (whole-numbers)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 |
+#+end_results
+
+#+begin_src clojure
+(take 10 (filter odd? (whole-numbers)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 3 | 5 | 7 | 9 | 11 | 13 | 15 | 17 | 19 |
+#+end_results
+
+最初の母音に出会うまで文字列から文字を取り出す操作。
+#+begin_src clojure
+(take-while (complement #{\a\e\i\o\u}) "the-quick-brown-fox")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(\t \h)
+#+end_results
+
+#+begin_src clojure
+(drop-while (complement #{\a\e\i\o\u}) "the-quick-brown-fox")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(\e \- \q \u \i \c \k \- \b \r \o \w \n \- \f \o \x)
+#+end_results
+
+#+begin_src clojure
+(split-at 5 (range 10))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 0 | 1 | 2 | 3 | 4 |
+| 5 | 6 | 7 | 8 | 9 |
+#+end_results
+
+#+begin_src clojure
+(split-with #(<= % 10) (range 0 20 2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+|  0 |  2 |  4 |  6 | 8 | 10 |
+| 12 | 14 | 16 | 18 |   |    |
+#+end_results
+*** シーケンスに対する述語
+述語をそれぞれ適応して真偽値を返す。
+#+begin_src clojure
+  (every? odd? [1 3 5])
+  (every? odd? [1 3 8])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| true  |
+| false |
+#+end_results
+
+いずれかが条件に合わない時はnilを返す。
+#+begin_src clojure
+  (some even? [1 2 3])
+  (some even? [1 3 5])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+true
+#+end_results
+
+#+begin_src clojure
+(some identity [nil false 1 nil 2])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+#+begin_src clojure
+(not-every? even? (whole-numbers))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+true
+#+end_results
+
+#+begin_src clojure
+(not-any? even? (take 10 (whole-numbers)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+false
+#+end_results
+*** シーケンスを変換する関数
+各リストに関数を適用する。
+#+begin_src clojure
+(map #(format "<p>%s</p>" %) ["the" "quick" "brown" "fox"])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| <p>the</p> | <p>quick</p> | <p>brown</p> | <p>fox</p> |
+#+end_results
+
+シーケンスの中身をまとめ上げる。
+#+begin_src clojure
+(reduce + (range 1 11))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+55
+#+end_results
+
+#+begin_src clojure
+(reduce * (range 1 11))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3628800
+#+end_results
+
+#+begin_src clojure
+(sort [42 1 7 11])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 7 | 11 | 42 |
+#+end_results
+
+#+begin_src clojure
+(sort-by #(.toString %) [42 1 7 11])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 11 | 42 | 7 |
+#+end_results
+
+ソートの順番を変えられる。
+#+begin_src clojure
+  (sort > [42 1 7 11])
+  (sort < [42 1 7 11])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| (42 11 7 1) |
+| (1 7 11 42) |
+#+end_results
+
+リスト内包表記バージョン。
+#+begin_src clojure
+  (for [word ["the" "quick" "brown" "fox"]]
+    (format "<p>%s</p>" word))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| <p>the</p> | <p>quick</p> | <p>brown</p> | <p>fox</p> |
+#+end_results
+
+~:when~ 節を使うと ~filter~ をエミュレートできる。
+#+begin_src clojure
+(take 10 (for [n (whole-numbers) :when (even? n)] n))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 2 | 4 | 6 | 8 | 10 | 12 | 14 | 16 | 18 | 20 |
+#+end_results
+
+1番右側の束縛を最初に繰り返し、1度繰り返すたびにその左側の操作を1つ進める。
+なのでrankの繰り返しが先に行われる。
+#+begin_src clojure
+(for [file "ABCDEFGH" rank (range 1 9)] (format "%c%d" file rank))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| A1 | A2 | A3 | A4 | A5 | A6 | A7 | A8 | B1 | B2 | B3 | B4 | B5 | B6 | B7 | B8 | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | D1 | D2 | D3 | D4 | D5 | D6 | D7 | D8 | E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | F1 | F2 | F3 | F4 | F5 | F6 | F7 | F8 | G1 | G2 | G3 | G4 | G5 | G6 | G7 | G8 | H1 | H2 | H3 | H4 | H5 | H6 | H7 | H8 |
+#+end_results
+** 遅延シーケンスと無限シーケンス
+リストは必要なときに作られる。
+#+begin_src clojure
+  (use 'examples.primes)
+  (def ordinals-and-primes (map vector (iterate inc 1) primes))
+  (take 5 (drop 1000 ordinals-and-primes))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'examples.primes/ordinals-and-primes                         |
+| ([1001 7927] [1002 7933] [1003 7937] [1004 7949] [1005 7951]) |
+#+end_results
+
+遅延なので、副作用が動かないように見える。
+#+begin_src clojure
+  (def x (for [i (range 1 3)] (do (println i) i)))
+  x ;; 標準入力に出ない
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/x |
+| (1 2)    |
+#+end_results
+
+シーケンスの要素をすべて計算する。
+#+begin_src clojure
+(doall x)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 1 | 2 |
+#+end_results
+
+#+begin_src clojure
+  (def x (for [i (range 1 3)] (do (println i) i)))
+  x
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/x |
+| (1 2)    |
+#+end_results
+** シーカブル
+シーケンス関数に渡されると、[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]のコレクションは自動的にシーケンスとして振る舞う。
+シーケンスとして振る舞えるコレクションをシーカブルであるという。
+
+配列はシーカブル。
+#+begin_src clojure
+  (first (.getBytes "hello"))
+  (rest (.getBytes "hello"))
+  (cons (int \h) (.getBytes "ello"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| 104                   |
+| (101 108 108 111)     |
+| (104 101 108 108 111) |
+#+end_results
+
+文字列もシーカブル。
+#+begin_src clojure
+  (first "Hello")
+  (rest "Hello")
+  (cons \H "ello")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| \H               |
+| (\e \l \l \o)    |
+| (\H \e \l \l \o) |
+#+end_results
+
+逆にして、戻す。
+#+begin_src clojure
+  (reverse "hello")
+  (apply str (reverse "hello"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| (\o \l \l \e \h) |
+| "olleh"          |
+#+end_results
+
+[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]のコレクションを使うのは、[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]のAPIを扱うときだけ(Clojure組み込みのコレクションの方が便利)。
+** 正規表現
+マッチした文字列からなる変更不可なシーケンスを作り出す。
+シーケンスライブラリの関数群がただで正規表現にも使えるようになる。
+#+begin_src clojure
+  (re-seq #"\w+" "the quick brown fox")
+  (sort (re-seq #"\w+" "the quick brown fox"))
+  (drop 2 (re-seq #"\w+" "the quick brown fox"))
+  (map #(.toUpperCase %) (re-seq #"\w+" "the quick brown fox"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| ("the" "quick" "brown" "fox") |
+| ("brown" "fox" "quick" "the") |
+| ("brown" "fox")               |
+| ("THE" "QUICK" "BROWN" "FOX") |
+#+end_results
+
+#+begin_src clojure
+  (import '(java.io File))
+  (map #(.getName %) (.listFiles (File. "./public/css")))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| java.io.File            |
+| ("site.css" "code.css") |
+#+end_results
+
+ディレクトリを深さ優先で辿る。
+#+begin_src clojure
+(count (file-seq (File. "./public")))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+101
+#+end_results
+
+最近更新されたファイルだけを調べる。
+#+begin_src clojure
+  (defn minutes-to-millis [mins]
+    (* mins 1000 60))
+  (defn recently-modified? [file]
+    (> (.lastModified file)
+       (- (System/currentTimeMillis) (minutes-to-millis 30))))
+  (filter recently-modified? (file-seq (File. ".")))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/minutes-to-millis                                                                                    |
+| #'user/recently-modified?                                                                                   |
+| (#object[java.io.File 0x6bf2183f "./20210926143813-clojure.org"] #object[java.io.File 0x70ca1df7 "./.git"]) |
+#+end_results
+
+読み込む(readerをオープンしたまま)。
+#+begin_src clojure
+  (use '[clojure.java.io :only (reader)])
+  (take 2 (line-seq (reader "public/index.html")))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| <!DOCTYPE html> | <html lang="en"> |
+#+end_results
+
+リーダーをちゃんと閉じる。
+#+begin_src clojure
+  (with-open [rdr (reader "./public/index.html")]
+    (count (line-seq rdr)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+107
+#+end_results
+
+空行を除いた行数。
+#+begin_src clojure
+  (with-open [rdr (reader "./public/index.html")]
+    (count (filter #(re-find #"\S" %) (line-seq rdr))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+98
+#+end_results
+
+orgコードの行数を数え上げる。
+#+begin_src clojure
+  (use '[clojure.java.io :only (reader)])
+  (defn non-blank? [line] (if (re-find #"\S" line) true false))
+  (defn non-svn? [file] (not (.contains (.toString file) ".svn")))
+  (defn org-source? [file] (.endsWith (.toString file) ".org"))
+  (defn org-loc [base-file]
+    (reduce
+     +
+     (for [file (file-seq base-file)
+           :when (and (org-source? file) (non-svn? file))]
+       (with-open [rdr (reader file)]
+         (count (filter non-blank? (line-seq rdr)))))))
+  (org-loc (java.io.File. "./"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/non-blank?  |
+| #'user/non-svn?    |
+| #'user/org-source? |
+| #'user/org-loc     |
+| 12299              |
+#+end_results
+** 特定の構造に特化した関数
+シーケンス関数を使うと汎用性の高いコードが書ける。
+リスト、ベクタ、マップ、セットに特化した関数もある。
+#+begin_src clojure
+  (peek '(1 2 3))
+  (pop '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+|     1 |
+| (2 3) |
+#+end_results
+
+#+begin_src clojure
+  (get [:a :b :c] 1)
+  (get [:a :b :c] 5) ;; nil
+#+end_src
+
+#+RESULTS:
+#+begin_results
+:b
+#+end_results
+
+指定のインデックスに新しい値を入れる。
+#+begin_src clojure
+  (assoc [0 1 2 3 4] 2 :two)
+  (subvec [1 2 3 4 5] 3)
+  (take 2 (drop 3 [1 2 3 4 5]))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| [0 1 :two 3 4] |
+| [4 5]          |
+| (4 5)          |
+#+end_results
+
+特定の構造向けの関数がある場合、それは性能のためであることがほとんど。
+#+begin_src clojure
+  (keys {:sundance "spaniel", :darwin "beagle"})
+  (vals {:sundance "spaniel", :darwin "beagle"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| (:sundance :darwin)  |
+| ("spaniel" "beagle") |
+#+end_results
+
+#+begin_src clojure
+  (get {:sundance "spaniel", :darwin "beagle"} :darwin)
+  ({:sundance "spaniel", :darwin "beagle"} :darwin)
+  (:darwin {:sundance "spaniel", :darwin "beagle"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| "beagle" |
+| "beagle" |
+| "beagle" |
+#+end_results
+
+キーとして持っていれば値に関わらずtrueを返す。
+#+begin_src clojure
+  (def score {:stu nil :joey 100})
+  (contains? score :stu)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/score |
+| true         |
+#+end_results
+
+#+begin_src clojure
+  (def song {:name "Agnus Dei"
+             :artist "Kryzysztof Penderecki"
+             :album "Polish Requiem"
+             :genre "Classical"})
+
+  song
+  (assoc song :kind "MPEG Audio File")
+  (dissoc song :genre)
+  (select-keys song [:name :artist])
+  (merge song {:size 8118166, :time 507245})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/song                                                                                                                    |
+| {:name "Agnus Dei", :artist "Kryzysztof Penderecki", :album "Polish Requiem", :genre "Classical"}                              |
+| {:name "Agnus Dei", :artist "Kryzysztof Penderecki", :album "Polish Requiem", :genre "Classical", :kind "MPEG Audio File"}     |
+| {:name "Agnus Dei", :artist "Kryzysztof Penderecki", :album "Polish Requiem"}                                                  |
+| {:name "Agnus Dei", :artist "Kryzysztof Penderecki"}                                                                           |
+| {:name "Agnus Dei", :artist "Kryzysztof Penderecki", :album "Polish Requiem", :genre "Classical", :size 8118166, :time 507245} |
+#+end_results
+
+同じキーを持っていた場合、どうやって値を組み合わせるかを指定する関数を与える。
+#+begin_src clojure
+  (merge-with
+   concat
+   {:rubble ["Barney"], :flintstone ["Fred"]}
+   {:rubble ["Betty"], :flintstone ["Wilma"]}
+   {:rubble ["Bam-Bam"], :flintstone ["Pebbles"]})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| :rubble | (Barney Betty Bam-Bam) | :flintstone | (Fred Wilma Pebbles) |
+#+end_results
+
 * Tasks
 ** TODO プログラミングClojure
 :LOGBOOK:
+CLOCK: [2021-10-18 Mon 23:03]--[2021-10-18 Mon 23:54] =>  0:51
+CLOCK: [2021-10-17 Sun 19:47]--[2021-10-17 Sun 21:16] =>  1:29
+CLOCK: [2021-10-17 Sun 15:04]--[2021-10-17 Sun 16:00] =>  0:56
+CLOCK: [2021-10-17 Sun 13:06]--[2021-10-17 Sun 13:24] =>  0:18
+CLOCK: [2021-10-17 Sun 10:43]--[2021-10-17 Sun 11:24] =>  0:41
+CLOCK: [2021-10-17 Sun 09:49]--[2021-10-17 Sun 10:14] =>  0:25
 CLOCK: [2021-10-16 Sat 23:02]--[2021-10-16 Sat 23:42] =>  0:40
 CLOCK: [2021-10-16 Sat 17:28]--[2021-10-16 Sat 17:53] =>  0:25
 :END:
+
+- 37, 39, 44, 56, 67, 74
 * Reference
+** [[https://www.infoq.com/presentations/Simple-Made-Easy/][Simple Made Easy]]
+clojure開発者リッチ・ヒッキーのプレゼン。
+** [[https://boxofpapers.hatenablog.com/entry/simple_made_easy][Clojureと「Simple Made Easy」 - 紙箱]]
+リッチ・ヒッキーのプレゼンの解説。
+簡単とシンプルさを分ける。抽象化によってシンプルさを保つ。
+** [[https://github.com/stuarthalloway/programming-clojure][stuarthalloway/programming-clojure: Sample code for the book]]
+clojureの本のサンプルコード。
+** [[https://github.com/technomancy/leiningen][technomancy/leiningen: Automate Clojure projects without setting your hair on fire.]]
+clojureの依存解決ライブラリ。
+** [[http://steve-yegge.blogspot.com/2006/03/execution-in-kingdom-of-nouns.html][「名詞の王国での実行」Stevey's Blog Rants: Execution in the Kingdom of Nouns]]
+オブジェクト指向では名詞が重要な地位を占めている。
 **  [[https://www.geidai.ac.jp/~marui/clojure/rationale/][Clojureをつくったわけ]]
 clojureの特徴がわかる。
 * Archive
