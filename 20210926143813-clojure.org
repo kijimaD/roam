@@ -2346,6 +2346,106 @@ orgコードの行数を数え上げる。
 #+begin_results
 | :rubble | (Barney Betty Bam-Bam) | :flintstone | (Fred Wilma Pebbles) |
 #+end_results
+** セットを扱う関数
+#+begin_src clojure
+  (use 'clojure.set)
+  (def languages #{"java" "c" "clojure"})
+  (def beverages #{"java" "chai" "pop"})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/languages |
+| #'user/beverages |
+#+end_results
+
+与えられたセットの少なくとも片方にある要素を集める。
+#+begin_src clojure
+(union languages beverages)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{"clojure" "pop" "java" "chai" "c"}
+#+end_results
+
+最初のセットに含まれ、しかし2番めのセットには含まれないような要素を集めたセット。
+#+begin_src clojure
+(difference languages beverages)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{"clojure" "c"}
+#+end_results
+
+言語の名前でもあり、かつ飲み物の名前でもあるようなもの。
+#+begin_src clojure
+(intersection languages beverages)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{"java"}
+#+end_results
+
+1文字だけの言語。
+#+begin_src clojure
+(select #(= 1 (.length %)) languages)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{"c"}
+#+end_results
+
+関係演算はSQLなどの問い合わせ言語の基礎となっている。
+
+| 関係演算 | データベース | Clojureの型システム            |
+| 関係     | テーブル     | セットとして動作するものすべて |
+| タプル   | 行           | マップとして動作するものすべて |
+
+#+begin_src clojure
+  (def compositions
+    #{{:name "The Art of the Fugue" :composer "J. S. Bach"}
+      {:name "Musical Offering" :composer "J. S. Bach"}
+      {:name "Requiem" :composer "Giuseppe Verdi"}
+      {:name "Requiem" :composer "W. A. Mozart"}})
+  (def composer
+    #{{:composer "J. S. Bach" :country "Germany"}
+      {:composer "W. A. Mozart" :country :Austria}
+      {:composer "Giuseppe Verdi" :country "Italy"}})
+  (def nations
+    #{{:nation "Germany" :language "German"}
+      {:nation "Austria" :language "German"}
+      {:nation "Italy" :language "Italian"}})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+| #'user/compositions |
+| #'user/composer     |
+| #'user/nations      |
+#+end_results
+
+#+begin_src clojure
+(rename compositions {:name :title})
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{{:composer "Giuseppe Verdi", :title "Requiem"} {:composer "W. A. Mozart", :title "Requiem"} {:composer "J. S. Bach", :title "The Art of the Fugue"} {:composer "J. S. Bach", :title "Musical Offering"}}
+#+end_results
+
+SQL SELECT文に該当する抜き出し。
+#+begin_src clojure
+(project compositions [:name])
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#{{:name "The Art of the Fugue"} {:name "Musical Offering"} {:name "Requiem"}}
+#+end_results
 
 * Tasks
 ** TODO プログラミングClojure
@@ -2360,7 +2460,7 @@ CLOCK: [2021-10-16 Sat 23:02]--[2021-10-16 Sat 23:42] =>  0:40
 CLOCK: [2021-10-16 Sat 17:28]--[2021-10-16 Sat 17:53] =>  0:25
 :END:
 
-- 37, 39, 44, 56, 67, 74
+- 37, 39, 44, 56, 67, 74, 81
 * Reference
 ** [[https://www.infoq.com/presentations/Simple-Made-Easy/][Simple Made Easy]]
 clojure開発者リッチ・ヒッキーのプレゼン。
