@@ -155,7 +155,7 @@
 
 (setq org-agenda-custom-commands
       '(("X" agenda ""
-         ((org-agenda-span 14)
+         ((org-agenda-span 7)
           (org-agenda-start-day "-7d")
           (org-agenda-start-with-log-mode t)
           (org-agenda-files '("./")))

@@ -32,7 +32,10 @@ docker logs 1111... # idを入れる
 - copyしてくるdocker-compose.ymlファイルが間違っていた。なので変更が反映されていなかった。
 - docker-compose ps で見ると、mysqlがfailしていた。つまり起動後すぐMysqlがシャットダウンしてるのでアクセスできない。ログを見てみるとたくさんエラーが出ていたがよくわからない。バージョンを変えると起動できた。
 ** トークンエラー無視
-トークンエラーになったので対応。もちろんこのままではだめなので対応する必要がある。
+docker内のrailsでtoken errorになった。dockerが1層はさまって、直に公開するわけでないので何かアドレスが異なるために起こるのだろう。
+lvh.meからアクセスすると直った。
+
+逐一対応するなら↓だが現実的でない。
 #+begin_src ruby
 skip_before_action :verify_authenticity_token
 #+end_src
@@ -60,8 +63,18 @@ docker rmi $(docker images -q)
 ** LinuxのDockerで rails new したときの権限がrootになる問題
 [[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
 * Tasks
-** day jobの環境構築
+** day jobの環境構築[1/3]
 day jobもLinuxに統一する。
+- [ ] テストの実行
+  + アタッチ…コンテナ内部でシェルコマンドを実行する必要がある
+- [X] サーバ立ち上げ
+  + サーバ部分も完全にdocker化した。表示はまったく問題なさそう
+- [ ] DBのGUIツールとの接続
+  + Linux用のsqlectronがよさそう。が、上手く接続できない
+- [ ] メール関係の動作確認
+  + redisが本当に動いてるかわからない
+- [ ] yarnができてない
+  + どうやってwatchして反映できるんだろう
 * Archive
 * References
 **  [[https://docs.docker.jp/pdf-download.html][Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント]]
