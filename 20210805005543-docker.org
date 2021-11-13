@@ -6,6 +6,25 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * 各種コマンド
+** dockerfile/runでbundle installするのは何が違うか
+runは新しいコンテナを作成するため永続しない。
+** dockerfile
+Dockrfileはイメージを作る。(image build)
+
+docker-composeは↑で作られたコンテナを作り操作する(不正確な可能性がある)。
+コンテナには2種類ある。
+- 自作する必要があるものは↑Dockerfileで作られたイメージを使う
+- 既存コンテナ([[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]とか)はコンテナをダウンロードする
+** アタッチ
+** コマンド実行
+コンテナ内部で実行する。
+#+begin_src shell
+  docker-compose run {コンテナ} {shellコマンド}
+#+end_src
+** キャッシュを使わずにbuild
+#+begin_src shell
+  docker-compose build --no-cache
+#+end_src
 ** 立ち上げと停止
 #+begin_src shell
 docker-compose up --build -d
@@ -63,18 +82,27 @@ docker rmi $(docker images -q)
 ** LinuxのDockerで rails new したときの権限がrootになる問題
 [[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
 * Tasks
-** day jobの環境構築[1/3]
-day jobもLinuxに統一する。
-- [ ] テストの実行
-  + アタッチ…コンテナ内部でシェルコマンドを実行する必要がある
-- [X] サーバ立ち上げ
-  + サーバ部分も完全にdocker化した。表示はまったく問題なさそう
-- [ ] DBのGUIツールとの接続
-  + Linux用のsqlectronがよさそう。が、上手く接続できない
-- [ ] メール関係の動作確認
-  + redisが本当に動いてるかわからない
-- [ ] yarnができてない
-  + どうやってwatchして反映できるんだろう
+** day jobのdocker環境化[2/6]
+Day JobもLinuxに統一する。
+*** [ ] テストの実行
+アタッチ…コンテナ内部でシェルコマンドを実行する必要がある。
+*** [X] サーバ立ち上げ
+サーバ部分も完全にdocker化した。表示はまったく問題なさそう
+できたと思ってたが、完全にdockerにすると反映が死ぬほど面倒なのでアタッチしないといけない。
+アタッチするとうまくいかない。
+*** [ ] volumes
+うまくできない。docker-compose内でもbundle installしないとgem not foundになる。
+かといってdocker-compose内でやるとまずい権限で作られるらしく、後のコンテナが起動に失敗する。
+*** [X] DBのGUIツールとの接続
+Linux用のsqlectronがよさそう。が、上手く[[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]と接続できない
+~MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'~ を追加して入れるように。指定してるとログインできなかった。
+*** [ ] メール関係の動作確認
+redisが本当に動いてるかわからない。
+*** [ ] yarnができてない
+どうやってwatchして反映できるんだろう。
+*** [ ] コンソールに入れるように
+~docker exec -it {container} /bin/bash~ に入れない。
+containerIDを入れたらいけたが、不便。
 * Archive
 * References
 **  [[https://docs.docker.jp/pdf-download.html][Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント]]
