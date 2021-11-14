@@ -8,6 +8,341 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 
 コンパイル不要なスクリプト言語、静的型付け、WEBに使用される、といった点で[[id:a6c9c9ad-d9b1-4e13-8992-75d8590e464c][Python]]と競合している。
 * Memo
+** closure
+- 10, 15
+:LOGBOOK:
+CLOCK: [2021-11-14 Sun 10:55]--[2021-11-14 Sun 11:00] =>  0:05
+CLOCK: [2021-11-13 Sat 20:58]--[2021-11-13 Sat 21:38] =>  0:40
+:END:
+*** 定義
+- 関数を必要とする
+- 親スコープで定義される変数を参照する
+*** レキシカルバインディング
+#+begin_src ruby :results output
+  msg = "aaa"
+  3.times do
+    prefix = "I"
+    puts "#{prefix} #{msg}"
+  end
+#+end_src
+
+#+RESULTS:
+: I aaa
+: I aaa
+: I aaa
+
+ブロックの内側から外側にはアクセスできる。
+
+#+begin_src ruby
+  msg = "aaa"
+  3.times do
+    prefix = "I"
+    puts "#{prefix} #{msg}"
+  end
+  prefix
+#+end_src
+
+#+RESULTS:
+
+ブロックの外側から内側にアクセスできない。
+*** 自由変数
+#+begin_src ruby
+  chalkboard_gag = lambda do |msg|
+    lambda do
+      prefix = "I will not"
+      "#{prefix} #{msg}"
+    end
+  end
+  chalkboard_gag
+  inner_lambda = chalkboard_gag.call("drive the car")
+  inner_lambda.call
+#+end_src
+
+#+RESULTS:
+: I will not drive the car
+*** 例) カウンター
+2つ目のlambdaから見ると、 ~x~ は注入されてるので自由変数。
+#+begin_src ruby :results output
+  counter = lambda do
+    x = 0
+    get_x = lambda { p x } # x is free variable
+    incr = lambda { p x += 1 }
+    decr = lambda { p x -= 1 }
+
+    {get_x: get_x, incr: incr, decr: decr}
+  end
+  c1 = counter.call
+  c1[:incr].call
+  c1[:incr].call
+  c1[:incr].call
+  c1[:get_x].call
+  c1[:decr].call
+  c1[:decr].call
+
+  c2 = counter.call
+  c2[:get_x].call
+#+end_src
+
+#+RESULTS:
+: 1
+: 2
+: 3
+: 3
+: 2
+: 1
+: 0
+*** コールバック関数
+#+begin_src ruby
+  class Generator
+    attr_reader :report
+
+    def initialize(report)
+      @report = report
+    end
+
+    def run
+      report.to_csv
+    end
+
+  Notifier.new(Generator.new(good_report),
+               on_success: lambda { |r| puts "Send #{r} to boss" },
+               on_failure: lambda { puts "Send to ben" }
+              ).tap do |n|
+    n.run
+  end
+#+end_src
+
+#+RESULTS:
+
+#+begin_src ruby
+  is_even = lambda { |x| x % 2 == 0 }
+  is_even.call(3)
+#+end_src
+
+#+RESULTS:
+: false
+
+#+begin_src ruby
+  is_even = lambda { |x| x % 2 == 0 }
+  def complement(predicate, value)
+    not predicate.call(value)
+  end
+  complement(is_even, 3)
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src ruby
+  is_even = lambda { |x| x % 2 == 0 }
+  def complement(predicate)
+    lambda do |value|
+      not predicate.call(value)
+    end
+  end
+  complement(is_even).call(4)
+  complement(is_even).call(5)
+#+end_src
+
+#+RESULTS:
+: true
+
+#+begin_src ruby
+  class Generator
+    attr_reader :report
+
+    def initialize(report)
+      @report = report
+    end
+
+    def run
+      report.to_csv
+    end
+  end
+
+  class Notifier
+    attr_reader :generator, :callbacks
+
+    def initialize(generator, callbacks)
+      @generator = generator
+      @callbacks = callbacks
+    end
+
+    def run
+      result = generator.run
+      if result
+        callbacks.fetch(:on_success).call(result)
+      else
+        callbacks.fetch(:on_failure).call
+      end
+    end
+  end
+
+  good_report = OpenStruct.new(to_csv: "59.99, Great Success")
+
+  Notifier.new(Generator.new(good_report),
+               on_success: lambda { |r| puts "Send #{r} to boss" },
+               on_failure: lambda { puts "Send email to ben" }
+              ).tap do |n|
+    n.run #=> send 59.99, great succes to boss
+  end
+#+end_src
+
+#+RESULTS:
+
+#+begin_src ruby
+  good_report = OpenStruct.new(to_csv: nil)
+
+  Notifier.new(Generator.new(good_report),
+               on_success: lambda { |r| puts "Send #{r} to boss" },
+               on_failure: lambda { puts "Send email to ben" }
+              ).tap do |n|
+    n.run #=> ben
+  end
+#+end_src
+元のNotifierクラスに手を加えることなく、ログ機能を追加できた。
+*** reduce
+既存のreduceの例。
+#+begin_src ruby
+  [1, 2, 3, 4, 5].reduce(10) { |acc, x| p "#{acc}, #{x}"; acc + x }
+#+end_src
+
+#+RESULTS:
+: 25
+
+eachを使わずに実装。再帰になる。
+
+#+begin_src ruby
+  adder = lambda do |acc, arr|
+    if arr.empty?
+      acc
+    else
+      adder.call(acc + arr.first, arr.drop(1))
+    end
+  end
+  adder.call(10, [1, 2, 3, 4, 5])
+#+end_src
+
+#+RESULTS:
+: 25
+
+#+begin_src ruby
+  multiplier = lambda do |acc, arr|
+    if arr.empty?
+      acc
+    else
+      multiplier.call(acc * arr.first, arr.drop(1))
+    end
+  end
+  multiplier.call(10, [1, 2, 3, 4, 5])
+#+end_src
+
+#+RESULTS:
+: 1200
+
+変わったのは演算子だけで、DRYでない。
+抽象化する。
+
+#+begin_src ruby
+  reducer = lambda do |acc, arr, binary_function|
+    if arr.empty?
+      acc
+    else
+      reducer.call(binary_function.call(acc, arr.first), arr.drop(1), binary_function)
+    end
+  end
+  reducer.call(1, [1, 2, 3, 4, 5], lambda { |x, y| x + y })
+#+end_src
+
+#+RESULTS:
+: 16
+
+#+begin_src ruby
+  reducer = lambda do |acc, arr, binary_function|
+    reducer_aux = lambda do |acc, arr|
+      if arr.empty?
+        acc
+      else
+        reducer_aux.call(binary_function.call(acc, arr.first), arr.drop(1))
+      end
+    end
+
+    reducer_aux.call(acc, arr)
+  end
+
+  reducer.call(1, [1, 2, 3, 4, 5], lambda { |x, y| x + y })
+#+end_src
+
+#+RESULTS:
+: 16
+*** ex1
+#+begin_src ruby
+  def is_larger_than(amount)
+    lambda do |a|
+      a > amount # amount is free variable
+    end
+  end
+
+  larger_than_5 = is_larger_than(5)
+  larger_than_5.call(7)
+  larger_than_5.call(3)
+#+end_src
+
+#+RESULTS:
+: false
+
+#+begin_src ruby :results output
+  new_db = lambda do
+    db = {}
+    insert = lambda do |key, value|
+      p db.store(key, value)
+    end
+    dump = lambda { p db }
+    delete = lambda do |key|
+      p db.delete(key)
+    end
+    {insert: insert, dump: dump, delete: delete}
+  end
+  db = new_db.call
+  db[:insert].call("this is key", "this is value")
+  db[:dump].call
+  db[:delete].call("this is key")
+  db[:dump].call
+#+end_src
+
+#+RESULTS:
+: "this is value"
+: {"this is key"=>"this is value"}
+: "this is value"
+: {}
+
+#+begin_src ruby
+  complement = lambda do |function|
+    not function.call
+  end
+  complement.call(lambda { 1 })
+#+end_src
+
+#+RESULTS:
+: false
+
+** presense
+~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
+~object.present? ? object : nil~ を短く書ける。
+** tap
+処理に関わらずselfを返す。
+メソッドチェーンへのデバッグに便利。
+
+#+begin_src ruby :results output
+  p ( 1 .. 5 )
+  .tap{|obj| puts obj.class}
+  .to_a.tap{|obj| puts obj.class}
+#+end_src
+
+#+RESULTS:
+: Range
+: Array
+: [1, 2, 3, 4, 5]
 ** min_by
 配列から最大/最小の値を取りたいというとき、min_byが便利。
 #+begin_src ruby
