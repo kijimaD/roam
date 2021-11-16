@@ -1,5 +1,6 @@
 :PROPERTIES:
 :ID:       cfd092c4-1bb2-43d3-88b1-9f647809e546
+:header-args+: :wrap
 :END:
 #+title: Ruby
 * 概要
@@ -9,11 +10,16 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 コンパイル不要なスクリプト言語、静的型付け、WEBに使用される、といった点で[[id:a6c9c9ad-d9b1-4e13-8992-75d8590e464c][Python]]と競合している。
 * Memo
 ** closure
-- 10, 15
 :LOGBOOK:
+CLOCK: [2021-11-16 Tue 21:13]--[2021-11-16 Tue 22:31] =>  1:18
+CLOCK: [2021-11-15 Mon 10:35]--[2021-11-15 Mon 10:55] =>  0:20
 CLOCK: [2021-11-14 Sun 10:55]--[2021-11-14 Sun 11:00] =>  0:05
 CLOCK: [2021-11-13 Sat 20:58]--[2021-11-13 Sat 21:38] =>  0:40
 :END:
+
+DEADLINE: <2021-11-20 Sat>
+- 10, 15, 20, 36
+
 *** 定義
 - 関数を必要とする
 - 親スコープで定義される変数を参照する
@@ -318,14 +324,316 @@ eachを使わずに実装。再帰になる。
 
 #+begin_src ruby
   complement = lambda do |function|
-    not function.call
+    lambda do |arg|
+      not function.call(arg)
+    end
   end
-  complement.call(lambda { 1 })
+
+  is_even = lambda { |x| x % 2 == 0 }
+  complement.call(is_even).call(5)
 #+end_src
 
 #+RESULTS:
-: false
+: true
 
+この部分遅延させる感じが本質か。
+
+畳み込み演算の配列バージョン。
+#+begin_src ruby
+  [1, 2, 3, 4, 5].reduce(Array.new()) { |result, item| result << item * 2 }
+#+end_src
+
+#+RESULTS:
+| 2 | 4 | 6 | 8 | 10 |
+*** ブロック
+#+begin_src ruby
+  def do_it
+    yield
+  end
+  do_it {"I'm doing it."}
+#+end_src
+
+#+RESULTS:
+: I'm doing it.
+
+#+begin_src ruby
+  def do_it
+    yield
+  end
+  do_it { [1, 2, 3] << 4}
+#+end_src
+
+#+RESULTS:
+| 1 | 2 | 3 | 4 |
+
+#+begin_src ruby results: output
+  def do_it(x, y)
+    yield(x, y)
+  end
+  do_it(2, 3) { |x, y| x + y }
+  do_it("Ohai", "Dictator") do |greeting, title|
+      "#{greeting}, #{title}!!!"
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Ohai, Dictator!!!
+#+end_results
+
+#+begin_src ruby
+  def do_it(x)
+    yield x
+  end
+  do_it(42) { |num, line| "#{num}: #{line}" }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+42:
+#+end_results
+
+ブロックは無名関数に似ている。
+
+名前がかぶると外側にあっても上書きする。
+#+begin_src ruby
+  x = "outside x"
+  1.times { x = "modified from the outside block" }
+  x
+#+end_src
+
+#+RESULTS:
+#+begin_results
+modified from the outside block
+#+end_results
+
+ブロック変数を使うとブロック外を上書きしない。
+#+begin_src ruby
+  x = "outside x"
+  1.times { |;x| x = "modified from the outside block" }
+  x
+#+end_src
+
+#+RESULTS:
+#+begin_results
+outside x
+#+end_results
+*** Fixnum#times
+↓みたいなことができるのはどうしてか。
+#+begin_src ruby :results output
+3.times { puts "D'oh!" }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+D'oh!
+D'oh!
+D'oh!
+#+end_results
+
+#+begin_src ruby
+  class Fixnum
+    def times
+      puts "This does nothing yet!"
+    end
+  end
+  3.times { puts "D'oh!" }
+#+end_src
+
+#+begin_src ruby
+  class Array
+    def each
+    end
+  end
+  %w(look ma no for loops).each do |x|
+    puts x
+  end
+#+end_src
+
+eachを作ってみる。
+#+begin_src ruby
+  class Array
+    def each
+      x = 0
+      while x < self.length
+        yield self[x]
+        x += 1
+      end
+    end
+  end
+
+  %w(look me no for loops).each do |x|
+    puts x
+  end
+
+  # look
+  # me
+  # no
+  # for
+  # loops
+#+end_src
+*** IO close利用
+ブロックはファイルクローズのし忘れ防止にも使える。
+これはどうやって実装しているか。
+#+begin_src ruby
+  File.open() do |f|
+    f << "aaa"
+  end
+#+end_src
+
+実装してみる。
+#+begin_src ruby
+  class File
+    def self.open(name, mode)
+      file = new(name, mode)
+      return file unless block_given?
+      yield(file)
+    ensure
+      file.close
+    end
+  end
+#+end_src
+*** オブジェクトの初期化
+ブロックはオブジェクトの初期化にも使える。
+#+begin_src ruby
+  module Twitter
+    module REST
+      class Client
+        attr_accessor :consumer_key, :consumer_secret,
+                      :access_token, :access_token_secret
+        def initialize
+          yield self if block_given?
+        end
+      end
+    end
+  end
+
+  client = Twitter::REST::Client.new do |config|
+    config.consumer_key        = "YOUR_CONSUMER_KEY"
+    config.consumer_secret     = "YOUR_CONSUMER_SECRET"
+    config.access_token        = "YOUR_ACCESS_TOKEN"
+    config.access_token_secret = "YOUR_ACCESS_SECRET"
+  end
+
+  #<Twitter::REST::Client:0x000056204ff8f410 @consumer_key="YOUR_CONSUMER_KEY", @consumer_secret="YOUR_CONSUMER_SECRET", @access_token="YOUR_ACCESS_TOKEN", @access_token_secret="YOUR_ACCESS_SECRET">
+#+end_src
+
+#+begin_src ruby
+  class Router
+    def initialize
+      yield self
+    end
+
+    def match(route)
+      puts route
+    end
+  end
+
+  routes = Router.new do |r|
+    r.match '/about' => 'home#about'
+    r.match '/users' => 'users#index'
+  end
+#+end_src
+
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]のrouterでやっているように、ここからどうやってレシーバーの ~r~ を使わずに指定できるのか。
+
+#+begin_src ruby
+  def foo
+    yield self
+  end
+
+  foo do
+    puts self
+  end
+  # => main
+#+end_src
+
+ブロック内のselfはブロックが定義されたところのselfになる。
+ということで、selfを変えたければブロックが定義されるコンテキストを変えなければならない。
+
+#+begin_src ruby
+  class Router
+    def initialize(&block)
+      instance_eval &block
+    end
+
+    def match(route)
+      puts route
+    end
+  end
+
+  routes = Router.new do
+    match '/about' => 'home#about'
+  end
+#+end_src
+Routerコンテキストになるので、デフォルトレシーバーでmatchが呼べる。
+
+オプションをハッシュで受け取る。
+#+begin_src ruby
+  module Twitter
+    module REST
+      class Client
+        attr_accessor :consumer_key, :consumer_secret,
+                      :access_token, :access_token_secret
+
+        def initialize(options = {}, &block)
+          options.each { |k, v| send("#{k}=", v) }
+          instance_eval(&block) if block_given?
+        end
+      end
+    end
+  end
+
+  client = Twitter::REST::Client.new({consumer_key: "YOUR_CONSUMER_KEY"}) do
+    consumer_secret     = "YOUR_CONSUMER_SECRET"
+    access_token        = "YOUR_ACCESS_TOKEN"
+    access_token_secret = "YOUR_ACCESS_SECRET"
+  end
+#+end_src
+オプションハッシュを使うか、ブロックを使うか、あるいは両方を使うか選択できる。
+*** ex2
+eachを使ってmapを実装する。
+#+begin_src ruby
+  class Array
+    def map
+      array = []
+      each do |x|
+        array.push(yield x)
+      end
+      array
+    end
+  end
+  goal = %w(look ma no for loops).map do |x|
+    x.upcase
+  end
+  p goal
+
+#+end_src
+
+each_wordを実装する。
+例えば↓みたいな動作イメージ。
+#+begin_src ruby
+  "Nothing lasts forever but cold November Rain".each_word do |x|
+    puts x
+  end
+  # => Nothing
+  # => lasts
+  # => forever ...
+#+end_src
+
+#+begin_src ruby
+  class String
+    def each_word
+      split.each do |x|
+        yield x
+      end
+    end
+  end
+
+  "Nothing lasts forever but cold November Rain".each_word do |x|
+    puts x
+  end
+#+end_src
 ** presense
 ~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
 ~object.present? ? object : nil~ を短く書ける。
@@ -340,9 +648,11 @@ eachを使わずに実装。再帰になる。
 #+end_src
 
 #+RESULTS:
-: Range
-: Array
-: [1, 2, 3, 4, 5]
+#+begin_results
+Range
+Array
+[1, 2, 3, 4, 5]
+#+end_results
 ** min_by
 配列から最大/最小の値を取りたいというとき、min_byが便利。
 #+begin_src ruby
