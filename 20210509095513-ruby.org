@@ -11,6 +11,7 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 * Memo
 ** Mastering Ruby Closure
 :LOGBOOK:
+CLOCK: [2021-11-19 Fri 21:57]--[2021-11-19 Fri 23:04] =>  1:07
 CLOCK: [2021-11-17 Wed 23:22]--[2021-11-17 Wed 23:54] =>  0:32
 CLOCK: [2021-11-16 Tue 21:13]--[2021-11-16 Tue 22:31] =>  1:18
 CLOCK: [2021-11-15 Mon 10:35]--[2021-11-15 Mon 10:55] =>  0:20
@@ -19,7 +20,7 @@ CLOCK: [2021-11-13 Sat 20:58]--[2021-11-13 Sat 21:38] =>  0:40
 :END:
 
 DEADLINE: <2021-11-20 Sat>
-- 10, 15, 20, 36, 38
+- 10, 15, 20, 36, 38, 55, 57
 
 *** 定義
 - 関数を必要とする
@@ -906,6 +907,7 @@ Rubyでは、 ~&~ があるとprocに変換しようとする。
 #+end_results
 
 これは引数がProcでないのでエラーになる。
+Objectクラスがprocへの変換のやり方を知らないため。
 #+begin_src ruby :eval never
   obj = Object.new
   [1, 2, 3].map &obj
@@ -920,6 +922,200 @@ class Object
 end
 obj = Object.new
 p [1, 2, 3].map &obj # => [nil, nil, nil]
+#+end_src
+
+#+begin_src ruby
+class Object
+  def to_proc
+    proc { |x| "Here's #{x}!" }
+  end
+end
+obj = Object.new
+p [1, 2, 3].map(&obj) # => ["Here's 1!", "Here's 2!", "Here's 3!"]
+#+end_src
+
+汎用化させる。
+#+begin_src ruby
+  class Symbol
+    def to_proc
+      proc { |obj| obj.send(self) }
+    end
+  end
+  p ["ai", "iue", "u"].map(&:length)
+  # => [2, 3, 1]
+  p ["ai", "iue", "u"].map(&:upcase)
+  # => ["AI", "IUE", "U"]
+#+end_src
+
+#+begin_src ruby :results output
+  p [1, 2, 3].inject(0) { |result, element| result + element }
+  p [1, 2, 3].inject(&:+)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+6
+6
+#+end_results
+
+#+begin_src ruby :eval never
+  class Symbol
+    def to_proc
+      lambda { |obj, args| obj.send(self, *args) }
+    end
+  end
+  p [1, 2, 3].inject(&:+)
+#+end_src
+*** カリー化
+評価を遅延させること。
+#+begin_src ruby
+  discriminant = lambda { |a| lambda { |b| lambda { |c| b **2 - 4*a*c } } }
+  discriminant.call(5).call(6).call(7)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+-104
+#+end_results
+
+同じ意味で、簡潔に書ける。
+#+begin_src ruby
+  discriminant = lambda { |a, b, c| b**2 - 4*a*c }.curry
+  discriminant.call(5).call(6).call(7)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+-104
+#+end_results
+
+これが利用できるシチュエーションを考える。
+↓は重複がたくさんある。
+#+begin_src ruby
+  sum_ints = lambda do |start,stop|
+    (start..stop).inject{ |sum,x| sum + x }
+  end
+
+  sum_of_squares= lambda do |start,stop|
+    (start..stop).inject{ |sum,x| sum + x*x }
+  end
+
+  sum_of_cubes = lambda do |start,stop|
+    (start..stop).inject{ |sum,x| sum + x*x*x}
+  end
+#+end_src
+
+共通化できる。
+#+begin_src ruby :results output
+  sum = lambda do |fun, start, stop|
+    (start..stop).inject { |sum, x| sum + fun.call(x) }
+  end
+
+  p sum_of_ints = sum.(lambda { |x| x }, 1, 10)
+  p sum_of_square = sum.(lambda { |x| x*x }, 1, 10)
+  p sum_of_cubes = sum.(lambda { |x| x*x*x }, 1, 10)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+55
+385
+3025
+#+end_results
+
+さらにカリー化。
+
+#+begin_src ruby
+  sum = lambda do |fun, start, stop|
+    (start..stop).inject { |sum, x| sum + fun.call(x) }
+  end
+
+  sum_of_squares = sum.curry.(lambda { |x| x*x })
+  sum_of_squares.(1).(10)
+  sum_of_squares.(50).(100)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+295475
+#+end_results
+*** ex3
+#+begin_src ruby
+  class Symbol
+    def to_proc
+      proc { |obj, args| obj.send(self, *args) }
+    end
+  end
+#+end_src
+
+#+begin_src ruby
+"aaaa".send(:length)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+4
+#+end_results
+
+to_procを初期化に使うことができる。
+#+begin_src ruby
+  class SpiceGirl
+    def initialize(name, nick)
+      @name = name
+      @nick = nick
+    end
+
+    def inspect
+      "#{@name} (#{@nick} Spice)"
+    end
+
+    def self.to_proc
+      proc { |obj| self.new(obj[0], obj[1]) }
+    end
+  end
+
+  spice_girls = [["tarou", "T"], ["jirou", "J"]]
+  p spice_girls.map(&SpiceGirl)
+  # => [tarou (T Spice), jirou (J Spice)]
+#+end_src
+
+#+begin_src ruby :results output
+  p proc {}.class
+  p proc {}.lambda?
+  p lambda {}.class
+  p lambda {}.lambda?
+  p -> {}.class
+  p lambda {}.lambda?
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Proc
+false
+Proc
+true
+Proc
+true
+#+end_results
+
+lambdaは引数の数が合わないとエラーになる。
+#+begin_src ruby
+  j1 = proc   { |x,y,z| "#{x}, #{y}, #{z}" }
+  j2 = lambda { |x,y,z| "#{x}, #{y}, #{z}" }
+  j1.call("hello", "world")
+  # j2.call("hello", "world") # argument error
+#+end_src
+
+#+RESULTS:
+#+begin_results
+hello, world,
+#+end_results
+
+#+begin_src ruby
+  j1 = proc { |x,y,z| x + y + z }
+  j2 = lambda { |x,y,z| x + y + z }
+  # j1.call(1, 2) # -:3:in `+': nil can't be coerced into Integer (TypeError)
+  # j2.call(1, 2) # -:4:in `block in main': wrong number of arguments (given 2, expected 3) (ArgumentError)
 #+end_src
 ** presense
 ~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
