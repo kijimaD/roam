@@ -9,8 +9,10 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 
 コンパイル不要なスクリプト言語、静的型付け、WEBに使用される、といった点で[[id:a6c9c9ad-d9b1-4e13-8992-75d8590e464c][Python]]と競合している。
 * Memo
-** Mastering Ruby Closure
+** DONE Mastering Ruby Closure
+CLOSED: [2021-11-21 Sun 00:38]
 :LOGBOOK:
+CLOCK: [2021-11-20 Sat 21:45]--[2021-11-20 Sat 22:54] =>  1:09
 CLOCK: [2021-11-20 Sat 15:31]--[2021-11-20 Sat 17:16] =>  1:45
 CLOCK: [2021-11-19 Fri 21:57]--[2021-11-19 Fri 23:04] =>  1:07
 CLOCK: [2021-11-17 Wed 23:22]--[2021-11-17 Wed 23:54] =>  0:32
@@ -20,7 +22,7 @@ CLOCK: [2021-11-14 Sun 10:55]--[2021-11-14 Sun 11:00] =>  0:05
 CLOCK: [2021-11-13 Sat 20:58]--[2021-11-13 Sat 21:38] =>  0:40
 :END:
 
-DEADLINE: <2021-11-20 Sat>
+DEADLINE: <2021-11-21 Sun>
 - 10, 15, 20, 36, 38, 55, 57, 61, 68
 
 *** 定義
@@ -1196,7 +1198,7 @@ fiberクラスは内部iteratorを外部iteratorに変換する。
 1
 2
 #+end_results
-
+*** EnumerableとEnumerator
 #+begin_src ruby
 module Enumerable
   def lax
@@ -1281,6 +1283,91 @@ lazy mapの実装。
 #+end_src
 
 lazy takeの実装。
+#+begin_src ruby
+  def take(n)
+    taken = 0
+    Lax.new(self) do |yielder, val|
+      if taken < n
+        yielder << val
+        taken += 1
+      else
+        raise StopIteration
+      end
+    end
+  end
+  p 1.upto(Float::INFINITY).lax.take(5).first(5)
+  # [1, 2, 3, 4, 5]
+#+end_src
+
+まとめ。
+#+begin_src ruby
+class Lax < Enumerator
+  def initialize(receiver)
+    super() do |yielder|
+      receiver.each do |val|
+        if block_given?
+          yield(yielder, val)
+        else
+          yielder << val
+        end
+      end
+    rescue StopIteration
+    end
+  end
+
+  def map(&block)
+    Lax.new(self) do |yielder, val|
+      yielder << block.call(val)
+    end
+  end
+
+  def take(n)
+    taken = 0
+    Lax.new(self) do |yielder, val|
+      if taken < n
+        yielder << val
+        taken += 1
+      else
+        raise StopIteration
+      end
+    end
+  end
+end
+
+p 1.upto(Float::INFINITY).lax.map { |x| x*x }.map { |x| x+1 }.first(5)
+p 1.upto(Float::INFINITY).lax.map { |x| x*x }.map { |x| x+1 }.take(5).to_a # ↑と結果は同じ
+#+end_src
+*** ex4
+selectのlazy版。
+  #+begin_src ruby
+    def select(&block)
+      Lax.new(self) do |yielder, val|
+        if block.call(val)
+          yielder << val
+        end
+      end
+    end
+
+    p 1.upto(Float::INFINITY).lax.take(5).select { |x| x % 2 == 0 }.to_a
+    # => [2, 4]
+  #+end_src
+
+dropのlazy版。
+#+begin_src ruby
+  def drop(n)
+    dropped = 0
+    Lax.new(self) do |yielder, val|
+      if dropped < n
+        dropped += 1
+      else
+        yielder << val
+      end
+    end
+  end
+
+  p 1.upto(Float::INFINITY).lax.take(5).drop(3).to_a
+  # => [4, 5]
+#+end_src
 ** presense
 ~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
 ~object.present? ? object : nil~ を短く書ける。
