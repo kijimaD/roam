@@ -11,6 +11,7 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 * Memo
 ** Mastering Ruby Closure
 :LOGBOOK:
+CLOCK: [2021-11-20 Sat 15:31]--[2021-11-20 Sat 17:16] =>  1:45
 CLOCK: [2021-11-19 Fri 21:57]--[2021-11-19 Fri 23:04] =>  1:07
 CLOCK: [2021-11-17 Wed 23:22]--[2021-11-17 Wed 23:54] =>  0:32
 CLOCK: [2021-11-16 Tue 21:13]--[2021-11-16 Tue 22:31] =>  1:18
@@ -20,7 +21,7 @@ CLOCK: [2021-11-13 Sat 20:58]--[2021-11-13 Sat 21:38] =>  0:40
 :END:
 
 DEADLINE: <2021-11-20 Sat>
-- 10, 15, 20, 36, 38, 55, 57
+- 10, 15, 20, 36, 38, 55, 57, 61, 68
 
 *** 定義
 - 関数を必要とする
@@ -1117,6 +1118,169 @@ hello, world,
   # j1.call(1, 2) # -:3:in `+': nil can't be coerced into Integer (TypeError)
   # j2.call(1, 2) # -:4:in `block in main': wrong number of arguments (given 2, expected 3) (ArgumentError)
 #+end_src
+*** enumerable
+- enumerable: 機能を持ったモジュール(ArrayとかHashと同列)。include先のクラスが持つ each メソッドを元に、様々なメソッドを提供する。
+- enumerator: 実際にenumerateするオブジェクト。each 以外のメソッドにも Enumerable の機能を提供するためのラッパークラス。外部イテレータとしても使える。
+#+begin_src ruby :results output
+  p 1.upto(Float::INFINITY) # 評価せずオブジェクトを返す
+  p 1.upto(5).to_a # 評価する
+  # p 1.upto(Float::INFINITY).to_a # 処理は終わらない
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#<Enumerator: 1:upto(Infinity)>
+[1, 2, 3, 4, 5]
+#+end_results
+
+#+begin_src ruby :results output
+  p 1.upto(Float::INFINITY).lazy.map { |x| x * x }
+  p 1.upto(Float::INFINITY).lazy.map { |x| x * x }.take(10)
+  p 1.upto(Float::INFINITY).lazy.map { |x| x * x }.take(10).to_a
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#<Enumerator::Lazy: #<Enumerator::Lazy: #<Enumerator: 1:upto(Infinity)>>:map>
+#<Enumerator::Lazy: #<Enumerator::Lazy: #<Enumerator::Lazy: #<Enumerator: 1:upto(Infinity)>>:map>:take(10)>
+[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+#+end_results
+*** internal iterationとexternal iteration
+internalは、Arrayオブジェクトがiterateをコントロールする。戻れない。
+externalは、包んでいる外部のオブジェクトがiterateをコントロールする。状態を持っているので戻ったり止めたりできる。
+
+EnumeratorはEnumerableを包んでいる。
+Arrayを入れてみる。
+#+begin_src ruby :results output
+  p e = Enumerator.new([1, 2, 3])
+  p e.next
+  p e.next
+  p e.next
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#<Enumerator: [1, 2, 3]:each>
+1
+2
+3
+#+end_results
+
+#+begin_src ruby
+  e = Enumerator.new do |yielder|
+    [1, 2, 3].each do |val|
+      yielder << val
+    end
+  end
+#+end_src
+
+fiberクラスは内部iteratorを外部iteratorに変換する。
+
+#+begin_src ruby :results output
+  f = Fiber.new do
+    x = 0
+    loop do
+      Fiber.yield x
+      x += 1
+    end
+  end
+
+  p f.resume
+  p f.resume
+  p f.resume
+#+end_src
+
+#+RESULTS:
+#+begin_results
+0
+1
+2
+#+end_results
+
+#+begin_src ruby
+module Enumerable
+  def lax
+    Lax.new(self)
+  end
+end
+
+class Lax < Enumerator
+  def initialize(receiver)
+    super() do |yielder|
+      receiver.each do |val|
+        yielder << val
+      end
+    end
+  end
+end
+
+e = 1.upto(Float::INFINITY).lax
+p e.next # 1
+p e.next # 2
+#+end_src
+
+#+begin_src ruby
+  module Enumerable
+    def lax
+      Lax.new(self)
+    end
+  end
+
+  class Lax < Enumerator
+    def initialize(receiver)
+      super() do |yielder|
+        receiver.each do |val|
+          puts "add: #{val}"
+          yielder << val
+        end
+      end
+    end
+  end
+
+  lax = Lax.new([1, 2, 3])
+  lax.map { |x| puts "map: #{x}; x" }
+
+  # add: 1
+  # map: 1; x
+  # add: 2
+  # map: 2; x
+  # add: 3
+  # map: 3; x
+#+end_src
+
+lazy mapの実装。
+#+begin_src ruby
+  module Enumerable
+    def lax
+      Lax.new(self)
+    end
+  end
+
+  class Lax < Enumerator
+    def initialize(receiver)
+      super() do |yielder|
+        receiver.each do |val|
+          if block_given?
+            yield(yielder, val)
+          else
+            yielder << val
+          end
+        end
+      end
+    end
+
+    def map(&block)
+      Lax.new(self) do |yielder, val|
+        yielder << block.call(val)
+      end
+    end
+  end
+
+  p 1.upto(Float::INFINITY).lax.map { |x| x*x }.map { |x| x+1 }.first(5)
+  # [2, 5, 10, 17, 26]
+#+end_src
+
+lazy takeの実装。
 ** presense
 ~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
 ~object.present? ? object : nil~ を短く書ける。
@@ -1462,6 +1626,7 @@ Rubyでの面白いプロジェクトを紹介している。
 るりまの誤字を発見した。いくつか発見してまとめてPRを送ろう。
 
 - 同じにように(Proc)
+- フォーマッター(表記ゆれ)
 ** TODO [[https://magazine.rubyist.net/articles/0061/0061-ForeWord.html][0061号 コンピュータサイエンスが気になるプログラマに勧める書籍リスト]]
 ** TODO [[https://i.loveruby.net/ja/rhg/book/][Rubyソースコード完全解説]]
 ** TODO Refactoring Ruby Edition
@@ -1528,10 +1693,12 @@ CLOCK: [2021-10-02 Sat 22:01]--[2021-10-02 Sat 22:51] =>  0:50
 :END:
 - https://zenn.dev/jnchito/books/how-to-read-ruby-reference
 * References
-**  [[https://blog.freedom-man.com/try-rubygem-codereading][RubyGemコードリーディングのすすめ]]
-**  [[http://www.aoky.net/articles/why_poignant_guide_to_ruby/index.html][ホワイの(感動的)Rubyガイド]]
+** [[https://practicingruby.com/articles/building-enumerable-and-enumerator][Building Enumerable & Enumerator in Ruby]]
+Enumerableの詳しい解説。
+** [[https://blog.freedom-man.com/try-rubygem-codereading][RubyGemコードリーディングのすすめ]]
+** [[http://www.aoky.net/articles/why_poignant_guide_to_ruby/index.html][ホワイの(感動的)Rubyガイド]]
 ちょっと変わったRuby入門。
-**  [[https://docs.ruby-lang.org/ja/][プログラミング言語 Ruby リファレンスマニュアル]]
+** [[https://docs.ruby-lang.org/ja/][プログラミング言語 Ruby リファレンスマニュアル]]
 rubyのドキュメント。
-**  [[https://rubular.com/][Rubular: a Ruby regular expression editor]]
+** [[https://rubular.com/][Rubular: a Ruby regular expression editor]]
 Rubyの正規表現チェッカ。
