@@ -1,0 +1,77 @@
+:PROPERTIES:
+:ID:       353d28c5-f878-4af8-81ff-95bfe4a630f5
+:END:
+#+title: gemat
+#+filetags: Project
+* 概要
+gematは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]プロジェクトにおけるGemfileをエクスポートするCLIツールである。
+* Goals
+Gemfileを見やすい形で、有益な情報をエクスポートできるようにすること。
+プロジェクトで使われているgemを、学びやすくすること。
+
+Bundlerで取ってくる以外の情報源も使えるようにする。
+たとえばGitHubの元リポジトリへのリンクがあると便利である。
+** Non Goals
+情報表示以上のことは行わない。
+* Background
+使っているgemのソースコードを把握したいとき、逐一検索してリポジトリを見つけるのが不便である。
+* Detailed Design
+** 標準的な使用例
+#+begin_src shell
+  gemat md
+#+end_src
+
+#+begin_src shell
+  Progress: |====================================================================|
+
+  | gem | Repo URL |
+  | ---- | ---- |
+  | csv | https://github.com/ruby/csv |
+  | httpclient | https://github.com/nahi/httpclient |
+  | rake | https://github.com/ruby/rake |
+  | rspec | https://github.com/rspec/rspec |
+  | rubocop | https://github.com/rubocop/rubocop |
+  | ruby-progressbar | https://github.com/jfelchner/ruby-progressbar |
+  | simplecov | https://github.com/simplecov-ruby/simplecov |
+  | thor | https://github.com/erikhuda/thor |
+#+end_src
+** オプション
+#+begin_src shell
+  gemat csv -o "output.csv" -f "index,name,repo,star,latest_version,current_version"
+#+end_src
+
+- 第1引数(required) : 出力形式(md, CSV)
+- o(optional) : 出力ファイルの指定
+- f(optional) : 出力カラムの指定
+** CLI
+Thorを用いる。
+** Bundler DSL
+Gemfileの解析には、bundlerがDSLを実行した結果集めた情報を使う。
+自分でGemfile読み込みを書かなくてすむ。自分で書くと仕様に追従しないといけないので現実的でない。
+** Fetcher
+gemfileから読み取った名前を元に、rubygemsにアクセスして情報を取る。
+jsonが返ってくる。
+** Gem
+jsonで取った情報を加工して、オブジェクトに格納する。
+1gemで1オブジェクト。
+** Column DSL
+カラム指定を解析して、フォーマットするときに利用する。
+** Formatter
+各形式でフォーマットして文字列にする。
+** Output
+Formatterが出力した文字列を指定方法で出力する。
+
+- 標準出力
+- ファイル
+
+progress barは常に標準出力。
+目的のものをどう出力するか、ということ。
+* 技術
+- [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]
+- [[id:afccf86d-70b8-44c0-86a8-cdac25f7dfd3][RSpec]]
+* Memo
+* Tasks
+** Fetcher, Gem分割
+* Reference
+- GitHub repository :: https://github.com/kijimaD/gemat/
+* Archive
