@@ -69,7 +69,7 @@
   (concat
    ;; "</div></div>"
    (sxml-to-xml
-    `(footer (@ (class "footer mt-auto py-3"))
+    `(footer (@ (class "footer py-3"))
       (div (@ (class "container"))
            (div (@ (class "row "))
                 (div (@ (class "col-md-4")) "")
@@ -120,6 +120,7 @@
       :with-timestamps nil
       :with-toc nil
 
+      :sitemap-title "Sitemap"
       :auto-sitemap t ; generate sitemap.org automagically
       )))
 
