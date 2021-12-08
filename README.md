@@ -17,3 +17,9 @@ npm install
 
 make lint
 ```
+
+## git hooks
+```shell
+git config --local core.hooksPath .githooks
+chmod -R +x .githooks/
+```
