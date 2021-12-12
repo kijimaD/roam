@@ -129,7 +129,7 @@
   (setq org-roam-graph-viewer nil)
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (setq org-roam-v2-ack t)
-  (org-roam-db-autosync-mode)
+  (org-roam-db-sync)
   (org-roam-graph)
   (sleep-for 2)
   (shell-command (concat "mv"
