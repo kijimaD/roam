@@ -131,7 +131,7 @@
   (setq org-roam-v2-ack t)
   (org-roam-db-sync)
   (org-roam-graph)
-  (sleep-for 2)
+  (sleep-for 10)
   (shell-command (concat "mv"
                          " "
                          (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
