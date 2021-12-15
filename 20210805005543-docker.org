@@ -82,27 +82,107 @@ docker rmi $(docker images -q)
 ** LinuxのDockerで rails new したときの権限がrootになる問題
 [[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
 * Tasks
-** day jobのdocker環境化[2/6]
-Day JobもLinuxに統一する。
-*** [ ] テストの実行
-アタッチ…コンテナ内部でシェルコマンドを実行する必要がある。
-*** [X] サーバ立ち上げ
-サーバ部分も完全にdocker化した。表示はまったく問題なさそう
-できたと思ってたが、完全にdockerにすると反映が死ぬほど面倒なのでアタッチしないといけない。
-アタッチするとうまくいかない。
-*** [ ] volumes
-うまくできない。docker-compose内でもbundle installしないとgem not foundになる。
-かといってdocker-compose内でやるとまずい権限で作られるらしく、後のコンテナが起動に失敗する。
-*** [X] DBのGUIツールとの接続
+** Rails Docker環境化[5/7]
+:LOGBOOK:
+CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
+:END:
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]] + webpackをLinuxで立ち上げられるようにする。
+- [ ] テストの実行
+#+caption: bin/rspecがポイントか
+#+begin_src shell
+docker-compose run rails bundle exec bin/rspec spec/requests/top/top_spec.rb
+#+end_src
+
+- [X] サーバ立ち上げ
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]部分をDocker化する。表示はまったく問題なさそう。
+リロードするとちゃんとローカルの変更が反映される。
+
+TODO: なぜかsudoでないとbundle installで書き込みができずエラーになる。
+
+#+caption: docker-compose.yml
+#+begin_src yml
+  rails:
+    build: .
+    environment:
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379
+      MEMCACHED_URL: memcached://memcached:11211
+      MEMCACHED_HOST: memcached
+      MEMCACHED: memcached:11211
+      WEBPACKER_DEV_SERVER_HOST: webpack
+    container_name: rails
+    ports:
+      - 3000:3000
+    stdin_open: true
+    tty: true
+    command: bash -c "bundle install && rm -f tmp/pids/server.pid && bundle exec rails s -b '0.0.0.0'"
+    volumes:
+      - .:/rails
+#+end_src
+
+#+caption: 立ち上げる
+#+begin_src shell
+sudo docker-compose up --build
+#+end_src
+
+- [X] gem not found
+TODO: dockerfileとdocker-compose両方でbundle installしないとgem not foundになる。
+2重にやってるのは何かおかしそう。
+
+- [X] DBのGUIツールとの接続
 Linux用のsqlectronがよさそう。が、上手く[[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]と接続できない
-~MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'~ を追加して入れるように。指定してるとログインできなかった。
-*** [ ] メール関係の動作確認
+docker-compose.ymlで ~MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'~ を追加すると入れるように。
+パスワードを指定してるとログインできない。
+
+- [ ] メール関係の動作確認
 redisが本当に動いてるかわからない。
-*** [ ] yarnができてない
-どうやってwatchして反映できるんだろう。確かにコマンドはできてるけど、nodeサーバと通信ができてない感じだ。
-*** [ ] コンソールに入れるように
-~docker exec -it {container} /bin/bash~ に入れない。
-containerIDを入れたらいけたが、不便。
+
+- [X] yarnができてない
+どうやってwatchして反映できるんだろう。
+確かにコマンドはできてるけど、webpack-dev-serverと通信ができてない感じだ。
+
+接続できないけど、8080でサーバが立ち上がっていることは確認した。
+portを合わせてやったらできた。
+#+caption: docker-compose.yml
+#+begin_src yml
+  webpack:
+    build: .
+    environment:
+      NODE_ENV: development
+      RAILS_ENV: development
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+    command: yarn watch
+    volumes:
+      - .:/rails
+    ports:
+      - 8080:8080
+    depends_on:
+      - rails
+#+end_src
+
+ホットリロードができない。
+↓をするとエラーは出なくなった。
+#+caption: webpack.config.js
+#+begin_src json
+  devServer: {
+    contentBase: path.join(__dirname, 'app/assets/javascripts'),
+    host: '0.0.0.0',
+    transportMode: 'ws',
+    injectClient: false,
+  },
+#+end_src
+
+- [X] コンソールに入れるように
+できた。
+#+caption: railsはコンテナ名で、この下を色々変えればいい
+#+begin_src shell
+  docker-compose run rails bundle exec rails c
+#+end_src
+
+#+caption: コンテナ内のshellに入ってみる
+#+begin_src shell
+  docker-compose run rails /bin/bash
+#+end_src
 * Archive
 * References
 **  [[https://docs.docker.jp/pdf-download.html][Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント]]
