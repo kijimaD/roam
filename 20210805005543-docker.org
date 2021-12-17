@@ -82,25 +82,17 @@ docker rmi $(docker images -q)
 ** LinuxのDockerで rails new したときの権限がrootになる問題
 [[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
 * Tasks
-** Rails Docker環境化[5/7]
+** Rails Docker環境化[3/7]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]] + webpackをLinuxで立ち上げられるようにする。
-- [ ] テストの実行
-#+caption: bin/rspecがポイントか
-#+begin_src shell
-docker-compose run rails bundle exec bin/rspec spec/requests/top/top_spec.rb
-#+end_src
-
-- [X] サーバ立ち上げ
+*** TODO 基本コマンド
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]部分をDocker化する。表示はまったく問題なさそう。
 リロードするとちゃんとローカルの変更が反映される。
 
-TODO: なぜかsudoでないとbundle installで書き込みができずエラーになる。
-
 #+caption: docker-compose.yml
-#+begin_src yml
+#+begin_src yaml
   rails:
     build: .
     environment:
@@ -115,36 +107,54 @@ TODO: なぜかsudoでないとbundle installで書き込みができずエラ�
       - 3000:3000
     stdin_open: true
     tty: true
-    command: bash -c "bundle install && rm -f tmp/pids/server.pid && bundle exec rails s -b '0.0.0.0'"
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -b '0.0.0.0'"
     volumes:
       - .:/rails
 #+end_src
 
-#+caption: 立ち上げる
+#+caption: コンテナ作成 + 立ち上げ
 #+begin_src shell
-sudo docker-compose up --build
+  sudo docker-compose up --build
 #+end_src
 
-- [X] gem not found
-TODO: dockerfileとdocker-compose両方でbundle installしないとgem not foundになる。
-2重にやってるのは何かおかしそう。
+#+caption: railsはコンテナ名で、この下を色々変えればいい
+#+begin_src shell
+  docker-compose run rails bundle exec rails c
+#+end_src
 
-- [X] DBのGUIツールとの接続
+#+caption: bundle install
+#+begin_src shell
+  docker-compose run rails bundle install
+#+end_src
+
+#+caption: テストを実行する
+#+begin_src shell
+  docker-compose run rails bundle exec bin/rspec spec/requests/top/top_spec.rb
+#+end_src
+
+#+caption: コンテナ内のshellに入ってみる
+#+begin_src shell
+  docker-compose run rails /bin/bash
+#+end_src
+*** DONE DBのGUIツールとの接続
+CLOSED: [2021-12-17 Fri 20:58]
 Linux用のsqlectronがよさそう。が、上手く[[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]と接続できない
 docker-compose.ymlで ~MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'~ を追加すると入れるように。
 パスワードを指定してるとログインできない。
 
-- [ ] メール関係の動作確認
+だがこのsqlectron、表示テーブルでの編集ができないので値を書き換えるのに非常に不便。
+別のを使ったほうがいいだろう。
+*** TODO メール関係の動作確認
 redisが本当に動いてるかわからない。
+*** DONE yarnができてない
+CLOSED: [2021-12-17 Fri 20:58]
+- ポートを合わせる
+- webpack.config.jsにhostを加える
 
-- [X] yarnができてない
-どうやってwatchして反映できるんだろう。
-確かにコマンドはできてるけど、webpack-dev-serverと通信ができてない感じだ。
+が必要。
 
-接続できないけど、8080でサーバが立ち上がっていることは確認した。
-portを合わせてやったらできた。
 #+caption: docker-compose.yml
-#+begin_src yml
+#+begin_src yaml
   webpack:
     build: .
     environment:
@@ -160,29 +170,23 @@ portを合わせてやったらできた。
       - rails
 #+end_src
 
-ホットリロードができない。
-↓をするとエラーは出なくなった。
+ホットリロードできるのを確認。
+hostを加える必要があった。
 #+caption: webpack.config.js
 #+begin_src json
   devServer: {
     contentBase: path.join(__dirname, 'app/assets/javascripts'),
+    allowedHosts: ['.lvh.me'],
     host: '0.0.0.0',
-    transportMode: 'ws',
-    injectClient: false,
   },
 #+end_src
-
-- [X] コンソールに入れるように
-できた。
-#+caption: railsはコンテナ名で、この下を色々変えればいい
-#+begin_src shell
-  docker-compose run rails bundle exec rails c
-#+end_src
-
-#+caption: コンテナ内のshellに入ってみる
-#+begin_src shell
-  docker-compose run rails /bin/bash
-#+end_src
+*** TODO dockerがrootユーザでファイルを生成する問題
+生成したファイルがroot権限になってしまう。
+だからbundle installを実行すると、その後は通常ユーザでは編集できなくなる。
+面倒だし、migrationとか明らかにダメな気がする。
+*** TODO railsコンソールに入れない
+一度入れてたのだが、何か変えて入れなくなった。
+serviceが見つからないと出る。
 * Archive
 * References
 **  [[https://docs.docker.jp/pdf-download.html][Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント]]
