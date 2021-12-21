@@ -5,14 +5,57 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
-** shoulda Error
-[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]上でテストを走らせると出現した。
+** クエリ高速化
+ネストしてクエリを発行してるときは何かがおかしい。
 
-#+caption: 読み込む
-#+begin_src shell
-  require "shoulda/matchers"
-  require 'rspec-sidekiq'
+- parent_category -> category -> blog のような構造
+
+#+caption: ひどいクエリメソッド
+#+begin_src ruby
+  parent_categories.each do |parent_category|
+    parent_category.categories.each do |category|
+      category.blogs.each do |blog|
+        @content << blog.content
+      end
+    end
+  end
 #+end_src
+
+- parent_category -> category -> blog
+
+#+caption: joins
+#+begin_src ruby
+  Blog.joins(categories: category)
+    .merge(Category.where(parent_category: parent_large_categories))
+#+end_src
+** Migrationファイルをまとめる
+Migrationファイルは変更しないのが基本だが、数が多い場合、 ~rails migrate:reset~ に時間がかかる。
+
+db/schema.rbの内容を、最新のタイムスタンプのマイグレーションにコピーする。
+
+- つまり現在のDB状況が、そのまま1つのmigrationとなる。DSLが同じなので問題ない。
+- migrationのタイムスタンプは既に実行済みのため、動作に影響しない。
+** Gemfileでの環境指定
+Gemfileのgroupキーワードは、指定環境でしかインストールしないことを示す。
+
+#+caption: developmentでしかインストールされない
+#+begin_src ruby
+  group :development do
+    gem 'annotate', require: false
+  end
+#+end_src
+
+なので環境を指定せずにテストを実行したとき、gem not foundが出る。実行されたのがdevelopment環境で、テストのgemが読み込まれてないから。 ~RAILS_ENV=test~ がついているか確認する。
+** 論理削除
+論理削除は削除したときレコードを削除するのではなく、フラグをトグルするもの。
+逆に物理削除はレコードから削除すること。
+
+論理削除のメリットは、データが戻せること。
+
+が、データベースの運用的に、後から問題となることの方が多い。
+
+- 削除フラグを付け忘れると事故になる。削除したはずなのに表示したり、計算に入れたりしてしまう
+- データが多くなるためパフォーマンスが悪くなる
 ** find、find_by、whereの違い
 [[https://qiita.com/tsuchinoko_run/items/f3926caaec461cfa1ca3][find、find_by、whereの違い - Qiita]]
 

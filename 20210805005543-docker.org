@@ -6,7 +6,21 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * 各種コマンド
-** dockerfile
+** Docker Hub
+Dockerイメージをインターネット上にアップロードできるスペース。
+個別にビルドしなくてよくなるためDocker関連の全工程が高速化する。テスト、ローカル、デプロイ…。
+** マルチステージビルド
+サイトをDockerデプロイにしたり、CIをDockerで行うとき。
+複数の環境が関係する場合、マルチステージビルドを行うとキャッシュが効くため高速化できる。
+
+- Linux関連のイメージ
+- [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]関連のイメージ
+- node関連のイメージ
+- [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]アプリのイメージ
+
+のように。
+Linux → [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]] + node → [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]] という依存関係になる。
+** Dockerfile
 Dockrfileはイメージを作る。(image build)
 docker-composeは↑で作られたイメージを元にコンテナを作る。そのなかアプリケーションを走らせて開発する。
 
@@ -18,6 +32,7 @@ docker-composeは↑で作られたイメージを元にコンテナを作る。
 コンテナ内部で実行したいコマンドがあるときにやりたいこと、たとえば[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]だと、gemfileが新しくなったときにbundle installしたい。
 
 runは新しくコンテナを作成し、内部でコマンドを実行する。サービス名はdocker-compose.ymlから取っている。つまり立ち上がっているコンテナ名は関係ないのに注意。何も指定してない場合、docker-compose.ymlからサービス名を決定する。ほかのファイルの場合には-fオプションが必要。外部で永続化される…volumeが指定されてるような処理(bundle install)とか、データベース関係はいいのだが、その他は永続化されないので注意。
+
 #+caption: run
 #+begin_src shell
   docker-compose run {サービス名} {shellコマンド}
@@ -192,9 +207,10 @@ runはコンテナを新しく作る…つまりymlを見てるので、指定�
   docker-compose -f docker-compose.yml -f docker-compose-app.override.yml exec rails bundle exec rspec --options ./.rspec ./spec/models/user_spec.rb
 #+end_src
 
-#+caption: system specを実行する
+↑いちいちクソ長いコマンドを打つのは苦痛なので、shellに入って作業すると楽。
+#+caption: shellに入る
 #+begin_src shell
-  sudo docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run rails bundle exec rspec --options ./.rspec ./spec/system/user_spec.rb
+  sudo docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run rails /bin/sh
 #+end_src
 *** DONE DBのGUIツールとの接続
 CLOSED: [2021-12-17 Fri 20:58]
