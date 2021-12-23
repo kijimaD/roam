@@ -5,6 +5,250 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+TODO: 数が多くなってきたので分類する。
+** 関連カラムを安全に変更する
+レコードがすでに入っているテーブルの関連を変更する場合。
+何も考えずにやると、一気にすべてを切り替えることになりがち。
+
+悪い例を示す。
+1. 最初に関連カラムを変更する。
+  #+caption: 関連変更
+  #+begin_src ruby
+   belongs_to :new_user # 旧 belongs_to :old_user
+  #+end_src
+2. 旧関連を使ってたアプリケーション側をすべて変更する。MVCすべて。
+3. 新しい関連カラムは空で、旧データを移行しないといけない。移行は↑のデプロイと同時にしないと不整合になる。デプロイと移行スクリプトの間の変更は無視されるから。
+
+ということで、大量な複数層の変更をぶっつけ本番でしないといけなくなる。途中で嫌になるだろうし、運が悪ければミスって大変なことになる。
+
+ではどうするか。根本的なアイデアは、2つの関連を同時に保持しておくことだ。
+同時に持っておけば、大丈夫なことを確認してから関連を変更するだけでいい。そうやって遅延させることで、一気にいろいろな変更をしなくてよくなる。
+
+具体的にどうやるか。
+#+caption: before_saveでオンデマンドコピー
+#+begin_src ruby
+  class User < ApplicationRecord
+    before_save do
+      self.user_id ||= old_user.user_id
+    end
+  end
+#+end_src
+
+としておくと、保存時にUser.user_id とOldUser.user_idの両方に関連がコピーされる。
+
+既存データについても処理を追加しておく。
+#+caption: メソッドを作っておく
+#+begin_src ruby
+  class User < ApplicationRecord
+    def migrate
+      self.user_id ||= old_user.user_id
+      save!
+    end
+  end
+#+end_src
+そして、全Userでmigrateを実行すれば既存データにも新しいカラムが入る。
+
+既存データと新しく作成されるファイルをおさえたので、新旧2つの関連カラムは完全に同等になる。
+ここまででマージ、リリースする。
+問題ないことを確認したあとで、新旧カラムが使える状態を活かしてアプリケーション側の変更…実際の関連の変更をやる(一番の目的の箇所)。
+ここまででマージ、リリースする。
+
+その後、移行処理とカラムを削除して片付ければ完了。
+
+もちろん関連カラムだけでなく、何かカラムを移すときにはすべて同様にできる。
+** カラム名を安全に変更する
+カラム名変更とアプリケーション側の変更を分け、変更範囲を狭める。
+alias_attributeを追加する。すると、新しいカラム名でもアクセスできるようになる。
+依存しているほかのアプリケーションの変更をする(new_user_idに書き換える)。
+#+caption: modelファイルにて、追加
+#+begin_src ruby
+alias_attribute :new_user_id, :typo_user_id
+#+end_src
+
+それらを書き換えたらマージ、リリースする。
+その後、カラム名を書き換えるマイグレーションを作成する。使っている箇所はないので安全に変更できる。
+マイグレーション後、alias_attributeを削除する。
+** テーブル名を安全に変更する
+最初にmodel クラス名を変更し、テーブルの参照先に変更前のものを設定する。
+#+begin_src ruby
+  class Blog_After < ApplicationRecord
+    self.table_name = :blog_before
+  end
+#+end_src
+すると、アプリケーション側だけの変更で、DBの変更はない状態で動作上の変更はなくなる。
+次にアプリケーションの、ほかの依存している箇所を修正する。
+ここまで1つのPRにする。
+
+テストが通ったりリリースできたら、テーブル名変更のマイグレーションを作成し、table_nameを削除するPRをつくる。
+安全に変更が完了する。
+テーブルの変更と、アプリケーションの変更を同時にやらないと安全だし分割できてすっきりする。
+** modelのログを保持する
+[[https://github.com/paper-trail-gem/paper_trail][paper-trail-gem/paper_trail: Track changes to your rails models]]
+変更や差分、変更時の何らかの情報(つまり、作業者とか)を保存、閲覧できる。
+
+[[https://github.com/ankit1910/paper_trail-globalid][ankit1910/paper_trail-globalid: An extension to paper_trail, using this you can fetch actual object who was responsible for this change]]
+paper_trailの拡張。変更したか取得できるようになる。
+** サロゲートキー
+Railsでいうところの ~id~ のこと。Rails5 からはbigintで設定されている。
+主キーとして使う人工的な値、というのがポイント。
+
+[[https://e-words.jp/w/%E3%82%B5%E3%83%AD%E3%82%B2%E3%83%BC%E3%83%88%E3%82%AD%E3%83%BC.html][サロゲートキー（surrogate key）とは - IT用語辞典 e-Words]]
+#+begin_quote
+サロゲートキーとは、データベースのテーブルの主キーとして、自動割り当ての連続した通し番号のように、利用者や記録する対象とは直接関係のない人工的な値を用いること。また、そのために設けられたカラムのこと。
+#+end_quote
+** ロールバックできないマイグレーションであることを明示する
+たいていの場合はコメントでロールバックできないなどと書けばよいが、rollbackが破壊的な動作になる場合があるのでdownに書く。
+#+caption: ActiveRecord::IrreversibleMigration
+#+begin_src ruby
+  def down
+    raise ActiveRecord::IrreversibleMigration
+  end
+#+end_src
+** null制約を追加しつつdefault設定
+[[https://qiita.com/akinov/items/852fe789fe98a44350a9][Railsのmigrationで後からNULL制約を設定する - Qiita]]
+
+null制約追加には、 ~change_column_null~ を使う。
+null制約だけ追加すると変更前にnullだったレコードでエラーになってしまうので、同時にdefaultを設定するとよい。
+
+#+caption: null制約 + default設定
+#+begin_src ruby
+class ChangePointColumnOnPost < ActiveRecord::Migration[5.2]
+  def change
+    change_column_null :posts, :point, false, 0
+    change_column_default :posts, :point, from: nil, to: 0
+  end
+end
+#+end_src
+
+#+caption: ↑falseはnullオプション
+#+begin_src ruby
+  change_column_null(table_name, column_name, null, default = nil)
+#+end_src
+** migrationファイルによる不整合解消タスク
+migrationファイルは一部DSLが扱われるだけで普通のrubyファイルと変わらない。
+データベースの不整合を解消することにも使える。
+
+#+caption:
+#+begin_src ruby
+  def up
+    Blog.unscoped.where(user_id: nil).delete_all
+  end
+#+end_src
+というように。
+環境別にconsoleでコマンドを実行する必要がないので便利。
+** unscopedでdefault_scopeを無効化
+~unscoped~ はdefault_scopeを無効化する。
+[[https://apidock.com/rails/ActiveRecord/Base/unscoped/class][unscoped (ActiveRecord::Base) - APIdock]]
+
+#+caption: 自動でpublishedの条件が発行されていることがわかる
+#+begin_src ruby
+  class Post < ActiveRecord::Base
+    def self.default_scope
+      where :published => true
+    end
+  end
+
+  Post.all          # Fires "SELECT * FROM posts WHERE published = true"
+  Post.unscoped.all # Fires "SELECT * FROM posts"
+#+end_src
+
+#+caption: default_scopeの条件がなくなる
+#+begin_src ruby
+  Post.unscoped {
+    Post.limit(10) # Fires "SELECT * FROM posts LIMIT 10"
+  }
+#+end_src
+** inverse_ofで双方向の不整合を防ぐ
+[[https://qiita.com/itp926/items/9cac175d3b35945b8f7e][inverse_of について - Qiita]]
+
+双方向の関連付けの不整合を防ぐ関連オプション。belongs_to, has_many等ではデフォルトでオンになっているよう。
+
+#+caption:
+#+begin_src ruby
+  class Category
+    has_many :blog
+  end
+
+  class Order
+    belongs_to :category
+  end
+#+end_src
+
+#+caption: 不整合
+#+begin_src ruby
+  c = Category.first
+  b = c.orders.first
+
+  c.title = "change"
+  c.title == b.category.title #=> false 値は異なる
+  c.equal? b.category #=> false 同じオブジェクトでない
+#+end_src
+inverse_ofを使うと同じオブジェクトを使うようになる。
+** リレーションの不整合検知
+よくわからない。
+
+#+caption: 不整合検知タスク
+#+begin_src ruby
+desc '外部キーの整合性を検証する'
+task extract_mismatch_records: :environment do
+  Rails.application.eager_load!
+
+  ApplicationRecord.subclasses.each do |model|
+    model.reflections.select { |_, reflection| reflection.is_a?(ActiveRecord::Reflection::BelongsToReflection) }.each do |name, reflection|
+      model_name = model.model_name.human
+      foreign_key = reflection.options[:foreign_key] || "#{name}_id"
+
+      unless model.columns.any? { |column| column.name == foreign_key.to_s }
+        puts "💢 #{model_name} には #{foreign_key} フィールドがありません"
+        next
+      end
+
+      parent_model_class_name = reflection.options[:class_name] || reflection.name.to_s.classify
+      parent_model = parent_model_class_name.safe_constantize
+
+      unless parent_model
+        puts "💢 #{model_name} が依存している #{parent_model_class_name} は参照できません"
+        next
+      end
+
+      parent_model_name = parent_model.model_name.human
+
+      begin
+        # NOTE: 親テーブルのIDとして存在しない外部キーの数を照会
+        relation = model.unscoped.where.not(foreign_key => parent_model.unscoped.select(:id)).where.not(foreign_key => nil)
+        sql = relation.to_sql
+        count = relation.count
+
+        if count.zero?
+          puts "💡 #{model_name} の #{parent_model_name} の外部キーは整合性が保証されています" unless ENV['ONLY_FAILURE']
+        else
+          puts "💣 #{model_name} の #{parent_model_name} の外部キーで不正なキーが #{count} 件 設定されています"
+        end
+
+        if ENV['DEBUG']
+          puts "=> #{sql}\n"
+          puts
+        end
+      rescue StandardError
+        # NOTE: マスタデータの場合はスキップ
+        puts "🈳 #{model_name} の #{parent_model_name} の整合性の検証をスキップしました" unless ENV['ONLY_FAILURE']
+      end
+    end
+  end
+end
+#+end_src
+
+Reflectionクラスはアソシエーション関係のmoduleのよう。
+https://github.com/kd-collective/rails/blob/f132be462b957ea4cd8b72bf9e7be77a184a887b/activerecord/lib/active_record/reflection.rb#L49
+
+#+begin_quote
+Reflection enables the ability to examine the associations and aggregations of Active Record classes and objects. This information, for example, can be used in a form builder that takes an Active Record object and creates input fields for all of the attributes depending on their type and displays the associations to other objects.
+
+Reflectionを使用すると、Active Recordのクラスやオブジェクトの関連付けや集計を調べることができます。この情報は、例えば、Active Recordオブジェクトを受け取り、その型に応じてすべての属性の入力フィールドを作成します。他のオブジェクトとの関連を表示するフォームビルダーで使用できます。
+#+end_quote
+
+Reflectionに関する記事。
+[[https://qiita.com/kkyouhei/items/067d5bb8d79c71f1646b][Railsのコードを読む アソシエーションについて - Qiita]]
 ** クエリ高速化
 ネストしてクエリを発行してるときは何かがおかしい。
 
@@ -28,14 +272,14 @@ Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作�
   Blog.joins(categories: category)
     .merge(Category.where(parent_category: parent_large_categories))
 #+end_src
-** Migrationファイルをまとめる
+** Migrationファイルをまとめて高速化する
 Migrationファイルは変更しないのが基本だが、数が多い場合、 ~rails migrate:reset~ に時間がかかる。
 
 db/schema.rbの内容を、最新のタイムスタンプのマイグレーションにコピーする。
 
 - つまり現在のDB状況が、そのまま1つのmigrationとなる。DSLが同じなので問題ない。
 - migrationのタイムスタンプは既に実行済みのため、動作に影響しない。
-** Gemfileでの環境指定
+** Gemfileで環境指定する
 Gemfileのgroupキーワードは、指定環境でしかインストールしないことを示す。
 
 #+caption: developmentでしかインストールされない
@@ -46,7 +290,7 @@ Gemfileのgroupキーワードは、指定環境でしかインストールし�
 #+end_src
 
 なので環境を指定せずにテストを実行したとき、gem not foundが出る。実行されたのがdevelopment環境で、テストのgemが読み込まれてないから。 ~RAILS_ENV=test~ がついているか確認する。
-** 論理削除
+** 論理削除と物理削除
 論理削除は削除したときレコードを削除するのではなく、フラグをトグルするもの。
 逆に物理削除はレコードから削除すること。
 
@@ -56,6 +300,8 @@ Gemfileのgroupキーワードは、指定環境でしかインストールし�
 
 - 削除フラグを付け忘れると事故になる。削除したはずなのに表示したり、計算に入れたりしてしまう
 - データが多くなるためパフォーマンスが悪くなる
+
+Railsではgem act_as_paranoidを使って簡単に論理削除処理を追加できる。deleted_atカラムを論理削除を管理するフラグとして用いる。
 ** find、find_by、whereの違い
 [[https://qiita.com/tsuchinoko_run/items/f3926caaec461cfa1ca3][find、find_by、whereの違い - Qiita]]
 
@@ -84,15 +330,15 @@ new時には番号フォームを表示しないなどが必要。
 [[https://railsdoc.com/page/find_each][find_each | Railsドキュメント]] ... 1件ずつ処理。
 [[https://railsdoc.com/page/find_in_batches][find_in_batches | Railsドキュメント]] ... 配列で処理。
 
-** 並列処理
-重い処理は並列処理する。
+** 並列処理の例
+parallel gemによって。
+#+caption: 例
 #+begin_src ruby
   require 'parallel'
   result = Parallel.each(1..10) do |item|
       item ** 2
   end
 #+end_src
-
 ** 開発に便利なページ
 - /rails/info/routes
   routes一覧。
@@ -152,7 +398,8 @@ gemのupdateやマイグレーションが起きたときにやる。
   git checkout develop && bundle install && bundle exec rails db:migrate
 #+end_src
 ** scope
-scopeはクラスメソッド的なやつ。インスタンスには使えない。 ~User.scope...~
+scopeはクラスメソッド的なやつ。
+インスタンスには使えない。 ~User.scope...~
 [[https://railsguides.jp/active_record_querying.html#%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97][Active Record クエリインターフェイス - Railsガイド]]
 
 #+begin_quote
@@ -162,7 +409,7 @@ scopeはクラスメソッド的なやつ。インスタンスには使えない
 ~valid?~ はAction Modelのバリデーションメソッド。
 [[https://devdocs.io/rails~6.1/activemodel/validations#method-i-valid-3F][Ruby on Rails 6.1 / ActiveModel::Validations#valid? — DevDocs]]
 引っかかってたらfalseになる。
-上書きしてしまいそうになるメソッド名なのに注意。
+オーバーライドしてしまいそうになるメソッド名なのに注意。
 ** ネストしたvalidateは反応しない
  特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要がある。
 #+begin_src ruby
@@ -177,6 +424,11 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 それでは具合が悪いときもあるので、消さないようにする。
 #+begin_src ruby
   has_many :contents, dependent: :restrict_with_error
+#+end_src
+
+あるいは、外部キーをnull更新する方法もある(nullableであれば)。
+#+begin_src ruby
+  has_many :contents, dependent: :nullify
 #+end_src
 ** 文字列で返ってくる真偽値をbooleanオブジェクトに変換する
 文字列で返ってくる真偽値を、booleanオブジェクトとして扱いとき。ActiveModelのmoduleを使用する。
