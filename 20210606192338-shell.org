@@ -6,6 +6,33 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
+** 一括削除
+TODO: xargsシリーズどこかにまとめたい。
+#+begin_src shell
+find . -name "*.log" | xargs rm -fv
+#+end_src
+
+findでファイルのリストを作成して、xargsに渡す。
+xargsはファイルを1つずつrmに渡す。
+
+xargsにはdry-runモードがある。
+#+caption: pオプションがついてると生成コマンドを確認するだけで実行しない
+#+begin_src shell
+find . -name "*.log" | xargs -p rm -fv
+#+end_src
+
+[[https://techblog.kyamanak.com/entry/2018/02/12/202256][【Linux】xargs コマンドの使い方がよく分からない - きゃまなかのブログ]]
+** リポジトリ内一括置換
+git grep、xargs、sedを組み合わせる。
+
+#+caption: リポジトリの2.6.5という文字列を2.7.1に置換する例
+#+begin_src shell
+git grep -l '2\.6\.5' | xargs sed -i 's/2\.6\.5/2.7.1/g'
+#+end_src
+
+- git grepの ~l~ オプションはヒットしたファイル名を出力する。
+- xargsは標準出力からリストを読み込み、出力を次のコマンドの引数に渡すコマンド。
+- sedは置換。 ~i~ オプションは結果を画面出力しないオプション。 本来は ~sed -i "s/aaa/bbb/s" Gemfile~ みたいな順だが、xargsで自動で渡されている。
 ** 一括git clone
 [[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]から、
 個人 or 組織のリポジトリをすべてダウンロードする方法。

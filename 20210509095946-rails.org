@@ -6,56 +6,98 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 TODO: 数が多くなってきたので分類する。
+** [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]バージョンアップデート
+超強い人が言っていたメモ。
+コマンドを組み合わせて一気に置換して検討していく。
+#+caption: 全体を一気に置換する
+#+begin_src shell
+git grep -l '2\.6\.5' | xargs sed -i 's/2\.6\.5/2.7.1/g'
+#+end_src
+vendor/bundle を削除して、bundle install。
+マイナーバージョンを変更した場合は .rubocop.yml の RUBY_VERSION を修正(parser gemの指定)。
+** 新規作成時はform表示しない
+formを共通化しているようなとき。
+このカラムはedit時のみ出したい、というようなことがある。
+#+caption: new時persistされてないので表示されない
+#+begin_src ruby
+  form_for do |f|
+    f.number_field :position if @content_category.persisted?
+  end
+#+end_src
+** 一部アクションだけvalidation
+#+caption: onでアクションを指定できる。
+#+begin_src ruby
+validates :user_id, presence: true, :on => :create
+#+end_src
+** 便利な日付操作
+#+caption: Time.zone
+#+begin_src ruby
+Time.zone.yesterday
+Time.zone.today.ago(7.days)
+#+end_src
+
+[[https://qiita.com/mmmm/items/efda48f1ac0267c95c29][Railsでの日付操作でよく使うものまとめ - Qiita]]
+** 安全に関連カラムを追加する
+Blogにuser_idを後から追加したい、みたいなとき。User -< Blog。
+最初にnullableで外部キーを作成する。
+
+次に、新規作成時にmodelでvalidationをかける。
+すると既存レコードの外部キーはnull、新しくできるレコードは外部キーありという状態になる。
+外部キーなしが増えることはない。移行をする。
+nullのレコードがゼロになってから外部キー制約をつけて関連カラム追加完了。
 ** 関連カラムを安全に変更する
 レコードがすでに入っているテーブルの関連を変更する場合。
+たとえば、blogs >- somethings >- users を blogs >- users というような。somethingsテーブルは何もしてないので削除したい、とする。
 何も考えずにやると、一気にすべてを切り替えることになりがち。
 
 悪い例を示す。
 1. 最初に関連カラムを変更する。
-  #+caption: 関連変更
+  #+caption: modelファイルで関連変更
   #+begin_src ruby
-   belongs_to :new_user # 旧 belongs_to :old_user
+   belongs_to :user # 旧 belongs_to :something
   #+end_src
 2. 旧関連を使ってたアプリケーション側をすべて変更する。MVCすべて。
 3. 新しい関連カラムは空で、旧データを移行しないといけない。移行は↑のデプロイと同時にしないと不整合になる。デプロイと移行スクリプトの間の変更は無視されるから。
+4. 1~3をまとめて一気にリリースする
 
 ということで、大量な複数層の変更をぶっつけ本番でしないといけなくなる。途中で嫌になるだろうし、運が悪ければミスって大変なことになる。
 
 ではどうするか。根本的なアイデアは、2つの関連を同時に保持しておくことだ。
 同時に持っておけば、大丈夫なことを確認してから関連を変更するだけでいい。そうやって遅延させることで、一気にいろいろな変更をしなくてよくなる。
 
-具体的にどうやるか。
-#+caption: before_saveでオンデマンドコピー
+具体的にどうやるか。良い例。
+#+caption: modelのbefore_saveでオンデマンドコピー
 #+begin_src ruby
-  class User < ApplicationRecord
+  class Blog < ApplicationRecord
     before_save do
-      self.user_id ||= old_user.user_id
+      self.user_id ||= something.user_id
     end
   end
 #+end_src
 
-としておくと、保存時にUser.user_id とOldUser.user_idの両方に関連がコピーされる。
+としておくと、保存時にblog.user_idとblog.something.user_idの両方に関連がコピーされる。somethingsを経由しないでよくなる。
 
 既存データについても処理を追加しておく。
-#+caption: メソッドを作っておく
+#+caption: modelにメソッドを作っておく
 #+begin_src ruby
   class User < ApplicationRecord
     def migrate
-      self.user_id ||= old_user.user_id
+      self.user_id ||= something.user_id
       save!
     end
   end
 #+end_src
 そして、全Userでmigrateを実行すれば既存データにも新しいカラムが入る。
 
-既存データと新しく作成されるファイルをおさえたので、新旧2つの関連カラムは完全に同等になる。
+既存データと新しく作成されるレコードをおさえたので、新旧2つの関連カラムは完全に同等になる。
 ここまででマージ、リリースする。
 問題ないことを確認したあとで、新旧カラムが使える状態を活かしてアプリケーション側の変更…実際の関連の変更をやる(一番の目的の箇所)。
 ここまででマージ、リリースする。
 
-その後、移行処理とカラムを削除して片付ければ完了。
+その後、移行処理とカラムを削除して片付ければ完了。(あるいは移行処理は前の時点で消す)
+関連カラムだけでなく、何かカラムを移すときにはすべて同様にできる。
 
-もちろん関連カラムだけでなく、何かカラムを移すときにはすべて同様にできる。
+実際のタスクでは、migration処理をする箇所は複数になるので前もって調査が必要。
 ** カラム名を安全に変更する
 カラム名変更とアプリケーション側の変更を分け、変更範囲を狭める。
 alias_attributeを追加する。すると、新しいカラム名でもアクセスできるようになる。
@@ -79,7 +121,7 @@ alias_attribute :new_user_id, :typo_user_id
 次にアプリケーションの、ほかの依存している箇所を修正する。
 ここまで1つのPRにする。
 
-テストが通ったりリリースできたら、テーブル名変更のマイグレーションを作成し、table_nameを削除するPRをつくる。
+テストが通ったりリリースできたら、テーブル名変更のマイグレーションを作成し、modelでのtable_name設定を削除するPRをつくる。
 安全に変更が完了する。
 テーブルの変更と、アプリケーションの変更を同時にやらないと安全だし分割できてすっきりする。
 ** modelのログを保持する
@@ -382,12 +424,8 @@ https://docs.ruby-lang.org/ja/latest/method/Method/i/source_location.html
 #+end_src
 ** DBリセット
 環境を指定して、リセットを行う。
-#+begin_src shell
-  RAILS_ENV=test bundle exec rake db:migrate:reset
-  rake db:seed_fu
-#+end_src
+データの初期化にseed_fu gemを使っている。
 
-初期データを投入する。
 #+begin_src shell
   bundle exec rails db:migrate:reset && rails db:seed_fu
 #+end_src
@@ -419,6 +457,11 @@ scopeはクラスメソッド的なやつ。
 [[id:8b69b8d4-1612-4dc5-8412-96b431fdd101][SQL]]がたくさん実行されて遅くなること。ループしているとレコードの数だけSQLが発行され、一気に遅くなる。
 includesを使うと少ないSQLにまとめられる。
 https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
+
+#+caption: includesで関連テーブルをまとめて取得する
+#+begin_src ruby
+  Page.includes(:category)
+#+end_src
 ** 子のデータが存在するとき関連削除しないようにする
 ~dependent: destroy~ だと子のデータもすべて破壊して整合性を保つ。
 それでは具合が悪いときもあるので、消さないようにする。
@@ -453,8 +496,7 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 ** TODO [[https://dxd2021.cto-a.org/program/time-table/b-3][クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021]]
 クソコードから学ぶ。
 ** TODO loggerを自動オン
-Rails console。これくらいはできるはず。
-ENVで分岐すれば本番だけログレベルを上げる、ということができるはず。
+Rails console。ENVで分岐すれば本番コンソールでログレベルを上げる、ということができるはず。
 ** TODO [[https://railsguides.jp/][Ruby on Rails ガイド：体系的に Rails を学ぼう]]
 :LOGBOOK:
 CLOCK: [2021-10-10 Sun 14:09]--[2021-10-10 Sun 14:43] =>  0:34
@@ -462,6 +504,11 @@ CLOCK: [2021-10-10 Sun 14:09]--[2021-10-10 Sun 14:43] =>  0:34
 Rails のドキュメント。
 ** TODO [[https://www.codewithjason.com/understanding-factory-bot-syntax-coding-factory-bot/][Understanding Factory Bot syntax by coding your own Factory Bot - Code with Jason]]
 Factory Botの作り方。
+** TODO Tips文書化
+:LOGBOOK:
+CLOCK: [2021-12-23 Thu 10:01]--[2021-12-23 Thu 10:56] =>  0:55
+:END:
+- 5730
 * Archive
 ** DONE 誤字
 CLOSED: [2021-09-09 木 09:18]

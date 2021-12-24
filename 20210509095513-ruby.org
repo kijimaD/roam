@@ -9,6 +9,79 @@ Webフレームワークの[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]が
 
 コンパイル不要なスクリプト言語、静的型付け、WEBに使用される、といった点で[[id:a6c9c9ad-d9b1-4e13-8992-75d8590e464c][Python]]と競合している。
 * Memo
+** クラスの読み込み順
+親(抽象)クラスは、子(具体)クラスよりも先に読み込む必要がある。
+普通に開発していると1つのファイルに入れることはないので気づきにくい、はまりやすい。
+
+↓はエラーになる。
+#+caption: Bが名前解決できずエラー
+#+begin_src ruby
+class A < B
+end
+
+class B
+end
+#+end_src
+** 名前空間の絶対指定と相対指定                                        :WIP:
+** 親クラスから子クラスの定数にアクセス
+#+caption: 具体クラスの定数が入る。子クラスに移譲できる
+#+begin_src ruby
+  class Abstruct
+    def print_child_constant
+      self.class::NAME
+    end
+  end
+
+  class A < Abstruct
+    NAME = 'AA'
+  end
+
+  class B < Abstruct
+    NAME = 'BB'
+  end
+
+  p A.new.print_child_constant # AA
+#+end_src
+
+[[https://easyramble.com/access-subclass-constant-from-superclass.html][Rubyで親クラスから子クラスの定数を参照 | EasyRamble]]
+** 配列をマージ/結合
+~merge~ メソッドはHashクラスのメソッドであり、配列では使えない。
+
+単純な結合。
+
+#+caption: 結合
+#+begin_src ruby
+['a', 'b'] + ['a', 'b']
+#+end_src
+
+#+RESULTS:
+#+begin_results
+["a", "b", "a", "b"]
+#+end_results
+
+マージ(=かぶってたら削除)。
+#+caption: マージ
+#+begin_src ruby
+['a', 'b'] | ['a', 'b']
+#+end_src
+
+#+RESULTS:
+#+begin_results
+["a", "b"]
+#+end_results
+
+uniqでも同じ。
+#+caption: uniq
+#+begin_src ruby
+(['a', 'b'] + ['a', 'b']).uniq
+#+end_src
+
+#+RESULTS:
+#+begin_results
+["a", "b"]
+#+end_results
+
+[[https://qiita.com/kenbu/items/68e230ae6e1f7b80c778][[Ruby]配列をマージ・結合する - Qiita]]
 ** Struct(構造体クラス)
 structは簡易的なclassのようなもの。
 データをまとめるのに使う。
@@ -1863,6 +1936,8 @@ CLOCK: [2021-10-02 Sat 22:01]--[2021-10-02 Sat 22:51] =>  0:50
 :END:
 - https://zenn.dev/jnchito/books/how-to-read-ruby-reference
 * References
+** [[https://rurema.clear-code.com/3.0.0/doc/glossary.html][Ruby用語集 (Ruby 3.0.0)]]
+おもしろい。
 ** [[http://franzejr.github.io/best-ruby/][Introduction | Ruby Tricks, Idiomatic Ruby, Refactorings and Best Practices]]
 Rubyのベストプラクティス集。
 ** [[https://practicingruby.com/articles/building-enumerable-and-enumerator][Building Enumerable & Enumerator in Ruby]]
