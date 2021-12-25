@@ -49,16 +49,16 @@ def add_missing_links(dot_graph: nx.DiGraph, n_missing: int) -> None:
     preds = nx.ra_index_soundarajan_hopcroft(simp_graph, community="communityLabel")
     new = sorted(preds, key=lambda x: -x[2])[:n_missing]
     for link in new:
-        sys.stderr.write(f"Predicted edge {link[0]} {link[1]}\n")
+        # sys.stderr.write(f"Predicted edge {link[0]} {link[1]}\n")
         dot_graph.add_edge(link[0], link[1], predicted=link[2])
 
 
 if __name__ == "__main__":
-    sys.stderr.write("Reading graph...")
+    # sys.stderr.write("Reading graph...")
     DOT_GRAPH = build_graph()
     compute_centrality(DOT_GRAPH)
     compute_communities(DOT_GRAPH, N_COM)
     add_missing_links(DOT_GRAPH, N_MISSING)
-    sys.stderr.write("Done\n")
+    # sys.stderr.write("Done\n")
     JS_GRAPH = json_graph.node_link_data(DOT_GRAPH)
     sys.stdout.write(json.dumps(JS_GRAPH))

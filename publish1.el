@@ -96,7 +96,9 @@
       (concat
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' />"
        "<link rel='stylesheet' href='css/site.css' />"
-       "<link rel='stylesheet' href='css/code.css' />"))
+       "<link rel='stylesheet' href='css/code.css' />"
+       "<script defer src='https://cdnjs.cloudflare.com/ajax/libs/d3/7.2.1/d3.min.js' integrity='sha512-wkduu4oQG74ySorPiSRStC0Zl8rQfjr/Ty6dMvYTmjZw6RS5bferdx8TR7ynxeh79ySEp/benIFFisKofMjPbg==' crossorigin='anonymous' referrerpolicy='no-referrer'></script>"
+       "<script defer src='/js/graph.js'></script>"))
 
 ;; Compile
 (setq org-publish-project-alist
