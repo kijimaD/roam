@@ -126,20 +126,12 @@
       :auto-sitemap t ; generate sitemap.org automagically
       )))
 
-(defun org-roam-graph-save ()
+(defun generate-org-roam-db ()
   (interactive)
   (setq org-roam-graph-viewer nil)
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (setq org-roam-v2-ack t)
-  (org-roam-db-sync)
-  (org-roam-graph)
-  (sleep-for 10)
-  (shell-command (concat "mv"
-                         " "
-                         (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
-                         " "
-                         "./public/graph.svg"))
-  (shell-command "rm /tmp/*.dot"))
+  (org-roam-db-sync))
 
 (setq org-todo-keywords '((type "TODO" "WAIT" "|" "DONE" "CLOSE")))
 (setq org-todo-keyword-faces

@@ -4,9 +4,8 @@ update-index:
 	emacs --batch -l ./publish1.el --funcall kd/update-index-table
 build:
 	emacs --batch -l ./publish1.el --funcall kd/publish
-roam-graph:
-	emacs --batch -l ./publish1.el --funcall org-roam-graph-save
 node-graph:
+	emacs --batch -l ./publish1.el --funcall generate-org-roam-db
 	pip3 install -r requirements.txt
 	python3 node_graph/build_graph.py > public/js/graph.json
 file-graph:

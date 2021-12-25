@@ -1,4 +1,4 @@
-d3.json("js/graph.json").then(function(data) {
+d3.json("graph.json").then(function(data) {
     // Canvas size
     height = 1100;
     width = 1600;
