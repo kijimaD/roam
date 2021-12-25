@@ -98,7 +98,7 @@
        "<link rel='stylesheet' href='css/site.css' />"
        "<link rel='stylesheet' href='css/code.css' />"
        "<script defer src='https://cdnjs.cloudflare.com/ajax/libs/d3/7.2.1/d3.min.js' integrity='sha512-wkduu4oQG74ySorPiSRStC0Zl8rQfjr/Ty6dMvYTmjZw6RS5bferdx8TR7ynxeh79ySEp/benIFFisKofMjPbg==' crossorigin='anonymous' referrerpolicy='no-referrer'></script>"
-       "<script defer src='/js/graph.js'></script>"))
+       "<script defer src='js/graph.js'></script>"))
 
 ;; Compile
 (setq org-publish-project-alist
@@ -126,20 +126,12 @@
       :auto-sitemap t ; generate sitemap.org automagically
       )))
 
-(defun org-roam-graph-save ()
+(defun generate-org-roam-db ()
   (interactive)
   (setq org-roam-graph-viewer nil)
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (setq org-roam-v2-ack t)
-  (org-roam-db-sync)
-  (org-roam-graph)
-  (sleep-for 10)
-  (shell-command (concat "mv"
-                         " "
-                         (nth 0 (file-expand-wildcards "/tmp/graph.*.svg"))
-                         " "
-                         "./public/graph.svg"))
-  (shell-command "rm /tmp/*.dot"))
+  (org-roam-db-sync))
 
 (setq org-todo-keywords '((type "TODO" "WAIT" "|" "DONE" "CLOSE")))
 (setq org-todo-keyword-faces
