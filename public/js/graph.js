@@ -6,7 +6,7 @@ d3.json("/js/graph.json").then(function(data) {
     // Radius function for nodes. Node radius are function of centrality
     radius = d => {
         if (!d.radius) {
-            d.radius = 11 + 24 * Math.pow(d.centrality, 4/5);
+            d.radius = 11 + 24 * Math.pow(d.centrality, 9/5);
         }
         return d.radius;
     };
@@ -100,7 +100,7 @@ d3.json("/js/graph.json").then(function(data) {
     .velocityDecay(0.6)
         .force("link", d3.forceLink(links).id(d => d.id).strength(.1))
         .force("charge", d3.forceManyBody()
-               .strength(-250))
+               .strength(-500))
         .force('collision',
                d3.forceCollide().radius(d => radius(d) * 1.2).strength(1.5))
         .force('x', d3.forceX().x(function(d) {
@@ -113,7 +113,7 @@ d3.json("/js/graph.json").then(function(data) {
     // Create all the graph elements
     const svg = d3.select("svg")
           .attr('max-width', '60%')
-          .attr('class', 'note-graph')
+          .attr('class', 'node-graph')
           .attr("viewBox", [0, 0, width, height]);
 
     const link = svg.append("g")
@@ -153,25 +153,22 @@ d3.json("/js/graph.json").then(function(data) {
           .data(nodes)
           .join("g");
     const label_background = label.append("text")
-          .style("font-size", "25px")
+          .style("font-size", "45px")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -25)
+          .attr("dy", -30)
           .attr("id", d => d.id.toLowerCase())
           .attr("class", "node_label")
           .style("display", "none")
           .style("pointer-events", "none")
           .style("alignment-baseline", "middle")
-          .attr("filter", "url(#solid)");
+          // .attr("filter", "url(#solid)");
     const label_text = label.append("text")
           .style("fill", "#222")
-          .style("font-size", "25px")
+          .style("font-size", "15px")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
           .attr("dy", -25)
           .attr("id", d => d.id.toLowerCase())
           .attr("class", "node_label")
-          .style("display", "none")
-          .style("pointer-events", "none")
-          .style("alignment-baseline", "middle");
 
     // Run the simulation
     simulation.on("tick", () => {
