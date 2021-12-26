@@ -6,10 +6,45 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * 各種コマンド
+** rootでファイル作成しないようにする
+Dockerコンテナ内でファイルを作成すると、ownerがrootになり編集や削除ができず面倒。
+Dockerの内部ではユーザid(uid)やグループid(gid)がホストと異なる。idがホストマシンと合わないためrootとして実行されたことになる、よう。
+
+安易な解決策としては、権限をホストユーザに変更すれば問題ない。
+とはいえ、コンテナ内のサービスが新しくファイルを作るたび(たとえばマイグレーションファイル生成)に実行するのは面倒。
+[[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
+#+caption: 権限変更
+#+begin_src shell
+  sudo chown -R $USER:$USER .
+#+end_src
+
+解決策としてはいくつか種類があるようなのだが、とりあえずできた。
+サービスのvolumesにユーザ情報をマウントする。:roは読み取り専用(read onlyか)。
+これでidの照合元がホストと同じになる。
+
+#+caption: docker-compose.yml
+#+begin_src yaml
+  volumes:
+    - .:/rails
+    - /etc/passwd:/etc/passwd:ro # <= 追加
+    - /etc/group:/etc/group:ro # <= 追加
+#+end_src
+
+あとはidを環境変数経由で渡せば、コンテナ内でもホストのユーザが実行したことになる。
+#+begin_src shell
+  sudo run -u "$(id -u $USER):$(id -g $USER)" rails /bin/sh
+#+end_src
+
+overrideがある場合、このようになる(長すぎ)。
+#+begin_src shell
+sudo docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run -u "$(id -u $USER):$(id -g $USER)" rails /bin/sh
+#+end_src
+
+[[https://blog.amedama.jp/entry/docker-container-host-same-user][Docker コンテナ内で Docker ホストと同じユーザを使う - CUBE SUGAR CONTAINER]]
 ** Docker Hub
 Dockerイメージをインターネット上にアップロードできるスペース。
 個別にビルドしなくてよくなるためDocker関連の全工程が高速化する。テスト、ローカル、デプロイ…。
-** マルチステージビルド
+** マルチステージビルドとは
 サイトをDockerデプロイにしたり、CIをDockerで行うとき。
 複数の環境が関係する場合、マルチステージビルドを行うとキャッシュが効くため高速化できる。
 
@@ -20,15 +55,16 @@ Dockerイメージをインターネット上にアップロードできるス�
 
 のように。
 Linux → [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]] + node → [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]] という依存関係になる。
-** Dockerfile
+** Dockerfileは何か
 Dockrfileはイメージを作る。(image build)
-docker-composeは↑で作られたイメージを元にコンテナを作る。そのなかアプリケーションを走らせて開発する。
+docker-compose upは↑で作られたイメージを元にコンテナを作り起動までする。そのなかアプリケーションを走らせて開発する。
+
+image構築 → コンテナ構築 → コンテナ起動 という流れ。
 
 コンテナの作り方には2種類ある。
 - 自作する必要があるものは↑Dockerfileで作る
 - 既存コンテナ([[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]とか)はイメージをダウンロードする
-** アタッチ
-** コマンド実行
+** コンテナ内でコマンド実行する
 コンテナ内部で実行したいコマンドがあるときにやりたいこと、たとえば[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]だと、gemfileが新しくなったときにbundle installしたい。
 
 runは新しくコンテナを作成し、内部でコマンドを実行する。サービス名はdocker-compose.ymlから取っている。つまり立ち上がっているコンテナ名は関係ないのに注意。何も指定してない場合、docker-compose.ymlからサービス名を決定する。ほかのファイルの場合には-fオプションが必要。外部で永続化される…volumeが指定されてるような処理(bundle install)とか、データベース関係はいいのだが、その他は永続化されないので注意。
@@ -43,53 +79,35 @@ execはコンテナを再利用してコマンドを実行する。高速。
 #+begin_src shell
   docker-compose exec {サービス名} {shellコマンド}
 #+end_src
-** キャッシュを使わずにbuild
+** キャッシュを使わずにbuildする
 #+begin_src shell
   docker-compose build --no-cache
 #+end_src
 ** 立ち上げと停止
 #+begin_src shell
-docker-compose up --build -d
+docker-compose up --build -d # コンテナ作成する
 docker-compose down
 #+end_src
-** docker外に公開
+** docker外に公開する
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]
 Dockerfileで。
 #+begin_src shell
   CMD bundle exec rails server -b 0.0.0.0
 #+end_src
 
-などと書いておくと、外部(Docker外)からアクセスできるようになる。
+などと書いておくと、外部(Docker外)からアクセスできるようになる。-b 0.0.0.0 がないと別のネットワークからアクセスが不可。コンテナを超えると別のネットワーク扱いになるのでこの記述が必要。
+** ポート指定する
+どっちだったか忘れる。
 左が公開、右がコンテナ内。だからブラウザでポート8000アクセスできるようになる。
 #+begin_src shell
   docker run -p 8000:3000 -it bdd92ace66ec
 #+end_src
-** ログ確認
+** ログを確認する
 #+begin_src shell
 docker ps -a # id確認
 docker logs 1111... # idを入れる
 #+end_src
-** [[id:7dab097c-60ba-43b9-949f-c58bf3151aa8][MySQL]]エラー
-- copyしてくるdocker-compose.ymlファイルが間違っていた。なので変更が反映されていなかった。
-- docker-compose ps で見ると、mysqlがfailしていた。つまり起動後すぐMysqlがシャットダウンしてるのでアクセスできない。ログを見てみるとたくさんエラーが出ていたがよくわからない。バージョンを変えると起動できた。
-** トークンエラー無視(特定の環境下)
-docker内のRails アプリケーションでToken Errorになる。
-lvh.meからアクセスすると問題ない。
-
-逐一対応するなら↓だが、もちろん現実的でない。
-#+begin_src ruby
-skip_before_action :verify_authenticity_token
-#+end_src
-** 周辺コンテナとの疎通
-エラー内容を確認する。
-コンテナ間で通信したいのに、127.0.0.1になっていたらローカルのやつと通信しようとしている。
-
-- redisエラーになった。確かに立ち上がってはいるのだが、railsからはアクセスできていない。
-URLを環境変数でコンテナを指定した。
-
-- memcachedエラーになった。特にブラウザにエラーは出ないがサーバでエラーが出てる。
-127.0.0.1を見ているよう。ホストが指定できてないんだな。同様に環境変数を設定して接続できるようになった。
-** 削除
+** イメージを削除する
 使ってないイメージを削除する。
 #+begin_src shell
   docker images prone
@@ -101,15 +119,26 @@ URLを環境変数でコンテナを指定した。
   docker rm $(docker ps -aq)
   docker rmi $(docker images -q)
 #+end_src
-** LinuxのDockerで rails new したときの権限がrootになる問題
-[[https://docs.docker.com/samples/rails/][If you are running Docker on Linux, the files rails new created are owned by root.]]
 * Tasks
 ** ゴミファイルができる
-** Rails Docker環境化[4/6]
+** Rails Docker環境化[5/7]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
-[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]] + webpackをLinuxで立ち上げられるようにする。
+仕事をLinuxで行えるようにする。
+*** TODO メール関係の動作確認
+redisが本当に動いてるかわからない。
+*** TODO SSH設定
+あまりdocker関係ない。
+rails c ができることまで確認する。
+環境を楽に選択できるようpemを設定する。
+*** DONE [#A] dockerがrootユーザでファイルを生成する問題
+CLOSED: [2021-12-25 Sat 23:51]
+生成したファイルがroot権限になってしまう。
+だからbundle installを実行すると、その後は通常ユーザでは編集できなくなる。
+面倒だし、migrationとか明らかにダメな気がする。
+
+簡単な解決策と環境変数によって解決する方法を調べた。
 *** DONE 基本コマンド
 CLOSED: [2021-12-20 Mon 22:57]
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]部分をDocker化する。表示はまったく問題なさそう。
@@ -148,6 +177,8 @@ CLOSED: [2021-12-20 Mon 22:57]
     command: yarn watch
     volumes:
       - .:/rails
+      - /etc/passwd:/etc/passwd:ro # Linux用
+      - /etc/group:/etc/group:ro # Linux用
     ports:
       - 8080:8080
 #+end_src
@@ -221,8 +252,6 @@ docker-compose.ymlで ~MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'~ を追加すると入�
 
 だがこのsqlectron、表示テーブルでの編集ができないので値を書き換えるのに非常に不便。
 別のを使ったほうがいいだろう。
-*** TODO メール関係の動作確認
-redisが本当に動いてるかわからない。
 *** DONE yarnができてない
 CLOSED: [2021-12-17 Fri 20:58]
 - ポートを合わせる
@@ -257,10 +286,6 @@ hostを加える必要があった。
     host: '0.0.0.0',
   },
 #+end_src
-*** TODO dockerがrootユーザでファイルを生成する問題
-生成したファイルがroot権限になってしまう。
-だからbundle installを実行すると、その後は通常ユーザでは編集できなくなる。
-面倒だし、migrationとか明らかにダメな気がする。
 * Archive
 * References
 **  [[https://docs.docker.jp/pdf-download.html][Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント]]

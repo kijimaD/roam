@@ -6,6 +6,85 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 TODO: 数が多くなってきたので分類する。
+** テーブル名にプレフィクスを設定する
+特定の機能に対して、関係したテーブルを複数つくるとき、プレフィクスのような形でモデル名やテーブル名を決めることがある。
+admin_user、admin_page、admin_permissionとか。
+こうすることの問題点: 衝突を避けるためにmodel名とテーブル名が長くなる。ディレクトリも見にくくなる。一語だとまだいいのだが、複数名になるとつらくなる。
+
+解決のためには、moduleを定義し、内部でtable_name_prefixを設定するといい。
+
+#+caption: modelにて
+#+begin_src ruby
+  module Admin
+    def self.table_name_prefix
+      'admin_'
+    end
+  end
+
+  module Admin
+    class User < ApplicationRecord
+    end
+  end
+#+end_src
+
+こうするとモデル名はAdmin::Userで、テーブル名はadmin_usersになりわかりやすい。
+** Rails環境でバッチ処理する
+#+caption: Rails環境でのクラスを実行できる
+#+begin_src ruby
+  rails runner "User.first"
+  rails r "User.first"
+#+end_src
+
+サービスクラス化したコマンドを実行するときに使える。
+** routesの制約
+#+begin_src ruby
+constraints(-> (req) { req.env["HTTP_USER_AGENT"] =~ /iPhone/ }) do
+  resources :iphones
+end
+#+end_src
+
+[[https://api.rubyonrails.org/v6.0.2/classes/ActionDispatch/Routing/Mapper/Scoping.html#method-i-constraints-label-Dynamic+request+matching][ActionDispatch::Routing::Mapper::Scoping]]
+** 大量のroutes変更を楽に確認する
+redirect設定やリファクタリングでroutesを大量に変更して、挙動の変更を追いたい場合。
+rails routesの結果のdiffを取れば、楽に確認できる。
+** create_or_find_by
+データベースのユニーク制約を使って作成、できなければ初めの1件を取得する。
+find_or_create_byでは作成されるまでに別プロセスによって作成されている可能性があったので、その問題を解決した処理。
+create_or_find_by!はエラーの時に例外が発生する。
+
+#+caption: データベースのユニーク制約を使って作成、できなければ初めの1件を取得
+#+begin_src ruby
+  User.create_or_find_by(name: 'aaa')
+#+end_src
+
+[[https://railsdoc.com/page/create_or_find_by][create_or_find_by | Railsドキュメント]]
+** 使われてないファイルを検索する
+assetsは相対パスが利用されないので絶対パスで検索してヒットしなければ未使用と判断できる、とのこと。
+#+caption: 検査タスクの例
+#+begin_src ruby
+namespace :assets do
+  desc 'prune needless image file'
+  task 'prune:images' => :environment do
+    base = Rails.root.join('app/assets/images/')
+
+    Dir[Rails.root.join('app/assets/images/**/*.{jpg,jpeg,gif,png,svg}')].each do |path|
+      target_path = path.to_s.gsub(/#{base}/, '')
+      puts "execute: git grep '#{target_path}'"
+      res = `git grep '#{target_path}'`
+
+      if res.empty?
+        puts "execute: rm #{path}"
+        FileUtils.rm path
+        puts '=> removed'
+      else
+        puts '=> used somewhere'
+      end
+
+      puts
+    end
+  end
+end
+#+end_src
 ** [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]バージョンアップデート
 超強い人が言っていたメモ。
 コマンドを組み合わせて一気に置換して検討していく。
@@ -505,8 +584,9 @@ Rails のドキュメント。
 ** TODO [[https://www.codewithjason.com/understanding-factory-bot-syntax-coding-factory-bot/][Understanding Factory Bot syntax by coding your own Factory Bot - Code with Jason]]
 Factory Botの作り方。
 ** TODO Tips文書化
-DEADLINE: <2021-12-26 Sun>
+DEADLINE: <2021-12-26 Sun 22:50>
 :LOGBOOK:
+CLOCK: [2021-12-26 Sun 15:43]--[2021-12-26 Sun 17:40] =>  1:57
 CLOCK: [2021-12-23 Thu 10:01]--[2021-12-23 Thu 10:56] =>  0:55
 :END:
 - 5730

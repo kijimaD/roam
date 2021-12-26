@@ -6,6 +6,26 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
+** cronで通知する
+cronで時報を通知したいけど、表示されないことがある。これはcronがCLI向けのコマンドであって、画面出力があることを想定してないから。
+
+指定する。普通はこれでOK。
+#+caption: GUIが関係するコマンドを実行するときはDISPLAY=:0をつける
+#+begin_src shell
+  export DISPLAY=:0 && notify-send "時報" "$(date +\%H):00!"
+#+end_src
+
+#+caption: 実行ログを見る
+#+begin_src shell
+  cat /var/log/syslog
+#+end_src
+
+[[id:eb196529-bdbd-48c5-9d5b-a156fe5c2f41][EXWM]] + dunstの環境でうまくいかなかった。
+DBUS_SESSION_BUS_ADDRESSの設定が必要なよう。参考サイトをコピペすると通知できるようになった。
+#+begin_src shell
+  00 * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setpriv --euid=1000 notify-send "Timebot" "$(date +\%H):00!"
+#+end_src
+[[https://bbs.archlinux.org/viewtopic.php?id=223050][[SOLVED] Cannot run notify-send from cron job / Newbie Corner / Arch Linux Forums]]
 ** 一括削除
 TODO: xargsシリーズどこかにまとめたい。
 #+begin_src shell
