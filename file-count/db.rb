@@ -26,11 +26,9 @@ class Db
 
   def run
     results = file_list.merge(page_rank)
-    results = results.sort { |(k1, v1), (k2, v2)| v2[:rank] <=> v1[:rank] }
-    results.each do |k, v|
-      p k
-      p v[:title], v[:rank]
-    end
+    # MEMO: 全く同じ構造でrankだけ違えて上書きするので、valueハッシュすべてで上書きで問題ない
+
+    results
   end
 
   def file_list
