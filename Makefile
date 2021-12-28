@@ -1,11 +1,11 @@
 server:
 	cd ./public; python -m SimpleHTTPServer 8000
 update-index:
-	emacs --batch -l ./publish1.el --funcall kd/update-index-table
+	emacs --batch -l ./publish.el --funcall kd/update-index-table
 build:
-	emacs --batch -l ./publish1.el --funcall kd/publish
+	emacs --batch -l ./publish.el --funcall kd/publish
 node-graph:
-	emacs --batch -l ./publish1.el --funcall generate-org-roam-db
+	emacs --batch -l ./publish.el --funcall generate-org-roam-db
 	pip3 install -r requirements.txt
 	python3 node_graph/build_graph.py > public/js/graph.json
 file-graph:
