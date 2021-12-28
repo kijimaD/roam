@@ -21,6 +21,5 @@ make lint
 ## git hooks
 ```shell
 git config --local core.hooksPath .githooks
-chmod -R +x .githooks/
 git config --local commit.template .githooks/commit_msg.txt
 ```
