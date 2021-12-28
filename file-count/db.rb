@@ -1,5 +1,6 @@
 require "sqlite3"
 
+# tables
 # ["files"]
 # ["nodes"]
 # ["aliases"]
@@ -8,15 +9,15 @@ require "sqlite3"
 # ["tags"]
 # ["links"]
 
-# Open a database
-
-db = SQLite3::Database.new "#{Dir.home}/.emacs.d/org-roam.db"
-
+# specify
 # db.execute( "select * from sqlite_master" ) do |master|
 #   pp master
 # end
 
 # n1.id: from, n2.id: to
+
+db = SQLite3::Database.new "#{Dir.home}/.emacs.d/org-roam.db"
+
 query = <<-SQL
     SELECT count(n2.id), n2.title, n2.file
     FROM nodes AS n1
