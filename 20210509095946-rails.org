@@ -6,6 +6,33 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 TODO: 数が多くなってきたので分類する。
+** 技術の潮流
+APIサーバとしての利用、バックとフロントの分割が主流になっている。
+採用者はRails開発をしている、というよりAPI開発経験がある人材を探している。
+** スマートな画像確認
+system specでスクショをとって確認する。
+わざわざ用意して確認しない。
+
+TDDを徹底し、一切ブラウザ確認せずにプロダクトを開発した、という偉人もいる。
+** zeitwerk
+zeitwerkはオートロードするgem。Rails 6で使われている。
+Railsでrequireしなくていいのはこれを使っているから。
+[[https://github.com/fxn/zeitwerk][fxn/zeitwerk: Efficient and thread-safe code loader for Ruby]]
+** reorder
+デフォルトスコープ。
+** 開発用データの用意
+開発用データにはいくつかの種類がある。
+
+** ALTER TABLEは重い
+テーブルのコピーを作るので重い。
+bulk: trueをつけるとALTER TABLEをまとめるので高速になる。
+#+begin_src ruby
+  def up
+    change_table :legal_engine_forms, bulk: true do |t|
+      ...
+    end
+  end
+#+end_src
 ** テーブル名にプレフィクスを設定する
 特定の機能に対して、関係したテーブルを複数つくるとき、プレフィクスのような形でモデル名やテーブル名を決めることがある。
 admin_user、admin_page、admin_permissionとか。
@@ -494,6 +521,30 @@ springはキャッシュを保存して次のコマンド実行を早くするge
 特にMacだと起こるよう。
 #+begin_src shell
   ulimit -n 1024
+#+end_src
+** seed_fuのlint
+走らせてエラーがないかチェックする。
+#+begin_src ruby
+namespace :db do
+  namespace :seed_fu do
+    desc 'Verify that all fixtures are valid'
+    task lint: :environment do
+      if Rails.env.test?
+        conn = ActiveRecord::Base.connection
+
+        %w[development test production].each do |env|
+          conn.transaction do
+            SeedFu.seed("db/fixtures/#{env}")
+            raise ActiveRecord::Rollback
+          end
+        end
+      else
+        system("bundle exec rails db:seed_fu:lint RAILS_ENV='test'")
+        raise if $CHILD_STATUS.exitstatus.nonzero?
+      end
+    end
+  end
+end
 #+end_src
 ** どのメソッドか調べる
 どのgemのメソッドかわからないときに ~source_location~ が便利。

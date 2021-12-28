@@ -96,9 +96,7 @@
       (concat
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' />"
        "<link rel='stylesheet' href='css/site.css' />"
-       "<link rel='stylesheet' href='css/code.css' />"
-       "<script defer src='https://cdnjs.cloudflare.com/ajax/libs/d3/7.2.1/d3.min.js' integrity='sha512-wkduu4oQG74ySorPiSRStC0Zl8rQfjr/Ty6dMvYTmjZw6RS5bferdx8TR7ynxeh79ySEp/benIFFisKofMjPbg==' crossorigin='anonymous' referrerpolicy='no-referrer'></script>"
-       "<script defer src='js/graph.js'></script>"))
+       "<link rel='stylesheet' href='css/code.css' />"))
 
 ;; Compile
 (setq org-publish-project-alist
@@ -151,8 +149,8 @@
 
 (setq org-agenda-custom-commands
       '(("X" agenda ""
-         ((org-agenda-span 7)
-          (org-agenda-start-day "-7d")
+         ((org-agenda-span 30)
+          (org-agenda-start-day "-30d")
           (org-agenda-start-with-log-mode t)
           (org-agenda-files '("./")))
          ("./public/agenda.html"))))
