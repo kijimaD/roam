@@ -12,10 +12,10 @@ file-graph:
 	ruby ./git-file/git-file.rb > ./git-file/git-file.dat
 	gnuplot ./git-file/git-file.plot
 line-graph:
-	ruby git-line.rb > git-line.dat
-	gnuplot git-line.plot
-gen-file-table:
-	ruby file-count/file-count.rb >> ./index.org
+	ruby ./git-line/git-line.rb > ./git-line/git-line.dat
+	gnuplot ./git-line/git-line.plot
+count-table:
+	ruby file-count.rb >> ./index.org
 lint:
 	npx textlint *.org
 dev:
