@@ -1,5 +1,7 @@
 require "sqlite3"
 
+DB_PATH = "#{Dir.home}/.emacs.d/org-roam.db".freeze
+
 # tables
 # ["files"]
 # ["nodes"]
@@ -16,22 +18,60 @@ require "sqlite3"
 
 # n1.id: from, n2.id: to
 
-db = SQLite3::Database.new "#{Dir.home}/.emacs.d/org-roam.db"
+class Db
+  def initialize
+    @db = SQLite3::Database.new(DB_PATH)
+    @results = Hash.new
+  end
 
-query = <<-SQL
-    SELECT count(n2.id), n2.title, n2.file
-    FROM nodes AS n1
-    INNER JOIN links ON n1.id = links.source
-    INNER JOIN nodes n2 ON links.dest = n2.id
-    WHERE links.type = '\"id\"'
-    GROUP BY(n2.id)
-    ORDER BY(count(n2.id)) DESC
-SQL
+  def run
+    results = file_list.merge(page_rank)
+    results = results.sort { |(k1, v1), (k2, v2)| v2[:rank] <=> v1[:rank] }
+    results.each do |k, v|
+      p k
+      p v[:title], v[:rank]
+    end
+  end
 
-db.execute(query) do |arr|
-  rank = arr[0]
-  title = arr[1].gsub(/\"/, '')
-  file = arr[2].split('/').last.gsub(/\"/, '')
+  def file_list
+    results = Hash.new
+    query = <<-SQL
+      SELECT f.title, f.file
+      FROM files AS f
+    SQL
 
-  puts "#{rank} #{title} #{file}"
+    @db.execute(query) do |arr|
+      title = arr[0].gsub(/\"/, '')
+      file = arr[1].split('/').last.gsub(/\"/, '')
+
+      results.store(file, { title: title, rank: 0 })
+    end
+    results
+  end
+
+  def page_rank
+    results = Hash.new
+    query = <<-SQL
+      SELECT n2.title, n2.file, count(n2.id)
+      FROM nodes AS n1
+      INNER JOIN links ON n1.id = links.source
+      INNER JOIN nodes n2 ON links.dest = n2.id
+      WHERE links.type = '\"id\"'
+      GROUP BY(n2.id)
+      ORDER BY(count(n2.id)) DESC
+    SQL
+
+    @db.execute(query) do |arr|
+      title = arr[0].gsub(/\"/, '')
+      file = arr[1].split('/').last.gsub(/\"/, '')
+      rank = arr[2]
+
+      # puts "#{rank} #{title} #{file}"
+      results.store(file, { title: title, rank: rank })
+      # @results << { title: title, file: file, rank: rank }
+    end
+    results
+  end
 end
+
+Db.new.run
