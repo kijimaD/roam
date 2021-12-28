@@ -6,6 +6,112 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 TODO: 数が多くなってきたので分類する。
+** 技術の潮流
+APIサーバとしての利用、バックとフロントの分割が主流になっている。
+採用者はRails開発をしている、というよりAPI開発経験がある人材を探している。
+** スマートな画像確認
+system specでスクショをとって確認する。
+わざわざ用意して確認しない。
+
+TDDを徹底し、一切ブラウザ確認せずにプロダクトを開発した、という偉人もいる。
+** zeitwerk
+zeitwerkはオートロードするgem。Rails 6で使われている。
+Railsでrequireしなくていいのはこれを使っているから。
+[[https://github.com/fxn/zeitwerk][fxn/zeitwerk: Efficient and thread-safe code loader for Ruby]]
+** reorder
+デフォルトスコープ。
+** 開発用データの用意
+開発用データにはいくつかの種類がある。
+
+** ALTER TABLEは重い
+テーブルのコピーを作るので重い。
+bulk: trueをつけるとALTER TABLEをまとめるので高速になる。
+#+begin_src ruby
+  def up
+    change_table :legal_engine_forms, bulk: true do |t|
+      ...
+    end
+  end
+#+end_src
+** テーブル名にプレフィクスを設定する
+特定の機能に対して、関係したテーブルを複数つくるとき、プレフィクスのような形でモデル名やテーブル名を決めることがある。
+admin_user、admin_page、admin_permissionとか。
+こうすることの問題点: 衝突を避けるためにmodel名とテーブル名が長くなる。ディレクトリも見にくくなる。一語だとまだいいのだが、複数名になるとつらくなる。
+
+解決のためには、moduleを定義し、内部でtable_name_prefixを設定するといい。
+
+#+caption: modelにて
+#+begin_src ruby
+  module Admin
+    def self.table_name_prefix
+      'admin_'
+    end
+  end
+
+  module Admin
+    class User < ApplicationRecord
+    end
+  end
+#+end_src
+
+こうするとモデル名はAdmin::Userで、テーブル名はadmin_usersになりわかりやすい。
+** Rails環境でバッチ処理する
+#+caption: Rails環境でのクラスを実行できる
+#+begin_src ruby
+  rails runner "User.first"
+  rails r "User.first"
+#+end_src
+
+サービスクラス化したコマンドを実行するときに使える。
+** routesの制約
+#+begin_src ruby
+constraints(-> (req) { req.env["HTTP_USER_AGENT"] =~ /iPhone/ }) do
+  resources :iphones
+end
+#+end_src
+
+[[https://api.rubyonrails.org/v6.0.2/classes/ActionDispatch/Routing/Mapper/Scoping.html#method-i-constraints-label-Dynamic+request+matching][ActionDispatch::Routing::Mapper::Scoping]]
+** 大量のroutes変更を楽に確認する
+redirect設定やリファクタリングでroutesを大量に変更して、挙動の変更を追いたい場合。
+rails routesの結果のdiffを取れば、楽に確認できる。
+** create_or_find_by
+データベースのユニーク制約を使って作成、できなければ初めの1件を取得する。
+find_or_create_byでは作成されるまでに別プロセスによって作成されている可能性があったので、その問題を解決した処理。
+~create_or_find_by!~ はエラーの時に例外が発生する。
+
+#+caption: データベースのユニーク制約を使って作成、できなければ初めの1件を取得
+#+begin_src ruby
+  User.create_or_find_by(name: 'aaa')
+#+end_src
+
+[[https://railsdoc.com/page/create_or_find_by][create_or_find_by | Railsドキュメント]]
+** 使われてないファイルを検索する
+assetsは相対パスが利用されないので絶対パスで検索してヒットしなければ未使用と判断できる、とのこと。
+#+caption: 検査タスクの例
+#+begin_src ruby
+namespace :assets do
+  desc 'prune needless image file'
+  task 'prune:images' => :environment do
+    base = Rails.root.join('app/assets/images/')
+
+    Dir[Rails.root.join('app/assets/images/**/*.{jpg,jpeg,gif,png,svg}')].each do |path|
+      target_path = path.to_s.gsub(/#{base}/, '')
+      puts "execute: git grep '#{target_path}'"
+      res = `git grep '#{target_path}'`
+
+      if res.empty?
+        puts "execute: rm #{path}"
+        FileUtils.rm path
+        puts '=> removed'
+      else
+        puts '=> used somewhere'
+      end
+
+      puts
+    end
+  end
+end
+#+end_src
 ** [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]バージョンアップデート
 超強い人が言っていたメモ。
 コマンドを組み合わせて一気に置換して検討していく。
@@ -416,6 +522,30 @@ springはキャッシュを保存して次のコマンド実行を早くするge
 #+begin_src shell
   ulimit -n 1024
 #+end_src
+** seed_fuのlint
+走らせてエラーがないかチェックする。
+#+begin_src ruby
+namespace :db do
+  namespace :seed_fu do
+    desc 'Verify that all fixtures are valid'
+    task lint: :environment do
+      if Rails.env.test?
+        conn = ActiveRecord::Base.connection
+
+        %w[development test production].each do |env|
+          conn.transaction do
+            SeedFu.seed("db/fixtures/#{env}")
+            raise ActiveRecord::Rollback
+          end
+        end
+      else
+        system("bundle exec rails db:seed_fu:lint RAILS_ENV='test'")
+        raise if $CHILD_STATUS.exitstatus.nonzero?
+      end
+    end
+  end
+end
+#+end_src
 ** どのメソッドか調べる
 どのgemのメソッドかわからないときに ~source_location~ が便利。
 https://docs.ruby-lang.org/ja/latest/method/Method/i/source_location.html
@@ -505,8 +635,9 @@ Rails のドキュメント。
 ** TODO [[https://www.codewithjason.com/understanding-factory-bot-syntax-coding-factory-bot/][Understanding Factory Bot syntax by coding your own Factory Bot - Code with Jason]]
 Factory Botの作り方。
 ** TODO Tips文書化
-DEADLINE: <2021-12-26 Sun>
+DEADLINE: <2021-12-26 Sun 22:50>
 :LOGBOOK:
+CLOCK: [2021-12-26 Sun 15:43]--[2021-12-26 Sun 17:40] =>  1:57
 CLOCK: [2021-12-23 Thu 10:01]--[2021-12-23 Thu 10:56] =>  0:55
 :END:
 - 5730
@@ -517,6 +648,8 @@ https://github.com/carrierwaveuploader/carrierwave/blob/a3ffc5381e70a4014b61b27b
 
 PR送信完了。一字だけ。
 * References
+** [[https://tech.kitchhike.com/entry/2017/03/07/190739][DHH流のルーティングで得られるメリットと、取り入れる上でのポイント - KitchHike Tech Blog]]
+ルーティングをどうするかの指針。
 ** [[https://github.com/ankane/strong_migrations][ankane/strong_migrations: Catch unsafe migrations in development]]
 READMEに安全なマイグレーションの説明がある。
 ** [[https://tech.speee.jp/entry/2020/06/30/110000][reg-suit によるビジュアルリグレッションテストで Rails アプリの CSS 改善サイクルが回り始めた話 - Speee DEVELOPER BLOG]]
