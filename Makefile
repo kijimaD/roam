@@ -14,8 +14,8 @@ file-graph:
 line-graph:
 	ruby ./git-line/git-line.rb > ./git-line/git-line.dat
 	gnuplot ./git-line/git-line.plot
-count-table:
-	ruby file-count.rb >> ./index.org
+gen-file-table:
+	ruby ./file-count/file-count.rb >> ./index.org
 lint:
 	npx textlint *.org
 dev:
