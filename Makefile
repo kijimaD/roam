@@ -9,8 +9,8 @@ node-graph:
 	pip3 install -r requirements.txt
 	python3 node_graph/build_graph.py > public/js/graph.json
 file-graph:
-	ruby git-file.rb > git-file.dat
-	gnuplot git-file.plot
+	ruby ./git-file/git-file.rb > ./git-file/git-file.dat
+	gnuplot ./git-file/git-file.plot
 line-graph:
 	ruby git-line.rb > git-line.dat
 	gnuplot git-line.plot
