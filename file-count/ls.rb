@@ -42,7 +42,7 @@ class Ls
   def last_changed_run
     results = Hash.new
 
-    rows = Open3.capture2('git ls-files -z *.org | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {}').first.split("\n")
+    rows = Open3.capture2('git ls-files -z *.org | xargs -0 -I{} -- git log -1 --format="%ai {}" {}').first.split("\n")
     rows.each do |row|
       date = row.split(" ")[0]
       file = row.split(" ")[3]
