@@ -31,12 +31,14 @@ class Table
       title = result[1][:title]
       rank = result[1][:rank]
       count = result[1][:count]
+      changed_count = result[1][:changed_count]
       percent = result[1][:percent]
       last_changed = timeago(result[1][:last_changed], depth: 1)
         text = <<~TEXT
                 | #{rank} \
                 | [[file:#{file}][#{title}]] \
                 | #{count} \
+                | #{changed_count} \
                 | #{percent} \
                 | #{last_changed} \
                 |

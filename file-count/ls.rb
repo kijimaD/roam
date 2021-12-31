@@ -7,6 +7,11 @@ class Ls
     wc.each do |k, v|
       results.store(k, v.merge(last_changed[k]))
     end
+
+    results.each do |k, v|
+      results.store(k, v.merge(changed_count[k]))
+    end
+
     results
   end
 
@@ -46,8 +51,18 @@ class Ls
     end
     results
   end
+
+  def changed_count
+    results = Hash.new
+
+    rows = Open3.capture2('git log --name-only --oneline | grep -v " " | sort | uniq -c').first.split("\n")
+    rows.each do |row|
+      count = row.split(" ")[0]
+      file = row.split(" ")[1]
+      results.store(file, { changed_count: count })
+    end
+    results
+  end
 end
 
 Ls.new.run
-
-# git ls-files -z *.org | xargs -0 -n1 -I{} -- git log -1 --format="%ai {}" {}
