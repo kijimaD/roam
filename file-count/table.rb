@@ -1,5 +1,5 @@
-require './db'
-require './ls'
+require_relative 'db'
+require_relative 'ls'
 
 class Table
   def run

@@ -42,7 +42,7 @@ class Ls
       date = row.split(" ")[0]
       file = row.split(" ")[3]
 
-      results.store(file, { last_chaged: date })
+      results.store(file, { last_changed: date })
     end
     results
   end
