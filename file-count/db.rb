@@ -1,6 +1,6 @@
 require "sqlite3"
 
-DB_PATH = "#{Dir.home}/.emacs.d/org-roam.db".freeze
+DB_PATH = "org-roam.db".freeze
 
 # tables
 # ["files"]
