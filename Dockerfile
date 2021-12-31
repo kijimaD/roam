@@ -3,8 +3,6 @@ FROM ruby:3.1
 
 RUN apt-get update
 RUN apt-get install git sqlite3 emacs -y
-# throw errors if Gemfile has been modified since Gemfile.lock
-RUN bundle config --global frozen 1
 
 WORKDIR /roam
 
