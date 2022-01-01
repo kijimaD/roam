@@ -23,7 +23,7 @@ class Table
 
   def show(results)
     puts '* Node Analysis'
-    puts '| Page Rank | Title | Char Count | Commit | Last Changed |'
+    puts '| Page Rank | Title | Char Count | Percent | Commit | Last Changed |'
 
     results.each do |result|
       file = result[0]
@@ -31,8 +31,8 @@ class Table
       title = result[1][:title]
       rank = result[1][:rank]
       count = result[1][:count]
-      changed_count = result[1][:changed_count]
       percent = result[1][:percent]
+      changed_count = result[1][:changed_count]
       last_changed = timeago(result[1][:last_changed], depth: 1)
         text = <<~TEXT
                 | #{rank} \
