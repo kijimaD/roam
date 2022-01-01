@@ -16,8 +16,6 @@ DB_PATH = "org-roam.db".freeze
 #   pp master
 # end
 
-# n1.id: from, n2.id: to
-
 class Db
   def initialize
     @db = SQLite3::Database.new(DB_PATH)
@@ -49,6 +47,8 @@ class Db
 
   def page_rank
     results = Hash.new
+
+    # n1.id: from, n2.id: to
     query = <<-SQL
       SELECT n2.title, n2.file, count(n2.id)
       FROM nodes AS n1
@@ -64,9 +64,7 @@ class Db
       file = arr[1].split('/').last.gsub(/\"/, '')
       rank = arr[2]
 
-      # puts "#{rank} #{title} #{file}"
       results.store(file, { title: title, rank: rank })
-      # @results << { title: title, file: file, rank: rank }
     end
     results
   end
