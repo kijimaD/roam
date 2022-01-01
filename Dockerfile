@@ -1,18 +1,23 @@
 FROM ubuntu:latest
-FROM ruby:3.1
-
+ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update
 RUN apt-get install git sqlite3 emacs -y
-# throw errors if Gemfile has been modified since Gemfile.lock
-RUN bundle config --global frozen 1
 
 WORKDIR /roam
 
+FROM ruby:3.1
 COPY Gemfile Gemfile.lock ./
-COPY .git/ ./.git/
 RUN bundle install
+
+WORKDIR /roam
+
+FROM python:3
+COPY requirements.txt ./
+RUN pip install -r requirements.txt
+
+WORKDIR /roam
+COPY .git/ ./.git/
 
 CMD /bin/bash
 
 # sudo docker-compose run roam
-# ruby file-count/ls.rb

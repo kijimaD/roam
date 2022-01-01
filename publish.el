@@ -106,6 +106,7 @@
       :recursive t
       :base-extension "org"
       :base-directory "./"
+      :exclude "./.packages"
       ;; :publishing-function #'org-html-publish-to-html
       :publishing-function org-html-publish-to-html
       :publishing-directory "./public"
