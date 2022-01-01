@@ -1,18 +1,12 @@
 require 'open3'
+require_relative 'utils'
 
 class Ls
   def run
-    results = Hash.new
+    store = Store.new(wc)
+    store.merge(last_changed).merge(changed_count)
 
-    wc.each do |k, v|
-      results.store(k, v.merge(last_changed[k]))
-    end
-
-    results.each do |k, v|
-      results.store(k, v.merge(changed_count[k]))
-    end
-
-    results
+    store.results
   end
 
   def wc
