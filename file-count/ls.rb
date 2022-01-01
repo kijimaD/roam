@@ -16,15 +16,11 @@ class Ls
     sum = rows.first.split(' ').first.to_f
     rows.shift # remove sum
 
-    # puts '* File ranking'
-    # puts '| Char Count | Title | Percent |'
-
     rows.each do |row|
       count, file = row.strip.split(' ')
       percent = ((count.to_i / sum).round(4) * 100).round(2)
 
       results.store(file, { count: count, percent: percent})
-      # puts "| #{count} | [[file:#{html}][#{title}]] | #{percent} |"
     end
     results
   end
