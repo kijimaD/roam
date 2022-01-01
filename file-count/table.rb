@@ -23,7 +23,7 @@ class Table
 
   def show(results)
     puts '* Node Analysis'
-    puts '| Page Rank | Title | Char Count | Percent | Commit | Last Changed |'
+    puts '| Page Rank | Title | Char Count | Commit | Percent | Last Changed |'
 
     results.each do |result|
       file = result[0]
