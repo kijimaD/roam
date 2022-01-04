@@ -15,10 +15,9 @@ line-graph:
 	ruby ./git-line/git-line.rb > ./git-line/git-line.dat
 	gnuplot ./git-line/git-line.plot
 gen-file-table:
-	ruby ./file-count/file-count.rb >> ./index.org
+	ruby ./file-count/table.rb >> ./index.org
 lint:
 	npx textlint *.org
 dev:
 	make build
-	make roam-graph
 	make lint

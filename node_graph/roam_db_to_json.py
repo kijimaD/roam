@@ -10,7 +10,7 @@ def build_graph() -> any:
     """Build a graph from the org-roam database."""
     graph = nx.DiGraph()
     home = pathlib.Path.home()
-    conn = sqlite3.connect(home / ".emacs.d" / "org-roam.db")
+    conn = sqlite3.connect("org-roam.db")
 
     # Query all nodes first
     nodes = conn.execute("SELECT file, id, title FROM nodes WHERE level = 0;")

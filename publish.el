@@ -28,6 +28,7 @@
 (use-package org-roam
   :ensure t)
 (setq org-roam-directory "./")
+(setq org-roam-db-location "./org-roam.db")
 (setq org-roam-v2-ack t)
 (setq org-id-link-to-org-use-id t)
 (setq org-id-extra-files (org-roam--list-files org-roam-directory))
@@ -105,6 +106,7 @@
       :recursive t
       :base-extension "org"
       :base-directory "./"
+      :exclude "./.packages"
       ;; :publishing-function #'org-html-publish-to-html
       :publishing-function org-html-publish-to-html
       :publishing-directory "./public"

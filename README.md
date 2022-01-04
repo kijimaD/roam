@@ -7,20 +7,23 @@
 ## build
 ```
 make build # build site
-
 make roam-graph # generate graph
 ```
 
 ## lint
 ```shell
 npm install
-
 make lint
 ```
 
 ## git hooks
 ```shell
 git config --local core.hooksPath .githooks
-chmod -R +x .githooks/
 git config --local commit.template .githooks/commit_msg.txt
+```
+
+## docker
+```shell
+sudo docker-compose build
+sudo docker-compose run roam
 ```
