@@ -20,8 +20,18 @@ Railsでrequireしなくていいのはこれを使っているから。
 [[https://github.com/fxn/zeitwerk][fxn/zeitwerk: Efficient and thread-safe code loader for Ruby]]
 ** reorder
 デフォルトスコープ。
-** 開発用データの用意                                                  :WIP:
-開発用データにはいくつかの種類がある。
+** 開発用データの用意
+開発用データにはいくつかの方法がある。
+
+- seedデータで用意する。毎回必要なときにresetして開発する
+  - クリーンな環境で再現性が高い開発を行える。
+  - 早い
+
+- 本番データに近いデータで行う
+  - デザインや性能の問題に気づきやすい
+  - ユースケースがイメージしやすい
+  - データの準備が楽
+  - 整合性のメンテナンスが必要
 ** ALTER TABLEは重い
 テーブルのコピーを作るので重い。
 bulk: trueをつけるとALTER TABLEをまとめるので高速になる。
@@ -620,6 +630,43 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
   - args = [:section]
 = content_tag(*args)
 #+end_export
+** migration例
+#+begin_src shell
+  $ rails g migration ChangeProductPrice
+#+end_src
+
+#+begin_src ruby
+  class ChangeProductsPrice < ActiveRecord::Migration[7.0]
+    def up
+      change_table :products do |t|
+        t.change :price, :string
+      end
+    end
+
+    def down
+      change_table :products do |t|
+        t.change :price, :integer
+      end
+    end
+  end
+#+end_src
+
+#+begin_src shell
+ $ rails g migration AddNotNullOnBooks
+#+end_src
+
+#+begin_src ruby
+  class AddNotNullOnBooks < ActiveRecord::Migration[6.0]
+    def up
+      change_column_null :books, :user_id, false
+    end
+
+    def down
+      change_column_null :books, :user_id, true
+    end
+  end
+#+end_src
+
 * Tasks
 ** TODO Advanced Rails Recipe
 ** TODO [[https://dxd2021.cto-a.org/program/time-table/b-3][クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021]]
