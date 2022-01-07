@@ -6,19 +6,33 @@
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
 TODO: 数が多くなってきたので分類する。
+** update_atを更新しない
+バッチ処理でいじった場合は更新するとよくないことがある。
+** save(validation: false)
+バリデーションが不要なとき、 ~user.save!(validation: false)~ とすると無効化できる。
+データを整合するときに使う。
+** バリデーションと一致してないレコード探知
+モデルバリデーションでpresence: trueなのに、レコードではnilが残っていると、別のカラムをupdateするときにバリデーションが弾かれて不便になる。
+こういうのはレコードからnilをちゃんと消してモデルとDBのバリデーションを一致させるとよい。
+
+まずnilをなくす。それからテーブルのバリデーションを追加する。
+
+モデルバリデーションは入出力のみ監視する。だから既存レコードに残っている可能性がある。
+DBバリデーションは、既存レコードにも入ってないことを保証できる。
+** presenceとnot nullの違い                                            :WIP:
 ** 技術の潮流
 APIサーバとしての利用、バックとフロントの分割が主流になっている。
 採用者はRails開発をしている、というよりAPI開発経験がある人材を探している。
-** スマートな画像確認
+** テストによるスマートな画像確認
 system specでスクショをとって確認する。
 わざわざ用意して確認しない。
 
 TDDを徹底し、一切ブラウザ確認せずにプロダクトを開発した、という偉人もいる。
-** zeitwerk
+** オートロードするgem: zeitwerk
 zeitwerkはオートロードするgem。Rails 6で使われている。
 Railsでrequireしなくていいのはこれを使っているから。
 [[https://github.com/fxn/zeitwerk][fxn/zeitwerk: Efficient and thread-safe code loader for Ruby]]
-** reorder
+** reorder                                                             :WIP:
 デフォルトスコープ。
 ** 開発用データの用意
 開発用データにはいくつかの方法がある。
@@ -341,8 +355,29 @@ migrationファイルは一部DSLが扱われるだけで普通のrubyファイ�
   c.equal? b.category #=> false 同じオブジェクトでない
 #+end_src
 inverse_ofを使うと同じオブジェクトを使うようになる。
-** リレーションの不整合検知
+** presence: trueなのにnilがあるレコードを検知する
+モデルバリデーションがかかっていても、既存のレコードはnilを含む可能性がある。
+この場合、編集できなくて不便。検知してテーブルにも制約をかけると安全になる。
+
+直にテーブルの制約を辿る方法がわからないのでレコードを探索する感じになった。レコードがたくさんある環境で実行すると検知できる。全部辿るのでクソ重い。
+#+begin_src ruby
+  msgs = {}
+
+  Rails.application.eager_load!
+  ApplicationRecord.subclasses.each do |model|
+    presence_validates = model.validators.select { |v| v.class.to_s.include?('ActiveRecord::Validations::PresenceValidator') }
+    presence_validates.each do |presence_validate|
+      model.all.find_each do |record|
+        msgs["#{record.class} #{presence_validate.attributes.first}"] = '❌ presence: trueあるのにnilレコードがある><' unless record.send(presence_validate.attributes.first)
+      end
+    end
+  end
+
+  pp msgs.sort #  [["User name", "❌ presence: trueあるのにnilレコードがある><"]]
+#+end_src
+** リレーションの不整合を検知する
 よくわからない。
+全部辿る方法は色々応用が効きそう。
 
 #+caption: 不整合検知タスク
 #+begin_src ruby
@@ -666,7 +701,6 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
     end
   end
 #+end_src
-
 * Tasks
 ** TODO Advanced Rails Recipe
 ** TODO [[https://dxd2021.cto-a.org/program/time-table/b-3][クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021]]
