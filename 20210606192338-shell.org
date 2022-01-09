@@ -6,6 +6,26 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
+** 踏み台を経由したssh
+普通にやると、2回sshコマンドを実行するので面倒。
+configに記入しておいて、一度に実行する。
+
+#+caption:.ssh/config
+#+begin_src
+Host <alias_name>
+  HostName <target_server>
+  User <target_user>
+  IdentityFile <target_id_rsa>
+  ProxyCommand ssh -W %h:%p -i <bastion_id_rsa> -p <bastion_port> <bastion_user>@<bastion_server>
+#+end_src
+
+[[https://qiita.com/hkak03key/items/3b0c4752bfbcc52e676d][踏み台サーバを飛び越えて一発で目的のサーバへsshする方法 - Qiita]]
+** input関係の設定を.bash_profile等でしてはいけない理由
+[[https://wiki.archlinux.jp/index.php/Fcitx#.E6.97.A5.E6.9C.AC.E8.AA.9E][Fcitx - ArchWiki]]
+
+#+begin_quote
+上記の設定を .bashrc でしないでください。.bashrc はインタラクティブな bash セッションを初期化するときに使われます。インタラクティブでないセッションや X セッションの初期化では用いられません。さらに、.bashrc で環境変数を設定すると、コマンドラインから実行した診断ツールに誤解を与えて、X セッションでは環境変数が使われていないのに正しく設定されているかのように表示されることがあります。
+#+end_quote
 ** cronで通知する
 cronで時報を通知したいけど、表示されないことがある。これはcronがCLI向けのコマンドであって、画面出力があることを想定してないから。
 
@@ -26,7 +46,7 @@ DBUS_SESSION_BUS_ADDRESSの設定が必要なよう。参考サイトをコピ�
   00 * * * * DISPLAY=:0 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus setpriv --euid=1000 notify-send "Timebot" "$(date +\%H):00!"
 #+end_src
 [[https://bbs.archlinux.org/viewtopic.php?id=223050][Cannot run notify-send from cron job / Newbie Corner / Arch Linux Forums]]
-** 一括削除
+** xargsで一括削除
 TODO: xargsシリーズどこかにまとめたい。
 #+begin_src shell
 find . -name "*.log" | xargs rm -fv
@@ -116,7 +136,7 @@ cinnamon-settings
   python $file | sed -e s/.*[0-9]m// >> ./docs/query.org
   done
 #+end_src
-** port検索
+** port検索する
 port already in used. が出たとき。
 
 プロセスを探す。
@@ -135,13 +155,13 @@ woeusbというパッケージをインストールして行う。
   sudo apt update && sudo apt install woeusb-frontend-wxgtk
 #+end_src
 https://www.omgubuntu.co.uk/2017/06/create-bootable-windows-10-usb-ubuntu
-** apt
+** aptコマンド
 aptはdebian系ディストリビューションで用いられるパッケージマネージャ。
 - パッケージ検索
 #+begin_src shell
   apt search libffi
 #+end_src
-** suspend
+** suspendする
 コマンドでサスペンドする方法。
 
 Ubuntuのとき。
@@ -153,7 +173,7 @@ GNU Guixのとき。
 #+begin_src shell
   loginctl suspend
 #+end_src
-** pgrep, pkill
+** プロセスを止める
 簡単に検索、killできる。
 #+begin_src shell
   pgrep firefox
