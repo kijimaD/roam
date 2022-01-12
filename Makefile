@@ -1,5 +1,5 @@
 server:
-	cd ./public; python -m SimpleHTTPServer 8000
+	cd ./public; python -m SimpleHTTPServer 8888
 update-index:
 	emacs --batch -l ./publish.el --funcall kd/update-index-table
 build:

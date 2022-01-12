@@ -5,6 +5,164 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** preload, eager_load, includes
+ややこしいがパフォーマンスを考える上で必要なので理解しておく。
+
+- [[https://tech.stmn.co.jp/entry/2020/11/30/145159][preload、eager_load、includesの挙動を理解して使い分ける - stmn tech blog]]
+
+| メソッド   | キャッシュ | クエリ     | 用途                         |
+|------------+------------+------------+------------------------------|
+| joins      | しない     | 単数       | 絞り込み                     |
+| eager_load | する       | 単数       | キャッシュと絞り込み         |
+| preload    | する       | 複数       | キャッシュ                   |
+| includes   | する       | 場合による | キャッシュ、必要なら絞り込み |
+
+#+begin_quote
+そのテーブルとのJOINを禁止したいケースではpreloadを指定し、JOINしても問題なくてとりあえずeager loadingしたい場合はincludesを使い、必ずJOINしたい場合はeager_loadを使いましょう。
+#+end_quote
+
+- [[https://qiita.com/ryosuketter/items/097556841ec8e1b2940f][ActiveRecordのincludesは使わずにpreloadとeager_loadを使い分ける理由 - Qiita]]
+
+| メソッド   | SQL(クエリ)            | キャッシュ | アソシエーション先のデータ参照 | デメリット                                                |
+|------------+------------------------+------------+--------------------------------+-----------------------------------------------------------|
+| joins      | INNER JOIN             | しない     | できる                         | N+1問題                                                   |
+| preload    | JOINせずそれぞれSELECT | する       | できない                       | IN句大きくなりがち                                        |
+| eager_load | LEFT JOIN              | する       | できる                         | LEFT JOINなので、相手が存在しなくても全部ロードしてしまう |
+| includes   | 場合による             | する       | できる                         | ただしく理解してないと挙動がコントロールできない          |
+
+- preload
+  - 多対多のアソシエーションの場合
+    - [[id:8b69b8d4-1612-4dc5-8412-96b431fdd101][SQL]]を分割して取得するため、レスポンスタイムが早くなるため
+  - アソシエーション先のデータ参照ができない
+  - データ量が大きいと、メモリを圧迫する可能性がある
+
+- eager_load
+  - 1対1あるいはN対1のアソシエーションをJOINする場合
+  - JOIN先のテーブルを参照したい場合
+
+- joins
+  - メモリの使用量を必要最低限に抑えたい場合
+  - JOINした先のデータを参照せず、絞り込み結果だけが必要な場合
+
+- includes
+  - なるべく使わない方がいい
+  - 条件によってpreloadとeager_loadを振り分ける
+
+- [[https://qiita.com/k0kubun/items/80c5a5494f53bb88dc58][ActiveRecordのjoinsとpreloadとincludesとeager_loadの違い - Qiita]]
+** Railsの[[id:bb71747d-8599-4aee-b747-13cb44c05773][OSS]]
+Railsをどう書くかの参考になりそうなリポジトリ。
+
+- [[https://github.com/gitlabhq/gitlabhq][gitlabhq/gitlabhq: GitLab CE Mirror | Please open new issues in our issue tracker on GitLab.com]]
+- [[https://github.com/rubygems/rubygems.org][rubygems/rubygems.org: The Ruby community's gem hosting service.]]
+- [[https://github.com/discourse/discourse][discourse/discourse: A platform for community discussion. Free, open, simple.]]
+- [[https://github.com/mastodon/mastodon][mastodon/mastodon: Your self-hosted, globally interconnected microblogging community]]
+- [[https://github.com/diaspora/diaspora][diaspora/diaspora: A privacy-aware, distributed, open source social network.]]
+- [[https://github.com/forem/forem][forem/forem: For empowering community 🌱]]
+** ルーティングのファイルと名前空間を切り出す
+[[https://qiita.com/sibakenY/items/973fbe635a7f91ae105c][Railsのルーティングをdrawを使ってまとめる - Qiita]]
+
+ファイル読み込みでルーティングのDSLを評価するメソッドを作る。
+これによって、ファイルで名前空間を分割できる。
+
+#+caption: config/initializers/draw_routes.rb
+#+begin_src ruby
+module DrawRoute
+  RoutesNotFound = Class.new(StandardError)
+
+  def draw(routes_name)
+    drawn_any = draw_route(routes_name)
+
+    drawn_any || raise(RoutesNotFound, "Cannot find #{routes_name}")
+  end
+
+  def route_path(routes_name)
+    Rails.root.join(routes_name)
+  end
+
+  def draw_route(routes_name)
+    path = route_path("config/routes/#{routes_name}.rb")
+    if File.exist?(path)
+      instance_eval(File.read(path))
+      true
+    else
+      false
+    end
+  end
+end
+
+ActionDispatch::Routing::Mapper.prepend DrawRoute
+#+end_src
+
+#+caption: config/routes/admin.rb
+#+begin_src ruby
+  namespace :admin do
+    resources :users
+  end
+#+end_src
+
+#+caption: routes.rb
+#+begin_src ruby
+  Rails.application.routes.draw do
+    draw :admin
+  end
+#+end_src
+** 時間関係                                                            :WIP:
+[[https://qiita.com/jnchito/items/cae89ee43c30f5d6fa2c][RubyとRailsにおけるTime, Date, DateTime, TimeWithZoneの違い - Qiita]]
+** ネストしたトランザクション
+ネストしたトランザクションでは内側のロールバックが、無視されるケースがある。
+トランザクションを再利用するため。
+なので、トランザクションを再利用しないように明示すればよい。
+
+#+begin_src ruby
+ActiveRecord::Base.transaction(joinable: false, requires_new: true) do
+  # inner code
+end
+#+end_src
+
+[[https://qiita.com/jnchito/items/930575c18679a5dbe1a0][【翻訳】ActiveRecordにおける、ネストしたトランザクションの落とし穴 - Qiita]]
+[[https://api.rubyonrails.org/classes/ActiveRecord/Transactions/ClassMethods.html][ActiveRecord::Transactions::ClassMethods]]
+** Fakerでboolean生成
+
+↓以下2つは同じ意味。
+
+#+caption: fakerで
+#+begin_src rb
+  Faker::Boolean.boolean
+#+end_src
+
+#+caption: sampleで
+#+begin_src ruby
+  [true, false].sample
+#+end_src
+** マイグレーションでカラムの型を変える
+usersのdeleted_atカラムをinteger型 から datetime型に変える例。
+
+1. 一時カラムを作ってそこで値を作成する
+2. 旧カラムを削除する
+3. 一時カラムの名前を変えて新カラムにする
+
+~ActiveRecord::Base.connection.execute(sql)~ を使うと生の[[id:8b69b8d4-1612-4dc5-8412-96b431fdd101][SQL]]を実行できる。
+
+#+caption:
+#+begin_src ruby
+  def up
+    connection.execute 'ALTER TABLE users ADD deleted_at_tmp datetime'
+    connection.execute 'UPDATE users SET deleted_at_tmp = FROM_UNIXTIME(deleted_at)'
+    connection.execute 'ALTER TABLE users DROP COLUMN deleted_at'
+    connection.execute 'ALTER TABLE users CHANGE deleted_at_tmp deleted_at datetime'
+  end
+#+end_src
+** 便利なデバッガweb-console
+view内でブレークポイントを設定し、ブラウザ上でコンソールを立ち上げることができるライブラリ。
+Railsにデフォルトで入っている。
+
+#+caption: 任意のview, controllerに追加する
+#+begin_src html
+<% console %>
+#+end_src
+
+あとは該当箇所にブラウザでアクセスするとコンソールが立ち上がる。
+再実行性がないので、テストでやるのが一番だとは感じる。
 ** update_atを更新しない                                               :WIP:
 バッチ処理でいじった場合は更新するとよくないことがある。
 ** save(validation: false)
@@ -34,6 +192,7 @@ Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作�
 
 まずnilをなくす。それからテーブルのバリデーションを追加する。
 ** presenceとnot nullの違い                                            :WIP:
+結論: 両方あるのが良い。
 ** バックエンドエンジニアというときの正確なスコープ
 APIサーバとしての利用、バックとフロントの分割が主流になっている。
 採用者がRailsのバックエンド開発者を探している、というときはAPI開発経験がある人材を探しているといえる。
@@ -695,8 +854,17 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
     end
   end
 #+end_src
+* 良いバッチ処理の書き方                                                :WIP:
 * Tasks
-** TODO Advanced Rails Recipe
+** TODO [[https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69][【Rails】graphql-rubyでAPIを作成 - Qiita]]
+** TODO [[https://egghead.io/blog/rails-graphql-typescript-react-apollo][Rails + GraphQL + TypeScript + React + Apollo | egghead.io]]
+** TODO [[https://zenn.dev/prune/books/0d7d6e3c5f0496][Rails+React（SPA）TODOアプリチュートリアル【0から学ぶ】]]
+:LOGBOOK:
+CLOCK: [2022-01-10 Mon 20:08]--[2022-01-10 Mon 20:33] =>  0:25
+CLOCK: [2022-01-10 Mon 19:30]--[2022-01-10 Mon 19:55] =>  0:25
+:END:
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]  + [[id:dc50d818-d7d1-48a8-ad76-62ead617c670][React]]の本。
+** TODO [[https://www.amazon.com/Advanced-Rails-Recipes-Mike-Clark/dp/0978739221][Advanced Rails Recipes]]
 ** TODO [[https://dxd2021.cto-a.org/program/time-table/b-3][クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021]]
 クソコードから学ぶ。
 ** TODO loggerを自動オン
@@ -711,6 +879,8 @@ Factory Botの作り方。
 ** TODO Tips文書化
 DEADLINE: <2021-12-26 Sun 22:50>
 :LOGBOOK:
+CLOCK: [2022-01-10 Mon 23:52]--[2022-01-11 Tue 00:17] =>  0:25
+CLOCK: [2022-01-10 Mon 21:45]--[2022-01-10 Mon 22:10] =>  0:25
 CLOCK: [2021-12-26 Sun 15:43]--[2021-12-26 Sun 17:40] =>  1:57
 CLOCK: [2021-12-23 Thu 10:01]--[2021-12-23 Thu 10:56] =>  0:55
 :END:
