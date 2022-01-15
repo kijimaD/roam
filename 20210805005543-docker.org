@@ -5,7 +5,30 @@
 
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
-* 各種コマンド
+* Memo
+** コンテナ間の接続はサービス名を用いる
+コンテナ間の接続をしようとして、このようなエラーが出た。
+#+caption: sidekiq -> redisへ接続したい
+#+begin_quote
+Error connecting to Redis on 127.0.0.1:6379 (Errno::ECONNREFUSED)
+#+end_quote
+
+127.0...とあることから、コンテナ内のアドレスを見に行ってる。
+コンテナ間での通信には、サービス名のアドレスを追加する必要がある。
+
+#+caption: redis://redis:6379/15
+#+begin_export yaml
+  worker:
+    build: .
+    command: bundle exec sidekiq
+    environment:
+      REDIS_URL: redis://redis:6379/15 ＃<---別のredisコンテナへの接続
+    volumes:
+      - .:/app
+    links:
+      - mysql
+      - redis
+#+end_export
 ** rootユーザでファイル作成しないようにする
 Dockerコンテナ内でファイルを作成すると、ownerがrootになり編集や削除ができず面倒。
 Dockerの内部ではユーザid(uid)やグループid(gid)がホストと異なる。idがホストマシンと合わないためrootとして実行されたことになる、よう。
@@ -32,7 +55,8 @@ Dockerの内部ではユーザid(uid)やグループid(gid)がホストと異な
 
 あとはidを環境変数経由で渡せば、コンテナ内でもホストのユーザが実行したことになる。
 #+begin_src shell
-  sudo run -u "$(id -u $USER):$(id -g $USER)" rails /bin/sh
+  sudo docker run -u "$(id -u $USER):$(id -g $USER)" rails /bin/sh
+  sudo docker-compose run -u "$(id -u $USER):$(id -g $USER)" rails /bin/sh
 #+end_src
 
 overrideがある場合、このようになる(長すぎ)。
@@ -120,21 +144,46 @@ docker logs 1111... # idを入れる
   docker rmi $(docker images -q)
 #+end_src
 * Tasks
+** タスクを簡単に実行する方法を調べる
+[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
 ** TODO [[https://www.forcia.com/blog/002273.html][社内のDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
 非常に詳しい情報。
-** ゴミファイルができる
-キャッシュ関係がroot権限でできるので面倒。
-** Rails Docker環境化[5/8]
+** TODO ゴミファイルができないようにする
+キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
+
+- できないようにする
+- 自動削除するようにする
+** Rails Docker環境化[6/8]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
 仕事をLinuxで行えるようにする。
-*** TODO system spec
-seleniumが接続に失敗しているよう。
+*** TODO system specが失敗する
+:LOGBOOK:
+CLOCK: [2022-01-14 Fri 21:59]--[2022-01-14 Fri 22:24] =>  0:25
+CLOCK: [2022-01-13 Thu 22:24]--[2022-01-13 Thu 22:49] =>  0:25
+CLOCK: [2022-01-13 Thu 10:40]--[2022-01-13 Thu 11:05] =>  0:25
+:END:
+seleniumが接続に失敗している。
+
+#+begin_quote
+Selenium::WebDriver::Error::UnknownError:
+  unknown error: net::ERR_CONNECTION_REFUSED
+#+end_quote
+
+例によってコンテナ内にアクセスしようとして弾かれているのか。
 *** TODO migration時にschemaに変な差分が出る
-DB設定がおかしいぽい。
-*** TODO メール関係の動作確認
-redisが本当に動いてるかわからない。
+DB設定がおかしいようだ。
+*** DONE 非同期処理の動作確認
+CLOSED: [2022-01-12 Wed 23:08]
+:LOGBOOK:
+CLOCK: [2022-01-12 Wed 23:02]--[2022-01-12 Wed 23:08] =>  0:06
+CLOCK: [2022-01-12 Wed 22:32]--[2022-01-12 Wed 22:57] =>  0:25
+:END:
+redis, sidekiqが本当に動いてるかわからない。
+letter openerを見る限り、できてない。
+
+追加した。
 *** DONE [#A] dockerがrootユーザでファイルを生成する問題
 CLOSED: [2021-12-25 Sat 23:51]
 生成したファイルがroot権限になってしまう。
@@ -147,10 +196,18 @@ CLOSED: [2021-12-20 Mon 22:57]
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]部分をDocker化する。表示はまったく問題なさそう。
 リロードするとちゃんとローカルの変更が反映される。
 
+最初にルートファイルのdockerfileでベースイメージをビルドして、名前を付ける。
+#+begin_src shell
+  docker build . -t app
+#+end_src
+
+各コンテナでは↑で作成したベースイメージappを用いる。
+イメージを使う代わりに ~build .~ でも可能だが、各コンテナがイメージをビルドする(中身は同じ)ので遅くごちゃつく。
+
 #+caption: docker-compose.yml
 #+begin_src yaml
   rails:
-    build: .
+    image: app
     environment:
       RAILS_ENV: development
       REDIS_URL: redis://redis:6379
@@ -167,10 +224,20 @@ CLOSED: [2021-12-20 Mon 22:57]
     command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -b '0.0.0.0'"
     volumes:
       - .:/rails
+      - /etc/passwd:/etc/passwd:ro # Linux用
+      - /etc/group:/etc/group:ro # Linux用
     depends_on:
       - mysql
 
+  worker:
+    image: app
+    command: bundle exec sidekiq
+    links:
+      - mysql
+      - redis
+
   webpack:
+    image: app
     build: .
     tty: true
     environment:
