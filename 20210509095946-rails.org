@@ -5,6 +5,77 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** factoryがないモデルを検知するタスク
+factoryはテストで使うので、fixtureほど忘れることはない。作り忘れたり、過去もので漏れているものがたまにあるので検知する。
+
+#+caption: rakeタスクファイルにて
+#+begin_src ruby
+  require "factory_bot_rails"
+  include FactoryBot::Syntax::Methods
+  include ActionDispatch::TestProcess #  # fixture_file_uploadメソッドでエラーになるため必要。
+
+  task factory: :environment do
+      msg = []
+      errors = []
+
+      Rails.application.eager_load!
+      ApplicationRecord.subclasses.each do |model|
+        begin
+          create(model.name.underscore.gsub(%r{/}, '_')) # factoryのメソッド
+          # UserPayment -> user_payment
+          # admin/user_payment -> admin_user_payment
+        rescue => e
+          errors << e if e.class == KeyError
+        end
+      end
+
+      puts errors
+
+      raise '登録されてないfactoryがあります' if errors
+    end
+#+end_src
+** レコードがないテーブルを検知するタスク
+fixtureの作り忘れなどよくあるので、seedを実行したあとにチェックするタスクを走らせるとよい。
+
+#+caption: rakeタスクファイルにて
+#+begin_src ruby
+  task lint: :environment do
+    msg = []
+    invalid = false
+
+    Rails.application.eager_load!
+    ApplicationRecord.subclasses.each do |model|
+      msg << "#{model.name} => #{model.count}"
+      invalid = true if model.count.zero?
+    end
+
+    puts msg
+
+    raise 'レコードがないテーブルがあります' if invalid
+  end
+#+end_src
+** seed_fu内でfactoryを使う
+SeedFu.seedを実行するコンテキストでrequire, includeしておけばメソッドが使える。
+#+caption: rakeタスクファイル
+#+begin_src ruby
+  require "factory_bot_rails"
+  include FactoryBot::Syntax::Methods
+  include ActionDispatch::TestProcess
+  SeedFu.quiet = true
+
+  task lint: :environment do
+    SeedFu.seed("db/fixtures/#{env}")
+  end
+#+end_src
+** rakeタスク
+rakeタスクは、普通ターミナルから実行するが、ほかから実行したいときがある(テストとか)。
+
+#+caption: テスト上にて実行する
+#+begin_src ruby
+Rake.application['namespace:command'].invoke
+#+end_src
+
+のようにして、実行できる。
 ** 非同期処理
 Webにおける非同期処理はメールとか、外部とのAPI連携とか、比較的時間のかかる処理で用いられている。
 とりあえず画面を返し、待たせないようにする。
@@ -173,8 +244,8 @@ Railsにデフォルトで入っている。
 再実行性がないので、テストでやるのが一番だとは感じる。
 ** update_atを更新しない                                               :WIP:
 バッチ処理でいじった場合は更新するとよくないことがある。
-** save(validation: false)
-バリデーションが不要なとき、 ~user.save!(validation: false)~ とすると無効化できる。
+** save(validate: false)
+バリデーションが不要なとき、 ~user.save!(validate: false)~ とすると無効化できる。
 データを整合するときに使う。
 ** presence: trueなのにnilがあるレコードを検知する
 モデルバリデーションがかかっていても、既存のレコードはnilを含む可能性がある。
@@ -864,6 +935,8 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 #+end_src
 * 良いバッチ処理の書き方                                                :WIP:
 * Tasks
+** TODO [[https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1][Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books]]
+モダンなdeploy環境構築の手順。
 ** TODO [[https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69][【Rails】graphql-rubyでAPIを作成 - Qiita]]
 ** TODO [[https://egghead.io/blog/rails-graphql-typescript-react-apollo][Rails + GraphQL + TypeScript + React + Apollo | egghead.io]]
 ** TODO [[https://www.amazon.com/Advanced-Rails-Recipes-Mike-Clark/dp/0978739221][Advanced Rails Recipes]]
@@ -879,7 +952,6 @@ Rails のドキュメント。
 ** TODO [[https://www.codewithjason.com/understanding-factory-bot-syntax-coding-factory-bot/][Understanding Factory Bot syntax by coding your own Factory Bot - Code with Jason]]
 Factory Botの作り方。
 ** TODO Tips文書化
-DEADLINE: <2021-12-26 Sun 22:50>
 :LOGBOOK:
 CLOCK: [2022-01-13 Thu 10:09]--[2022-01-13 Thu 10:34] =>  0:25
 CLOCK: [2022-01-10 Mon 23:52]--[2022-01-11 Tue 00:17] =>  0:25
@@ -912,6 +984,9 @@ CLOCK: [2022-01-10 Mon 19:30]--[2022-01-10 Mon 19:55] =>  0:25
 
 ホットリロードができない。
 * References
+** [[https://qiita.com/takahiro1127/items/fcb81753eaf381b4b33c][なぜrailsの本番環境ではUnicorn,Nginxを使うのか? 　~ Rack,Unicorn,Nginxの連携について ~【Ruby On Railsでwebサービス運営】 - Qiita]]
+** [[https://stackoverflow.com/questions/61413196/how-to-run-capybara-tests-using-selenium-chrome-in-a-dockerised-rails-environm][docker - How to run Capybara tests using Selenium & Chrome in a Dockerised Rails environment on a Mac - Stack Overflow]]
+dockerのseleniumで動かす方法。
 ** [[https://railsguides.jp/active_model_basics.html][Active Model の基礎 - Railsガイド]]
 モデルの説明。
 ** [[https://qiita.com/jnchito/items/0ee47108972a0e302caf][永久保存版！？伊藤さん式・Railsアプリのアップグレード手順 - Qiita]]
