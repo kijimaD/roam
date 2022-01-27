@@ -6,6 +6,19 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * Memo
+** pushスクリプト
+[[https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1][Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books]] に載ってたスクリプト。書いてリポジトリに入れておくとスムーズにビルドやプッシュができる。
+レジストリ・ユーザ名・リポジトリを適宜変える。
+#+begin_src shell
+  #!/bin/sh
+
+  LC=$(git rev-parse --short HEAD)
+  docker build -t ghcr.io/kijimad/webapp:${LC} .
+  docker push ghcr.io/kijimad/webapp:${LC}
+#+end_src
+** 実行後にコンテナ削除
+docker run するとコンテナ内に入れるが、作ったコンテナはそのままになる。
+実行後に削除して欲しい場合は、 ~docker --rm webapp /bin/sh~ などrmオプションを使う。
 ** コンテナ間の接続はサービス名を用いる
 コンテナ間の接続をしようとして、このようなエラーが出た。
 #+caption: sidekiq -> redisへ接続したい

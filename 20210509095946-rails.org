@@ -5,6 +5,20 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** 依存関係一切なくrails newする
+公式のrailsコンテナ内でrails newすればよい。
+
+#+caption: 依存がない作成方法。user周りは権限問題のため
+#+begin_src shell
+docker run -it --rm --user "$(id -u):$(id -g)" -v "$PWD":/usr/src/app -w /usr/src/app rails rails new --skip-bundle --api --database postgresql .
+#+end_src
+
+依存がないbundle install。
+ruby:2.7.5イメージで走らせる。
+#+begin_src shell
+docker run --rm -v "$PWD":/usr/src/app -w /usr/src/app ruby:2.7.5 bundle install
+#+end_src
+
 ** factoryがないモデルを検知するタスク
 factoryはテストで使うので、fixtureほど忘れることはない。作り忘れたり、過去もので漏れているものがたまにあるので検知する。
 
@@ -54,7 +68,7 @@ fixtureの作り忘れなどよくあるので、seedを実行したあとにチ
     raise 'レコードがないテーブルがあります' if invalid
   end
 #+end_src
-** seed_fu内でfactoryを使う
+** seed_fu内でfactory botを使う
 SeedFu.seedを実行するコンテキストでrequire, includeしておけばメソッドが使える。
 #+caption: rakeタスクファイル
 #+begin_src ruby
@@ -70,9 +84,16 @@ SeedFu.seedを実行するコンテキストでrequire, includeしておけば�
 ** rakeタスク
 rakeタスクは、普通ターミナルから実行するが、ほかから実行したいときがある(テストとか)。
 
+#+caption: rails_helper.rbにて
+#+begin_src ruby
+  config.before(:each) do
+    Rake.application.tasks.each(&:reenable)
+  end
+#+end_src
+
 #+caption: テスト上にて実行する
 #+begin_src ruby
-Rake.application['namespace:command'].invoke
+  Rake.application['namespace:command'].invoke
 #+end_src
 
 のようにして、実行できる。
@@ -936,6 +957,16 @@ https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327
 * 良いバッチ処理の書き方                                                :WIP:
 * Tasks
 ** TODO [[https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1][Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books]]
+:LOGBOOK:
+CLOCK: [2022-01-27 Thu 23:08]--[2022-01-27 Thu 23:33] =>  0:25
+CLOCK: [2022-01-27 Thu 22:35]--[2022-01-27 Thu 23:00] =>  0:25
+CLOCK: [2022-01-27 Thu 10:39]--[2022-01-27 Thu 11:04] =>  0:25
+CLOCK: [2022-01-27 Thu 10:03]--[2022-01-27 Thu 10:28] =>  0:25
+CLOCK: [2022-01-27 Thu 09:29]--[2022-01-27 Thu 09:54] =>  0:25
+CLOCK: [2022-01-27 Thu 00:29]--[2022-01-27 Thu 00:54] =>  0:25
+:END:
+- 24
+
 モダンなdeploy環境構築の手順。
 ** TODO [[https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69][【Rails】graphql-rubyでAPIを作成 - Qiita]]
 ** TODO [[https://egghead.io/blog/rails-graphql-typescript-react-apollo][Rails + GraphQL + TypeScript + React + Apollo | egghead.io]]
