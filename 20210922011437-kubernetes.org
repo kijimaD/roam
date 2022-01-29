@@ -1,10 +1,107 @@
 :PROPERTIES:
 :ID:       81b73757-21b3-438c-ab65-680b5ad88a1b
+:header-args+: :wrap :results raw
 :END:
 #+title: Kubernetes
 * 概要
 Kubernetesは複数の[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]コンテナを連携させるためのシステム。
 * Memo
+** context
+kubectlが、どのコンテキストにいるか確認できる。
+#+begin_src shell
+kubectl config current-context
+#+end_src
+
+#+RESULTS:
+#+begin_results
+minikube
+#+end_results
+
+これは、minikube、つまりローカル環境のcontextにいて、Kubernetesとの通信のcontextにはなっていないことを示す。
+** コマンド類
+#+caption: 起動しているIPアドレスを調べる
+#+begin_src shell
+minikube ip
+#+end_src
+
+#+RESULTS:
+#+begin_results
+172.17.0.2
+#+end_results
+
+#+caption: 起動状況確認
+#+begin_src shell
+minikube dashboard
+#+end_src
+
+#+caption: 作ったPod(postgres)を確認
+#+begin_src shell
+kubectl describe deployment postgres
+#+end_src
+
+#+caption: podsの情報確認
+#+begin_src shell
+kubectl get Pods
+#+end_src
+
+#+caption: 起動サービスを開く。webappはサービス名
+#+begin_src shell
+minikube service webapp
+#+end_src
+
+#+caption: 詳細情報
+#+begin_src shell
+kubectl describe service webapp
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Name:                     webapp
+Namespace:                default
+Labels:                   app=webapp
+Annotations:              <none>
+Selector:                 app=webapp,tier=frontend
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.109.7.196
+IPs:                      10.109.7.196
+Port:                     <unset>  80/TCP
+TargetPort:               80/TCP
+NodePort:                 <unset>  30020/TCP
+Endpoints:                172.18.0.6:80,172.18.0.7:80,172.18.0.8:80
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   <none>
+#+end_results
+
+チェックしたIPアドレスにpostしてみて、データベースに値を保存・登録できるのを確認する。
+** ローカルで試す
+Kubernetesをローカルで動かすことは難しいので、代替手段が必要。
+minikubeによってローカルで試したり、開発に使うことができる。
+
+[[https://github.com/kubernetes/minikube][kubernetes/minikube: Run Kubernetes locally]]
+
+導入手順。
+[[https://minikube.sigs.k8s.io/docs/start/][minikube start | minikube]]
+
+kubectlも動かすために必要。
+[[https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-binary-with-curl-on-linux][Install and Set Up kubectl on Linux | Kubernetes]]
+
+#+caption: 実行
+#+begin_src shell
+minikube start
+#+end_src
+
+#+caption: これが出れば成功
+#+begin_quote
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+#+end_quote
+
+AWS上で動かすためにはまた別のインストールが必要。
+#+begin_src shell
+export KUBERNETES_PROVIDER=aws; curl -sS https://get.k8s.io | bash
+#+end_src
 * Tasks
 * Reference
 - [[https://ja.wikipedia.org/wiki/Kubernetes][Kubernetes - Wikipedia]]
