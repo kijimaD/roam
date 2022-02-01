@@ -1,22 +1,35 @@
-FROM ubuntu:latest
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update
-RUN apt-get install git sqlite3 emacs -y
+FROM amazonlinux:2 AS ruby
+RUN yum -y update && \
+    yum -y install \
+        yum-utils \
+        epel-release \
+        sudo \
+        which \
+        bzip2 \
+        wget \
+        tar \
+        git \
+        gcc \
+        gcc-c++ \
+        make \
+        openssl-devel \
+        openssh-server \
+        readline-devel \
+        zlib-devel \
+        sqlite-devel \
+        emacs
+
+RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
+    /usr/local/plugins/ruby-build/install.sh
+RUN ruby-build 2.7.5 /usr/local/
 
 WORKDIR /roam
 
-FROM ruby:3.1
 COPY Gemfile Gemfile.lock ./
-RUN bundle install
-
-WORKDIR /roam
-
-FROM python:3
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
-
-WORKDIR /roam
 COPY .git/ ./.git/
+
+# COPY --from=ruby /usr/local /usr/local
+RUN bundle install
 
 CMD /bin/bash
 
