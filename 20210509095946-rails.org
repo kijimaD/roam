@@ -5,10 +5,48 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** docker サンプル
+開発用環境のサンプル。サクっと起動したい用。
+プロジェクトのあちこちで使ってるので、どこかにまとめた方がよさそうだな。
+
+#+caption: Dockerfile
+#+begin_src
+FROM phusion/passenger-ruby27:latest
+
+WORKDIR /tmp
+
+ADD Gemfile /tmp/
+ADD Gemfile.lock /tmp/
+RUN gem update --system
+RUN bundle install
+
+COPY . /home/app/webapp
+RUN usermod -u 1000 app
+RUN chown -R app:app /home/app/webapp
+WORKDIR /home/app/webapp
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+#+end_src
+
+かぶり防止のため3001番ポートの方を変えてブラウザアクセスする。
+#+caption: docker-compose.yml
+#+begin_src yaml
+version: '3'
+
+services:
+  rails:
+    container_name: rails
+    build: .
+    command: bash -c 'rm -f tmp/pids/server.pid && bundle exec rails s -b 0.0.0.0'
+    volumes:
+      - .:/home/app/webapp
+    ports:
+      - "3001:3000"
+#+end_src
 ** 依存関係一切なくrails newする
 公式のrailsコンテナ内でrails newすればよい。
 
-#+caption: 依存がない作成方法。user周りは権限問題のため
+#+caption: 依存がない作成方法。user周りは権限問題のため⚠一行
 #+begin_src shell
 docker run -it --rm --user "$(id -u):$(id -g)" -v "$PWD":/usr/src/app -w /usr/src/app rails rails new --skip-bundle --api --database postgresql .
 #+end_src
@@ -976,14 +1014,10 @@ CLOCK: [2022-01-27 Thu 00:29]--[2022-01-27 Thu 00:54] =>  0:25
 
 KubernetesでRails deployまでやる本。
 AWSデプロイコマンドの挙動が違い、バージョンを合わせても動かずよくわからなかったので断念。こういうのは新しい本を買うべきだな。ローカル環境minikubeでの動作は確認できた。
-** TODO [[https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69][【Rails】graphql-rubyでAPIを作成 - Qiita]]
-SCHEDULED: <2022-02-25 Fri>
 ** TODO [[https://egghead.io/blog/rails-graphql-typescript-react-apollo][Rails + GraphQL + TypeScript + React + Apollo | egghead.io]]
 ** TODO [[https://www.amazon.com/Advanced-Rails-Recipes-Mike-Clark/dp/0978739221][Advanced Rails Recipes]]
 ** TODO [[https://dxd2021.cto-a.org/program/time-table/b-3][クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021]]
 クソコードから学ぶ。
-** TODO loggerを自動オン
-Rails console。ENVで分岐すれば本番コンソールでログレベルを上げる、ということができるはず。
 ** TODO [[https://railsguides.jp/][Ruby on Rails ガイド：体系的に Rails を学ぼう]]
 :LOGBOOK:
 CLOCK: [2021-10-10 Sun 14:09]--[2021-10-10 Sun 14:43] =>  0:34
@@ -1023,6 +1057,19 @@ CLOCK: [2022-01-10 Mon 19:30]--[2022-01-10 Mon 19:55] =>  0:25
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]  + [[id:dc50d818-d7d1-48a8-ad76-62ead617c670][React]]の本。
 
 ホットリロードができない。
+** CLOSE loggerを自動オン
+CLOSED: [2022-01-31 Mon 09:35]
+Rails console。ENVで分岐すれば本番コンソールでログレベルを上げる、ということができるはず。
+** DONE [[https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69][【Rails】graphql-rubyでAPIを作成 - Qiita]] -実行
+CLOSED: [2022-02-01 Tue 21:55] DEADLINE: <2022-02-25 Fri>
+:LOGBOOK:
+CLOCK: [2022-02-01 Tue 10:10]--[2022-02-01 Tue 10:35] =>  0:25
+CLOCK: [2022-02-01 Tue 09:18]--[2022-02-01 Tue 09:43] =>  0:25
+CLOCK: [2022-01-31 Mon 23:36]--[2022-02-01 Tue 00:01] =>  0:25
+CLOCK: [2022-01-31 Mon 22:03]--[2022-01-31 Mon 22:28] =>  0:25
+CLOCK: [2022-01-31 Mon 21:24]--[2022-01-31 Mon 21:49] =>  0:25
+:END:
+[[id:b4f456cf-d250-4877-ac4c-4b03144392f0][GraphQL]]をrailsでやるチュートリアル。
 * References
 ** [[https://qiita.com/takahiro1127/items/fcb81753eaf381b4b33c][なぜrailsの本番環境ではUnicorn,Nginxを使うのか? 　~ Rack,Unicorn,Nginxの連携について ~【Ruby On Railsでwebサービス運営】 - Qiita]]
 ** [[https://stackoverflow.com/questions/61413196/how-to-run-capybara-tests-using-selenium-chrome-in-a-dockerised-rails-environm][docker - How to run Capybara tests using Selenium & Chrome in a Dockerised Rails environment on a Mac - Stack Overflow]]
