@@ -1,5 +1,5 @@
 deploy:
-	sh deploy.sh
+	docker-compose build && docker-compose run roam sh deploy.sh
 push-image:
 	sh push.sh
 server:
