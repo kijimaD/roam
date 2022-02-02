@@ -18,20 +18,24 @@ RUN yum -y update && \
         zlib-devel \
         sqlite-devel \
         sqlite3 \
-        emacs
+        emacs \
+        python3
 
 RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
     /usr/local/plugins/ruby-build/install.sh
 RUN ruby-build 2.7.5 /usr/local/
+RUN gem update --system
 
 WORKDIR /roam
 
-COPY Gemfile Gemfile.lock ./
-COPY .git/ ./.git/
-
 # COPY --from=ruby /usr/local /usr/local
+COPY Gemfile Gemfile.lock ./
 RUN bundle install
 
-CMD /bin/bash
+COPY requirements.txt ./
+RUN pip3 install -r requirements.txt
 
+COPY .git/ ./.git/
+
+CMD /bin/bash
 # sudo docker-compose run roam

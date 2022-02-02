@@ -1,3 +1,5 @@
+push-image:
+	sh push.sh
 server:
 	cd ./public; python -m SimpleHTTPServer 8888
 update-index:
