@@ -37,6 +37,7 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 COPY .git/ ./.git/
+COPY . /roam
 
 CMD /bin/bash
 # sudo docker-compose run roam
