@@ -19,7 +19,8 @@ RUN yum -y update && \
         sqlite-devel \
         sqlite3 \
         emacs \
-        python3
+        python3 \
+        gnuplot
 
 RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
     /usr/local/plugins/ruby-build/install.sh
