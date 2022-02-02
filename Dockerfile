@@ -29,7 +29,7 @@ RUN gem update --system
 WORKDIR /roam
 
 # COPY --from=ruby /usr/local /usr/local
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile* ./
 RUN bundle install
 
 COPY requirements.txt ./

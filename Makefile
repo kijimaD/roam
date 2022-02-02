@@ -1,3 +1,5 @@
+deploy:
+	sh deploy.sh
 push-image:
 	sh push.sh
 server:
