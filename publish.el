@@ -1,6 +1,8 @@
 ;; Initialize package sources
 (require 'package)
 
+(defun yes-or-no-p (dummy) t)
+
 (defvar bootstrap-version)
 (let ((bootstrap-file
        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
