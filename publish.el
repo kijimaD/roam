@@ -36,12 +36,12 @@
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
 
-(use-package sqlite3
-  :straight t)
-(use-package emacsql-libsqlite3
-  :straight t
-  :custom
-  (org-roam-database-connector 'libsqlite3))
+;; (use-package sqlite3
+;;   :straight t)
+;; (use-package emacsql-libsqlite3
+;;   :straight t
+;;   :custom
+;;   (org-roam-database-connector 'libsqlite3))
 
 ;; Install other dependencies
 (use-package esxml
