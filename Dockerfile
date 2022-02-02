@@ -17,6 +17,7 @@ RUN yum -y update && \
         readline-devel \
         zlib-devel \
         sqlite-devel \
+        sqlite3 \
         emacs
 
 RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \

@@ -1,6 +1,19 @@
 ;; Initialize package sources
 (require 'package)
 
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
 ;; Set the package installation directory so that packages aren't stored in the
 ;; ~/.emacs.d/elpa path.
 (setq package-user-dir (expand-file-name "./.packages"))
@@ -20,6 +33,13 @@
 
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
+
+(use-package sqlite3
+  :straight t)
+(use-package emacsql-libsqlite3
+  :straight t
+  :custom
+  (org-roam-database-connector 'libsqlite3))
 
 ;; Install other dependencies
 (use-package esxml
