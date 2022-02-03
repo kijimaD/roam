@@ -11,7 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
+
+        # for using git hash to tag
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v1
+        with:
+          images: ghcr.io/yoshinorin/docker-cahsper
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
@@ -20,5 +27,11 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.WRITE_PACKAGE }}
 
-      - name: build + push
-        run: make push-image
+        # build + push
+      - name: Push to GitHub Packages
+        uses: docker/build-push-action@v2
+        with:
+          # Dokcerfileのパス
+          context: .
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
