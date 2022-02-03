@@ -1,5 +1,10 @@
 deploy:
-	docker-compose build && docker-compose run roam sh deploy.sh
+	docker-compose run roam sh deploy.sh
+user:
+	sudo chown -R $USER:$USER .
+refresh:
+	git clean -xdn
+	git clean -xdf
 push-image:
 	sh push.sh
 server:
