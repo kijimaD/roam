@@ -15,21 +15,28 @@ RUN yum -y update && \
         openssl-devel \
         openssh-server \
         readline-devel \
-        zlib-devel \
-        sqlite-devel \
-        sqlite3 \
-        emacs \
-        python3 \
-        gnuplot
+        zlib-devel
 
 RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
     /usr/local/plugins/ruby-build/install.sh
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
 
-WORKDIR /roam
+FROM ruby AS dev
+RUN yum -y update && \
+    yum -y install \
+    git \
+    make \
+    sqlite-devel \
+    sqlite3 \
+    emacs \
+    python3 \
+    gnuplot
 
 # COPY --from=ruby /usr/local /usr/local
+
+WORKDIR /roam
+
 COPY Gemfile* ./
 RUN bundle install
 
