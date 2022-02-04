@@ -1,5 +1,7 @@
 deploy:
 	docker-compose pull && docker-compose run roam sh deploy.sh
+deploy-dev:
+	docker-compose build && docker-compose run roam make refresh && sh deploy.sh
 user:
 	sudo chown -R $USER:$USER .
 refresh:
