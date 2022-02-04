@@ -1,36 +1,17 @@
-FROM amazonlinux:2 AS ruby
-RUN yum -y update && \
-    yum -y install \
-        yum-utils \
-        epel-release \
-        sudo \
-        which \
-        bzip2 \
-        wget \
-        tar \
-        git \
-        gcc \
-        gcc-c++ \
-        make \
-        openssl-devel \
-        openssh-server \
-        readline-devel \
-        zlib-devel
+FROM node:17 AS node
 
-RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
-    /usr/local/plugins/ruby-build/install.sh
-RUN ruby-build 2.7.5 /usr/local/
-RUN gem update --system
+COPY package.json package-lock.json ./
+RUN npm install
 
-FROM ruby AS dev
-RUN yum -y update && \
-    yum -y install \
+FROM ruby:3.1 AS build
+RUN apt-get update && \
+    apt-get install -y \
     git \
     make \
-    sqlite-devel \
     sqlite3 \
     emacs \
     python3 \
+    python3-pip \
     gnuplot
 
 # COPY --from=ruby /usr/local /usr/local
@@ -47,4 +28,3 @@ COPY .git/ ./.git/
 COPY . /roam
 
 CMD /bin/bash
-# sudo docker-compose run roam
