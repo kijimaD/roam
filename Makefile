@@ -2,18 +2,12 @@ deploy:
 	docker-compose pull && docker-compose run roam sh deploy.sh
 deploy-dev:
 	docker-compose build && docker-compose run roam make refresh && sh deploy.sh
-user:
-	sudo chown -R $USER:$USER .
-refresh:
-	git clean -xdn
-	git clean -xdf
-push-image:
-	sh push.sh
-server:
-	cd ./public; python -m SimpleHTTPServer 8888
+
+# build tasks ================
+
 update-index:
 	emacs --batch -l ./publish.el --funcall kd/update-index-table
-build:
+org2html:
 	emacs --batch -l ./publish.el --funcall kd/publish
 node-graph:
 	emacs --batch -l ./publish.el --funcall generate-org-roam-db
@@ -27,8 +21,17 @@ line-graph:
 	gnuplot ./git-line/git-line.plot
 gen-file-table:
 	ruby ./file-count/table.rb >> ./index.org
+
+# development ================
+
 lint:
 	npx textlint *.org
-dev:
-	make build
-	make lint
+server:
+	cd ./public; python -m SimpleHTTPServer 8888
+refresh:
+	git clean -xdn
+	git clean -xdf
+user:
+	sudo chown -R $USER:$USER .
+push-image:
+	sh push.sh

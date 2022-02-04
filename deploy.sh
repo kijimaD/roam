@@ -5,4 +5,4 @@ make file-graph && \
     make update-index && \
     make node-graph && \
     make gen-file-table && \
-    make build
+    make org2html

@@ -24,12 +24,13 @@ git config --local commit.template .githooks/commit_msg.txt
 ## docker
 repository image: https://github.com/users/kijimaD/packages/container/package/roam
 
+build(use docker-compose)
+```shell
+make deploy-dev
+```
+
+development
 ```shell
 docker-compose pull
 docker-compose run roam
-```
-
-deploy(use docker-compose)
-```shell
-make deploy
 ```
