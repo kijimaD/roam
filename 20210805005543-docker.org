@@ -6,6 +6,47 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * Memo
+** dockleでセキュリティチェック
+dockleというツールでイメージをチェックできる。
+[[https://github.com/goodwithtech/dockle][goodwithtech/dockle: Container Image Linter for Security, Helping build the Best-Practice Docker Image, Easy to start]]
+
+自前のイメージにかけるとたくさん見つかった。
+#+caption: 実行してみた
+#+begin_src shell
+$ dockle ghcr.io/kijimad/roam:4f3296b
+FATAL   - DKL-DI-0001: Avoid sudo command
+        ,* Avoid sudo in container : /bin/sh -c yum -y update &&     yum -y install         yum-utils
+      gcc         gcc-c++         make         openssl-devel         openssh-server         readline
+nuplot
+WARN    - CIS-DI-0001: Create a user for the container
+        ,* Last user should not be root
+INFO    - CIS-DI-0005: Enable Content trust for Docker
+        ,* export DOCKER_CONTENT_TRUST=1 before docker pull/build
+INFO    - CIS-DI-0006: Add HEALTHCHECK instruction to the container image
+        ,* not found HEALTHCHECK statement
+INFO    - CIS-DI-0008: Confirm safety of setuid/setgid files
+        ,* setgid file: g--x--x--x usr/libexec/openssh/ssh-keysign
+        ,* setuid file: urwxr-xr-x usr/sbin/pam_timestamp_check
+        ,* setuid file: urwxr-xr-x usr/bin/mount
+        ,* setgid file: grwx--x--x usr/libexec/utempter/utempter
+        ,* setuid file: urwxr-xr-x usr/bin/chage
+        ,* setuid file: urwxr-xr-x usr/bin/su
+        ,* setuid file: urwxr-x--- usr/libexec/dbus-1/dbus-daemon-launch-helper
+        ,* setuid file: urwxr-xr-x usr/sbin/unix_chkpwd
+        ,* setuid file: u--x--x--x usr/bin/sudo
+        ,* setgid file: g--x--x--x usr/bin/ssh-agent
+        ,* setuid file: urwxr-xr-x usr/bin/umount
+        ,* setuid file: urwxr-xr-x usr/bin/gpasswd
+        ,* setuid file: urwxr-xr-x usr/bin/newgrp
+        ,* setgid file: grwxr-xr-x usr/bin/write
+INFO    - DKL-LI-0003: Only put necessary files
+        ,* Suspicious directory : roam/.git
+        ,* Suspicious directory : usr/local/plugins/ruby-build/.git
+        ,* Suspicious directory : usr/local/plugins/ruby-build/test/tmp
+        ,* Suspicious directory : tmp
+        ,* unnecessary file : roam/docker-compose.yml
+        ,* unnecessary file : roam/Dockerfile
+#+end_src
 ** pushスクリプト
 [[https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1][Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books]] に載ってたスクリプト。書いてリポジトリに入れておくとスムーズにビルドやプッシュができる。
 レジストリ・ユーザ名・リポジトリを適宜変える。
@@ -164,26 +205,18 @@ docker logs 1111... # idを入れる
 
 - できないようにする
 - 自動削除するようにする
+** TODO nginx, unicornをDocker化
+:LOGBOOK:
+CLOCK: [2022-02-04 Fri 10:15]--[2022-02-04 Fri 10:40] =>  0:25
+:END:
 ** Rails Docker環境化[6/9]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
 仕事をLinuxで行えるようにする。
 *** TODO rails c内で日本語が含まれると失敗する
-*** TODO system specが失敗する
-:LOGBOOK:
-CLOCK: [2022-01-14 Fri 21:59]--[2022-01-14 Fri 22:24] =>  0:25
-CLOCK: [2022-01-13 Thu 22:24]--[2022-01-13 Thu 22:49] =>  0:25
-CLOCK: [2022-01-13 Thu 10:40]--[2022-01-13 Thu 11:05] =>  0:25
-:END:
-seleniumが接続に失敗している。
-
-#+begin_quote
-Selenium::WebDriver::Error::UnknownError:
-  unknown error: net::ERR_CONNECTION_REFUSED
-#+end_quote
-
-例によってコンテナ内にアクセスしようとして弾かれているのか。
+*** TODO JS system specが失敗する
+js: trueのときだけ。
 *** TODO migration時にschemaに変な差分が出る
 DB設定がおかしいようだ。
 *** DONE 非同期処理の動作確認
