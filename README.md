@@ -26,7 +26,7 @@ repository image: https://github.com/users/kijimaD/packages/container/package/ro
 
 build(use docker-compose)
 ```shell
-make deploy-dev
+make build-dev
 ```
 
 development
