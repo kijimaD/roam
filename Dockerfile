@@ -53,7 +53,7 @@ CMD /bin/bash
 
 FROM build AS dev
 
-RUN yum -y install g++
+# RUN yum -y install g++
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
