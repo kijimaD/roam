@@ -28,6 +28,7 @@ RUN yum -y update && \
     yum -y install \
         make \
         gcc \
+        git \
         sqlite-devel \
         sqlite3 \
         emacs \
