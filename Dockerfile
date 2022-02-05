@@ -61,6 +61,7 @@ FROM build AS dev
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
+COPY dockle-installer.sh ./
 RUN sh dockle-installer.sh
 
 CMD /bin/bash
