@@ -1,7 +1,7 @@
 build:
-	docker-compose pull && docker-compose run roam sh deploy.sh
+	docker-compose pull build && docker-compose run build sh deploy.sh
 build-dev:
-	docker-compose build && docker-compose run roam make refresh && sh deploy.sh
+	docker-compose build dev && docker-compose run build make refresh && sh deploy.sh
 
 # build tasks ================
 
