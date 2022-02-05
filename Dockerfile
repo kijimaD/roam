@@ -1,4 +1,4 @@
-FROM amazonlinux:2 AS ruby
+FROM amazonlinux:2 AS build
 RUN yum -y update && \
     yum -y install \
         yum-utils \
