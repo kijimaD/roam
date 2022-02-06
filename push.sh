@@ -1,6 +1,6 @@
 #!/bin/sh
 
 LC=$(git rev-parse --short HEAD)
-docker build --target build -t ghcr.io/kijimad/roam:${LC} .
+docker build --target build -t ghcr.io/kijimad/roam:${LC} -t ghcr.io/kijimad/roam:master .
 docker push ghcr.io/kijimad/roam:master
 docker push ghcr.io/kijimad/roam:${LC}
