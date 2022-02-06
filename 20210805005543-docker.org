@@ -6,6 +6,26 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * Memo
+** docker-composeとdocker
+docker-composeは自動でタグ名をつけてくれたり、マウントしてくれたり、dockerコマンドよりややこしくなりにくい。
+単に開発環境として使っているだけでは、ほとんどdocker-composeで事足りる。
+が、docker-composeへ依存しているということで、docker-compose関係ない別の文脈で使おうとすると途端に動かなくなる。本質的にdocker-composeはコンテナ間の関係性を記述しているだけで、コンテナ自体を表現しているわけではない。
+
+本当にdockerコンテナとしての正しい使い方をしているかテストするには、コンテナを複数のデプロイやCIで利用してみるのがよい。同じ流れで簡単にできたのなら正しい。簡単にできないなら何かが間違っている。
+** よく使うdockerオプション
+#+caption: 例
+#+begin_src shell
+docker run --rm -v "$PWD/":/roam -w /roam ghcr.io/kijimad/roam:master sh deploy.sh
+#+end_src
+
+~--rm~ : コマンド実行後にコンテナを削除する
+~-v~: ホストマシンにマウントする。左がホストマシン、右がコンテナ内。
+
+#+caption: -itの意味: 対話モード
+#+begin_src shell
+docker run --rm -it ghcr.io/kijimad/roam:master
+#+end_src
+-it はttyオプション。インタラクティブなシェルを作成する。つけないと、一瞬で消える。
 ** buildkitをオンにする
 環境変数をオンにすることで、新しい機能が使えるようになる。
 #+caption: shell
