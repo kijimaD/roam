@@ -45,11 +45,16 @@ RUN gem install bundler && bundle install
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
+COPY publish.el ox-slimhtml.el ./
+RUN emacs --batch -l ./publish.el
+
 CMD /bin/bash
 
 # development ================
 
 FROM node:17 AS node
+
+WORKDIR /roam
 
 COPY package.json package-lock.json ./
 RUN npm install
@@ -58,8 +63,11 @@ CMD /bin/bash
 
 FROM build AS dev
 
+WORKDIR /roam
+
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node /roam/node_modules /roam/node_modules
 
 COPY dockle-installer.sh ./
 RUN sh dockle-installer.sh

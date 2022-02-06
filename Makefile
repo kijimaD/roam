@@ -1,7 +1,9 @@
 build:
+	export COMPOSE_DOCKER_CLI_BUILD=1
 	docker-compose pull build && docker-compose run build sh deploy.sh
 build-dev:
-	docker-compose build dev && docker-compose run dev sh deploy.sh
+	export COMPOSE_DOCKER_CLI_BUILD=1
+	docker-compose build build && docker-compose run build sh deploy.sh
 
 # build tasks ================
 
