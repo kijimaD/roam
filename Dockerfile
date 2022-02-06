@@ -54,6 +54,8 @@ CMD /bin/bash
 
 FROM node:17 AS node
 
+WORKDIR /roam
+
 COPY package.json package-lock.json ./
 RUN npm install
 
