@@ -46,3 +46,12 @@ user:
 	sudo chown -R $USER:$USER .
 push-image:
 	sh push.sh
+
+# push ================
+
+push-ruby:
+	docker build --target ruby -t ghcr.io/kijimad/roam_ruby:master .
+	docker push ghcr.io/kijimad/roam_ruby:master
+push-lint:
+	docker build --target lint -t ghcr.io/kijimad/roam_lint:master .
+	docker push ghcr.io/kijimad/roam_lint:master
