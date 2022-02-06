@@ -10,7 +10,7 @@
 ## lint
 ```shell
 npm install
-make lint
+make textlint
 ```
 
 ## git hooks

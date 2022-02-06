@@ -1,8 +1,8 @@
 build:
-	export COMPOSE_DOCKER_CLI_BUILD=1
+	export COMPOSE_DOCKER_CLI_BUILD=1 && \
 	docker-compose pull build && docker-compose run build sh deploy.sh
 build-dev:
-	export COMPOSE_DOCKER_CLI_BUILD=1
+	export COMPOSE_DOCKER_CLI_BUILD=1 && \
 	docker-compose build build && docker-compose run build sh deploy.sh
 
 # build tasks ================
@@ -26,8 +26,17 @@ gen-file-table:
 
 # development ================
 
-lint:
+lint-run:
+	export COMPOSE_DOCKER_CLI_BUILD=1 && docker-compose run lint make textlint
+	export COMPOSE_DOCKER_CLI_BUILD=1 && docker-compose run lint make dockle
+	make hadolint
+textlint:
 	npx textlint *.org
+hadolint:
+	docker run --rm -i hadolint/hadolint < Dockerfile
+dockle:
+	dockle ghcr.io/kijimad/roam:master
+
 server:
 	cd ./public; python -m SimpleHTTPServer 8888
 refresh:

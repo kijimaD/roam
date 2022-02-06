@@ -6,6 +6,30 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * Memo
+** buildkitをオンにする
+環境変数をオンにすることで、新しい機能が使えるようになる。
+#+caption: shell
+#+begin_src shell
+  export COMPOSE_DOCKER_CLI_BUILD=1
+  export DOCKER_BUILDKIT=1
+  docker build .
+#+end_src
+** docker-composeでマウントしたときにnode_modulesが消える問題
+1. npm install するコンテナを作成
+2. コンテナをマウント
+3. ホストマシンにないnode_modulesは消える
+4. エラー
+
+なので、node_modulesもマウントする。
+
+#+caption: docker-compose.yml
+#+begin_export yaml
+volumes:
+  - .:/contaier # ホストマシンのファイルをすべてマウント。ホストマシンにないのは消える
+  - /container/node_modules
+#+end_export
+
+https://rara-world.com/dockerfile-node-modules/ に書いてあった。
 ** dockleでセキュリティチェック
 dockleというツールでイメージをチェックできる。
 [[https://github.com/goodwithtech/dockle][goodwithtech/dockle: Container Image Linter for Security, Helping build the Best-Practice Docker Image, Easy to start]]
