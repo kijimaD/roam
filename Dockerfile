@@ -54,6 +54,11 @@ CMD /bin/bash
 
 FROM node:17 AS node
 
+COPY package.json package-lock.json ./
+RUN npm install
+
+CMD /bin/bash
+
 FROM amazonlinux:2 AS lint
 
 RUN yum -y update && \
@@ -62,11 +67,9 @@ RUN yum -y update && \
 
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+COPY --from=node /roam/node_modules /roam/node_modules
 
 WORKDIR /roam
-
-COPY package.json package-lock.json ./
-RUN npm install
 
 COPY dockle-installer.sh ./
 RUN sh dockle-installer.sh
