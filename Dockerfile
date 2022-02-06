@@ -61,13 +61,17 @@ RUN npm install
 
 CMD /bin/bash
 
-FROM build AS dev
+FROM amazonlinux:2 AS lint
 
-WORKDIR /roam
+RUN yum -y update && \
+    yum -y install \
+        make
 
 COPY --from=node /usr/local/bin/ /usr/local/bin/
 COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --from=node /roam/node_modules /roam/node_modules
+
+WORKDIR /roam
 
 COPY dockle-installer.sh ./
 RUN sh dockle-installer.sh

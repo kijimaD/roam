@@ -26,8 +26,11 @@ gen-file-table:
 
 # development ================
 
-lint:
+textlint:
 	npx textlint *.org
+docker-lint:
+	docker run --rm -i hadolint/hadolint < Dockerfile
+
 server:
 	cd ./public; python -m SimpleHTTPServer 8888
 refresh:
