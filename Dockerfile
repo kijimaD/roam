@@ -50,10 +50,18 @@ RUN pip3 install -r requirements.txt
 COPY publish.el ox-slimhtml.el ./
 RUN emacs --batch -l ./publish.el
 
+CMD /bin/bash
+
+# release ================
+
+FROM ghcr.io/kijimad/roam:master as release
+
 COPY .git/ ./.git/
 COPY . /roam
 
-CMD /bin/bash
+CMD make build
+
+CMD /bin/sh
 
 # development ================
 
