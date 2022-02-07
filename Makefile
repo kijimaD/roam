@@ -1,6 +1,6 @@
 build:
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker-compose pull build && docker-compose run build sh deploy.sh
+	docker run --rm -v "$PWD":/roam ghcr.io/kijimad/roam:397cbf75 sh deploy.sh
 build-dev:
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
 	docker-compose build build && docker-compose run build sh deploy.sh

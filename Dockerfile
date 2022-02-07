@@ -54,12 +54,12 @@ CMD /bin/bash
 
 # release ================
 
-FROM ghcr.io/kijimad/roam:master as release
+# for heroku staging
+FROM ghcr.io/kijimad/roam:master as staging
 
-COPY .git/ ./.git/
+# COPY .git/ ./.git/
 COPY . /roam
-
-CMD make build
+CMD make org2html
 
 CMD /bin/sh
 
