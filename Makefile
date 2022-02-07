@@ -1,11 +1,11 @@
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker run --rm -v "$PWD":/roam ghcr.io/kijimad/roam:397cbf75 sh deploy.sh
+	docker run --rm -v $(pwd):/roam ghcr.io/kijimad/roam:397cbf75 sh deploy.sh
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker build --target build . -t builder && docker run builder sh deploy.sh
+	docker build --target build -t builder . && docker run --rm -v $(pwd):/roam builder sh deploy.sh
 
 # build tasks ================
 
