@@ -54,7 +54,7 @@ CMD /bin/sh
 
 # release ================
 
-FROM build as test
+FROM build as release
 
 COPY .git/ ./.git/
 COPY . /roam
