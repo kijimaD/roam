@@ -5,7 +5,7 @@ build:
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker build --target build -t builder . && docker run --rm -v $(pwd):/roam builder sh deploy.sh
+	docker build --target test -t test . && docker run --rm -v $(pwd):/roam test sh deploy.sh
 
 # build tasks ================
 

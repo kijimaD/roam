@@ -50,9 +50,16 @@ RUN pip3 install -r requirements.txt
 COPY publish.el ox-slimhtml.el ./
 RUN emacs --batch -l ./publish.el
 
-CMD /bin/bash
+CMD /bin/sh
 
 # release ================
+
+FROM build as test
+
+COPY .git/ ./.git/
+COPY . /roam
+
+CMD sh deploy.sh
 
 # for heroku staging
 FROM ghcr.io/kijimad/roam:master as staging
