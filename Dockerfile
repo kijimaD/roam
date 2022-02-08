@@ -50,6 +50,9 @@ RUN pip3 install -r requirements.txt
 COPY publish.el ox-slimhtml.el ./
 RUN emacs --batch -l ./publish.el
 
+COPY .git/ ./.git/
+COPY . /roam
+
 CMD /bin/sh
 
 # release ================

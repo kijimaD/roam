@@ -1,7 +1,7 @@
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker build --target release -t test . && docker run --rm -v $(pwd):/roam test
+	docker run --rm -v "$PWD":/roam ghcr.io/kijimad/roam:397cbf75 sh deploy.sh
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
