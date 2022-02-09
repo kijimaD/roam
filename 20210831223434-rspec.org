@@ -6,6 +6,42 @@
 RSpecは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]で書かれたテストフレームワーク。
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]でもよく使われる。
 * Memo
+** ENVをテストするためのヘルパー
+ENVを変えてテストしたいときがある。
+https://github.com/rspec/rspec-rails/issues/1279#issuecomment-70275896
+ヘルパーを追加する。
+
+#+caption: helper
+#+begin_src ruby
+module EnvHelpers
+  def with_env_vars(vars)
+    original = ENV.to_hash
+    vars.each { |k, v| ENV[k] = v }
+
+    begin
+      yield
+    ensure
+      ENV.replace(original)
+    end
+  end
+end
+#+end_src
+
+#+caption: rails_helper
+#+begin_src ruby
+RSpec.configure do |c|
+  c.include EnvHelpers
+end
+#+end_src
+
+#+caption: rspec
+#+begin_src ruby
+it 'does something with the FOO environment variable' do
+  with_env_vars 'FOO' => 'bar' do
+    # logic that depends upon ENV['FOO'] goes here
+  end
+end
+#+end_src
 ** テスト結果にSQLを出力する
 どのようなSQLが発行されるか確認できると便利。
 
