@@ -62,7 +62,8 @@ FROM build as release
 COPY .git/ ./.git/
 COPY . /roam
 
-CMD sh deploy.sh
+CMD /bin/sh deploy.sh
+VOLUME /roam
 
 # for heroku staging
 FROM ghcr.io/kijimad/roam:master as staging
