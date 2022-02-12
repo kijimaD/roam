@@ -6,6 +6,41 @@
 * 概要
 Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
 * Memo
+** entrypoint.sh
+公式Docker Imageでよく用いられる、コンテナ起動時に実行するスクリプト。
+公式のイメージのままで、初回起動時に実行したいフックとして記述できる。
+
+例(Dockerfile): [[https://github.com/tzumby/rails-on-kubernetes/blob/master/Dockerfile][rails-on-kubernetes/Dockerfile at master · tzumby/rails-on-kubernetes]]
+#+caption: Dockerfileの末尾で取り込む
+#+begin_src shell
+ADD . /myapp
+
+COPY docker-entrypoint.sh /usr/local/bin
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+#+end_src
+
+例(entrypoint.sh): [[https://github.com/tzumby/rails-on-kubernetes/blob/master/docker-entrypoint.sh][rails-on-kubernetes/docker-entrypoint.sh at master · tzumby/rails-on-kubernetes]]
+#+caption: entrypoint.sh $@は引数
+#+begin_src shell
+#!/bin/sh
+
+set -e
+
+if [ -f tmp/pids/server.pid ]; then
+  rm tmp/pids/server.pid
+fi
+
+echo "Waiting for Postgres to start..."
+while ! nc -z postgres 5432; do sleep 0.1; done
+echo "Postgres is up"
+
+echo "Waiting for Redis to start..."
+while ! nc -z redis 6379; do sleep 0.1; done
+echo "Redis is up - execuring command"
+
+exec bundle exec "$@"
+#+end_src
 ** docker-composeとdocker
 docker-composeは自動でタグ名をつけてくれたり、マウントしてくれたり、dockerコマンドよりややこしくなりにくい。
 単に開発環境として使っているだけでは、ほとんどdocker-composeで事足りる。
@@ -245,20 +280,24 @@ docker logs 1111... # idを入れる
   docker rmi $(docker images -q)
 #+end_src
 * Tasks
+** TODO [[https://dev.classmethod.jp/articles/container-journey/][「コンテナジャーニー」〜明日から速攻始めるAWSでのコンテナ導入運用〜 #cmdevio2018 | DevelopersIO]]
+現実的な導入ステップ。
+** TODO [[https://qiita.com/tatsurou313/items/ad86da1bb9e8e570b6fa][BuildKitによりDockerとDocker Composeで外部キャッシュを使った効率的なビルドをする方法 - Qiita]]
+BuildKitの解説。
 ** TODO [[https://www.slideshare.net/zembutsu/dockerfile-bestpractices-19-and-advice][Dockerfileを改善するためのBest Practice 2019年版]]
-** タスクを簡単に実行する方法を調べる
+** TODO タスクを簡単に実行する方法を調べる
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
-** TODO [[https://www.forcia.com/blog/002273.html][社内のDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
-非常に詳しい情報。
 ** TODO ゴミファイルができないようにする
 キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
 
 - できないようにする
 - 自動削除するようにする
-** TODO nginx, unicornをDocker化
+** TODO Nginx, UnicornをDocker化
 :LOGBOOK:
+CLOCK: [2022-02-11 Fri 18:25]--[2022-02-11 Fri 18:50] =>  0:25
 CLOCK: [2022-02-04 Fri 10:15]--[2022-02-04 Fri 10:40] =>  0:25
 :END:
+<2022-02-28 Mon>
 ** Rails Docker環境化[6/9]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
@@ -452,7 +491,12 @@ hostを加える必要があった。
   },
 #+end_src
 * Archives
+** DONE [[https://www.forcia.com/blog/002273.html][社内のDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
+CLOSED: [2022-02-11 Fri 18:27]
+非常に詳しい情報。
 * References
+** [[https://ja.wikipedia.org/wiki/Docker][Docker - Wikipedia]]
+企業としてのDocker。
 ** [[https://github.com/phusion/passenger-docker][phusion/passenger-docker: Docker base images for Ruby, Python, Node.js and Meteor web apps]]
 Web開発用の扱いやすいDockerイメージ。
 ** [[https://12factor.net/][The Twelve-Factor App]]
