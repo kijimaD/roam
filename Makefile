@@ -16,6 +16,8 @@ node-graph:
 	emacs --batch -l ./publish.el --funcall generate-org-roam-db
 	pip3 install -r requirements.txt
 	python3 node_graph/build_graph.py > public/js/graph.json
+pmd-graph:
+	cp pmd.csv public/js/
 file-graph:
 	ruby ./git-file/git-file.rb > ./git-file/git-file.dat
 	gnuplot ./git-file/git-file.plot
