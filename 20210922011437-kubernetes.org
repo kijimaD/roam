@@ -6,7 +6,40 @@
 * 概要
 Kubernetesは複数の[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]コンテナを連携させるためのシステム。
 * Memo
-** context
+** minikubeでlocalhost8080エラーが出たときの対応
+kubectl runを実行すると実行できないときがある。
+#+begin_src
+$ kubectl run ...
+The connection to the server localhost:8080 was refused - did you specify the right host or port?
+#+end_src
+
+落ち着いてstatusを確認する。
+#+caption: statusで確認する。動いてなかった
+#+begin_src
+$ kubectl status
+
+minikube
+type: Control Plane
+host: Stopped
+kubelet: Stopped
+apiserver: Stopped
+kubeconfig: Stopped
+#+end_src
+
+単に動いてないことがわかったので、起動する。
+#+caption: 起動する
+#+begin_src shell
+$ minikube start
+#+end_src
+
+再度kubectl runする。
+#+caption: 無事podが作成される
+#+begin_src shell
+$ kubectl run ...
+pod/demo created
+#+end_src
+
+** kubectlでcontextを確認する
 kubectlが、どのコンテキストにいるか確認できる。
 #+begin_src shell
 kubectl config current-context
@@ -18,7 +51,7 @@ minikube
 #+end_results
 
 これは、minikube、つまりローカル環境のcontextにいて、Kubernetesとの通信のcontextにはなっていないことを示す。
-** コマンド類
+** 基本コマンド類
 #+caption: 起動しているIPアドレスを調べる
 #+begin_src shell
 minikube ip
@@ -76,7 +109,7 @@ Events:                   <none>
 #+end_results
 
 チェックしたIPアドレスにpostしてみて、データベースに値を保存・登録できるのを確認する。
-** ローカルで試す
+** minikubeで試す
 Kubernetesをローカルで動かすことは難しいので、代替手段が必要。
 minikubeによってローカルで試したり、開発に使うことができる。
 
@@ -103,10 +136,20 @@ AWS上で動かすためにはまた別のインストールが必要。
 export KUBERNETES_PROVIDER=aws; curl -sS https://get.k8s.io | bash
 #+end_src
 * Tasks
-** WIP Kubernetes devops
+** WIP [[https://www.oreilly.co.jp/books/9784873119014/][O'Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps]]
 :LOGBOOK:
+CLOCK: [2022-02-12 Sat 18:49]--[2022-02-12 Sat 19:14] =>  0:25
+CLOCK: [2022-02-12 Sat 18:11]--[2022-02-12 Sat 18:36] =>  0:25
+CLOCK: [2022-02-12 Sat 17:45]--[2022-02-12 Sat 18:10] =>  0:25
 CLOCK: [2022-02-11 Fri 09:05]--[2022-02-11 Fri 09:30] =>  0:25
 :END:
+
+- (all) 60
+
+#+caption: 説明に使うデモアプリをcloneする
+#+begin_src shell
+git clone git://github.com/cloudnativedevops/demo.git
+#+end_src
 ** TODO [[https://tech.drecom.co.jp/migrate-rails-app-to-container/][古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom]]
 * Reference
 ** [[https://kubernetes.io/ja/docs/home/][Kubernetesドキュメント | Kubernetes]]
