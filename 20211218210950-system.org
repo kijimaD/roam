@@ -53,83 +53,6 @@ Emacs側で透過設定しても字が薄くなって微妙だが、ウィンド
 ** dunst
 [[https://github.com/dunst-project/dunst][dunst-project/dunst: Lightweight and customizable notification daemon]]
 通知機能が入ってないウィンドウシステムでは([[id:eb196529-bdbd-48c5-9d5b-a156fe5c2f41][EXWM]]とか)、これを組み合わせて通知する。
-* ビルド手順
-すべてクリーンな状況から、システムを構築するまでをまとめておく。
-** 基本コマンドインストール
-syncthingはディレクトリ同期ツール。
-[[id:90c6b715-9324-46ce-a354-63d09403b066][Git]]はあとで[[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]]を[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]からクローンしてくるときに使う。
-
-#+caption: aptからインストールする
-#+begin_src shell
-  sudo apt-get install syncthing git
-#+end_src
-
-ssh鍵を生成する。それから適切な権限を付与する。
-#+caption: 権限を付与する
-#+begin_src shell
-  sudo chmod 600 .ssh/id_rsa
-#+end_src
-** package manager として[[id:d694ecaa-6a8b-4669-a95c-f76de6dcbd2c][GNU Guix]]インストール
-ほかのディストリビューションの上にpackage managerとしてインストールする場合。
-参考: [[https://systemcrafters.cc/craft-your-system-with-guix/installing-the-package-manager/][Installing the GNU Guix Package Manager - System Crafters]]
-
-#+begin_src shell
-  cd /tmp
-  wget https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh
-  chmod +x guix-install.sh
-  sudo ./guix-install.sh
-#+end_src
-** [[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]] 実行
-#+caption: ホームディレクトリで実行する
-#+begin_src shell
-  git clone git@github.com:kijimaD/dotfiles.git
-#+end_src
-
-#+caption: makeタスク実行
-#+begin_src shell
-  make batch
-#+end_src
-
-- 必要パッケージの一括ダウンロード
-- メモ用リポジトリのclone
-- Emacsの設定
-- stowによるdotfilesの配置
-
-をやってくれる。
-** その他インストール
-いくつか手動でやる必要がある。
-
-- Google Chrome
-  - ~chrome://flags/#sharing-desktop-screenshots~ でベータ版機能を利用できる。
-
-- org-protocolを設定する
-- Zoom
-- DBeaver
-  - apt-get版はバージョンが古いらしく起動できなかったので、公式サイトからダウンロードする。
-- Docker関係
-** TODO その他guix
-ag, ripgrep をguixでインストールできそう。
-** docker関係のインストール
-guix installでやったができなかったので、apt-getを使った。
-
-docker本体。
-#+begin_src shell
-  sudo apt-get install docker.io
-  systemctl docker
-#+end_src
-
-docker-compose。バイナリを展開して実行権限を与える。
-#+begin_src shell
-  sudo curl -L https://github.com/docker/compose/releases/download/1.16.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-  sudo chmod +x /usr/local/bin/docker-compose
-#+end_src
-
-[[https://docs.docker.jp/compose/install.html][Docker Compose のインストール — Docker-docs-ja 19.03 ドキュメント]]
-** Spotify
-サイトで方法を見てダウンロードする。
-#+begin_src shell
-  snap install spotify
-#+end_src
 * [[id:d694ecaa-6a8b-4669-a95c-f76de6dcbd2c][GNU Guix]]への移行
 Linux Mintに、Guixを後でインストールして使っている。
 Guixオンリーにしたい。
@@ -181,6 +104,7 @@ qemu-system-x86_64 -m 4096 -smp 2 -hda MSEdge\ -\ Win10.vhdx -enable-kvm
 [[https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/][配布サイト]]に記載のように、パスワードは ~Passw0rd!~ 。
 仮想マシンのフォーカスを抜けるにはCtrl + Alt + g。
 * Tasks
+** TODO dotfilesと内容がかぶっているので、統一する
 ** TODO [[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]で動作チェックできるようにする
 クリーンな環境でうまくいっているかチェックしたい。
 Guix関連が難しく、詰まっている。

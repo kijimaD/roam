@@ -11,7 +11,88 @@ Linux系のプログラムでは、dotfileと呼ばれる ~.~ から始まるプ
 などのメリットがある。
 
 [[https://github.com/kijimaD/dotfiles][kijimaD/dotfiles: System settings]]
+
+todo: [[id:49971784-7850-4d24-92f2-9c6f29bd332e][system]]とかぶるところが大きいので統合してよさそう。
 * Memo
+* ビルド手順
+すべてクリーンな状況から、システムを構築するまでをまとめておく。
+** 基本コマンドインストール
+syncthingはディレクトリ同期ツール。
+[[id:90c6b715-9324-46ce-a354-63d09403b066][Git]]はあとで[[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]]を[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]からクローンしてくるときに使う。
+
+#+caption: aptからインストールする
+#+begin_src shell
+  sudo apt-get install syncthing git
+#+end_src
+
+ssh鍵を生成する。それから適切な権限を付与する。
+#+caption: 権限を付与する
+#+begin_src shell
+  sudo chmod 600 .ssh/id_rsa
+#+end_src
+
+#+caption: ~/.gitconfig を配置する
+#+begin_src yaml
+[user]
+	email = norimaking777@gmail.com
+	name = kijimaD
+[github]
+	user = kijimaD
+[http]
+	sslVerify = false
+#+end_src
+これでgit pullできるようになる。
+** [[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]] pull・実行
+#+caption: ホームディレクトリで実行する
+#+begin_src shell
+  git clone git@github.com:kijimaD/dotfiles.git
+#+end_src
+
+#+caption: makeタスク実行
+#+begin_src shell
+  make batch
+#+end_src
+
+↓をやってくれる。
+- 必要パッケージの一括ダウンロード
+- メモ用リポジトリのclone
+- stowによるdotfilesの配置
+** その他インストールの流れ
+いくつか手動でやる必要がある。
+
+- Google Chrome
+  - ~chrome://flags/#sharing-desktop-screenshots~ でベータ版機能を利用できる。
+  - org-protocolを設定する
+- DBeaver
+  - apt-get版はバージョンが古いらしく起動できなかったので、公式サイトからダウンロードする。
+- Dockerのデーモン登録
+** docker pullできないとき
+インストール確認 + デーモン登録。
+guixでインストールしてもよさそうなのだが、サービス起動する方法がわからないので、手軽なapt経由で行った。
+[[https://www.trifields.jp/how-to-install-docker-on-ubuntu-2004-4436][Ubuntu 20.04にDockerをインストールする手順 | トライフィールズ]]
+
+docker pull時にproxyエラー。↓で直った。
+[[https://www.s-watanabe.work/2021/09/docker-compose-up-proxyconnect-tcp-dial.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed:+blogspot/Czhqy+(%E3%81%95%E3%81%99%E3%82%89%E3%81%84%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%83%BC%E3%81%AEIT%E6%8A%80%E8%A1%93%E3%83%96%E3%83%AD%E3%82%B0)&m=1][docker-compose up で proxyconnect tcp: dial tcp: lookup proxy.example.com: no such host]]
+
+#+caption: この2行をコメントアウトして、使わないようにする
+#+begin_src shell
+  sudo cat /etc/systemd/system/docker.service.d/http-proxy.conf
+
+  [Service]
+  # Environment="HTTP_PROXY=http://proxy.example.com:8080/"
+  # Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
+#+end_src
+
+#+caption: デーモン再起動
+#+begin_src shell
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+#+end_src
+** Spotify
+サイトで方法を見てダウンロードする。
+#+begin_src shell
+  snap install spotify
+#+end_src
 * Tasks
 ** TODO [[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]でテストする
 クリーンな環境で一連のインストール作業ができるかチェックすると安心だろう。
