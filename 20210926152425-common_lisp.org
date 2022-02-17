@@ -1,11 +1,162 @@
 :PROPERTIES:
 :ID:       2337587f-0d95-484f-922a-f4cca1ace49e
+:header-args+: :wrap :results raw
 :END:
 #+title: Common Lisp
 * 概要
 Common Lispは[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]、[[id:18fbe00f-4ec8-4ca0-adfa-2d1381669642][LISP]]の方言の1つ。
 Lispファミリーでは最もメジャー。
 * Memo
+* WIP [[https://www.oreilly.co.jp/books/9784873115870/][O'Reilly Japan - Land of Lisp]]                                    :Read:
+:LOGBOOK:
+CLOCK: [2022-02-17 Thu 10:28]--[2022-02-17 Thu 10:53] =>  0:25
+CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
+CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
+:END:
+- (全) 46, 48
+** 数あてゲーム
+#+caption: defparameterはグローバル変数
+#+begin_src lisp
+  (defparameter *small* 1)
+  *small*
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+#+caption: 元の値は上書きされる
+#+begin_src lisp
+  (defparameter *foo* 5)
+  ,*foo*
+  (defparameter *foo* 6)
+  ,*foo*
+#+end_src
+
+#+RESULTS:
+#+begin_results
+6
+#+end_results
+
+#+caption: ashはバイナリサーチを書くのに使う
+#+begin_src lisp
+  (defun guess-my-number ()
+    (ash (+ *small* *big*) -1))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+GUESS-MY-NUMBER
+#+end_results
+
+#+caption: 実行してみる
+#+begin_src lisp
+  (guess-my-number)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+50
+#+end_results
+
+#+caption: smallerとbigger関数の定義
+#+begin_src lisp
+  (defun smaller ()
+    (setf *big* (1- (guess-my-number)))
+    (guess-my-number))
+  (defun bigger ()
+    (setf *small* (1+ (guess-my-number)))
+    (guess-my-number))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+BIGGER
+#+end_results
+
+#+caption: 使ってみる
+#+begin_src lisp
+  (bigger)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+75
+#+end_results
+
+#+caption: 初期化関数の定義
+#+begin_src lisp
+  (defun start-over ()
+    (defparameter *small* 1)
+    (defparameter *big* 100)
+    (guess-my-number))
+  (start-over)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+50
+#+end_results
+** 探検
+#+caption: 53の53乗
+#+begin_src lisp
+(expt 53 53)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+24356848165022712132477606520104725518533453128685640844505130879576720609150223301256150373
+#+end_results
+
+#+caption: 除算関数は有理数を返す
+#+begin_src lisp
+(/ 4 6)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+2/3
+#+end_results
+
+#+caption: 文字を表示するprinc
+#+begin_src lisp
+(princ "aaaa")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+aaaa
+#+end_results
+
+Lispには、コードモードとデータモードがある。
+通常はコードモード、シングルクォートがつくとデータモード。
+
+#+caption: cadrで短くかける
+#+begin_src lisp
+  (car (cdr '(pork beef chicken)))
+  (cadr '(pork beef chicken))
+#+end_src
+名前はリストにしたときの順番になっている。
+つまり評価するときの意味としては逆になる。
+cadrはcdr+carである。
+
+andやorは真偽値演算だけでなく、条件判断としても使える。
+#+caption: 条件を満たさないときは、以降は評価されない
+#+begin_src lisp
+  (and *file-modified* (ask-user-about-saving) (save-file))
+#+end_src
+
+member関数の返り値は部分リストになっている。もしマッチしたものを返すだったらnilを探すとき偽になってしまうから。
+#+caption:
+#+begin_src lisp
+  (if (member nil '(3 4 nil 5))
+      'nil-is-in-the-list
+      'nil-is-not-in-the-list)
+#+end_src
+
+- シンボル同士は常に ~eq~ で比較する
+- シンボル同士の比較でなければ ~equal~ で比較する
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
