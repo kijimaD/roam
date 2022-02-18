@@ -29,6 +29,8 @@ Common Lispの実装の1つSBCL(Steel Bank Common Lisp)を使用する方法。
 * TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
 DEADLINE: <2022-02-25 Fri>
 :LOGBOOK:
+CLOCK: [2022-02-18 Fri 22:02]--[2022-02-18 Fri 22:27] =>  0:25
+CLOCK: [2022-02-18 Fri 21:36]--[2022-02-18 Fri 22:01] =>  0:25
 CLOCK: [2022-02-18 Fri 00:09]--[2022-02-18 Fri 00:34] =>  0:25
 CLOCK: [2021-12-13 Mon 22:58]--[2021-12-13 Mon 23:07] =>  0:09
 CLOCK: [2021-12-13 Mon 09:15]--[2021-12-13 Mon 09:55] =>  0:40
@@ -38,6 +40,11 @@ Lispの考え方に焦点を当てた入門本。
 解説で使われているのは[[id:2337587f-0d95-484f-922a-f4cca1ace49e][Common Lisp]]。
 
 - 128, 162, 175, 191, 201
+** Progress
+*** DONE 200
+CLOSED: [2022-02-18 Fri 10:57] DEADLINE: <2022-02-18 Fri 23:59>
+*** TODO 220
+DEADLINE: <2022-02-18 Fri 23:59>
 ** cond
 #+caption: condは条件式の処理に使う。
 #+begin_src lisp
@@ -642,6 +649,50 @@ NIL
 #+RESULTS:
 #+begin_results
 T
+#+end_results
+** alist
+#+caption: alistにアクセスするgetの実装
+#+begin_src lisp
+  (defun my-get (symbol property)
+    (let ((plist (symbol-plist symbol)))
+      (loop (until (null plist) nil)
+         (until (eq (car plist) property) (cadr plist))
+         (setq plist (cddr plist)))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+MY-GET
+#+end_results
+
+#+caption: putpropの実装
+#+begin_src lisp
+  (putprop 'foo
+           (cons (symbol-function 'foo)
+                 (get 'foo 'old-definition))
+           'old-definition)
+#+end_src
+
+lambdaはdefunのように関数を定義する特殊形式ではない。
+lambdaはcarにあるリストが関数実体を示す単なる標識。
+
+#+begin_export latex
+(defun fn args . body)
+;; ↑は、
+(cons 'lambda (cons args body))
+;; ↑と表すことができる
+#+end_export
+
+defunとは、関数実体に名前をつける関数といえる。
+
+#+caption: applyは関数(ラムダ式でも名前付きでもよい)に引数を与えて評価する
+#+begin_src lisp
+  (apply (lambda (x y) (+ (* x x) (* y y))) (list 3 4))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+25
 #+end_results
 * Tasks
 ** TODO [[https://www.amazon.co.jp/-/en/%E7%AC%B9%E5%B7%9D-%E8%B3%A2%E4%B8%80-ebook/dp/B01B1FYQVQ/?_encoding=UTF8&pd_rd_w=eNfAv&pf_rd_p=5ce033f0-5b81-46ec-8910-385cc2abff14&pf_rd_r=XQTYBYBT7WDGZDYXJ1F3&pd_rd_r=cc740f97-a72c-4bcc-a32f-c926d52344fe&pd_rd_wg=njTzq&ref_=pd_gw_ci_mcx_mr_hp_d][Amazon.co.jp: やさしいLispの作り方: C言語で作るミニミニLisp処理系 eBook : 笹川 賢一: Kindle Store]] :Read:

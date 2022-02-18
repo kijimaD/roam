@@ -9,11 +9,18 @@ Lispファミリーでは最もメジャー。
 * Memo
 * WIP [[https://www.oreilly.co.jp/books/9784873115870/][O'Reilly Japan - Land of Lisp]]                                    :Read:
 :LOGBOOK:
+CLOCK: [2022-02-18 Fri 23:28]--[2022-02-18 Fri 23:53] =>  0:25
+CLOCK: [2022-02-18 Fri 22:53]--[2022-02-18 Fri 23:18] =>  0:25
 CLOCK: [2022-02-17 Thu 10:28]--[2022-02-17 Thu 10:53] =>  0:25
 CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
 CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
 :END:
 - (全) 46, 48
+** Progress
+*** DONE 50
+CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
+*** TODO 100
+DEADLINE: <2022-02-18 Fri 23:59>
 ** 数あてゲーム
 #+caption: defparameterはグローバル変数
 #+begin_src lisp
@@ -160,6 +167,146 @@ member関数の返り値は部分リストになっている。もしマッチ�
 ** ゲームエンジン
 - ゲームに限らずほとんどの実用プログラムでは、出力される情報は単なるテキストよりもはるかに複雑な構造をとる。HTML, PDF, グラフィック
 - 元となるデータ構造を出力形式に縛られない形で最初から持っておけば、プログラミング言語の得意な点を活かしたコーディングができる。[[id:18fbe00f-4ec8-4ca0-adfa-2d1381669642][LISP]]の場合操作がしやすいのはシンボルとリストだから、可能な限り、プログラムを設計する際にこれらのデータ型で処理できないかを考える
+
+#+caption: 連想リストを使って景色を描写する
+#+begin_src lisp
+  (defparameter *nodes* '((living-room (you are in the living-room.
+                                        a wizard is snoring loudly on the couch.))
+                          (garden (your are in a beautiful garden.
+                                   there is a well in front of you.))
+                          (attic (you are in the attic.
+                                  there is a giant welding torch in the corner.))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+*NODES*
+#+end_results
+
+#+caption: alistからキーを取り出す
+#+begin_src lisp
+  (assoc 'garden *nodes*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(GARDEN (YOUR ARE IN A BEAUTIFUL GARDEN. THERE IS A WELL IN FRONT OF YOU.))
+#+end_results
+
+#+caption: 場所を描写する関数
+#+begin_src lisp
+  (defun describe-location (location nodes)
+    (cadr (assoc location nodes)))
+  (describe-location 'living-room *nodes*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH.)
+#+end_results
+
+通り道を描写する。
+#+caption: ゲームのマップ上でプレーヤーが場所間を移動可能な通り道を格納する
+#+begin_src lisp
+  (defparameter *edges* '((living-room (garden west door)
+                                       (attic upstairs ladder))
+                          (garden (living-room east door))
+                          (attic (living-room downstairs ladder))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+*EDGES*
+#+end_results
+
+テキストをシンボルのリストとして表現しておいたおかげで、準クォートを使って文を構築するコードを簡潔に書ける。
+
+#+caption: 必要なエッジの名前からテキストによる説明を得る関数
+#+begin_src lisp
+  (defun describe-path (edge)
+    `(there is a ,(caddr edge) going ,(cadr edge) from here.))
+  (describe-path '(garden west door))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(THERE IS A DOOR GOING WEST FROM HERE.)
+#+end_results
+
+1つの場所からはいくつもの通り道が出ている可能性がある。
+与えられた場所から出ているすべての*edges*データから探して描写する関数が必要。
+
+#+caption: 描写する
+#+begin_src lisp
+  (defun describe-paths (location edges)
+    (apply #'append (mapcar #'describe-path (cdr (assoc location edges)))))
+  (describe-paths 'living-room *edges*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(THERE IS A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM
+ HERE.)
+#+end_results
+
+mapcarはよく使われる。引数に他の関数とリストを受け取って、リストの要素それぞれを引数として受け取った関数を呼び出す。
+#+caption: sqrtは平方根を求める関数
+#+begin_src lisp
+(mapcar #'sqrt '(1 2 3 4))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 1.4142135 1.7320508 2)
+#+end_results
+
+#+caption: 2つのリストの最初を返す
+#+begin_src lisp
+  (mapcar #'car '((foo bar) (baz qux)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(FOO BAZ)
+#+end_results
+
+#'はfunctionオペレータの略記。この記号を含む式は、内部的に変換される。
+#+caption: ↑の関数の内部的な形
+#+begin_src lisp
+  (mapcar (function car) '((foo bar) (baz qux)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(FOO BAZ)
+#+end_results
+
+Common Lispでは関数を値として扱うときにfunctionオペレータを使ってそのことを明示しなければならない。
+関数と変数で名前が衝突した場合にエラーを起こす可能性があるから。
+
+#+caption: 別々の名前空間。組み込みの関数carとローカル変数carは区別できる
+#+begin_src lisp
+  (let ((car "Honda Civic"))
+    (mapcar #'car '((foo bar) (baz qux))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(FOO BAZ)
+#+end_results
+
+[[id:53a7a781-8398-4069-8735-6ac5b8c3bc05][Scheme]]では、変数と関数と名前空間が共通なので関数を値として渡す場合にfunctionオペレータで明示する必要はない。
+
+applyとappendでリストを合体する。
+#+caption: apply
+#+begin_src lisp
+  (apply #'append '((mary had) (a) (little lamb)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(MARY HAD A LITTLE LAMB)
+#+end_results
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
