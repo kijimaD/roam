@@ -307,6 +307,674 @@ applyとappendでリストを合体する。
 #+begin_results
 (MARY HAD A LITTLE LAMB)
 #+end_results
+* TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
+DEADLINE: <2022-02-25 Fri>
+:LOGBOOK:
+CLOCK: [2022-02-18 Fri 22:02]--[2022-02-18 Fri 22:27] =>  0:25
+CLOCK: [2022-02-18 Fri 21:36]--[2022-02-18 Fri 22:01] =>  0:25
+CLOCK: [2022-02-18 Fri 00:09]--[2022-02-18 Fri 00:34] =>  0:25
+CLOCK: [2021-12-13 Mon 22:58]--[2021-12-13 Mon 23:07] =>  0:09
+CLOCK: [2021-12-13 Mon 09:15]--[2021-12-13 Mon 09:55] =>  0:40
+CLOCK: [2021-12-13 Mon 00:03]--[2021-12-13 Mon 00:54] =>  0:51
+:END:
+Lispの考え方に焦点を当てた入門本。
+解説で使われているのは[[id:2337587f-0d95-484f-922a-f4cca1ace49e][Common Lisp]]。
+
+- 128, 162, 175, 191, 201
+** Progress
+*** DONE 200
+CLOSED: [2022-02-18 Fri 10:57] DEADLINE: <2022-02-18 Fri 23:59>
+*** TODO 220
+DEADLINE: <2022-02-18 Fri 23:59>
+** cond
+#+caption: condは条件式の処理に使う。
+#+begin_src lisp
+  (cond ((>= 1 1) (print 0))
+        ((= 0 0) (print 1)))
+#+end_src
+
+#+RESULTS:
+: 0
+** member
+#+caption: member関数は、リストのトップレベルに望むものがあるか調べる
+#+begin_src lisp
+  (defun my-member (x y)
+    (cond ((null y) nil)
+          ((eq x (car y)) t)
+          (t (member x (cdr y)))))
+  (my-member 'a '(a b))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+T
+#+end_results
+
+#+caption: 無い場合はnilを返す
+#+begin_src lisp
+  (my-member 'c '(a b))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+NIL
+#+end_results
+** assoc
+#+caption: assoc関数は辞書を検索する
+#+begin_src lisp
+  (setq dict '((unum . 1) (duo . 2) (tria . 3)))
+  (assoc 'unum dict)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(UNUM . 1)
+#+end_results
+
+#+caption: assocの定義
+#+begin_src lisp
+  (defun my-assoc (x y)
+    (cond ((null y) nil)
+          ((eq x (caar y)) (car y))
+          (t (assoc x (cdr y)))))
+  (my-assoc 'unum dict)
+#+end_src
+
+#+RESULTS: assocの定義
+#+begin_results
+(UNUM . 1)
+#+end_results
+** rassoc
+#+caption: rassocは逆引き関数。辞書からcdrを検索する
+#+begin_src lisp
+  (defun my-rassoc (x y)
+    (cond ((null y) nil)
+          ((eq x (cdar y)) (car y))
+          (t (rassoc x (cdr y)))))
+  (my-rassoc 1 dict)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(UNUM . 1)
+#+end_results
+
+ドット記法で ~(reiko . (3 712 5648))~ は、
+~(reiko 3 712 5678)~ と同じ。後ろの方がリストになっているとドットは書かない慣習。
+
+Lispにおける式は、題付きリストといえる。
+(関数 引数1 引数2 ...)
+は、関数と引数のリストとのドット対、
+(関数 . 引数のリスト)
+と考えることができる。
+** replaca
+#+caption: rplacaはxが指しているセルのcarをyに置き換える
+#+begin_src lisp
+(rplaca '(1 1) 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(2 1)
+#+end_results
+
+#+caption: rplacdはcdrバージョン
+#+begin_src lisp
+(rplacd '(1 1) 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 . 2)
+#+end_results
+
+#+caption: alistを書き換える関数
+#+begin_src lisp
+  (defun update-phone (p x y)
+      (rplacd (assoc x p) y)
+      p  )
+
+  (setq dict '((unum . 1) (duo . 2) (tria . 3)))
+  (update-phone dict 'unum 111)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((UNUM . 111) (DUO . 2) (TRIA . 3))
+#+end_results
+** remove
+#+caption: xと等しいトップレベルの要素をすべて削除してみる
+#+begin_src lisp
+  (defun my-remove (x y)
+    (cond ((null y) nil)
+          ((eq (car y) x) (remove x (cdr y)))
+          (t (cons (car y) (remove x (cdr y))))))
+(my-remove 'mo '(to mo do mo mo to mo to mo))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(TO DO TO TO)
+#+end_results
+
+#+caption: マッチした最初のリストを取り除く。書き換えるべきセルは、1つ前のセル。
+#+begin_src lisp
+  (defun my-delete-1 (x y)
+    (setq y (cons 'dummy y))
+    (my-del2 x (cdr y) y)
+    (cdr y))
+
+  (defun my-del2 (x y z)
+    (cond ((null y) nil)
+          ((eq (car y) x) (rplacd z (cdr y)))
+          (t (my-del2 x (cdr y) y))))
+  (my-delete-1 'mo '(mo mo mo to to to))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(MO MO TO TO TO)
+#+end_results
+
+#+caption: 再帰関数が取る変数を少なくしたバージョン
+#+begin_src lisp
+  (defun my-delete (x y)
+    (setq y (cons 'dummy y))
+    (my-dela x y)
+    (cdr y))
+
+  (defun my-dela (x y)
+    (cond ((null (cdr y)) nil)
+          ((eq (cadr y) x)
+           (rplacd y (cddr y))
+           (my-dela x (cdr y)))
+    (t (my-dela x (cdr y)))))
+
+  (my-delete 'mo '(mo to mo to))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(TO TO TO)
+#+end_results
+** nreverse
+#+caption: nreverseはリストを逆にする関数
+#+begin_src lisp
+(nreverse '(A B C))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(C B A)
+#+end_results
+
+#+caption: nreverseを定義する(バグ)
+#+begin_src lisp
+  (defun my-nreverse (x)
+    (nrev2 x nil))
+
+  (defun nrev2 (x r)
+    (cond ((null x) r)
+          (t (rplacd x r)
+             (nrev2 (cdr x) x))))
+  (my-nreverse '(A B C))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A)
+#+end_results
+
+特殊形式prog1。
+(prog1 式1 式2 式3 ...)
+は返す値が式1の値。これを使って修正する。
+
+#+caption: nrev2の修正版。prog1を使う
+#+begin_src lisp
+  (defun nrev2 (x r)
+    (cond ((null x) r)
+          (t (prog1 (nrev2 (cdr x) x)
+               (rplacd x r)))))
+  (my-nreverse '(A B C))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(C B A)
+#+end_results
+** 破壊的
+nreverseは破壊的。
+
+#+caption: 返される値は逆になる
+#+begin_src lisp
+  (setq numl '(1 2 3))
+  (nreverse numl)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(3 2 1)
+#+end_results
+
+#+caption: 元のリストは破壊される
+#+begin_src lisp
+  numl
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1)
+#+end_results
+
+破壊的関数にはsetqを使うとよい。
+#+caption: numlにnreverseした後の値が入っている
+#+begin_src lisp
+  (setq numl '(1 2 3))
+  (setq numl (nreverse numl))
+  numl
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(3 2 1)
+#+end_results
+** append, nconc
+appendの破壊版がnconc。
+#+caption: appendは非破壊
+#+begin_src lisp
+  (setq numl '(1 2 3))
+  (append numl 1)
+  numl
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3)
+#+end_results
+
+#+caption: nconcは破壊的
+#+begin_src lisp
+  (setq numl '(1 2 3))
+  (nconc numl 1)
+  numl
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3 . 1)
+#+end_results
+
+#+caption: nconcを定義する。xに破壊的変更して、xを最後に返す
+#+begin_src lisp
+  (defun my-nconc (x y)
+    (cond ((null x) y)
+          (t (rplacd (last x) y) x)))
+  (my-nconc '(1 2 3) 1)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3 . 1)
+#+end_results
+** last
+#+caption:
+#+begin_src lisp
+  (defun my-last (x)
+    (cond ((null x) nil)
+          (t (my-last2 x))))
+
+  (defun my-last2 (x)
+    (cond ((null (cdr x)) x)
+          (t (my-last2 (cdr x)))))
+
+  (my-last '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(3)
+#+end_results
+** subst
+#+caption: substはaをbに置き換える関数
+#+begin_src lisp
+  (subst 'a 'b '(a b (a b (b ba) nil a)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A A (A A (A BA) NIL A))
+#+end_results
+
+#+caption: substの定義
+#+begin_src lisp
+  (defun my-subst (new old tree)
+    (cond ((eq old Tree) new)
+          ((atom tree) tree)
+          (t (cons (subst new old (car tree))
+                   (subst new old (cdr tree))))))
+  (my-subst 'a 'b '(a b a b))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A A A A)
+#+end_results
+
+#+caption: substではcarもcdrも平等に扱われているので、ドット記法が見える。
+#+begin_src lisp
+(subst 'kk nil '(a b (b ba) nil a))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A B (B BA . KK) KK A . KK)
+#+end_results
+
+consを使っているので、新しいリストを作っていることになる。
+#+caption: 置き換える対象がなければ単にリストコピーになる
+#+begin_src lisp
+(subst 'a 'b '(a a a))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A A A)
+#+end_results
+
+何もやらないときはcopy関数の定義と同じ。
+#+caption: cons部分に注目すると同じことがわかる
+#+begin_src lisp
+  (defun my-copy (tree)
+    (cond ((atom tree) tree)
+          (t (cons (my-copy (car tree))
+                   (my-copy (cdr tree))))))
+  (my-copy '(a a a))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A A A)
+#+end_results
+
+今風スタイルなsubst。
+#+caption: letと、同じであればコピーせずtreeをそのまま返すのが違い
+#+begin_src lisp
+  (defun my-subst (new old tree)
+    (cond ((eq old tree) new)
+          ((atom tree) tree)
+          (t (let ((a (my-subst new old (car tree)))
+                   (d (my-subst new old (cdr tree))))
+               (cond ((and (eq a (car tree))
+                           (eq d (cdr tree)))
+                      tree)
+                     (t (cons a d)))))))
+  (my-subst 'a 'b '(a b))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(A A)
+#+end_results
+
+複数種類の置き換えをしたい。
+#+caption: sublistは置き換えのための辞書をalistでもらう
+#+begin_src lisp
+  (defun my-sublis (alist tree)
+    (let ((pair (assoc tree alist)))
+      (cond (pair (cdr pair))
+            ((atom tree) tree)
+            (t (let ((a (my-sublis alist (car tree)))
+                     (d (my-sublis alist (cdr tree))))
+                 (cond ((and (eq a (car tree))
+                             (eq d (cdr Tree)))
+                        tree)
+                       (t (cons a d))))))))
+  (my-sublis '((unum . 1) (duo . 2) (tria . 3)) '(unum duo tria unum (unum tria)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3 1 (1 3))
+#+end_results
+** defsubst
+defsubstが使われるとき。
+
+まずifを定義してみる(これはうまくいかない)。
+#+caption: 返る値とxの値の違いに注目する。ifを呼ぶ時に引数を評価してしまう。なので副作用が実行されてxの値は7になる
+#+begin_src lisp
+  (defun my-if (p x y)
+    (cond (p x)
+          (t y)))
+
+  (setq x 4)
+  (setq flag t)
+  (my-if flag (setq x (+ x 1)) (setq x (+ x 2))) ;; => 5
+  x ;; => 7
+#+end_src
+
+#+RESULTS:
+#+begin_results
+7
+#+end_results
+
+#+caption: defsubst。setqのように副作用のある式が引数に来ても、評価しない
+#+begin_src lisp
+  (defsubst my-if (p x y)
+    (cond (p x)
+          (t y)))
+
+  ;; (setq x 4)
+  ;; (setq flag t)
+  ;; (my-if flag (setq x (+ x 1)) (setq x (+ x 2)))
+#+end_src
+
+余剰変数: 変数が不定個の引数をリストに束ねて受け取ること。
+#+caption: &restでlistが簡単に定義できる
+#+begin_src lisp
+  (defun my-list (&rest x) x)
+  (my-list 1 1)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 1)
+#+end_results
+** defmacro
+#+caption: マクロは引数を評価しない
+#+begin_src lisp
+  (defmacro my-first (x)
+    (list 'car x))
+  (my-first (list 1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+~(my-first (list 1 2 3))~ は、
+~(car (list 1 2 3))~ に置き換わるように見える。
+
+試しにdefunでやってみると、できない。
+#+caption: carが単なるシンボルになり(関数として評価されない)、リストになる
+#+begin_src lisp
+  (defun my-first (x)
+    (list 'car x))
+  (my-first '(1 2 3)) ;; '(car (1 2 3)) と同じ
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(CAR (1 2 3))
+#+end_results
+
+condをマクロ定義してみる。
+#+caption:
+#+begin_src lisp
+  (defmacro my-cond (&rest clauses)
+    (expand-cond clauses))
+
+  (defun expand-cond (clauses)
+    (my-cond ((null clauses) nil)
+          ((eq (caar clauses) 't)
+           (cons 'progn (cdar clauses)))
+          (t (list 'if
+                   (caar clauses)
+                   (cons 'progn (cdar clauses))
+                   (expand-cond (cdr clauses))))))
+  (my-cond (1 '(1))
+           (t '(t)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1)
+#+end_results
+
+backquoteをつけると、quoteと違ってS式がコピーされる。
+コピーの途中で、コンマのついた部分S式があるとそれを評価する。
+これを用いてfirstの定義を書き直す。
+
+#+caption: バッククォートを使ったバージョンのfirst
+#+begin_src lisp
+  (defmacro my-first (x)
+    `(car ,x))
+  (my-first '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+よく見るパターンをマクロ化する。
+#+caption: よく見るやつ
+#+begin_src lisp :eval never
+  (cond ((null なんとか) どうする1)
+        (t どうする2))
+#+end_src
+
+#+caption:
+#+begin_src lisp
+  (defmacro if-null (nan dos1 dos2)
+    `(cond ((null ,nan) ,dos1)
+           (t ,dos2)))
+  (defun my-even (x)
+    (if-null (= (mod x 2) 1) t nil))
+  (my-even 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+T
+#+end_results
+** pop
+よく使うマクロ2つ。
+#+caption: 定義する
+#+begin_src lisp
+  (defmacro my-pop (x)
+    `(prog1 (car ,x) (setq ,x (cdr ,x))))
+  (defmacro my-push (y x)
+    `(setq ,x (cons ,y ,x)))
+#+end_src
+
+#+caption: popを使ってみる
+#+begin_src lisp
+  (setq pop-test '(1 2 3))
+  (my-pop pop-test)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+#+caption: 破壊的
+#+begin_src lisp
+  pop-test
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(2 3)
+#+end_results
+
+#+begin_src lisp
+  (defmacro image (var list &rest forms)
+    `(let (($list$ ,list)
+           ($r$ nil)
+           (,var nil))
+      (while ($list$ (nreverse $r$))
+       (setq ,var (pop $list$))
+       (push (progn ,@forms) $r$))))
+  (image i (list 1 2 3 4) (* i i)) ;; => (1 4 9 16)になるはずだが動かない
+  ;; i をrubyでいうブロック引数とするように定義するマクロ
+  ;; このようにもともとの特殊形式と同じように自由に定義できるのがLispらしさ
+#+end_src
+** 文字列
+#+caption: 実体が異なるのでnilになる
+#+begin_src lisp
+(eq "tide" "tide")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+NIL
+#+end_results
+
+#+caption: equalを使うと文字列で比較する
+#+begin_src lisp
+(equal "tide" "tide")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+T
+#+end_results
+** alist
+#+caption: alistにアクセスするgetの実装
+#+begin_src lisp
+  (defun my-get (symbol property)
+    (let ((plist (symbol-plist symbol)))
+      (loop (until (null plist) nil)
+         (until (eq (car plist) property) (cadr plist))
+         (setq plist (cddr plist)))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+MY-GET
+#+end_results
+
+#+caption: putpropの実装
+#+begin_src lisp
+  (putprop 'foo
+           (cons (symbol-function 'foo)
+                 (get 'foo 'old-definition))
+           'old-definition)
+#+end_src
+
+lambdaはdefunのように関数を定義する特殊形式ではない。
+lambdaはcarにあるリストが関数実体を示す単なる標識。
+
+#+begin_export latex
+(defun fn args . body)
+;; ↑は、
+(cons 'lambda (cons args body))
+;; ↑と表すことができる
+#+end_export
+
+defunとは、関数実体に名前をつける関数といえる。
+
+#+caption: applyは関数(ラムダ式でも名前付きでもよい)に引数を与えて評価する
+#+begin_src lisp
+  (apply (lambda (x y) (+ (* x x) (* y y))) (list 3 4))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+25
+#+end_results
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
