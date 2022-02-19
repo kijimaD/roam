@@ -15,7 +15,8 @@ CLOCK: [2022-02-17 Thu 10:28]--[2022-02-17 Thu 10:53] =>  0:25
 CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
 CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
 :END:
-- (全) 46, 48
+** _
+- 46, 48, 96
 ** Progress
 *** DONE 50
 CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
@@ -284,7 +285,7 @@ mapcarはよく使われる。引数に他の関数とリストを受け取っ�
 Common Lispでは関数を値として扱うときにfunctionオペレータを使ってそのことを明示しなければならない。
 関数と変数で名前が衝突した場合にエラーを起こす可能性があるから。
 
-#+caption: 別々の名前空間。組み込みの関数carとローカル変数carは区別できる
+#+caption: 別々の名前空間。組み込みの関数carとローカル変数carは区別できる。mapcarはそれぞれのapply結果のリストを返す
 #+begin_src lisp
   (let ((car "Honda Civic"))
     (mapcar #'car '((foo bar) (baz qux))))
@@ -307,9 +308,51 @@ applyとappendでリストを合体する。
 #+begin_results
 (MARY HAD A LITTLE LAMB)
 #+end_results
+
+#+caption: mapcarの定義
+#+begin_src lisp
+  (defun my-mapcar (fn mlist)
+    (cond ((null mlist) nil)
+          (t (cons (funcall fn (car mlist))
+                   (mapcar fn (cdr mlist))))))
+  (my-mapcar #'sqrt '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 1.4142135 1.7320508)
+#+end_results
+
+#+caption: maplistの定義
+#+begin_src lisp
+  (defun my-maplist (fn mlist)
+    (cond ((null mlist) nil)
+          (t (cons (funcall fn mlist) ;; mapcar との違いはここだけ。carではなくリストに対してfnをapplyする
+                   (maplist fn (cdr mlist))))))
+  (my-maplist #'append '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((1 2 3) (2 3) (3))
+#+end_results
+
+#+caption: maplistの例。各要素の累計を得るとき
+#+begin_src lisp
+  (reverse
+   (my-maplist (lambda (x) (apply #'+ x))
+               (reverse '(10 5 6 12 3 5 9 7 0 4 2 15))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(10 15 21 33 36 41 50 57 57 61 63 78)
+#+end_results
+
 * TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
 DEADLINE: <2022-02-25 Fri>
 :LOGBOOK:
+CLOCK: [2022-02-19 Sat 20:00]--[2022-02-19 Sat 20:25] =>  0:25
 CLOCK: [2022-02-18 Fri 22:02]--[2022-02-18 Fri 22:27] =>  0:25
 CLOCK: [2022-02-18 Fri 21:36]--[2022-02-18 Fri 22:01] =>  0:25
 CLOCK: [2022-02-18 Fri 00:09]--[2022-02-18 Fri 00:34] =>  0:25
@@ -317,15 +360,17 @@ CLOCK: [2021-12-13 Mon 22:58]--[2021-12-13 Mon 23:07] =>  0:09
 CLOCK: [2021-12-13 Mon 09:15]--[2021-12-13 Mon 09:55] =>  0:40
 CLOCK: [2021-12-13 Mon 00:03]--[2021-12-13 Mon 00:54] =>  0:51
 :END:
+** _
 Lispの考え方に焦点を当てた入門本。
 解説で使われているのは[[id:2337587f-0d95-484f-922a-f4cca1ace49e][Common Lisp]]。
 
-- 128, 162, 175, 191, 201
+- 128, 162, 175, 191, 201, 210, 220
 ** Progress
 *** DONE 200
 CLOSED: [2022-02-18 Fri 10:57] DEADLINE: <2022-02-18 Fri 23:59>
-*** TODO 220
-DEADLINE: <2022-02-18 Fri 23:59>
+*** DONE 220
+CLOSED: [2022-02-20 Sun 00:29] DEADLINE: <2022-02-18 Fri 23:59>
+*** TODO 240
 ** cond
 #+caption: condは条件式の処理に使う。
 #+begin_src lisp
@@ -956,6 +1001,7 @@ MY-GET
 
 lambdaはdefunのように関数を定義する特殊形式ではない。
 lambdaはcarにあるリストが関数実体を示す単なる標識。
+defunとは、関数実体に名前をつける関数といえる。
 
 #+begin_export latex
 (defun fn args . body)
@@ -963,8 +1009,6 @@ lambdaはcarにあるリストが関数実体を示す単なる標識。
 (cons 'lambda (cons args body))
 ;; ↑と表すことができる
 #+end_export
-
-defunとは、関数実体に名前をつける関数といえる。
 
 #+caption: applyは関数(ラムダ式でも名前付きでもよい)に引数を与えて評価する
 #+begin_src lisp
@@ -975,6 +1019,29 @@ defunとは、関数実体に名前をつける関数といえる。
 #+begin_results
 25
 #+end_results
+
+簡単な例。
+#+caption: リストの合計を求める。第2引数はリスト
+#+begin_src lisp
+  (apply '+ '(1 2 3 4))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+10
+#+end_results
+
+funcallで書く。
+#+caption: リストの合計を求める。第2引数は任意の数
+#+begin_src lisp
+  (funcall '+ 1 2 3 4)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+10
+#+end_results
+
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
