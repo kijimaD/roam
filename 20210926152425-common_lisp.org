@@ -165,7 +165,7 @@ member関数の返り値は部分リストになっている。もしマッチ�
 
 - シンボル同士は常に ~eq~ で比較する
 - シンボル同士の比較でなければ ~equal~ で比較する
-** ゲームエンジン
+** 描写する
 - ゲームに限らずほとんどの実用プログラムでは、出力される情報は単なるテキストよりもはるかに複雑な構造をとる。HTML, PDF, グラフィック
 - 元となるデータ構造を出力形式に縛られない形で最初から持っておけば、プログラミング言語の得意な点を活かしたコーディングができる。[[id:18fbe00f-4ec8-4ca0-adfa-2d1381669642][LISP]]の場合操作がしやすいのはシンボルとリストだから、可能な限り、プログラムを設計する際にこれらのデータ型で処理できないかを考える
 
@@ -298,8 +298,7 @@ Common Lispでは関数を値として扱うときにfunctionオペレータを�
 
 [[id:53a7a781-8398-4069-8735-6ac5b8c3bc05][Scheme]]では、変数と関数と名前空間が共通なので関数を値として渡す場合にfunctionオペレータで明示する必要はない。
 
-applyとappendでリストを合体する。
-#+caption: apply
+#+caption: applyとappendでリストを合体する
 #+begin_src lisp
   (apply #'append '((mary had) (a) (little lamb)))
 #+end_src
@@ -309,44 +308,22 @@ applyとappendでリストを合体する。
 (MARY HAD A LITTLE LAMB)
 #+end_results
 
-#+caption: mapcarの定義
+#+caption:
 #+begin_src lisp
-  (defun my-mapcar (fn mlist)
-    (cond ((null mlist) nil)
-          (t (cons (funcall fn (car mlist))
-                   (mapcar fn (cdr mlist))))))
-  (my-mapcar #'sqrt '(1 2 3))
+  (apply #'append '((THERE IS A DOOR GOING WEST FROM HERE.)
+                    (THERE IS A LADDER GOING UPSTAIRS FROM HERE.)))
+#+end_src
+** 目に見えるオブジェクトをリストする
+ゲーム世界に存在するオブジェクトのリストを作る。
+
+#+caption:
+#+begin_src lisp
+(defparameter *objects* '(whiskey bucket frog chain))
 #+end_src
 
 #+RESULTS:
 #+begin_results
-(1 1.4142135 1.7320508)
-#+end_results
-
-#+caption: maplistの定義
-#+begin_src lisp
-  (defun my-maplist (fn mlist)
-    (cond ((null mlist) nil)
-          (t (cons (funcall fn mlist) ;; mapcar との違いはここだけ。carではなくリストに対してfnをapplyする
-                   (maplist fn (cdr mlist))))))
-  (my-maplist #'append '(1 2 3))
-#+end_src
-
-#+RESULTS:
-#+begin_results
-((1 2 3) (2 3) (3))
-#+end_results
-
-#+caption: maplistの例。各要素の累計を得るとき
-#+begin_src lisp
-  (reverse
-   (my-maplist (lambda (x) (apply #'+ x))
-               (reverse '(10 5 6 12 3 5 9 7 0 4 2 15))))
-#+end_src
-
-#+RESULTS:
-#+begin_results
-(10 15 21 33 36 41 50 57 57 61 63 78)
+*OBJECTS*
 #+end_results
 
 * TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
@@ -1041,7 +1018,46 @@ funcallで書く。
 #+begin_results
 10
 #+end_results
+** mapcar
+#+caption: mapcarの定義
+#+begin_src lisp
+  (defun my-mapcar (fn mlist)
+    (cond ((null mlist) nil)
+          (t (cons (funcall fn (car mlist))
+                   (mapcar fn (cdr mlist))))))
+  (my-mapcar #'sqrt '(1 2 3))
+#+end_src
 
+#+RESULTS:
+#+begin_results
+(1 1.4142135 1.7320508)
+#+end_results
+
+#+caption: maplistの定義
+#+begin_src lisp
+  (defun my-maplist (fn mlist)
+    (cond ((null mlist) nil)
+          (t (cons (funcall fn mlist) ;; mapcar との違いはここだけ。carではなくリストに対してfnをapplyする
+                   (maplist fn (cdr mlist))))))
+  (my-maplist #'append '(1 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((1 2 3) (2 3) (3))
+#+end_results
+
+#+caption: maplistの例。各要素の累計を得るとき
+#+begin_src lisp
+  (reverse
+   (my-maplist (lambda (x) (apply #'+ x))
+               (reverse '(10 5 6 12 3 5 9 7 0 4 2 15))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(10 15 21 33 36 41 50 57 57 61 63 78)
+#+end_results
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
