@@ -5,6 +5,11 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** mailerはキューにためられるので、Serializationできない値は渡すとエラーになる
+SerializationErrorになる。
+メーラーに対して、シリアライゼーションできないオブジェクトは渡すことができない。
+Railsからredisに渡されるが、redisはkey-value storeの形でないと保存できないから。
+[[https://github.com/rails/rails/issues/18519][Mail and deliver_later doesn't work with date argument · Issue #18519 · rails/rails]]
 ** join先のテーブルでwhere
 A -< B -< C -< D みたいな関係。
 #+caption: mergeで関連テーブル先で条件を絞れる
@@ -320,7 +325,9 @@ Railsにデフォルトで入っている。
 バッチ処理でいじった場合は更新するとよくないことがある。
 ** save(validate: false)
 バリデーションが不要なとき、 ~user.save!(validate: false)~ とすると無効化できる。
-データを整合するときに使う。
+データを不整合を直したいけどほかのバリデーションにかかる、ようなときに使う。
+
+あるいは ~assign_attribute~ でもよい。
 ** presence: trueなのにnilがあるレコードを検知する
 モデルバリデーションがかかっていても、既存のレコードはnilを含む可能性がある。
 モデルバリデーションは入出力のみ監視する。だから既存レコードに残っている可能性がある。

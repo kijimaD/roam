@@ -9,6 +9,11 @@ Lispファミリーでは最もメジャー。
 * Memo
 * WIP [[https://www.oreilly.co.jp/books/9784873115870/][O'Reilly Japan - Land of Lisp]]                                    :Read:
 :LOGBOOK:
+CLOCK: [2022-02-21 Mon 10:33]--[2022-02-21 Mon 10:59] =>  0:26
+CLOCK: [2022-02-20 Sun 22:35]--[2022-02-20 Sun 23:00] =>  0:25
+CLOCK: [2022-02-20 Sun 22:08]--[2022-02-20 Sun 22:33] =>  0:25
+CLOCK: [2022-02-20 Sun 21:33]--[2022-02-20 Sun 21:58] =>  0:25
+CLOCK: [2022-02-20 Sun 21:05]--[2022-02-20 Sun 21:31] =>  0:26
 CLOCK: [2022-02-18 Fri 23:28]--[2022-02-18 Fri 23:53] =>  0:25
 CLOCK: [2022-02-18 Fri 22:53]--[2022-02-18 Fri 23:18] =>  0:25
 CLOCK: [2022-02-17 Thu 10:28]--[2022-02-17 Thu 10:53] =>  0:25
@@ -16,7 +21,7 @@ CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
 CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
 :END:
 ** _
-- 46, 48, 96
+- 46, 48, 96, 103
 ** Progress
 *** DONE 50
 CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
@@ -313,6 +318,7 @@ Common Lispでは関数を値として扱うときにfunctionオペレータを�
   (apply #'append '((THERE IS A DOOR GOING WEST FROM HERE.)
                     (THERE IS A LADDER GOING UPSTAIRS FROM HERE.)))
 #+end_src
+
 ** 目に見えるオブジェクトをリストする
 ゲーム世界に存在するオブジェクトのリストを作る。
 
@@ -324,6 +330,211 @@ Common Lispでは関数を値として扱うときにfunctionオペレータを�
 #+RESULTS:
 #+begin_results
 *OBJECTS*
+#+end_results
+
+オブジェクトとその場所をalistで表現する。
+#+caption: alist
+#+begin_src lisp
+  (defparameter *object-locations* '((whiskey living-room)
+                                     (bucket living-room)
+                                     (chain garden)
+                                     (frog garden)))
+  *object-locations*
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((WHISKEY LIVING-ROOM) (BUCKET LIVING-ROOM) (CHAIN GARDEN) (FROG GARDEN))
+#+end_results
+
+与えられた場所から見るオブジェクトのリスト。
+#+caption: labelsでローカル関数が定義できる
+#+begin_src lisp
+  (defun objects-at (loc objs obj-locs)
+    (labels ((at-loc-p (obj)
+               (eq (cadr (assoc obj obj-locs)) loc)))
+      (remove-if-not #'at-loc-p objs)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+OBJECTS-AT
+#+end_results
+
+objects-atを使ってみる。
+
+#+caption: living-roomにあるobjectを描写する
+#+begin_src lisp
+(objects-at 'living-room *objects* *object-locations*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(WHISKEY BUCKET)
+#+end_results
+
+ある場所で見えるオブジェクトの一覧。
+
+#+caption: オブジェクト一覧
+#+begin_src lisp
+  (defun describe-objects (loc objs obj-loc)
+    (labels ((describe-obj (obj)
+               `(you see a ,obj on the floor.)))
+      (apply #'append (mapcar #'describe-obj (objects-at loc objs obj-loc)))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+DESCRIBE-OBJECTS
+#+end_results
+
+使ってみる。
+
+#+caption:
+#+begin_src lisp
+  (describe-objects 'living-room *objects* *object-locations*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+#+end_results
+
+** 現在地を保持する
+現在値を保持する変数を作る。
+
+#+caption: 現在地を保持する
+#+begin_src lisp
+  (defparameter *location* 'living-room)
+  *location*
+#+end_src
+
+#+RESULTS:
+#+begin_results
+LIVING-ROOM
+#+end_results
+
+プレイヤーがタイプするlook関数を作る。見えるものすべてを描写する。
+
+#+caption: 見えるものすべてを描写する
+#+begin_src lisp
+  (defun look ()
+  (append (describe-location *location* *nodes*)
+        (describe-paths *location* *edges*)
+        (describe-objects *location* *objects* *object-locations*)))
+  (look)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+#+end_results
+
+look関数はグローバル変数を読むから、関数的ではない。
+** 動き回る
+#+caption: 歩き回るwalk関数。find関数はリストから与えた要素を探す関数
+#+begin_src lisp
+  (defun walk (direction)
+    (let ((next (find direction
+                      (cdr (assoc *location* *edges*))
+                      :key #'cadr)))
+      (if next
+          (progn (setf *location* (car next))
+                 (look))
+          '(you cannot go that way.))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+WALK
+#+end_results
+
+#+caption: findの例: シンボルyをcadrに持つような最初の要素をリストから探し出す
+#+begin_src lisp
+  (find 'y '((5 x) (3 y) (7 z)) :key #'cadr)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(3 Y)
+#+end_results
+
+#+caption: findの例2: シンボルyをcarに持つような最初の要素をリストから探し出す
+#+begin_src lisp
+  (find '3 '((5 x) (3 y) (7 z)) :key #'car)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(3 Y)
+#+end_results
+
+:key #'carはキーワード引数。
+コロンで始まる名前、続く値で構成されている。
+
+#+caption: walkを使ってみる
+#+begin_src lisp
+(walk 'west)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOUR ARE IN A BEAUTIFUL GARDEN. THERE IS A WELL IN FRONT OF YOU. THERE IS A
+ DOOR GOING EAST FROM HERE. YOU SEE A FROG ON THE FLOOR. YOU SEE A CHAIN ON THE
+ FLOOR.)
+#+end_results
+
+** オブジェクトを手に取る
+pushとassocを使うことで、alistの値が変更されたかのように見せることができる。
+
+#+caption: オブジェクトの場所を管理している変数 *object-locations*を変更する
+#+begin_src lisp
+  (defun pickup (object)
+    (cond ((member object
+                   (objects-at *location* *objects* *object-locations*))
+           (push (list object 'body) *object-locations*)
+           `(you are now carrying the ,object))
+          (t '(you cannot get that.))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+PICKUP
+#+end_results
+
+#+caption: リビングに戻る
+#+begin_src lisp
+(walk 'east)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+#+end_results
+
+#+caption: ウィスキーを取る
+#+begin_src lisp
+  (pickup 'whiskey)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU CANNOT GET THAT.)
+#+end_results
+
+#+caption: 持っているものを調べる
+#+begin_src lisp
+    (defun inventory ()
+      (cons 'items- (objects-at 'body *objects* *object-locations*)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+INVENTORY
 #+end_results
 
 * TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
@@ -406,6 +617,7 @@ NIL
 #+begin_results
 (UNUM . 1)
 #+end_results
+
 ** rassoc
 #+caption: rassocは逆引き関数。辞書からcdrを検索する
 #+begin_src lisp
@@ -464,6 +676,7 @@ Lispにおける式は、題付きリストといえる。
 #+begin_results
 ((UNUM . 111) (DUO . 2) (TRIA . 3))
 #+end_results
+
 ** remove
 #+caption: xと等しいトップレベルの要素をすべて削除してみる
 #+begin_src lisp
@@ -564,7 +777,7 @@ Lispにおける式は、題付きリストといえる。
 #+begin_results
 (C B A)
 #+end_results
-** 破壊的
+** 破壊的関数
 nreverseは破壊的。
 
 #+caption: 返される値は逆になる
@@ -600,6 +813,7 @@ nreverseは破壊的。
 #+begin_results
 (3 2 1)
 #+end_results
+
 ** append, nconc
 appendの破壊版がnconc。
 #+caption: appendは非破壊
@@ -656,6 +870,7 @@ appendの破壊版がnconc。
 #+begin_results
 (3)
 #+end_results
+
 ** subst
 #+caption: substはaをbに置き換える関数
 #+begin_src lisp
@@ -933,6 +1148,7 @@ T
   ;; i をrubyでいうブロック引数とするように定義するマクロ
   ;; このようにもともとの特殊形式と同じように自由に定義できるのがLispらしさ
 #+end_src
+
 ** 文字列
 #+caption: 実体が異なるのでnilになる
 #+begin_src lisp
@@ -953,6 +1169,7 @@ NIL
 #+begin_results
 T
 #+end_results
+
 ** alist
 #+caption: alistにアクセスするgetの実装
 #+begin_src lisp
