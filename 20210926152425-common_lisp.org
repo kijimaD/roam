@@ -9,6 +9,7 @@ Lispファミリーでは最もメジャー。
 * Memo
 * WIP [[https://www.oreilly.co.jp/books/9784873115870/][O'Reilly Japan - Land of Lisp]]                                    :Read:
 :LOGBOOK:
+CLOCK: [2022-02-22 Tue 23:05]--[2022-02-22 Tue 23:30] =>  0:25
 CLOCK: [2022-02-21 Mon 10:33]--[2022-02-21 Mon 10:59] =>  0:26
 CLOCK: [2022-02-20 Sun 22:35]--[2022-02-20 Sun 23:00] =>  0:25
 CLOCK: [2022-02-20 Sun 22:08]--[2022-02-20 Sun 22:33] =>  0:25
@@ -21,12 +22,20 @@ CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
 CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
 :END:
 ** _
-- 46, 48, 96, 103
+- 46, 48, 96, 103, 106
 ** Progress
 *** DONE 50
 CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
-*** TODO 100
-DEADLINE: <2022-02-18 Fri 23:59>
+*** DONE 100
+CLOSED: [2022-02-22 Tue 23:25] DEADLINE: <2022-02-18 Fri 23:59>
+*** TODO 150
+DEADLINE: <2022-02-23 Wed 23:59>
+:LOGBOOK:
+CLOCK: [2022-02-23 Wed 12:55]--[2022-02-23 Wed 13:20] =>  0:25
+CLOCK: [2022-02-23 Wed 12:05]--[2022-02-23 Wed 12:30] =>  0:25
+CLOCK: [2022-02-23 Wed 11:21]--[2022-02-23 Wed 11:46] =>  0:25
+CLOCK: [2022-02-23 Wed 10:54]--[2022-02-23 Wed 11:19] =>  0:25
+:END:
 ** 数あてゲーム
 #+caption: defparameterはグローバル変数
 #+begin_src lisp
@@ -319,6 +328,12 @@ Common Lispでは関数を値として扱うときにfunctionオペレータを�
                     (THERE IS A LADDER GOING UPSTAIRS FROM HERE.)))
 #+end_src
 
+#+RESULTS:
+#+begin_results
+(THERE IS A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM
+ HERE.)
+#+end_results
+
 ** 目に見えるオブジェクトをリストする
 ゲーム世界に存在するオブジェクトのリストを作る。
 
@@ -526,17 +541,256 @@ PICKUP
 (YOU CANNOT GET THAT.)
 #+end_results
 
+alist中の値を置き換えたければ、新しい要素をリストにpushするだけでいい。
+assocは最も新しい値だけを返すから。
+
 #+caption: 持っているものを調べる
 #+begin_src lisp
-    (defun inventory ()
+  (defun inventory ()
       (cons 'items- (objects-at 'body *objects* *object-locations*)))
+  (inventory)
 #+end_src
 
 #+RESULTS:
 #+begin_results
-INVENTORY
+(ITEMS-)
 #+end_results
 
+#+caption: pushは先頭に新しいリストを追加する
+#+begin_src lisp
+  (defparameter *foo* '(1 2 3))
+  (push 7 *foo*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(7 1 2 3)
+#+end_results
+
+#+caption: ↑と同じことをsetfで表現する
+#+begin_src lisp
+(setf *foo* (cons 7 '(1 2 3)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(7 1 2 3)
+#+end_results
+
+動作を試す。
+居間に戻ってウィスキーを取る。
+
+#+caption: 歩く
+#+begin_src lisp
+(walk 'east)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU CANNOT GO THAT WAY.)
+#+end_results
+
+#+caption: ウィスキーを取る
+#+begin_src lisp
+(pickup 'whiskey)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(YOU ARE NOW CARRYING THE WHISKEY)
+#+end_results
+
+** テキストの表示と読み込み
+#+caption: 表示する
+#+begin_src lisp
+(print "foo")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+foo
+#+end_results
+
+#+caption: printは改行する
+#+begin_src lisp :results output
+  (progn (print "this")
+         (print "is")
+         (print "a")
+         (print "test"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+"this"
+"is"
+"a"
+"test"
+#+end_results
+
+#+caption: prin1は改行しない
+#+begin_src lisp :results output
+  (progn (prin1 "this")
+         (prin1 "is")
+         (prin1 "a")
+         (prin1 "test"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+this""is""a""test
+#+end_results
+
+prin1の方がやってることは少ないので、より基本的な関数であると言える。組み合わせの自由度も高く、したがって大規模なコードの中でよく見られる。
+
+入力させて挨拶を返す関数。
+#+caption: プロンプトから呼び出して、入力を待つ。入力はダブルクォートで囲む必要がある
+#+begin_src lisp
+  (defun say-hello ()
+    (print "Please type your name:")
+    (let ((name (read)))
+      (print "Nice to meet you, ")
+      (print name)))
+#+end_src
+
+printはコンピュータ向け、princは人間向け。
+printは元のデータを表示する。printcは文字列にして表示する。
+
+ダブルクォートをつけなくていい改良版。
+
+#+caption: princ, read-lineを使う
+#+begin_src lisp
+  (defun say-hello()
+    (princ "Please type your name:")
+    (let ((name (read-line)))
+      (princ "Nice to meet you, ")
+      (princ name)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+SAY-HELLO
+#+end_results
+
+** データの対称性
+プログラムコードとデータを同じデータ構造を使って扱うプログラミング言語は、同図象性を持つ、と呼ばれる。
+
+- '(+ 1 2) → データモード
+- (+ 1 2) → コードモード
+
+evalは強力で、自己書き換えのプログラムを書くには役立つ。が、普段はほとんど使わない。
+
+** 専用のインターフェースを追加する
+専用のREPLを作るのは簡単にできる。
+#+caption:
+#+begin_src lisp
+  (defun game-repl ()
+    (loop (print (eval (read)))))
+  (game-repl)
+#+end_src
+
+REPLでの実行。
+
+#+begin_src lisp
+CL-USER> (look)
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A BUCKET ON THE FLOOR.)
+#+end_src
+
+quit呼び出しを検知して、replを抜けられるようにする。
+
+#+caption: ローカル変数cmdにコマンドを保存しておいて、判断する
+#+begin_src lisp
+  (defun game-repl ()
+    (let ((cmd (game-read)))
+      (unless (eq (car cmd) 'quit)
+        (game-print (game-eval cmd))
+        (game-repl))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+GAME-REPL
+#+end_results
+
+カッコをつけなくてもコマンド入力できるようにする。
+walk east とタイプしたなら、(walk east) になる。
+#+caption: カッコを付け足して評価する
+#+begin_src lisp
+  (defun game-read ()
+    (let ((cmd (read-from-string
+                (concatenate 'string "(" (read-line) ")"))))
+      (flet ((quote-it (x)
+               (list 'quote x)))
+        (cons (car cmd) (mapcar #'quote-it (cdr cmd))))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+GAME-READ
+#+end_results
+
+game-evalではあらかじめ決めたコマンドだけを呼べるようにする。
+#+caption: 変数に入れておいたコマンドだけ実行できる
+#+begin_src lisp
+  (defparameter *allowed-commands* '(look walk pickup inventory))
+
+  (defun game-eval (sexp)
+    (if (member (car sexp) *allowed-commands*)
+        (eval sexp)
+        '(i do not know that command.)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+GAME-EVAL
+#+end_results
+
+テキストをいい感じに変換する関数が必要。
+#+caption: 内部表現にすぎないシンボルのリストを文字列に変換する。coerce関数を使って文字列を文字のリストに変換することで、解くべき問題をリスト処理へと落とし込んでいる
+#+begin_src lisp
+  (defun tweak-text (lst caps lit)
+    (when lst
+      (let ((item (car lst))
+            (rest (cdr lst)))
+        (cond ((eql item #\space) (cons item (tweak-text rest caps lit)))
+              ((member item '(#\! #\? #\.)) (cons item (tweak-text rest t lit))) ;; 文章の先頭は、!,?,.,のあとに現れる
+              ((eql item #\") (tweak-text rest caps (not lit)))
+              (lit (cons  item (tweak-text rest nil lit)))
+              (caps (cons (char-upcase item) (tweak-text rest nil lit)))
+              (t (cons (char-downcase item) (tweak-text rest nil nil))))))) ;; どの条件も満たさなければ、小文字になる
+
+  (defun game-print (lst)
+    (princ (coerce (tweak-text (coerce (string-trim "() "
+                                                    (prin1-to-string lst))
+                                       'list)
+                               t
+                               nil)
+                   'string)
+           (fresh-line)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+GAME-PRINT
+#+end_results
+
+途中で大文字が出てくる場合に対応している。
+#+caption: "がでてきた場合は無視して、残りの処理を続行する
+#+begin_src lisp
+(game-print '(not only does this sentence have a "comma," it also mentions the "iPad."))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Not only does this sentence have a comma, it also mentions the iPad.
+#+end_results
+
+** Lambda
+そもそもLispが産まれたのは、lambdaコマンドのためだった。
+
+lambdaを使えば、名前を与えずに関数を作れる。
 * TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
 DEADLINE: <2022-02-25 Fri>
 :LOGBOOK:
@@ -559,6 +813,7 @@ CLOSED: [2022-02-18 Fri 10:57] DEADLINE: <2022-02-18 Fri 23:59>
 *** DONE 220
 CLOSED: [2022-02-20 Sun 00:29] DEADLINE: <2022-02-18 Fri 23:59>
 *** TODO 240
+DEADLINE: <2022-02-23 Wed 23:59>
 ** cond
 #+caption: condは条件式の処理に使う。
 #+begin_src lisp
