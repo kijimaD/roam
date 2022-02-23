@@ -9,6 +9,7 @@ Lispファミリーでは最もメジャー。
 * Memo
 * WIP [[https://www.oreilly.co.jp/books/9784873115870/][O'Reilly Japan - Land of Lisp]]                                    :Read:
 :LOGBOOK:
+CLOCK: [2022-02-23 Wed 19:12]--[2022-02-23 Wed 19:37] =>  0:25
 CLOCK: [2022-02-22 Tue 23:05]--[2022-02-22 Tue 23:30] =>  0:25
 CLOCK: [2022-02-21 Mon 10:33]--[2022-02-21 Mon 10:59] =>  0:26
 CLOCK: [2022-02-20 Sun 22:35]--[2022-02-20 Sun 23:00] =>  0:25
@@ -20,9 +21,15 @@ CLOCK: [2022-02-18 Fri 22:53]--[2022-02-18 Fri 23:18] =>  0:25
 CLOCK: [2022-02-17 Thu 10:28]--[2022-02-17 Thu 10:53] =>  0:25
 CLOCK: [2022-02-17 Thu 09:27]--[2022-02-17 Thu 09:52] =>  0:25
 CLOCK: [2022-02-17 Thu 09:53]--[2022-02-17 Thu 10:18] =>  0:25
+CLOCK: [2022-02-23 Wed 19:42]--[2022-02-23 Wed 20:07] =>  0:25
+CLOCK: [2022-02-23 Wed 18:04]--[2022-02-23 Wed 18:29] =>  0:25
+CLOCK: [2022-02-23 Wed 12:55]--[2022-02-23 Wed 13:20] =>  0:25
+CLOCK: [2022-02-23 Wed 12:05]--[2022-02-23 Wed 12:30] =>  0:25
+CLOCK: [2022-02-23 Wed 11:21]--[2022-02-23 Wed 11:46] =>  0:25
+CLOCK: [2022-02-23 Wed 10:54]--[2022-02-23 Wed 11:19] =>  0:25
 :END:
 ** _
-- 46, 48, 96, 103, 106
+- 46, 48, 96, 103, 106, 132
 ** Progress
 *** DONE 50
 CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
@@ -30,12 +37,6 @@ CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
 CLOSED: [2022-02-22 Tue 23:25] DEADLINE: <2022-02-18 Fri 23:59>
 *** TODO 150
 DEADLINE: <2022-02-23 Wed 23:59>
-:LOGBOOK:
-CLOCK: [2022-02-23 Wed 12:55]--[2022-02-23 Wed 13:20] =>  0:25
-CLOCK: [2022-02-23 Wed 12:05]--[2022-02-23 Wed 12:30] =>  0:25
-CLOCK: [2022-02-23 Wed 11:21]--[2022-02-23 Wed 11:46] =>  0:25
-CLOCK: [2022-02-23 Wed 10:54]--[2022-02-23 Wed 11:19] =>  0:25
-:END:
 ** 数あてゲーム
 #+caption: defparameterはグローバル変数
 #+begin_src lisp
@@ -791,7 +792,250 @@ Not only does this sentence have a comma, it also mentions the iPad.
 そもそもLispが産まれたのは、lambdaコマンドのためだった。
 
 lambdaを使えば、名前を与えずに関数を作れる。
-* TODO [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                          :Read:
+
+#+caption: 関数引数に渡すことができる
+#+begin_src lisp
+  (mapcar (lambda (n) (/ n 2)) '(2 4 6))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3)
+#+end_results
+
+#+caption: 関数引数に渡すことができる
+#+begin_src lisp
+  (funcall (lambda (n) (/ n 2)) 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+#+end_results
+
+lambdaの引数は評価されずlambdaに渡される。つまり、lambdaは本物の関数ではない。これはマクロとよばれる。[[id:18fbe00f-4ec8-4ca0-adfa-2d1381669642][LISP]]の関数の引数は、関数自体が評価される前にすべて評価される。
+lambdaが返す値は通常のLisp関数である。
+多くの言語では、関数と値の世界を分けようとしている。Lispでは、この2つの世界をつなぐことができる。
+
+関数を普通のデータのように受け渡しできるという機能は、とても便利である。純粋に数学的な意味では、lambdaが唯一のLispコマンドといえる。(ラムダ算法…lambdaを唯一のコマンドする理論的なプログラミング言語のようなもの。)
+
+- lambda形式はLispシステムの中で最も根源的なコマンドである
+- Lispの他の関数はlambdaの概念を元に導かれている
+- lambdaはLispのアイディアそのものが産まれた中心にある概念
+** 奇妙なリスト
+#+caption: 通常のリスト
+#+begin_src lisp
+(cons 1 (cons 2 (cons 3 nil)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3)
+#+end_results
+
+#+caption: リストの最後のnilが見つからなかったとき、3の前に . をつけて表示する
+#+begin_src lisp
+(cons 1 (cons 2 3))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 . 3)
+#+end_results
+
+最後がnilではないことを明示するために.をつけている。
+ドットリストは、対を表現するのによく使う。
+
+リストの最後がリストの最初を指すような、循環しているリストもある。
+遊ぶ前に準備する。
+#+caption: ループで止まるのを防ぐ設定
+#+begin_src lisp
+(setf *print-circle* t)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+T
+#+end_results
+
+#+caption: 循環リストを作る
+#+begin_src lisp
+  (defparameter foo (list 1 2 3))
+  (setf (cdddr foo) foo)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#1=(1 2 3 . #1#)
+#+end_results
+** 連想リスト
+コンスセルから作られるデータ構造の中でも特に便利なのは、連想リスト。
+#+caption: 連想リストと、assocによるアクセス
+#+begin_src lisp
+  (defparameter *drink-order* '((bill . double-espresso)
+                                (lisa . small-drip-coffee)
+                                (john . medium-latter)))
+  (assoc 'lisa *drink-order*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(LISA . SMALL-DRIP-COFFEE)
+#+end_results
+
+追加。
+#+caption: 追加。lisaが2つあることがわかる
+#+begin_src lisp
+(push '(lisa . large-mocha-with-whipped-cream) *drink-order*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((LISA . LARGE-MOCHA-WITH-WHIPPED-CREAM) (BILL . DOUBLE-ESPRESSO)
+ (LISA . SMALL-DRIP-COFFEE) (JOHN . MEDIUM-LATTER))
+#+end_results
+
+#+caption: assocで優先されるのは先にあるほうだから、新しい値に入れ替わったことになる
+#+begin_src lisp
+(assoc 'lisa *drink-order*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(LISA . LARGE-MOCHA-WITH-WHIPPED-CREAM)
+#+end_results
+
+そのため、データの変更履歴をたどることも可能。
+** ノードの変換
+グラフ構造を視覚的に表現するために、graphvizを使う。
+フォーマットを出力するための関数を書く。
+
+#+caption: DOTフォーマットが受け付けない文字(アルファベットでも数字でもない)をすべてアンダースコアに変更する
+#+begin_src lisp
+  (defun dot-name (exp)
+      (substitute-if #\_ (complement #'alphanumericp) (prin1-to-string exp)))
+  (dot-name 'foo!)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+FOO_
+#+end_results
+
+substitute-ifは、与えられたテスト関数の結果によって値を置き換える関数。
+#+caption: 数字をeに変換する
+#+begin_src lisp
+(substitute-if #\e #'digit-char-p "I'm a l33t hack3r!")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+I'm a leet hacker!
+#+end_results
+
+substitute-ifは、リストも処理できる。
+#+caption: 奇数を0に置き換える
+#+begin_src lisp
+(substitute-if 0 #'oddp '(1 2 3 4 5 6 7 8 9))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(0 2 0 4 0 6 0 8 0)
+#+end_results
+
+グラフのノードにラベルをつける。
+#+caption: write-to-string のキーワード引数prettyは、人間用に改行などを整形してくれるのをオフにするため
+#+begin_src lisp
+  (defparameter *max-label-length* 30)
+
+  (defun dot-label (exp)
+    (if exp
+        (let ((s (write-to-string exp :pretty nil)))
+          (if (> (length s) *max-label-length*)
+              (concatenate 'string (subseq s 0 (- *max-label-length* 3)) "...")
+              s))
+        ""))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+DOT-LABEL
+#+end_results
+
+ノードのalistを取ってその情報をDOTの形で生成する関数を書く。
+#+caption: mapcはmapcarの変種で、結果のリストを返さない。ここではREPLで出力される情報だけが重要(副作用だけを使う)なため
+#+begin_src lisp
+  (defun nodes->dot (nodes)
+    (mapc (lambda (node)
+            (fresh-line)
+            (princ (dot-name (car node)))
+            (princ "[label=\"")
+            (princ (dot-label node))
+            (princ "\"];"))
+          nodes))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+NODES->DOT
+#+end_results
+
+#+caption: 変換したいalistを再定義しておく
+#+begin_src lisp
+  (defparameter *wizard-edges* '((living-room (garden west door)
+                           (attic upstairs ladder))
+                          (garden (living-room east door))
+                          (attic (living-room downstairs ladder))))
+
+  (defparameter *wizard-nodes* '((living-room (you are in the living-room.
+                                        a wizard is snoring loudly on the couch.))
+                          (garden (your are in a beautiful garden.
+                                   there is a well in front of you.))
+                          (attic (you are in the attic.
+                                  there is a giant welding torch in the corner.))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+*WIZARD-NODES*
+#+end_results
+
+#+caption:
+#+begin_src lisp :results output
+  (nodes->dot *wizard-nodes*)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+LIVING_ROOM[label="(LIVING-ROOM (YOU ARE IN TH..."];
+GARDEN[label="(GARDEN (YOUR ARE IN A BEAU..."];
+ATTIC[label="(ATTIC (YOU ARE IN THE ATTI..."];
+#+end_results
+
+次は、エッジをDOTの情報として書き出す。
+#+caption:
+#+begin_src lisp
+  (defun edges->dot (edges)
+    (mapc (lambda (node)
+            (mapc (lambda (edge)
+                    (fresh-line)
+                    (princ (dot-name (car node)))
+                    (princ "->")
+                    (princ (dot-name (car edge)))
+                    (princ "[label=\"")
+                    (princ (dot-label (cdr edge)))
+                    (princ "\"];"))
+                  (cdr node)))
+          edges))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+EDGES->DOT
+#+end_results
+
+* WIP [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                           :Read:
 DEADLINE: <2022-02-25 Fri>
 :LOGBOOK:
 CLOCK: [2022-02-19 Sat 20:00]--[2022-02-19 Sat 20:25] =>  0:25
