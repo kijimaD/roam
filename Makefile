@@ -1,7 +1,12 @@
+REGISTORY_URL = ghcr.io/kijimad/roam_build:master
+
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker-compose pull build && docker-compose run build sh deploy.sh
+	docker pull $(REGISTORY_URL) && \
+	docker build --target build -t $(REGISTORY_URL) --cache-from $(REGISTORY_URL) . && \
+	docker push $(REGISTORY_URL) && \
+	docker-compose run build sh deploy.sh
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
