@@ -976,69 +976,6 @@ nil値が返されるような要素全てをリストにして返す。
 
 文言のところどころを読んだ覚えがあるのだが、コードは全然覚えてない…。
 * memo
-** with-demoted-errors
-#+begin_src emacs-lisp :tangle yes
-(apropos "with-demoted-errors")
-#+end_src
-
-#+caption:
-#+begin_src emacs-lisp
-(with-demoted-errors "これはエラー %S" (/ 1 0))
-#+end_src
-#+RESULTS:
-#+begin_results
-nil
-#+end_results
-
-** open-line
-#+begin_src emacs-lisp :tangle yes
-(apropos "open-line")
-#+end_src
-
-open-lineは改行するコマンド。カーソルは移動しない。
-
-#+caption: 一行改行する
-#+begin_src emacs-lisp :tangle yes
-(open-line 1)
-#+end_src
-
-** declare
-#+begin_src emacs-lisp :tangle yes
-(apropos "declare")
-#+end_src
-
-謎。
-
-#+caption: よく見かける書き方
-#+begin_src emacs-lisp :tangle yes
-(declare (indent 2))
-#+end_src
-
-#+RESULTS:
-#+begin_results
-nil
-#+end_results
-
-** apply-partially                                                     :WIP:
-#+begin_src emacs-lisp :tangle yes
-(apropos "apply-partially")
-#+end_src
-
-どうやって使うのかわからない。
-
-#+begin_src emacs-lisp :results raw
-  (defun my-apply-partially (fun &rest args)
-    (lambda (&rest args2)
-      (apply fun (append args args2))))
-#+end_src
-
-#+RESULTS:
-#+begin_results
-my-apply-partially
-#+end_results
-
-/lisp/subr.el にはいろいろ見慣れた関数があるな。
-** cl-block
 ** 現在のメジャーモードの調べ方
 判定や使いかたを調べるのに使える。
 #+begin_src ruby
@@ -1258,4 +1195,96 @@ return 0 (i.e., success)."
       0
     eshell-last-command-status))
 #+end_src
+* パッケージ作成に役立つ関数
+** user-error
+エラーを出力する。
+#+caption: 処理を止め、メッセージを出す
+#+begin_src emacs-lisp :tangle yes
+(user-error "this is error!")
+#+end_src
+
+** format-spec
+フォーマット文字列を入れ込みたいときに使う。
+
+#+caption: 定数としてフォーマット文字列を決めておいて、あとから埋め込む
+#+begin_src emacs-lisp :tangle yes
+  (setq my-format "%h:%m")
+  (defun my-format-time (hour minute)
+    (format-spec my-format
+                 `((?h . ,hour)
+                   (?m . ,minute))))
+
+  (my-format-time 12 59)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+12:59
+#+end_results
+
+** repeat
+最後に実行したコマンドを繰り返す。
+** with-demoted-errors
+#+begin_src emacs-lisp :tangle yes
+(apropos "with-demoted-errors")
+#+end_src
+
+#+caption:
+#+begin_src emacs-lisp
+(with-demoted-errors "これはエラー %S" (/ 1 0))
+#+end_src
+#+RESULTS:
+#+begin_results
+nil
+#+end_results
+
+** open-line
+#+begin_src emacs-lisp :tangle yes
+(apropos "open-line")
+#+end_src
+
+open-lineは改行するコマンド。カーソルは移動しない。
+
+#+caption: 一行改行する
+#+begin_src emacs-lisp :tangle yes
+(open-line 1)
+#+end_src
+
+** declare
+#+begin_src emacs-lisp :tangle yes
+(apropos "declare")
+#+end_src
+
+謎。
+
+#+caption: よく見かける書き方
+#+begin_src emacs-lisp :tangle yes
+(declare (indent 2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+nil
+#+end_results
+
+** apply-partially                                                     :WIP:
+#+begin_src emacs-lisp :tangle yes
+(apropos "apply-partially")
+#+end_src
+
+どうやって使うのかわからない。
+
+#+begin_src emacs-lisp :results raw
+  (defun my-apply-partially (fun &rest args)
+    (lambda (&rest args2)
+      (apply fun (append args args2))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+my-apply-partially
+#+end_results
+
+/lisp/subr.el にはいろいろ見慣れた関数があるな。
+** cl-block
 * Tasks
