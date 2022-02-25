@@ -1,7 +1,20 @@
+BUILD_URL=ghcr.io/kijimad/roam_build:master
+RELEASE_URL=ghcr.io/kijimad/roam_release:master
+
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker-compose pull build && docker-compose run build sh deploy.sh
+	docker pull $(BUILD_URL) && \
+	docker build --target build -t $(BUILD_URL) --cache-from $(BUILD_URL) . && \
+	docker push $(BUILD_URL) && \
+	docker pull $(RELEASE_URL) && \
+	docker build --target build -t $(RELEASE_URL) --cache-from $(RELEASE_URL) . && \
+	docker push $(RELEASE_URL)
+
+release:
+	docker pull $(RELEASE_URL) && \
+	docker run --rm -v $(PWD):/roam $(RELEASE_URL)
+
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
