@@ -21,11 +21,6 @@ staging:
 	docker push registry.heroku.com/roam-staging/web && \
 	docker push $(STAGING_URL) && \
 	heroku container:release web
-build-dev:
-	export DOCKER_BUILDKIT=1 && \
-	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker build --target release -t test --cache-from $(RELEASE_URL) . && \
-	docker run --rm -v $(pwd):/roam test
 # build tasks ================
 
 update-index:

@@ -6,8 +6,9 @@
 
 - Notes by Emacs package: Org Roam https://github.com/org-roam/org-roam
 - written by Emacs, published by Emacs.
-- production: https://kijimad.github.io/roam/
-- staging: https://roam-staging.herokuapp.com/
+
++ production: https://kijimad.github.io/roam/
++ staging: https://roam-staging.herokuapp.com/
 
 ## lint
 ```shell
@@ -21,18 +22,4 @@ settings for conventional commit
 ```shell
 git config --local core.hooksPath .githooks
 git config --local commit.template .githooks/commit_msg.txt
-```
-
-## docker
-repository image: https://github.com/users/kijimaD/packages/container/package/roam
-
-build(use docker-compose)
-```shell
-make build-dev
-```
-
-development
-```shell
-docker-compose pull
-docker-compose run roam
 ```
