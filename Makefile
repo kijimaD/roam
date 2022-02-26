@@ -17,7 +17,7 @@ release:
 
 staging:
 	docker pull $(STAGING_URL) && \
-	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL) --cache-from ${STAGING_URL} . && \
+	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL) --cache-from $(STAGING_URL) . && \
 	docker push registry.heroku.com/roam-staging/web && \
 	docker push $(STAGING_URL) && \
 	heroku container:release web
