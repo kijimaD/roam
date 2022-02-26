@@ -70,7 +70,7 @@ FROM amazonlinux:2 as staging
 
 COPY --from=build /roam/public /roam/public
 
-CMD cd ./public && python -m SimpleHTTPServer $PORT
+CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # development ================
 
