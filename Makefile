@@ -13,7 +13,8 @@ build:
 	docker push $(RELEASE_URL)
 release:
 	docker pull $(RELEASE_URL) && \
-	docker run --rm -v $(PWD):/roam $(RELEASE_URL)
+	docker run --name release ${RELEASE_URL} && \
+	docker cp release:/roam/public ./
 staging:
 	docker pull $(STAGING_URL) && \
 	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL) --cache-from $(STAGING_URL) . && \
