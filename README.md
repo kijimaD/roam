@@ -4,8 +4,10 @@
 
 # Org Roam note
 
-- Notes using Emacs package: Org Roam https://github.com/org-roam/org-roam
+- Notes by Emacs package: Org Roam https://github.com/org-roam/org-roam
 - written by Emacs, published by Emacs.
+- production: https://kijimad.github.io/roam/
+- staging: https://roam-staging.herokuapp.com/
 
 ## lint
 ```shell
