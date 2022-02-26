@@ -70,8 +70,7 @@ FROM build as staging
 COPY .git/ ./.git/
 COPY . /roam
 
-CMD sh deploy.sh
-CMD cd ./public && python -m SimpleHTTPServer $PORT
+CMD sh deploy.sh & cd ./public && python -m SimpleHTTPServer $PORT
 
 # development ================
 
