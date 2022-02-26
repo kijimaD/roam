@@ -1,6 +1,5 @@
 [![textlint](https://github.com/kijimaD/roam/actions/workflows/lint.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/lint.yml)
 [![Publish to GitHub Pages](https://github.com/kijimaD/roam/actions/workflows/publish.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/publish.yml)
-[![Docker build](https://github.com/kijimaD/roam/actions/workflows/docker.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/docker.yml)
 
 # Org Roam note
 
