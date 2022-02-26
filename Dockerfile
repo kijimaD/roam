@@ -65,13 +65,13 @@ COPY . /roam
 CMD sh deploy.sh
 
 # for heroku staging
-FROM ghcr.io/kijimad/roam:master as staging
+FROM build as staging
 
-# COPY .git/ ./.git/
+COPY .git/ ./.git/
 COPY . /roam
-CMD make org2html
 
-CMD /bin/sh
+CMD sh deploy.sh
+CMD cd ./public && python -m SimpleHTTPServer $PORT
 
 # development ================
 

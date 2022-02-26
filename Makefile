@@ -1,5 +1,6 @@
 BUILD_URL=ghcr.io/kijimad/roam_build:master
 RELEASE_URL=ghcr.io/kijimad/roam_release:master
+STAGING_URL=ghcr.io/kijimad/roam_staging:master
 
 build:
 	export DOCKER_BUILDKIT=1 && \
@@ -10,10 +11,16 @@ build:
 	docker pull $(RELEASE_URL) && \
 	docker build --target build -t $(RELEASE_URL) --cache-from $(RELEASE_URL) . && \
 	docker push $(RELEASE_URL)
-
 release:
 	docker pull $(RELEASE_URL) && \
 	docker run --rm -v $(PWD):/roam $(RELEASE_URL)
+
+staging:
+	docker pull $(STAGING_URL) && \
+	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL) --cache-from ${STAGING_URL} . && \
+	docker push registry.heroku.com/roam-staging/web && \
+	docker push $(STAGING_URL) && \
+	heroku container:release web
 
 build-dev:
 	export DOCKER_BUILDKIT=1 && \
