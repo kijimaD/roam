@@ -53,6 +53,8 @@ RUN emacs --batch -l ./publish.el
 COPY .git/ ./.git/
 COPY . /roam
 
+RUN sh deploy.sh
+
 CMD /bin/sh
 
 # release ================
@@ -70,7 +72,7 @@ FROM build as staging
 COPY .git/ ./.git/
 COPY . /roam
 
-CMD sh deploy.sh & cd ./public && python -m SimpleHTTPServer $PORT
+CMD cd ./public && python -m SimpleHTTPServer $PORT
 
 # development ================
 
