@@ -13,7 +13,7 @@ build:
 	docker push $(RELEASE_URL)
 release:
 	docker pull $(RELEASE_URL) && \
-	docker run --name release ${RELEASE_URL} && \
+	docker run --detach --name release $(RELEASE_URL) && \
 	docker cp release:/roam/public ./
 staging:
 	docker pull $(STAGING_URL) && \
