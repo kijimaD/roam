@@ -58,19 +58,17 @@ RUN sh deploy.sh
 CMD /bin/sh
 
 # release ================
+# GitHub Pages(production)
+FROM amazonlinux:2 as release
 
-FROM build as release
+COPY --from=build /roam/public /roam/public
 
-COPY .git/ ./.git/
-COPY . /roam
+CMD /bin/sh
 
-CMD sh deploy.sh
+# Heroku(staging)
+FROM amazonlinux:2 as staging
 
-# for heroku staging
-FROM build as staging
-
-COPY .git/ ./.git/
-COPY . /roam
+COPY --from=build /roam/public /roam/public
 
 CMD cd ./public && python -m SimpleHTTPServer $PORT
 
