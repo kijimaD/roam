@@ -10,6 +10,20 @@ jobs:
       - name: Check out
         uses: actions/checkout@v1
 
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.WRITE_PACKAGE }}
+
+      - name: build & push to staging
+        env:
+          HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: heroku container:login && heroku git:remote -a roam-staging && make staging
+
       - name: check build
         env:
           DOCKER_BUILDKIT: 1

@@ -53,25 +53,24 @@ RUN emacs --batch -l ./publish.el
 COPY .git/ ./.git/
 COPY . /roam
 
+RUN sh deploy.sh
+
 CMD /bin/sh
 
 # release ================
+# GitHub Pages(production)
+FROM amazonlinux:2 as release
 
-FROM build as release
-
-COPY .git/ ./.git/
-COPY . /roam
-
-CMD sh deploy.sh
-
-# for heroku staging
-FROM ghcr.io/kijimad/roam:master as staging
-
-# COPY .git/ ./.git/
-COPY . /roam
-CMD make org2html
+COPY --from=build /roam/public /roam/public
 
 CMD /bin/sh
+
+# Heroku(staging)
+FROM amazonlinux:2 as staging
+
+COPY --from=build /roam/public /roam/public
+
+CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # development ================
 
