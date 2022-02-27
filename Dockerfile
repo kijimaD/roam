@@ -35,7 +35,7 @@ RUN yum -y update && \
         python3 \
         gnuplot
 
-COPY --from=ruby /usr/local /usr/local
+COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
 
 WORKDIR /roam
 
