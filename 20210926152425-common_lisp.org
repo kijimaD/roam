@@ -36,7 +36,7 @@ CLOSED: [2022-02-17 Thu 23:42] DEADLINE: <2022-02-17 Thu 23:59>
 *** DONE 100
 CLOSED: [2022-02-22 Tue 23:25] DEADLINE: <2022-02-18 Fri 23:59>
 *** TODO 150
-DEADLINE: <2022-02-23 Wed 23:59>
+DEADLINE: <2022-02-27 Sun 23:59>
 ** 数あてゲーム
 #+caption: defparameterはグローバル変数
 #+begin_src lisp
@@ -1038,6 +1038,8 @@ EDGES->DOT
 * WIP [[https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712][初めての人のためのLISP]]                                           :Read:
 DEADLINE: <2022-02-25 Fri>
 :LOGBOOK:
+CLOCK: [2022-02-27 Sun 13:40]--[2022-02-27 Sun 14:05] =>  0:25
+CLOCK: [2022-02-27 Sun 12:44]--[2022-02-27 Sun 13:09] =>  0:25
 CLOCK: [2022-02-19 Sat 20:00]--[2022-02-19 Sat 20:25] =>  0:25
 CLOCK: [2022-02-18 Fri 22:02]--[2022-02-18 Fri 22:27] =>  0:25
 CLOCK: [2022-02-18 Fri 21:36]--[2022-02-18 Fri 22:01] =>  0:25
@@ -1057,7 +1059,7 @@ CLOSED: [2022-02-18 Fri 10:57] DEADLINE: <2022-02-18 Fri 23:59>
 *** DONE 220
 CLOSED: [2022-02-20 Sun 00:29] DEADLINE: <2022-02-18 Fri 23:59>
 *** TODO 240
-DEADLINE: <2022-02-23 Wed 23:59>
+DEADLINE: <2022-02-27 Sun 23:59>
 ** cond
 #+caption: condは条件式の処理に使う。
 #+begin_src lisp
@@ -1774,6 +1776,80 @@ funcallで書く。
 #+begin_results
 (10 15 21 33 36 41 50 57 57 61 63 78)
 #+end_results
+** sort
+#+caption: 無名関数で順序を指定してソートする
+#+begin_src lisp
+  (setq monthly-sales
+        '((Jan . 10) (Feb . 5) (Mar . 6) (Apr . 12) (May . 3)(Jun . 5) (Jul . 9) (Aug . 7) (Sep . 0) (Oct . 4)(Nov . 2) (Dec . 15)))
+  (sort monthly-sales #'(lambda (x y) (> (cdr x) (cdr y))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+((DEC . 15) (APR . 12) (JAN . 10) (JUL . 9) (AUG . 7) (MAR . 6) (FEB . 5)
+ (JUN . 5) (OCT . 4) (MAY . 3) (NOV . 2) (SEP . 0))
+#+end_results
+** eval
+evalを実装することで理解する。
+
+#+caption: eval
+#+begin_src lisp
+  (defun eval (form)
+    (cond
+      ((or (null form) (numberp form) (stringp form)) form) ; nil, 数, 文字列の値はそれ自身
+      ((symbolp form) (variable-value form)) ; シンボルは変数と解釈される
+      ((member (car form)
+               '(quote cond setq prog progn prog1 prog2 go let let* if do do* defun defmacro function ...))
+       (eval-special-form form)) ; 特殊形式の処理(ここから先はセルとわかっている)
+      ((and (consp (car Form)) ; ラムダ式
+            (eq (caar form) 'lambda))
+       (apply (car form) (evlis (cdr form))))
+      ((function-symbol-p (car form)  ; 関数シンボル
+                          (evlis (cdr form))))
+      ((macro-symbol-p (car form)) ; マクロ呼び出し。ただしbackquoteには未対応
+       (eval (apply (macro-function (car form)) (cdr form))))
+      (t (error 'concat-evaluate form))))
+#+end_src
+
+#+caption: evlis
+#+begin_src lisp
+  ;; 引数を順次評価してリストにする(実際はリストを作らずスタックに積む ??)
+  (defun evlis (args)
+    (cond ((null args) nil)
+          (t (cons (eval (car args)) (evlis (cdr args))))))
+#+end_src
+
+#+caption: 特殊形式の評価
+#+begin_src lisp
+  (defun eval-special-form (form)
+    (cond ((eq (car form) 'quote) (cadr form))
+          ((eq (car form 'cond) (evcon (cdr form))))
+          ((eq (car form) 'setq') ...)
+          ((eq (car form) 'progn) (evprogn (cdr form)))))
+#+end_src
+
+#+caption: cond式の評価
+#+begin_src lisp
+  (defun evcon (clauses)
+    (cond
+      ;; もうcond節が残ってなければnilを返す
+      ((null clauses) nil)
+      ;; 述語が真であれば、帰結の暗黙のprognを順次評価する
+      ((eval (caar clauses))
+       (evprogn (cdr clauses)))
+      ;; 次のcond節を調べる
+      (t (evcon (cdr clauses)))))
+#+end_src
+
+#+caption: prognの評価
+#+begin_src lisp
+  (defun evprogn (forms)
+    (cond
+      ((null forms) nil)
+      ((null (cdr forms)) (eval (car forms)))
+      (t (eval (car forms)) (evprogn (cdr forms)))))
+#+end_src
+
 * Tasks
 ** [[https://www.cs.cmu.edu/~dst/LispBook/book.pdf][COMMONLISP: A Gentle Introduction to Symbolic Computation]]
 わかりやすい入門。
