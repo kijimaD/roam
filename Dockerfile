@@ -22,8 +22,6 @@ RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-buil
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
 
-FROM ghcr.io/kijimad/roam_ruby:master as roam_ruby
-
 FROM amazonlinux:2 AS build
 
 RUN yum -y update && \
@@ -37,7 +35,7 @@ RUN yum -y update && \
         python3 \
         gnuplot
 
-COPY --from=roam_ruby /usr/local /usr/local
+COPY --from=ruby /usr/local /usr/local
 
 WORKDIR /roam
 
