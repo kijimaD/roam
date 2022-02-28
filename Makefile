@@ -1,25 +1,35 @@
-BUILD_URL=ghcr.io/kijimad/roam_build:master
-RELEASE_URL=ghcr.io/kijimad/roam_release:master
-STAGING_URL=ghcr.io/kijimad/roam_staging:master
+GIT_TAG:=$(shell git rev-parse --short HEAD)
+PULL_TAG:=master
+
+BUILD_URL_BASE:=ghcr.io/kijimad/roam_build
+BUILD_URL_PUSH:=$(BUILD_URL_BASE):$(GIT_TAG)
+BUILD_URL_PULL:=$(BUILD_URL_BASE):$(PULL_TAG)
+
+RELEASE_URL_BASE:=ghcr.io/kijimad/roam_release
+RELEASE_URL_PUSH:=$(RELEASE_URL_BASE):$(GIT_TAG)
+RELEASE_URL_PULL:=$(RELEASE_URL_BASE):$(PULL_TAG)
+
+STAGING_URL_BASE:=ghcr.io/kijimad/roam_staging
+STAGING_URL_PUSH:=$(STAGING_URL_BASE):$(GIT_TAG)
+STAGING_URL_PULL:=$(STAGING_URL_BASE):$(PULL_TAG)
 
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker pull $(BUILD_URL) && \
-	docker build --target build -t $(BUILD_URL) --cache-from $(BUILD_URL) . && \
-	docker push $(BUILD_URL) && \
-	docker pull $(RELEASE_URL) && \
-	docker build --target build -t $(RELEASE_URL) --cache-from $(RELEASE_URL) . && \
-	docker push $(RELEASE_URL)
+	docker build --target build -t $(BUILD_URL_PUSH) -t $(BUILD_URL_PULL) --cache-from $(BUILD_URL_PULL) . && \
+	docker push $(BUILD_URL_PUSH) && \
+	docker push $(BUILD_URL_PULL) && \
+	docker build --target build -t $(RELEASE_URL_PUSH) -t $(RELEASE_URL_PULL) --cache-from $(RELEASE_URL_PULL) . && \
+	docker push $(RELEASE_URL_PUSH) && \
+	docker push $(RELEASE_URL_PULL)
 release:
-	docker pull $(RELEASE_URL) && \
-	docker run --detach --name release $(RELEASE_URL) && \
+	docker run --detach --name release $(RELEASE_URL_PUSH) && \
 	docker cp release:/roam/public ./
 staging:
-	docker pull $(STAGING_URL) && \
-	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL) --cache-from $(STAGING_URL) . && \
+	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL_PUSH) -t $(STAGING_URL_PULL) --cache-from $(STAGING_URL_PULL) . && \
 	docker push registry.heroku.com/roam-staging/web && \
-	docker push $(STAGING_URL) && \
+	docker push $(STAGING_URL_PUSH) && \
+	docker push $(STAGING_URL_PULL) && \
 	heroku container:release web
 # build tasks ================
 
