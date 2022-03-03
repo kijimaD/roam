@@ -1,11 +1,113 @@
 :PROPERTIES:
 :ID:       b2f63c13-4b30-481c-9c95-8abe388254fd
+:header-args+: :wrap :results raw
 :END:
 #+title: Scala
 * 概要
 Scalaはオブジェクト指向言語と関数型の特徴を合わせた[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 [[id:6218deb2-43df-473a-8cdf-910c47edd801][Clojure]]と同様に[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]仮想マシン上で動作するため、[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]のコードベース流用ができる。
 * Memo
+* TODO [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
+:LOGBOOK:
+CLOCK: [2022-03-03 Thu 19:07]--[2022-03-03 Thu 19:32] =>  0:25
+CLOCK: [2022-03-03 Thu 18:11]--[2022-03-03 Thu 18:36] =>  0:25
+CLOCK: [2022-03-03 Thu 14:54]--[2022-03-03 Thu 15:19] =>  0:25
+CLOCK: [2022-03-03 Thu 13:51]--[2022-03-03 Thu 14:16] =>  0:25
+:END:
+** _
+scalaの入門本。
+** progress
+*** TODO 100
+*** TODO 200
+*** TODO 300
+*** TODO 400
+*** TODO 500
+** 基本
+#+caption: Upperクラス、upperメソッドを書く
+#+begin_src scala :results output
+  class Upper {
+    def upper(strings: String*): Seq[String] = {
+      strings.map((s:String) => s.toUpperCase())
+    }
+  }
+  val up = new Upper
+  Console.println(up.upper("A", "First", "Scala", "Program"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+ArraySeq(A, FIRST, SCALA, PROGRAM)
+#+end_results
+
+#+caption: ↑の例と同じ結果で短く書く。Upperをシングルトンであるobjectとして宣言する
+#+begin_src scala :results output
+    object Upper {
+      def upper(strings: String*) = strings.map(_.toUpperCase())
+    }
+  Console.println(Upper.upper("A", "First", "Scala", "Program")) // new Upper によってインスタンスを生成する代わりに、単にUpperオブジェクトのUpperメソッドを直接呼ぶ
+#+end_src
+
+#+RESULTS:
+#+begin_results
+ArraySeq(A, FIRST, SCALA, PROGRAM)
+#+end_results
+
+#+caption: さらにリファクタリング。_プレースホルダは省略記法
+#+begin_src scala :results output
+  object Upper {
+    def main(args: Array[String]) = {
+      args.map(_.toUpperCase()).foreach(printf("%s ",_))
+      println("")
+    }
+  }
+
+  Upper.main(Array("Hello", "World"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+HELLO WORLD
+#+end_results
+** 非同期実行
+
+- valキーワードは、同名の読み取り専用のフィールドと同名の公開読み取りメソッドに自動的に変換される
+  - Pointをインスタンス化した場合、そのフィールドをpoint.xやpoint.yで読み取ることができる
+- scalaでは、具象メソッドをオーバーライドする場合、overrideキーワードが必要
+- Shapeは抽象クラス。つまりインスタンス化できない
+  - Shapeのメソッドは抽象メソッド。本体をもたない
+- drawメソッドが返すUnitは、[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]などにおけるvoidに相当する
+
+#+caption:
+#+begin_src scala
+  package shapes {
+    class Point (val x: Double, val y: Double) {
+      override def toString() = "Point(" + x + "," + y + ")"
+    }
+
+    abstract class Shape() {
+      def draw() : Unit
+    }
+
+    class Circle(val center: Point, val radius: Double) extends Shape {
+      def draw() = println("Circle.draw: " + this)
+      override def toString() = "Circle(" + center + "," + radius + ")"
+    }
+
+    class Rectangle(val lowerLeft: Point, val height: Double, val width: Double)
+        extends Shape {
+      def draw() = println("Rectangle.draw: " + this)
+      override def toString() =
+        "Rectangle(" + lowerLeft + "," + height + "," + width + ")"
+    }
+
+    class Triangle(val point1: Point, val point2: Point, val point3: Point)
+        extends Shape {
+      def draw() = println("Triangle.draw: " + this)
+      override def toString() =
+        "Triangle(" + point1 + "," + point2 + "," + point3 + ")"
+    }
+  }
+#+end_src
 * Tasks
 * Reference
 ** [[https://ja.wikipedia.org/wiki/Scala][Scala - Wikipedia]]
