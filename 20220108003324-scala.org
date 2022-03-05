@@ -1,14 +1,29 @@
 :PROPERTIES:
 :ID:       b2f63c13-4b30-481c-9c95-8abe388254fd
-:header-args+: :wrap :results raw
+:header-args+: :wrap :results output
 :END:
 #+title: Scala
 * 概要
 Scalaはオブジェクト指向言語と関数型の特徴を合わせた[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 [[id:6218deb2-43df-473a-8cdf-910c47edd801][Clojure]]と同様に[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]仮想マシン上で動作するため、[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]のコードベース流用ができる。
 * Memo
-* TODO [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
+** sbt
+sbtはScalaのビルドツールのこと。
+* WIP [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
 :LOGBOOK:
+CLOCK: [2022-03-05 Sat 20:36]--[2022-03-05 Sat 21:01] =>  0:25
+CLOCK: [2022-03-05 Sat 15:56]--[2022-03-05 Sat 16:21] =>  0:25
+CLOCK: [2022-03-05 Sat 15:05]--[2022-03-05 Sat 15:30] =>  0:25
+CLOCK: [2022-03-05 Sat 12:29]--[2022-03-05 Sat 12:54] =>  0:25
+CLOCK: [2022-03-04 Fri 23:42]--[2022-03-05 Sat 00:07] =>  0:25
+CLOCK: [2022-03-04 Fri 23:16]--[2022-03-04 Fri 23:41] =>  0:25
+CLOCK: [2022-03-04 Fri 10:22]--[2022-03-04 Fri 10:47] =>  0:25
+CLOCK: [2022-03-04 Fri 09:37]--[2022-03-04 Fri 10:02] =>  0:25
+CLOCK: [2022-03-03 Thu 23:36]--[2022-03-04 Fri 00:01] =>  0:25
+CLOCK: [2022-03-03 Thu 22:59]--[2022-03-03 Thu 23:24] =>  0:25
+CLOCK: [2022-03-03 Thu 22:18]--[2022-03-03 Thu 22:43] =>  0:25
+CLOCK: [2022-03-03 Thu 21:46]--[2022-03-03 Thu 22:11] =>  0:25
+CLOCK: [2022-03-03 Thu 21:07]--[2022-03-03 Thu 21:32] =>  0:25
 CLOCK: [2022-03-03 Thu 19:07]--[2022-03-03 Thu 19:32] =>  0:25
 CLOCK: [2022-03-03 Thu 18:11]--[2022-03-03 Thu 18:36] =>  0:25
 CLOCK: [2022-03-03 Thu 14:54]--[2022-03-03 Thu 15:19] =>  0:25
@@ -22,9 +37,9 @@ scalaの入門本。
 *** TODO 300
 *** TODO 400
 *** TODO 500
-** 基本
+** Hello, world
 #+caption: Upperクラス、upperメソッドを書く
-#+begin_src scala :results output
+#+begin_src scala
   class Upper {
     def upper(strings: String*): Seq[String] = {
       strings.map((s:String) => s.toUpperCase())
@@ -40,7 +55,7 @@ ArraySeq(A, FIRST, SCALA, PROGRAM)
 #+end_results
 
 #+caption: ↑の例と同じ結果で短く書く。Upperをシングルトンであるobjectとして宣言する
-#+begin_src scala :results output
+#+begin_src scala
     object Upper {
       def upper(strings: String*) = strings.map(_.toUpperCase())
     }
@@ -53,7 +68,7 @@ ArraySeq(A, FIRST, SCALA, PROGRAM)
 #+end_results
 
 #+caption: さらにリファクタリング。_プレースホルダは省略記法
-#+begin_src scala :results output
+#+begin_src scala
   object Upper {
     def main(args: Array[String]) = {
       args.map(_.toUpperCase()).foreach(printf("%s ",_))
@@ -68,6 +83,7 @@ ArraySeq(A, FIRST, SCALA, PROGRAM)
 #+begin_results
 HELLO WORLD
 #+end_results
+
 ** 非同期実行
 
 - valキーワードは、同名の読み取り専用のフィールドと同名の公開読み取りメソッドに自動的に変換される
@@ -77,7 +93,7 @@ HELLO WORLD
   - Shapeのメソッドは抽象メソッド。本体をもたない
 - drawメソッドが返すUnitは、[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]などにおけるvoidに相当する
 
-#+caption:
+#+caption: shapes.scala
 #+begin_src scala
   package shapes {
     class Point (val x: Double, val y: Double) {
@@ -107,6 +123,706 @@ HELLO WORLD
         "Triangle(" + point1 + "," + point2 + "," + point3 + ")"
     }
   }
+#+end_src
+
+- importでの ~_~ は、すべての型をインポートすることを示す( ~*~ は関数名として有効だから)
+- actメソッドは抽象メソッドなので、オーバーライドするのに明示的なoverrideキーワードは不要
+
+#+caption: shapes-actor.scala
+
+#+begin_src scala
+  packages shapes {
+    import scala.actors._
+    import scala.actors.Actor._
+
+    object ShapeDrawingActor extends Actor {
+      def act() {
+        loop {
+          receive {
+            case s: Shape => s.draw()
+            case "exit" => println("exiting..."); exit
+            case x: Any => println("Error: Unknown message! " + x)
+          }
+        }
+      }
+    }
+  }
+#+end_src
+
+#+caption: shapes-actor-script.scala アクターを使用する
+#+begin_src scala
+  import shapes._
+  ShapeDrawingActor.start()
+  ShapeDrawingActor | new Circle(new Point(0.0,0.0), 1.0)
+  ShapeDrawingActor | new Rectangle(new Point(0.0,0.0), 2, 5)
+  ShapeDrawingActor | new Triangle(new Point(0.0,0.0),
+                                   new Point(1.0,0.0),
+                                   new Point(0.0,1.0))
+  ShapeDrawingActor | 3.14159
+  ShapeDrawingActor | "exit"
+#+end_src
+
+** 変数宣言
+- 不変の変数は、キーワード ~val~ を使う。
+
+#+caption: 変数宣言
+#+begin_src scala
+  val array: Array[String] = new Array(5)
+  array
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[Ljava.lang.String;@6d304f9d
+#+end_results
+
+array参照を変更できないことを確かめる。
+
+#+caption: 再代入できない
+#+begin_src scala :eval never
+  val array: Array[String] = new Array(5)
+  array = new Array(2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/tmp/babel-LymR61/scala-PllbQI:7: error: reassignment to val
+array = new Array(2)
+#+end_results
+
+参照は変更できないが、配列そのものは変更できる。
+
+#+caption: 中身が出力されないが、コンソールで打つとたしかに中身が書き換わっている
+#+begin_src scala
+  val array: Array[String] = new Array(5)
+  array(0) = "Hello"
+  array
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[Ljava.lang.String;@51cd7ffc
+#+end_results
+
+- 不変: val
+- 可変: var
+
+紛らわしいな。
+
+#+caption: varは可変で、再代入できる
+#+begin_src scala
+  var stockPrice: Double = 100.0
+  stockPrice = 10.0
+  stockPrice
+#+end_src
+
+#+RESULTS:
+#+begin_results
+10.0
+#+end_results
+
+** デフォルト引数
+#+caption: 引数を結合するメソッド。separatorがデフォルト引数を指定している
+#+begin_src scala
+  object StringUtil {
+    def joiner(strings: List[String], separator: String = " "): String = strings.mkString(separator)
+  }
+  import StringUtil._
+  println(joiner(List("Programming", "Scala")))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Programming Scala
+#+end_results
+
+** 名前付き引数
+名前付き引数。引数が何かわかりやすい。
+
+#+caption: すべて同じ意味
+#+begin_src scala
+  object StringUtil {
+    def joiner(strings: List[String], separator: String = " "): String = strings.mkString(separator)
+  }
+  import StringUtil._
+  println(joiner(List("Programming", "Scala")))
+  println(joiner(strings = List("Programming", "Scala")))
+  println(joiner(List("Programming", "Scala"), " "))
+  println(joiner(List("Programming", "Scala"), separator = " "))
+  println(joiner(strings = List("Programming", "Scala"), separator = " "))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Programming Scala
+Programming Scala
+Programming Scala
+Programming Scala
+Programming Scala
+#+end_results
+
+** 入れ子のメソッド定義
+#+caption: 階乗計算を入れ子で定義する
+#+begin_src scala
+  def factorial(i: Int): Int = {
+    def fact(i: Int, accumulator: Int): Int = {
+      if (i <= 1)
+        accumulator
+      else
+        fact(i - 1, i * accumulator)
+    }
+    fact(i, 1)
+  }
+
+  println(factorial(0))
+  println(factorial(1))
+  println(factorial(2))
+  println(factorial(3))
+  println(factorial(4))
+  println(factorial(5))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+1
+2
+6
+24
+120
+#+end_results
+
+#+caption: 入れ子の外側で定義された変数を使う
+#+begin_src scala
+  def countTo(n: Int):Unit = {
+    def count(i: Int):Unit = {
+      if (i <= n) { // nをcountメソッドから参照できる
+        println(i)
+        count(i + 1)
+      }
+    }
+    count(1)
+  }
+  countTo(5)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+2
+3
+4
+5
+#+end_results
+
+** 型推論
+#+caption: 右辺では実際に使う型であるHashMapをインスタンス化しているが、型パラメータを書く必要はない
+#+begin_src scala
+  import java.util.Map
+  import java.util.HashMap
+
+  val intToStringMap: Map[Integer, String] = new HashMap
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+caption: 型情報が左辺にあるバージョン
+#+begin_src scala
+  import java.util.Map
+  import java.util.HashMap
+
+  val intToStringMap2 = new HashMap[Integer, String]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+- Scalaの場合、純粋関数言語([[id:c4c3816f-e03f-41a8-9a97-ddcfd3d738ff][Haskell]]とか)より多くの型アノテーションを付ける必要がある。オブジェクト指向の型付けと関数型の片付けをサポートしないといけないから。
+
+メソッドの戻り値の型に対して明示的な宣言が必要な例。
+#+caption: 長さゼロの文字列に対する条件付きのreturn文
+#+begin_src scala :eval never
+  def upCase(s: String) = {
+    if (s.length == 0)
+      return s
+    else
+      s.toUpperCase()
+  }
+
+  println(upCase(""))
+  println(upCase("Hello"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/tmp/babel-LymR61/scala-TQZ3UB:8: error: method upCase has return statement; needs result type
+    return s
+#+end_results
+
+#+caption: upCaseの戻り値を指定するとコンパイルできる
+#+begin_src scala
+  def upCase(s: String): String = {
+    if (s.length == 0)
+      return s
+    else
+      s.toUpperCase()
+  }
+
+  println(upCase(""))
+  println(upCase("Hello"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+HELLO
+#+end_results
+
+#+caption: makeListに対して推論された戻り値の型がList[Any]
+#+begin_src scala :eval never
+  def makeList(strings: String*) = {
+    if (strings.length == 0)
+      List(0)
+    else
+      strings.toList
+  }
+
+val list: List[String] = makeList()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/tmp/babel-LymR61/scala-x73fET:13: error: type mismatch;
+ found   : List[Any]
+ required: List[String]
+val list: List[String] = makeList()
+#+end_results
+
+strings.lengthが0のときにList(0)…List[Int]を返す。正しくはList()。
+メソッドの推論された戻り値の型は、List[Int]とList[String]の最も近い共通のスーパー型、List[Any]になる。
+
+別の例。
+
+#+caption: Mapの型パラメータは[Nothing]と推論された
+#+begin_src scala :eval never
+  val map = Map()
+  map.update("book", "Programming Scala")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/tmp/babel-LymR61/scala-JI2yYc:7: error: value update is not a member of scala.collection.immutable.Map[Nothing,Nothing]
+#+end_results
+
+Mapにおける型パラメータは[Nothing, Nothing]と推論された。なのでStringを入れるとエラー。
+** 等号
+#+caption: Int型の引数を取り、Unit型を返す定義になっている。Int型を返さない
+#+begin_src scala
+  def double(i: Int) { 2 * i }
+  println(double(2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+()
+#+end_results
+
+- 本体の前に等号を持つメソッドを関数の定義とみなす
+- 先頭に等号がないメソッドの本体を見つけると、プログラマが「手続き」の定義としてメソッドを書いたとみなす。手続きは、Unit型の戻り値しか持たず副作用を伴う処理を実行するためのもの
+
+#+caption: 本来意図していた挙動
+#+begin_src scala
+  def double(i: Int) = { 2 * i }
+  println(double(2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+4
+#+end_results
+
+** タプル
+t._NはN番目の項目を取得するが、1始まりなのに注意。
+
+#+caption:
+#+begin_src scala
+  def tupleator(x1: Any, x2: Any, x3: Any) = (x1, x2, x3)
+
+  val t = tupleator("Hello", 1, 2.3)
+  println("Print the whole tuple: " + t)
+  println("Print the first item: " + t._1)
+  println("Print the second item: " + t._2)
+  println("Print the third item: " + t._3)
+
+  val (t1, t2, t3) = tupleator("World", '!', 0x22)
+  println(t1 + " " + t2 + " " + t3)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Print the whole tuple: (Hello,1,2.3)
+Print the first item: Hello
+Print the second item: 1
+Print the third item: 2.3
+World ! 34
+#+end_results
+
+Option型は、nullを返すことがあることを明示する。
+#+caption: scala.collection.immutable.HashMap の getの実装(Scala 2.7)
+#+begin_src scala
+  def get(key: A): Option[B] = {
+    if (contains(key))
+      new Some(getValue(key))
+    else
+      None
+  }
+#+end_src
+
+** 名前空間
+#+caption:
+#+begin_src scala
+  package com {
+    package example {
+      package pkg1 {
+        class Class11 {
+          def m = "m11"
+        }
+        class Class12 {
+          def m = "m12"
+        }
+      }
+
+      package pkg2 {
+        class Class21 {
+          def m = "m21"
+          def makeClass11 = {
+            new pkg1.Class11
+          }
+          def makeClass12 = {
+            new pkg1.Class12
+          }
+        }
+      }
+
+      package pkg3.pkg31.pkg311 {
+        class Class311 {
+          def m = "m21"
+        }
+      }
+    }
+  }
+#+end_src
+
+** インポート
+#+caption: _でワイルドカード
+#+begin_src scala
+  import java.awt._
+  import java.io.File
+  import java.io.File._
+  import java.util.{Map, HashMap}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+caption: 特定の型だけインポート
+#+begin_src scala :results output
+  def writeAboutBigInteger() = {
+  import java.math.BigInteger.{
+  ONE => _, // インポートしたスコープのスコープ内から隠し、利用できなくする
+  TEN,
+  ZERO => JAVAZERO } // 別名をつけてインポート
+
+  // println("ONE: " +ONE) // 未定義
+  println("TEN: " +TEN)
+  println("ZERO: " +JAVAZERO)}
+  writeAboutBigInteger
+#+end_src
+
+#+RESULTS:
+#+begin_results
+TEN: 10
+ZERO: 0
+#+end_results
+
+** 抽象型
+#+caption:
+#+begin_src scala
+  import java.io._
+
+  abstract class BulkReader {
+    type In
+    val source: In
+    def read: String
+  }
+
+  class StringBulkReader(val source: String) extends BulkReader {
+    type In = String
+    def read = source
+  }
+
+  class FileBulkReader(val source: File) extends BulkReader {
+    type In = File
+    def read = {
+      val in = new BufferedInputStream(new FileInputStream(source))
+      val numBytes = in.available()
+      val bytes = new Array[Byte](numBytes)
+      in.read(bytes, 0, numBytes)
+      new String(bytes)
+    }
+  }
+
+  println(new StringBulkReader("Hello Scala!").read)
+  println(new FileBulkReader(new File(".gitattributes")).read)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Hello Scala!
+public/* linguist-vendored
+public/*/* linguist-vendored
+#+end_results
+
+- インスタンスは具象クラスからのみ生成できる
+- 具象クラスにはすべてのメンバが定義されていなければならない
+- StringBulkReader, FileBulkReaderという派生クラスは、BulkReaderで定義した抽象メンバに対する具体的な定義を与える
+** 基本文法
+- 最も重要で基本的なコンセプト: 演算子に見えるものは実際にはすべてメソッド
+
+~1 + 2~ は、 ~1.+(2)~ と同じ。
+
+- 慣習的に、副作用のないメソッドの呼び出しには()を使う
+- 引数なしのメソッドや引数が1つだけのメソッドを呼び出すときには、ドットを省略することができる
+
+#+caption: 左結合のメソッド呼び出しは、単純に左から右の順に束縛される
+#+begin_src scala :results raw
+  val list = List('b', 'c', 'd')
+  println(list)
+
+  println('a' :: list)
+  println(list.::('a')) // ↑と同じ意味
+#+end_src
+
+#+RESULTS:
+#+begin_results
+List(b, c, d)
+List(a, b, c, d)
+List(a, b, c, d)
+#+end_results
+
+if式やその他のほとんどの文が実際には式である。そのため、if式の結果を代入できる。
+
+#+caption: if式の結果を代入する
+#+begin_src scala
+  val configFile = new java.io.File(".myapprc")
+
+  val configFilePath = if(configFile.exists()) {
+    configFile.getAbsolutePath()
+  } else {
+    configFile.createNewFile()
+    configFile.getAbsolutePath()
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+** for式
+基本的なfor式。
+#+caption:
+#+begin_src scala
+  val dogBreeds = List("Doberman", "Yorkshire Terrirorf", "Dachshund",
+  "Scottish Terrir", "Creat Dane", "Portuguess Water Dog")
+  for (breed <- dogBreeds)
+  println(breed)
+#+end_src
+
+#+RESULTS: <-演算子は、for式の内側で参照される一時変数に、コレクションの要素を1つずつ代入する
+#+begin_results
+Doberman
+Yorkshire Terrirorf
+Dachshund
+Scottish Terrir
+Creat Dane
+Portuguess Water Dog
+#+end_results
+
+<-演算子はジェネレータという。
+for式の内側で参照される一時変数に、コレクションの要素を1つずつ代入する矢印。
+
+フィルタリングの結果をプログラムの別の部分に渡すとき、yieldを使う。
+
+#+caption: for式を通過するたびに、フィルタの結果がbreedと名付けられた値で生成される。結果の集合がfilteredBreedsに代入される
+#+begin_src scala
+  val dogBreeds = List("Doberman", "Yorkshire Terrier", "Dachshund",
+    "Scottish Terrier", "Great Dane", "Portuguese Water Dog")
+  val filteredBreeds = for {
+    breed <- dogBreeds
+    if breed.contains("Terrier")
+    if !breed.startsWith("Yorkshire")
+  } yield breed
+  println(filteredBreeds)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+List(Scottish Terrier)
+#+end_results
+
+#+caption: for式の内側に定義した変数をあとで使用できる
+#+begin_src scala
+  val dogBreeds = List("Doberman", "Yorkshire Terrier", "Dachshund",
+    "Scottish Terrier", "Great Dane", "Portuguese Water Dog")
+  for {
+    breed <- dogBreeds
+    upcasedBreed = breed.toUpperCase()
+  } println(upcasedBreed)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+DOBERMAN
+YORKSHIRE TERRIER
+DACHSHUND
+SCOTTISH TERRIER
+GREAT DANE
+PORTUGUESE WATER DOG
+#+end_results
+
+** do-whileループ
+#+caption: whileループとの違い…do-whileはブロックを実行したあとで状態が真がどうかをチェックする
+#+begin_src scala
+  var count = 0
+  do {
+    count += 1
+    println(count)
+  } while (count < 10)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+#+end_results
+
+** ジェネレータ式
+#+caption: アロー演算子で書ける
+#+begin_src scala
+  for (i <- 1 to 10) println(i)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+#+end_results
+
+- コンパイラは暗黙の型変換を呼び出し、Intの1をRichIntに変換する。toメソッドを呼び出し、Range.Inclusiveのインスタンスを返す。
+
+** パターンマッチ
+#+caption: _ は上のcaseで定義されていないすべてのケースにマッチする
+#+begin_src scala
+  val bools = List(true, false)
+
+  for (bool <- bools) {
+    bool match {
+      case true => println("heads")
+      case false => println("tails")
+      case _ => println("something other than heads or tails (yikes!)")
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+heads
+tails
+#+end_results
+
+#+caption: 7が否かで分岐
+#+begin_src scala
+  import scala.util.Random
+
+  val randomInt = new Random() .nextInt(10)
+
+  randomInt match {
+    case 7 => println("lucky seven!")
+    case otherNumber => println("boo, got boring ol' " + otherNumber)
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+boo, got boring ol' 2
+#+end_results
+** 型に対するマッチ
+#+caption: 型の条件で条件分け
+#+begin_src scala
+  val sundries = List(23, "Hello", 8.5, 'q')
+
+  for (sundry <- sundries) {
+    sundry match {
+      case i: Int => println("got an Integer: " + i)
+      case s: String => println("got an String: " + s)
+      case f: Double => println("got an Double: " + f)
+      case other =>println("got soumething else: " + other)
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+got an Integer: 23
+got an String: Hello
+got an Double: 8.5
+got soumething else: q
+#+end_results
+** シーケンスに対するマッチ
+#+caption: 条件に合うシーケンスだけが選択される
+#+begin_src scala
+  val willWork = List(1, 3, 23, 90)
+  val willNotWork = List(4, 18, 52)
+  val empty = List()
+
+  for (l <- List(willWork, willNotWork, empty)) {
+    l match {
+      case List(_, 3, _, _) => println("Four elements, with the 2nd being '3'.")
+      case List(_*) => println("Any other list with 0 or more elements.")
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Four elements, with the 2nd being '3'.
+Any other list with 0 or more elements.
+Any other list with 0 or more elements.
+#+end_results
+
+#+caption: a :: list は、リストの先頭にaを追加する
+#+begin_src scala
+
 #+end_src
 * Tasks
 * Reference
