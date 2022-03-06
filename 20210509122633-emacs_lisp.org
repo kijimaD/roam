@@ -1195,7 +1195,101 @@ return 0 (i.e., success)."
       0
     eshell-last-command-status))
 #+end_src
-* パッケージ作成に役立つ関数
+* 関数メモ
+** line-number-at-pos
+行数を求める関数。
+
+#+caption: 何も引数を渡さないと現在のカーソル位置の行数
+#+begin_src emacs-lisp :tangle yes
+(line-number-at-pos)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1204
+#+end_results
+
+** push
+(push NEWELT PLACE)
+リストを先頭にくっつける関数。
+だが、PLACEはsymbolである必要がある。直にリストを入れることはできない。
+
+#+caption: リストを作成する
+#+begin_src emacs-lisp :tangle yes
+  (let ((l '(a b c)))
+    (push 'new l))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(new a b c)
+#+end_results
+
+** dolist
+#+caption: numはリストを構成する要素の名前。(dolist (var list) body)
+#+begin_src emacs-lisp :tangle yes
+  (let ((nums '(1 2 3 4 5))
+        (sum 0))
+        (dolist (num nums)
+              (setq sum (+ sum num)))
+        sum)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+15
+#+end_results
+
+** 直に実行するのを防止
+直に実行してほしくないことがある。privateメソッドのように。
+[[id:5ba43a42-93cb-48fa-8578-0558c757493f][magit]]のコードから取ってきた。
+
+#+caption: called-interactively-pを使う
+#+begin_src emacs-lisp
+  (magit-blame-mode
+   (when (called-interactively-p 'any)
+     (setq magit-blame-mode nil)
+     (user-error
+      (concat "Don't call `magit-blame-mode' directly; "
+              "instead use `magit-blame'"))))
+#+end_src
+** buffer-read-only
+バッファが読み込み専用なら ~t~ を返す。
+** --some(form list)
+dashライブラリに含まれる関数。
+
+LIST内に条件を1つでも満たすものがあればFORMを返す。
+LIST要素はitにバインドされる。マクロすごいな。
+
+#+caption: リスト1つ1つがitにバインドされる
+#+begin_src emacs-lisp
+  (--some (evenp it) '(2 4))  ;; => t
+  (--some (evenp it) '(1 3)) ;; => nil
+  (--some (evenp it) '(1 3 2)) ;; => t
+#+end_src
+
+#+RESULTS:
+#+begin_results
+t
+#+end_results
+
+定義を見ても、どうやってitにバインドしてるのかわからない。
+
+#+caption: itは出てない
+#+begin_src emacs-lisp :tangle yes
+(defmacro --some (form list)
+  "Return non-nil if FORM evals to non-nil for at least one item in LIST.
+If so, return the first such result of FORM.
+Each element of LIST in turn is bound to `it' and its index
+within LIST to `it-index' before evaluating FORM.
+This is the anaphoric counterpart to `-some'."
+  (declare (debug (form form)))
+  (let ((n (make-symbol "needle")))
+    `(let (,n)
+       (--each-while ,list (not (setq ,n ,form)))
+       ,n)))
+#+end_src
+
 ** user-error
 エラーを出力する。
 #+caption: 処理を止め、メッセージを出す

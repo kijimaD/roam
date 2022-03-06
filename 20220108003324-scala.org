@@ -11,6 +11,16 @@ Scalaはオブジェクト指向言語と関数型の特徴を合わせた[[id:8
 sbtはScalaのビルドツールのこと。
 * WIP [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
 :LOGBOOK:
+CLOCK: [2022-03-06 Sun 20:34]--[2022-03-06 Sun 20:59] =>  0:25
+CLOCK: [2022-03-06 Sun 20:05]--[2022-03-06 Sun 20:30] =>  0:25
+CLOCK: [2022-03-06 Sun 17:41]--[2022-03-06 Sun 18:06] =>  0:25
+CLOCK: [2022-03-06 Sun 16:28]--[2022-03-06 Sun 16:53] =>  0:25
+CLOCK: [2022-03-06 Sun 15:55]--[2022-03-06 Sun 16:20] =>  0:25
+CLOCK: [2022-03-06 Sun 11:20]--[2022-03-06 Sun 11:45] =>  0:25
+CLOCK: [2022-03-06 Sun 10:48]--[2022-03-06 Sun 11:13] =>  0:25
+CLOCK: [2022-03-06 Sun 10:09]--[2022-03-06 Sun 10:34] =>  0:25
+CLOCK: [2022-03-05 Sat 23:35]--[2022-03-06 Sun 00:00] =>  0:25
+CLOCK: [2022-03-05 Sat 21:59]--[2022-03-05 Sat 22:24] =>  0:25
 CLOCK: [2022-03-05 Sat 20:36]--[2022-03-05 Sat 21:01] =>  0:25
 CLOCK: [2022-03-05 Sat 15:56]--[2022-03-05 Sat 16:21] =>  0:25
 CLOCK: [2022-03-05 Sat 15:05]--[2022-03-05 Sat 15:30] =>  0:25
@@ -32,11 +42,14 @@ CLOCK: [2022-03-03 Thu 13:51]--[2022-03-03 Thu 14:16] =>  0:25
 ** _
 scalaの入門本。
 ** progress
-*** TODO 100
+*** DONE 100
+CLOSED: [2022-03-05 Sat 21:59]
 *** TODO 200
+DEADLINE: <2022-03-06 Sun 23:59>
 *** TODO 300
 *** TODO 400
 *** TODO 500
+DEADLINE: <2022-03-28 Mon>
 ** Hello, world
 #+caption: Upperクラス、upperメソッドを書く
 #+begin_src scala
@@ -820,11 +833,308 @@ Any other list with 0 or more elements.
 Any other list with 0 or more elements.
 #+end_results
 
-#+caption: a :: list は、リストの先頭にaを追加する
+#+caption: headにはリストの最初の要素が代入され、tailにはリストの残りが代入される
 #+begin_src scala
+  val willWork = List(1, 3, 23, 90)
+  val willNotWork = List(4, 18, 52)
+  val empty = List()
 
+  def processList(l: List[Any]): Unit = l match {
+    case head :: tail =>
+      printf("%s ", head)
+      processList(tail)
+    case Nil => println("")
+  }
+
+  for (l <- List(willWork, willNotWork, empty)) {
+    print("List: ")
+    processList(l)
+  }
 #+end_src
+
+#+RESULTS:
+#+begin_results
+List: 1 3 23 90
+List: 4 18 52
+List:
+#+end_results
+
+** タプルに対するマッチ
+#+caption: 2つの項目を持つタプルをテストするのに、タプルに対するマッチが使える。タプルのあとのif条件はガード
+#+begin_src scala
+  val tupA = ("Good", "Morning!")
+  val tupB = ("Guten", "Tag!")
+
+  for (tup <- List(tupA, tupB)) {
+    tup match {
+      case (thingOne, thingTwo) if thingOne == "Good" =>
+        println("A two-tuple starting with 'Good'.")
+      case (thingOne, thingTwo) =>
+        println("This has two things: " + thingOne + " and " + thingTwo)
+  }}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+A two-tuple starting with 'Good'.
+This has two things: Guten and Tag!
+#+end_results
+
+** ケースクラスに対するマッチ
+中身を調べる深いマッチ。
+
+#+caption: ケースクラスでオブジェクトの中身を調べる
+#+begin_src scala
+  case class Person(name: String, age: Int) // ケースクラス
+
+  val alice = new Person("Alice", 25)
+  val bob = new Person("Bob", 32)
+  val charlie = new Person("Charlie", 32)
+
+  for (person <- List (alice, bob, charlie)) {
+    person match {
+      case Person("Alice", 25) => println("Hi Alice!")
+      case Person("Bob", 32) => println("Hi Bob!")
+      case Person(name, age) =>
+        println("Who are you, " + age + " year-old person named " + name + "?")
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Hi Alice!
+Hi Bob!
+Who are you, 32 year-old person named Charlie?
+#+end_results
+
+** 正規表現
+#+caption:
+#+begin_src scala
+  val BookExtractorRE = """Book: title=([^,]+),\s+authors=(.+)""".r
+  val MagazineExtractorRE = """Magazine: title=([^,]+),\s+issue=(.+)""".r
+
+  val catalog = List (
+    "Book: title=Programming Scala, authors=Dean Wampler, Alex Payne",
+    "Magazine: title=The New Yorker, issue=January 2009",
+    "Book: title=War and Peace, authors=Leo Tolstoy",
+    "Magazine: title=The SAtlantic, issue=February 2009",
+    "BadData: text=Who put this here??"
+  )
+
+  for (item <- catalog) {
+    item match {
+      case BookExtractorRE(title, authors) =>
+        println("Book \"" + title + "\", written by " + authors)
+      case MagazineExtractorRE(title, issue) =>
+        println("Magazine \"" + title + "\", issue " + issue)
+      case entry => println("Unrecognized entry: " + entry)
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Book "Programming Scala", written by Dean Wampler, Alex Payne
+Magazine "The New Yorker", issue January 2009
+Book "War and Peace", written by Leo Tolstoy
+Magazine "The SAtlantic", issue February 2009
+Unrecognized entry: BadData: text=Who put this here??
+#+end_results
+** enum
+#+caption:
+#+begin_src scala
+  object Breed extends Enumeration {
+    val doberman = Value("Doberman Pinscher")
+    val yorkie = Value("Yorkshire Terrier")
+    val scottie = Value("Scottish Terrier")
+    val dane = Value("Great Dane")
+    val portie = Value("Portuguese Water Dog")
+  }
+
+  println("ID\tBreed")
+  for (breed <- Breed.values) println(breed.id + "\t" + breed)
+
+  println("\nJust Terriers:")
+  Breed.values.filter(_.toString.endsWith("Terrier")).foreach(println)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+ID	Breed
+0	Doberman Pinscher
+1	Yorkshire Terrier
+2	Scottish Terrier
+3	Great Dane
+4	Portuguese Water Dog
+
+Just Terriers:
+Yorkshire Terrier
+Scottish Terrier
+#+end_results
+** トレイト
+トレイトは関心事の分離を保ちながらも、ミックスインによって要求に応じて振る舞いを変えられる。
+
+- [[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]でいうと、実装を持つこともできるインターフェースといえる。
+- [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でいうと、モジュールのようなもの。
+
+#+caption: Traits/ui/button.scala
+#+begin_src scala
+  package ui
+
+  class Button(val label: String) extends Widget {
+    def click() = {
+      // クリックされたボタンの見た目を変更する…
+    }
+  }
+#+end_src
+
+#+caption:Traits/ui/widget.scala
+#+begin_src scala
+  package ui
+  abstract class Widget
+#+end_src
+
+#+caption: Traits/observer/observer.scala
+#+begin_src scala
+  package observer
+  trait Subject {
+    type Observer = { def receiveUpdate(subject: Any) }
+
+    private var observers = List[Observer]()
+    def addObserver(observer:Observer) = observers ::= observer
+    def notifyObservers = observers foreach (_.receiveUpdate(this))
+  }
+#+end_src
+
+定義したSubjectトレイトを使ってみる。
+#+caption: /Traits/ui/observable-button.scala
+#+begin_src scala
+  package ui
+  import observer._
+  class ObservableButton(name: String) extends Button(name) with Subject {
+    override def click() = {
+      super.click()
+      notifyObservers
+    }
+  }
+#+end_src
+
+クラスと同じように、トレイトを使うインスタンスが生成されるたびにトレイトの本体が実行される。
+#+caption: 実行される順番に注目する
+#+begin_src scala
+  trait T1 {
+    println(" in T1: x = " + x)
+    val x=1
+    println(" in T1: x = " + x)
+  }
+  trait T2 {
+    println(" in T2: y = " + y)
+    val y="T2"
+    println(" in T2: y = " + y)
+  }
+
+  class Base12 {
+    println(" in Base12: b = " + b)
+    val b="Basel12"
+    println(" in Base12: b = " + b)
+  }
+  class C12 extends Base12 with T1 with T2 {
+    println(" in C12: c = " + c)
+    val c="C12"
+    println(" in C12: c = " + c)
+  }
+  println("Creating C12:")
+  new C12
+  println("After Creating C12")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Creating C12:
+ in Base12: b = null
+ in Base12: b = Basel12
+ in T1: x = 0
+ in T1: x = 1
+ in T2: y = null
+ in T2: y = T2
+ in C12: c = null
+ in C12: c = C12
+After Creating C12
+#+end_results
+
+- トレイトのコンストラクタに引数を渡すことはできない
+- フィールドをデフォルト値で上書きすることや、抽象フィールドにしておくことは可能
+- クラスかトレイトのどちらかにすべきかを考えるとき、ミックスインとしてのトレイトは「付加的な」ふるまいに最もふさわしい
+** 公開可視性
+デフォルトで公開(public)。つまりどこからでも参照できる。
+** オーバーライド
+#+caption: ui3/widget.scala
+#+begin_src scala
+  package ui3
+  abstract class Widget {
+    def draw(): Unit
+    override def toString() = "(widget)"
+  }
+#+end_src
+
+#+caption: ui3/button.scala
+#+begin_src scala
+  package ui3
+
+  class Button(val label: String) extends Widget with Clickable {
+    def click() = {
+      // ...
+    }
+
+    def draw() = {
+      // ...
+    }
+
+    override def toString() =
+      "(button: label=" + label + ", " + super.toString() + ")"
+  }
+#+end_src
+** apply
+appleは新たなインスタンスを返すファクトリメソッドとして使われるのが慣例になっている。
+#+caption: newなしにPairのインスタンスを生成しているように見える
+#+begin_src scala
+  type Pair[+A, +B] = Tuple2[A, B]
+  object Pair {
+    def apply[A, B] (x: A, y: B) = Tuple2(x, y)
+    def unapply[A, B] (x: Tuple2[A, B]): Option[Tuple2[A, B]] = Some(x)
+  }
+
+  val p = Pair(1, "one")
+  println(p)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1,one)
+#+end_results
+
+暗黙のうちにList.applyが使われるスクリプトの例。
+#+caption: 'fourはシンボル。LispやRubyと同じ識別子を表現する
+#+begin_src scala
+  val list1 = List()
+  val list2 = List(1, 2.2, "three", 'four)
+  val list3 = List("1", "2.2", "three", "four")
+  println("1: "+list1)
+  println("2: "+list2)
+  println("3: "+list3)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: List()
+2: List(1, 2.2, three, Symbol(four))
+3: List(1, 2.2, three, four)
+#+end_results
+
 * Tasks
 * Reference
 ** [[https://ja.wikipedia.org/wiki/Scala][Scala - Wikipedia]]
+** [[http://xerial.org/scala-cookbook/][Scala Cookbook | Scala Cookbook]]
+日本語の情報。
 * Archives
