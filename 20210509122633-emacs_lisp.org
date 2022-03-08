@@ -1196,65 +1196,31 @@ return 0 (i.e., success)."
     eshell-last-command-status))
 #+end_src
 * 関数メモ
-** line-number-at-pos
-行数を求める関数。
-
-#+caption: 何も引数を渡さないと現在のカーソル位置の行数
+** macroexp-progn
 #+begin_src emacs-lisp :tangle yes
-(line-number-at-pos)
+  (macroexp-progn '(1
+                    2
+                    3
+                    (* 2 2)))
 #+end_src
 
 #+RESULTS:
 #+begin_results
-1204
+(progn 1 2 3 (* 2 2))
 #+end_results
 
-** push
-(push NEWELT PLACE)
-リストを先頭にくっつける関数。
-だが、PLACEはsymbolである必要がある。直にリストを入れることはできない。
-
-#+caption: リストを作成する
 #+begin_src emacs-lisp :tangle yes
-  (let ((l '(a b c)))
-    (push 'new l))
+  (eval (macroexp-progn '(1
+                          2
+                          3
+                          (* 2 2))))
 #+end_src
 
 #+RESULTS:
 #+begin_results
-(new a b c)
+4
 #+end_results
 
-** dolist
-#+caption: numはリストを構成する要素の名前。(dolist (var list) body)
-#+begin_src emacs-lisp :tangle yes
-  (let ((nums '(1 2 3 4 5))
-        (sum 0))
-        (dolist (num nums)
-              (setq sum (+ sum num)))
-        sum)
-#+end_src
-
-#+RESULTS:
-#+begin_results
-15
-#+end_results
-
-** 直に実行するのを防止
-直に実行してほしくないことがある。privateメソッドのように。
-[[id:5ba43a42-93cb-48fa-8578-0558c757493f][magit]]のコードから取ってきた。
-
-#+caption: called-interactively-pを使う
-#+begin_src emacs-lisp
-  (magit-blame-mode
-   (when (called-interactively-p 'any)
-     (setq magit-blame-mode nil)
-     (user-error
-      (concat "Don't call `magit-blame-mode' directly; "
-              "instead use `magit-blame'"))))
-#+end_src
-** buffer-read-only
-バッファが読み込み専用なら ~t~ を返す。
 ** --some(form list)
 dashライブラリに含まれる関数。
 
@@ -1290,12 +1256,72 @@ This is the anaphoric counterpart to `-some'."
        ,n)))
 #+end_src
 
-** user-error
-エラーを出力する。
-#+caption: 処理を止め、メッセージを出す
+** apply-partially                                                     :WIP:
 #+begin_src emacs-lisp :tangle yes
-(user-error "this is error!")
+(apropos "apply-partially")
 #+end_src
+
+どうやって使うのかわからない。
+
+#+begin_src emacs-lisp :results raw
+  (defun my-apply-partially (fun &rest args)
+    (lambda (&rest args2)
+      (apply fun (append args args2))))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+my-apply-partially
+#+end_results
+
+/lisp/subr.el にはいろいろ見慣れた関数があるな。
+** buffer-read-only
+バッファが読み込み専用なら ~t~ を返す。
+** called-interactively-p
+直に実行してほしくないことがある。privateメソッドのように。
+[[id:5ba43a42-93cb-48fa-8578-0558c757493f][magit]]のコードから取ってきた。
+
+#+caption: called-interactively-pを使う
+#+begin_src emacs-lisp
+  (magit-blame-mode
+   (when (called-interactively-p 'any)
+     (setq magit-blame-mode nil)
+     (user-error
+      (concat "Don't call `magit-blame-mode' directly; "
+              "instead use `magit-blame'"))))
+#+end_src
+** cl-block
+** declare
+#+begin_src emacs-lisp :tangle yes
+(apropos "declare")
+#+end_src
+
+謎。
+
+#+caption: よく見かける書き方
+#+begin_src emacs-lisp :tangle yes
+(declare (indent 2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+nil
+#+end_results
+
+** dolist
+#+caption: numはリストを構成する要素の名前。(dolist (var list) body)
+#+begin_src emacs-lisp :tangle yes
+  (let ((nums '(1 2 3 4 5))
+        (sum 0))
+        (dolist (num nums)
+              (setq sum (+ sum num)))
+        sum)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+15
+#+end_results
 
 ** format-spec
 フォーマット文字列を入れ込みたいときに使う。
@@ -1316,20 +1342,28 @@ This is the anaphoric counterpart to `-some'."
 12:59
 #+end_results
 
-** repeat
-最後に実行したコマンドを繰り返す。
-** with-demoted-errors
+** line-number-at-pos
+行数を求める関数。
+
+#+caption: 何も引数を渡さないと現在のカーソル位置の行数
 #+begin_src emacs-lisp :tangle yes
-(apropos "with-demoted-errors")
+(line-number-at-pos)
 #+end_src
 
-#+caption:
-#+begin_src emacs-lisp
-(with-demoted-errors "これはエラー %S" (/ 1 0))
-#+end_src
 #+RESULTS:
 #+begin_results
-nil
+1204
+#+end_results
+
+** looking-at
+#+caption: 現在のカーソル位置からあとにマッチするものがあればt
+#+begin_src emacs-lisp :tangle yes
+  (looking-at ".")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+t
 #+end_results
 
 ** open-line
@@ -1344,41 +1378,43 @@ open-lineは改行するコマンド。カーソルは移動しない。
 (open-line 1)
 #+end_src
 
-** declare
+** push
+(push NEWELT PLACE)
+リストを先頭にくっつける関数。
+だが、PLACEはsymbolである必要がある。直にリストを入れることはできない。
+
+#+caption: リストを作成する
 #+begin_src emacs-lisp :tangle yes
-(apropos "declare")
+  (let ((l '(a b c)))
+    (push 'new l))
 #+end_src
 
-謎。
+#+RESULTS:
+#+begin_results
+(new a b c)
+#+end_results
 
-#+caption: よく見かける書き方
+** repeat
+最後に実行したコマンドを繰り返す。
+** user-error
+エラーを出力する。
+#+caption: 処理を止め、メッセージを出す
 #+begin_src emacs-lisp :tangle yes
-(declare (indent 2))
+(user-error "this is error!")
 #+end_src
 
+** with-demoted-errors
+#+begin_src emacs-lisp :tangle yes
+(apropos "with-demoted-errors")
+#+end_src
+
+#+caption:
+#+begin_src emacs-lisp
+(with-demoted-errors "これはエラー %S" (/ 1 0))
+#+end_src
 #+RESULTS:
 #+begin_results
 nil
 #+end_results
 
-** apply-partially                                                     :WIP:
-#+begin_src emacs-lisp :tangle yes
-(apropos "apply-partially")
-#+end_src
-
-どうやって使うのかわからない。
-
-#+begin_src emacs-lisp :results raw
-  (defun my-apply-partially (fun &rest args)
-    (lambda (&rest args2)
-      (apply fun (append args args2))))
-#+end_src
-
-#+RESULTS:
-#+begin_results
-my-apply-partially
-#+end_results
-
-/lisp/subr.el にはいろいろ見慣れた関数があるな。
-** cl-block
 * Tasks

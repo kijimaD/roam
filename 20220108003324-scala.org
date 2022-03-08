@@ -11,6 +11,10 @@ Scalaはオブジェクト指向言語と関数型の特徴を合わせた[[id:8
 sbtはScalaのビルドツールのこと。
 * WIP [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
 :LOGBOOK:
+CLOCK: [2022-03-08 Tue 10:40]
+CLOCK: [2022-03-08 Tue 09:21]--[2022-03-08 Tue 09:46] =>  0:25
+CLOCK: [2022-03-07 Mon 22:40]--[2022-03-07 Mon 23:05] =>  0:25
+CLOCK: [2022-03-07 Mon 00:06]--[2022-03-07 Mon 00:31] =>  0:25
 CLOCK: [2022-03-06 Sun 20:34]--[2022-03-06 Sun 20:59] =>  0:25
 CLOCK: [2022-03-06 Sun 20:05]--[2022-03-06 Sun 20:30] =>  0:25
 CLOCK: [2022-03-06 Sun 17:41]--[2022-03-06 Sun 18:06] =>  0:25
@@ -44,8 +48,8 @@ scalaの入門本。
 ** progress
 *** DONE 100
 CLOSED: [2022-03-05 Sat 21:59]
-*** TODO 200
-DEADLINE: <2022-03-06 Sun 23:59>
+*** DONE 200
+CLOSED: [2022-03-07 Mon 00:40] DEADLINE: <2022-03-06 Sun 23:59>
 *** TODO 300
 *** TODO 400
 *** TODO 500
@@ -908,6 +912,7 @@ Hi Bob!
 Who are you, 32 year-old person named Charlie?
 #+end_results
 
+- ケースクラスを他のケースクラスから継承するのは避ける
 ** 正規表現
 #+caption:
 #+begin_src scala
@@ -1130,6 +1135,136 @@ appleは新たなインスタンスを返すファクトリメソッドとして
 1: List()
 2: List(1, 2.2, three, Symbol(four))
 3: List(1, 2.2, three, four)
+#+end_results
+** 関数型プログラミング言語
+- 不変なものこそが値である
+- すでに値を持った変数に新しい値を代入することはできない
+
+Scalaはどの書き方も強制しないが、できるだけ関数言語のスタイルを使うほうがわかりやすい。
+
+#+caption: _ * 2 は i => i * 2を省略した関数リテラル
+#+begin_src scala
+  println(List(1, 2, 3, 4, 5) map { _ * 2 })
+#+end_src
+
+#+RESULTS:
+#+begin_results
+List(2, 4, 6, 8, 10)
+#+end_results
+
+#+caption: 畳み込み
+#+begin_src scala
+  println(List(1, 2, 3, 4, 5) reduceLeft { _ * _ })
+#+end_src
+
+#+RESULTS:
+#+begin_results
+120
+#+end_results
+
+#+caption:
+#+begin_src scala
+  var factor = 3
+  val multiplier = (i: Int) => i * factor
+  val l1 = List(1, 2, 3, 4, 5) map multiplier
+
+  factor = 5
+  val l2 = List(1, 2, 3, 4, 5) map multiplier
+
+  println(l1)
+  println(l2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+List(3, 6, 9, 12, 15)
+List(5, 10, 15, 20, 25)
+#+end_results
+
+再帰を使う。
+#+caption:
+#+begin_src scala
+    def factorial (i: BigInt): BigInt = i match {
+      case _ if i == 1 => i
+      case _ => i * factorial(i - 1)
+    }
+
+  for (i <- 1 to 10)
+  printf("%s: %s\n", i, factorial(i))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: 1
+2: 2
+3: 6
+4: 24
+5: 120
+6: 720
+7: 5040
+8: 40320
+9: 362880
+10: 3628800
+#+end_results
+** 末尾再帰
+再帰にはパフォーマンスのオーバーヘッドとスタックオーバーフローの危険性がある。
+末尾再帰はループに変換はループに変換することで最適化できる。
+
+末尾再帰でない例。
+
+#+caption: 末尾再帰でないバージョン
+#+begin_src scala
+  def factorial(i: BigInt): BigInt = i match {
+    case _ if i == 1 => i
+    case _ => i * factorial(i - 1)
+  }
+
+  for (i <- 1 to 10)
+    printf("%s: %s\n", i, factorial(i))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: 1
+2: 2
+3: 6
+4: 24
+5: 120
+6: 720
+7: 5040
+8: 40320
+9: 362880
+10: 3628800
+#+end_results
+
+末尾再帰の例。
+
+#+caption: 末尾再帰バージョン。計算結果を保持するために引数を渡すので、末尾再帰になる
+#+begin_src scala
+  def factorial(i: BigInt): BigInt = {
+    def fact(i: BigInt, accumulator: BigInt): BigInt = i match {
+      case _ if i == 1 => accumulator
+      case _ => fact(i - 1, i * accumulator)
+    }
+    fact(i, 1)
+  }
+
+  for (i <- 1 to 10)
+    printf("%s: %s\n", i , factorial(i))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: 1
+2: 2
+3: 6
+4: 24
+5: 120
+6: 720
+7: 5040
+8: 40320
+9: 362880
+10: 3628800
 #+end_results
 
 * Tasks
