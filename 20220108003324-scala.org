@@ -11,7 +11,13 @@ Scalaはオブジェクト指向言語と関数型の特徴を合わせた[[id:8
 sbtはScalaのビルドツールのこと。
 * WIP [[https://www.oreilly.co.jp/books/9784873114811/][O'Reilly Japan - プログラミングScala]]
 :LOGBOOK:
-CLOCK: [2022-03-08 Tue 10:40]
+CLOCK: [2022-03-10 Thu 22:43]
+CLOCK: [2022-03-10 Thu 10:09]--[2022-03-10 Thu 10:34] =>  0:25
+CLOCK: [2022-03-10 Thu 09:34]--[2022-03-10 Thu 09:59] =>  0:25
+CLOCK: [2022-03-09 Wed 23:19]--[2022-03-09 Wed 23:44] =>  0:25
+CLOCK: [2022-03-09 Wed 22:22]--[2022-03-09 Wed 22:47] =>  0:25
+CLOCK: [2022-03-08 Tue 22:54]--[2022-03-08 Tue 23:19] =>  0:25
+CLOCK: [2022-03-08 Tue 10:40]--[2022-03-08 Tue 11:05] =>  0:25
 CLOCK: [2022-03-08 Tue 09:21]--[2022-03-08 Tue 09:46] =>  0:25
 CLOCK: [2022-03-07 Mon 22:40]--[2022-03-07 Mon 23:05] =>  0:25
 CLOCK: [2022-03-07 Mon 00:06]--[2022-03-07 Mon 00:31] =>  0:25
@@ -1265,6 +1271,163 @@ List(5, 10, 15, 20, 25)
 8: 40320
 9: 362880
 10: 3628800
+#+end_results
+** 走査
+#+caption:
+#+begin_src scala
+  List(1, 2, 3, 4, 5) foreach { i => println("Int: " + i) }
+
+  val stateCapitals = Map(
+    "Alabama" -> "Montgomery",
+    "Alaska"  -> "Janeau",
+    "Wyoming" -> "Cheyenne")
+  stateCapitals foreach { kv => println(kv._1 + ": " + kv._2) }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Int: 1
+Int: 2
+Int: 3
+Int: 4
+Int: 5
+Alabama: Montgomery
+Alaska: Janeau
+Wyoming: Cheyenne
+#+end_results
+** フィルタリング
+#+caption:
+#+begin_src scala
+  val stateCapitals = Map(
+    "Alabama" -> "Montgomery",
+    "Alaska" -> "Juneau",
+    "Wyoming" -> "Cheyenne")
+
+  val map2 = stateCapitals filter { kv => kv._1 startsWith "A" }
+
+  println(map2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Map(Alabama -> Montgomery, Alaska -> Juneau)
+#+end_results
+
+** 畳み込み
+#+caption: 入力のリストと同じ順序でリストを返すために、reverseを呼び出す
+#+begin_src scala
+  List(1, 2, 3, 4, 5, 6).foldLeft(List[String] ()) {
+    (list, x) => ("<" + x + ">") :: list
+  }.reverse
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+Iterableの畳み込みと簡約の操作のシグネチャ。
+#+caption: 演算子を見る
+#+begin_src scala
+  trait Iterable[+A] {
+    def foldLeft [B] (z : B) (op : (B, A) => B) : B
+
+    def foldRight [B] (z : B) (op : (A, B) => B) : B
+
+    def /: [B] (z : B) (op : (B, A) => B) : B
+
+    def :\ [B] (z : B) (op : (A, B) => B) : B
+
+    def reduceLeft [B >: A] (op : (B, A) => B) : B
+
+    def reduceRight [B >: A] (op : (A, B) => B) : B
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+caption: reverseは必要なくなった
+#+begin_src scala
+  List(1, 2, 3, 4, 5, 6).foldRight(List[String] ()) {
+    (x, list) => ("<" + x + ">") :: list
+  }
+#+end_src
+
+** 部分適用
+#+caption: 引数を部分適用している
+#+begin_src scala
+  def concatUpper(s1: String, s2: String) : String = (s1 + " " + s2).toUpperCase
+
+  val c = concatUpper _
+  println(c("short", "pants"))
+  val c2 = concatUpper("short", _: String)
+  println(c2("pants"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+SHORT PANTS
+SHORT PANTS
+#+end_results
+
+#+caption: PartialFunctionトレイト　
+#+begin_src scala
+  val pantsTest: PartialFunction[String, String] = {
+    case "pants" => "yes, we have pants!"
+  }
+
+  println(pantsTest.isDefinedAt("pants"))
+  println(pantsTest.isDefinedAt("skort"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+true
+false
+#+end_results
+
+** カリー化
+#+caption: 部分的に引数を適用してカリー化
+#+begin_src scala
+  def multiplier(i: Int) (factor: Int) = i * factor
+  val byFive = multiplier(5) _
+  val byTen = multiplier(10) _
+
+  println(byFive(2))
+  println(byTen(2))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+10
+20
+#+end_results
+
+** 名前渡しパラメータ
+#+caption: 関数内で呼び出されるまで評価したくない式をパラメータとして受け取る
+#+begin_src scala
+  def whileAwesome(conditional: => Boolean) (f: => Unit) {
+    if (conditional) {
+      f
+      whileAwesome(conditional) (f)
+    }
+  }
+
+  var count = 0
+  whileAwesome(count < 5) {
+    println("still awesome")
+    count += 1
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+still awesome
+still awesome
+still awesome
+still awesome
+still awesome
 #+end_results
 
 * Tasks
