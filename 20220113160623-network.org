@@ -7,6 +7,35 @@
 [[id:e3b48a23-21bc-4cdf-8395-052fab9fecb5][Computer Science]]と関係が深い。
 通常のWeb開発でこのレイヤーをいじることは多くないが、技術的背景を理解してないと解決できない種類の問題がある。
 * Memo
+** ソケット通信
+:LOGBOOK:
+CLOCK: [2022-04-15 Fri 20:52]--[2022-04-15 Fri 21:17] =>  0:25
+:END:
+
+#+begin_quote
+TCP/IPのソケット通信とは、ソケットインターネットとも呼ばれ、主にプログラムの世界とTCP/IP世界を結ぶ特別な出入り口のことを意味し、TCP/IPのトランスポート層を指します。
+#+end_quote
+[[https://www.itmanage.co.jp/column/tcp-ip-protocol/#:~:text=TCP%2FIP%E3%81%AE%E3%82%BD%E3%82%B1%E3%83%83%E3%83%88%E9%80%9A%E4%BF%A1%E3%81%A8%E3%81%AF%E3%80%81%E3%82%BD%E3%82%B1%E3%83%83%E3%83%88%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%8D%E3%83%83%E3%83%88%E3%81%A8%E3%82%82,%E7%94%A8%E3%81%84%E3%81%A6%E9%96%8B%E7%99%BA%E3%81%97%E3%81%BE%E3%81%99%E3%80%82][TCP/IPとは？通信プロトコルの階層モデルを図解で解説 | ITコラム｜アイティーエム株式会社]]
+
+[[id:df013984-822e-439c-bffd-06a5a67ff945][nginx]](webサーバ) + puma(アプリケーションサーバ) + [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]の実例で考える。
+
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]でpumaを起動したときソケットパスを指定できる。
+起動すると、 ~puma.sock~ というファイルが作成される。
+
+[[id:df013984-822e-439c-bffd-06a5a67ff945][nginx]]の設定。
+#+caption: nginx.conf
+#+begin_src shell
+upstream app_server {
+  server unix:///rails/tmp/sockets/puma.sock;
+}
+#+end_src
+
+とすると、[[id:df013984-822e-439c-bffd-06a5a67ff945][nginx]]を経由してpumaでサーブされる内容を表示できる。
+ポートやプロセス関係は指定せずに2つのサーバが通信できていることに注目。
+
+** プロキシ
+プロキシによって、サイトURLはそのままで違うURLのサイトを表示できる。
+[[https://shiro-secret-base.com/?p=573][Nginx：proxy_passを使ってURLはそのままで違うサイトを表示する | Shiro's secret base]]
 * Tasks
 ** TODO [[https://www.amazon.co.jp/dp/B073VDH5J8/ref=dp-kindle-redirect?_encoding=UTF8&btkr=1][Amazon.co.jp: 日経ITエンジニアスクール TCP/IP最強の指南書 eBook : 日経NETWORK: Kindle Store]]
 TCP/IPの教科書的な本。
