@@ -1,0 +1,78 @@
+:PROPERTIES:
+:ID:       2d35ac9e-554a-4142-bba7-3c614cbfe4c4
+:END:
+#+title: GitHub Actions
+* 概要
+GitHub Actionsは[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]が提供する[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]/[[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]環境。
+コードやプロジェクトに対するタスクを実行できる。
+* Memo
+** Stale Bot
+動きがないIssueやPRを自動的にマークしたりcloseするGitHub bot。
+[[https://github.com/probot/stale][probot/stale: A GitHub App built with Probot that closes abandoned Issues and Pull Requests after a period of inactivity.]]
+
+設定の例(rubocop)。
+https://github.com/rubocop/rubocop/blob/master/.github/stale.yml
+** PRの編集ファイルによって自動でラベルをつける
+面倒なラベル付けを自動化する。
+
+#+caption: actions https://github.com/upptime/uptime-monitor/blob/master/.github/workflows/labeler.yml
+#+begin_src yaml
+name: Pull Request Labeler
+on:
+  - pull_request
+  - pull_request_review
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label all PRs
+        uses: actions/labeler@master
+        with:
+          repo-token: "${{ secrets.GH_PAT }}"
+      - name: Label approved PRs
+        uses: koj-co/label-approved-action@master
+        with:
+          labels: "merge"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GH_PAT }}"
+#+end_src
+
+#+caption: labels.yml https://github.com/upptime/uptime-monitor/blob/master/.github/labeler.yml
+#+begin_src yaml
+config:
+  - ./*
+tooling:
+  - tooling/**/*.*
+assets:
+  - static/**/*.*
+tests:
+  - any: ["src/**/*.spec.js", "cypress/**/*"]
+package:
+  - any: ["package.json", "package-lock.json"]
+source:
+  - src/**/*
+#+end_src
+** GitHub Actionsのトリガー
+pathsで特定ファイルが含まれるときのみ実行するときの注意点。
+pushは使わずに、pull_requestトリガーを使うべき。
+
+#+caption: 良い。Dockerfileが含まれるPRではすべて実行される
+#+begin_src yaml
+on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+#+end_src
+
+#+caption: 悪い。Dockerfileが含まれないコミットでは実行されない。漏れやすい
+#+begin_src yaml
+on:
+  push:
+    paths:
+      - 'Dockerfile'
+#+end_src
+
+pushではpull_request全体の変更を追うことができないので、コミットが分かれているとジョブが走らず、あたかもパスしているように見えて危険。
+* Tasks
+* Reference
+* Archives
