@@ -8,8 +8,152 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
-** 再起動
+** Rails開発のMy docker-compose
+[[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]開発をすべてdockerでやる想定。
+一発ですべてが準備され、クリーンな環境を構築する。bundle install やyarn install など、立ち上げ続ける前提でないコマンドも含まれる。そのコマンドだけ再度実行したいときは ~docker-compose restart bundle~ などとする。
+
+元ネタ: foremのdocker-compose.yml。
+- https://github.com/forem/forem
+
+↓あとはdockerizeを設定すれば完璧か。
+#+caption: docker-compose.yml
+#+begin_src yaml
+  # 共通のimage名: app
+  # imageのワーキングディレクトリ: /app
+  version: '3.7'
+
+  services:
+    mysql:
+      image: mysql:latest
+      ports:
+        - '${MYSQL_PORT:-3306}:3306'
+      environment:
+        # DBクライアントでの接続時に必要なので明示する
+        MYSQL_DATABASE: develop
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_USER: user
+        MYSQL_PASSWORD: password
+        MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+      volumes:
+        - 'mysql-data:/var/lib/mysql'
+
+    redis:
+      image: redis:latest
+      ports:
+        - '${REDIS_PORT:-6379}:6379'
+
+    memcached:
+      image: memcached:latest
+      ports:
+        - '${MEMCACHED_PORT:-11212}:11211'
+
+    rails:
+      image: app
+      environment:
+        RAILS_ENV: development
+        REDIS_URL: 'redis://redis:6379'
+        MEMCACHED: 'memcached:11211'
+        DATABASE_URL: 'mysql2://root@mysql:3306'
+      depends_on:
+        - mysql
+        - redis
+        - memcached
+        - bundle
+        - yarn
+        - seed
+      command: bash -c 'bundle exec rails s -b 0.0.0.0'
+      volumes:
+        - .:/app:delegated # delegatedで高速化
+        - gem_data:/usr/local/bundle:delegated # package系は永続化して最初からinstallにならないようにする
+        - node_modules:/app/node_modules:delegated
+      ports:
+        - '3000:3000'
+
+    webpack:
+      image: app
+      environment:
+        NODE_ENV: development
+        WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+      command: bash -c 'yarn watch'
+      volumes:
+        - .:/app:delegated
+        - node_modules:/app/node_modules:delegated
+      ports:
+        - 8080:8080
+
+    sidekiq:
+      image: app
+      command: bash -c 'bundle exec sidekiq -C config/sidekiq.yml'
+      environment:
+        REDIS_URL: 'redis://redis:6379'
+        DATABASE_URL: 'mysql2://root@mysql:3306'
+      volumes:
+        - .:/app:delegated
+        - gem_data:/usr/local/bundle:delegated
+      links:
+        - mysql
+        - redis
+
+    bundle:
+      image: app
+      environment:
+        RAILS_ENV: development
+      volumes:
+        - .:/app:delegated
+        - gem_data:/usr/local/bundle:delegated
+      command: bash -c "bundle install --jobs 8" # マシンがいくつ並列処理できるかは`$ getconf _NPROCESSORS_ONLN` で調べられる
+
+    yarn:
+      image: app
+      environment:
+        NODE_ENV: development
+      volumes:
+        - .:/app:delegated
+        - node_modules:/app/node_modules:delegated
+      command: bash -c "yarn install"
+
+    seed:
+      image: app
+      environment:
+        DATABASE_URL: 'mysql2://root@mysql:3306'
+      volumes:
+        - .:/app:delegated
+        - gem_data:/usr/local/bundle:delegated
+      command: bash -c "rake db:seed_fu"
+
+  volumes:
+    gem_data:
+    node_modules:
+    mysql_data:
+#+end_src
+
+#+caption: entrypoint.sh
+#+begin_src shell
+  #! /bin/bash
+
+  set -e
+
+  if [ -f tmp/pids/server.pid ]; then
+    rm -f tmp/pids/server.pid
+  fi
+
+  cat << EOF
+
+    ░░▄████████████▄▐█▄▄▄▄█▌░
+    ░░████████████████▌▀▀██▀▀░░
+    ░░████▄████████████▄▄█▌░░░░
+    ░░▄▄▄▄▄██████████████▀ ░░░░
+
+  EOF
+
+  exec "$@"
+
+#+end_src
+** docker service再起動
+おかしくなったときの再起動。
+#+begin_src shell
 sudo service docker restart
+#+end_src
 ** コンテナ掃除関係
 [[https://qiita.com/shisama/items/48e2eaf1dc356568b0d7][コマンドでDockerコンテナを停止・削除、イメージの削除をする - Qiita]]
 
@@ -398,7 +542,7 @@ CLOSED: [2021-12-20 Mon 22:57]
     depends_on:
       - mysql
 
-  worker:
+  sidekiq:
     image: app
     command: bundle exec sidekiq
     links:
@@ -407,8 +551,6 @@ CLOSED: [2021-12-20 Mon 22:57]
 
   webpack:
     image: app
-    build: .
-    tty: true
     environment:
       NODE_ENV: development
       RAILS_ENV: development
