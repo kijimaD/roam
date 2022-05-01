@@ -225,6 +225,70 @@ https://rubygems.org/ であらかじめログインしておく。
 #+begin_src shell
   rake release
 #+end_src
+** presense
+~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
+
+#+begin_src ruby
+  object.present? ? object : nil
+  object.presense
+#+end_src
+
+これらは等価である。
+
+- https://apidock.com/rails/Object/presence
+** tap
+処理に関わらずselfを返す。
+メソッドチェーンへのデバッグに便利。
+
+#+begin_src ruby :results output
+  p ( 1 .. 5 )
+  .tap{|obj| puts obj.class}
+  .to_a.tap{|obj| puts obj.class}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Range
+Array
+[1, 2, 3, 4, 5]
+#+end_results
+
+メソッドチェーンの途中で分岐として使えそう。
+** min_by
+配列から最大/最小の値を取りたいというとき、min_byが便利。
+#+begin_src ruby
+  [5, -8, 3, 9].min_by{|num| num.abs }
+#+end_src
+
+#+RESULTS:
+: 3
+
+order → first と冗長に書いてしまいがち。
+** &: 記法
+#+begin_src ruby
+%w{ a b c }.map(&:capitalize)
+#+end_src
+- & -> ~to_proc~ trigger
+- : -> symbol
+** ファイルを作らずにファイルオブジェクトを作ってテストする
+ファイル入力のあるプログラムがあるとする。
+テストするとき、普通はファイルを作って読み込むことになる。
+しかしいちいちファイルを用意するほどではない、みたいな場合もある。
+そのときは ~StringIO~ を使うと気軽に試せる。
+
+#+begin_src ruby
+  require 'stringio'
+  string = <<EOM
+    aaa
+    "aaa"
+  EOM
+
+  file1 = StringIO.new(string)
+  file.read # => aaa\n"aaa"
+  file2 = StringIO.new('')
+  file.read # => ""
+#+end_src
+としておいて、あとは普通のFIleオブジェクトにするように、 ~StringIO~ オブジェクトに対して各種操作ができる。
 * Mastering Ruby Closure
 CLOSED: [2021-11-21 Sun 00:38]
 :LOGBOOK:
@@ -1588,70 +1652,6 @@ dropのlazy版。
   # => [4, 5]
 #+end_src
 
-** presense
-~present?~ の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
-
-#+begin_src ruby
-  object.present? ? object : nil
-  object.presense
-#+end_src
-
-これらは等価である。
-
-- https://apidock.com/rails/Object/presence
-** tap
-処理に関わらずselfを返す。
-メソッドチェーンへのデバッグに便利。
-
-#+begin_src ruby :results output
-  p ( 1 .. 5 )
-  .tap{|obj| puts obj.class}
-  .to_a.tap{|obj| puts obj.class}
-#+end_src
-
-#+RESULTS:
-#+begin_results
-Range
-Array
-[1, 2, 3, 4, 5]
-#+end_results
-
-メソッドチェーンの途中で分岐として使えそう。
-** min_by
-配列から最大/最小の値を取りたいというとき、min_byが便利。
-#+begin_src ruby
-  [5, -8, 3, 9].min_by{|num| num.abs }
-#+end_src
-
-#+RESULTS:
-: 3
-
-order → first と冗長に書いてしまいがち。
-** &: 記法
-#+begin_src ruby
-%w{ a b c }.map(&:capitalize)
-#+end_src
-- & -> ~to_proc~ trigger
-- : -> symbol
-** ファイルを作らずにファイルオブジェクトを作ってテストする
-ファイル入力のあるプログラムがあるとする。
-テストするとき、普通はファイルを作って読み込むことになる。
-しかしいちいちファイルを用意するほどではない、みたいな場合もある。
-そのときは ~StringIO~ を使うと気軽に試せる。
-
-#+begin_src ruby
-  require 'stringio'
-  string = <<EOM
-    aaa
-    "aaa"
-  EOM
-
-  file1 = StringIO.new(string)
-  file.read # => aaa\n"aaa"
-  file2 = StringIO.new('')
-  file.read # => ""
-#+end_src
-としておいて、あとは普通のFIleオブジェクトにするように、 ~StringIO~ オブジェクトに対して各種操作ができる。
 * Ruby kaigi 2021
 ** VSCode extension for ruby type
 https://www.slideshare.net/mametter/typeprof-for-ide-enrich-development-experience-without-annotations
