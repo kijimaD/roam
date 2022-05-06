@@ -1,7 +1,7 @@
 d3.json("js/graph.json").then(function(data) {
     // Canvas size
-    height = 1100;
-    width = 1600;
+    height = 800;
+    width = 2400;
     scale = 1.;
     // Radius function for nodes. Node radius are function of centrality
     radius = d => {
@@ -154,6 +154,7 @@ d3.json("js/graph.json").then(function(data) {
           .join("g");
     const label_background = label.append("text")
           .style("font-size", "45px")
+          .style("font-family", "Ultra")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
           .attr("dy", -30)
           .attr("id", d => d.id.toLowerCase())
