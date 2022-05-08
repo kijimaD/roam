@@ -20,13 +20,18 @@ d3.json("js/graph.json").then(function(data) {
     centersy = angleArr.map(x => Math.sin(Math.PI + x));
     // Color palette
     nodeColors = [
-        '#C98914',
-        '#C55F1A',
-        '#4189AD',
-        '#007500',
-        '#968674',
-        '#5E998A',
-        "#363ea9",
+      '#ff7f7f',
+      '#ff7fbf',
+      '#ff7fff',
+      '#bf7fff',
+      '#7f7fff',
+      '#7fbfff',
+      '#7fffff',
+      '#7fffbf',
+      '#7fff7f',
+      '#bfff7f',
+      '#ffff7f',
+      '#ffbf7f',
     ];
     // Color function just maps cluster to color palette
     nodeColor = d => {

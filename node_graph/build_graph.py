@@ -12,9 +12,9 @@ from networkx.readwrite import json_graph
 
 from roam_db_to_json import build_graph
 
-N_COM = 7  # Desired number of communities
+N_COM = 12  # Desired number of communities
 N_MISSING = 20  # Number of predicted missing links
-MAX_NODES = 200  # Number of nodes in the final graph
+MAX_NODES = 1000  # Number of nodes in the final graph
 
 def compute_centrality(dot_graph: nx.DiGraph) -> None:
     """Add a `centrality` attribute to each node with its PageRank score.
