@@ -8,6 +8,28 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
+** 本番用yarn buildの例
+本番用にコンパクトにビルドする場合の例。
+node_modulesはいらなくて、ビルド成果物だけあればよい。
+ステージを分けることで、意味が明確になり、サイズも小さくできる(高速化)。
+
+#+begin_src dockerfile
+  COPY package.json $HOME/
+  COPY front/ $HOME/front/ # front にはビルド対象のjs, tsファイルが配置されている想定。サブモジュールを導入している場合、package.jsonは階層上に複数あるため、COPYしておく必要がある
+
+  RUN npm install
+
+  COPY babel.config.js $HOME/
+  COPY tsconfig.json $HOME/
+  COPY webpack.config.js $HOME/
+
+  RUN yarn run build
+#+end_src
+
+#+caption: ビルド成果物だけを配置
+#+begin_src dockerfile
+COPY --from=rails-yarn-build $HOME/public/webpack/ $HOME/public/webpack/
+#+end_src
 ** Rails開発のMy docker-compose
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]開発をすべてdockerでやる想定。
 一発ですべてが準備され、クリーンな環境を構築する。bundle install やyarn install など、立ち上げ続ける前提でないコマンドも含まれる。そのコマンドだけ再度実行したいときは ~docker-compose restart bundle~ などとする。
