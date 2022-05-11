@@ -16,17 +16,17 @@ STAGING_URL_PULL:=$(STAGING_URL_BASE):$(PULL_TAG)
 build:
 	export DOCKER_BUILDKIT=1 && \
 	export COMPOSE_DOCKER_CLI_BUILD=1 && \
-	docker build --target build -t $(BUILD_URL_PUSH) -t $(BUILD_URL_PULL) --cache-from $(BUILD_URL_PULL) . && \
+	docker build --target build -t $(BUILD_URL_PUSH) -t $(BUILD_URL_PULL) --cache-from $(BUILD_URL_PULL) --build-arg BUILDKIT_INLINE_CACHE=1 . && \
 	docker push $(BUILD_URL_PUSH) && \
 	docker push $(BUILD_URL_PULL) && \
-	docker build --target build -t $(RELEASE_URL_PUSH) -t $(RELEASE_URL_PULL) --cache-from $(RELEASE_URL_PULL) . && \
+	docker build --target build -t $(RELEASE_URL_PUSH) -t $(RELEASE_URL_PULL) --cache-from $(RELEASE_URL_PULL) --build-arg BUILDKIT_INLINE_CACHE=1 . && \
 	docker push $(RELEASE_URL_PUSH) && \
 	docker push $(RELEASE_URL_PULL)
 release:
 	docker run --detach --name release $(RELEASE_URL_PUSH) && \
 	docker cp release:/roam/public ./
 staging:
-	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL_PUSH) -t $(STAGING_URL_PULL) --cache-from $(STAGING_URL_PULL) . && \
+	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL_PUSH) -t $(STAGING_URL_PULL) --cache-from $(STAGING_URL_PULL) --build-arg BUILDKIT_INLINE_CACHE=1 . && \
 	docker push registry.heroku.com/roam-staging/web && \
 	docker push $(STAGING_URL_PUSH) && \
 	docker push $(STAGING_URL_PULL) && \
