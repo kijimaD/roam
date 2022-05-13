@@ -8,6 +8,18 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
+** ビルドキャッシュをレジストリに保存し、CI環境でキャッシュを使ってビルドする
+レジストリのキャッシュを利用してビルドできる。これによって、キャッシュがローカル環境に保持されない[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]環境などでもキャッシュを利用して高速にビルドできる。
+
+ポイントは--build-argと--cache-from。
+--build-argでメタ情報を含めてビルドする。このイメージをpushしておくことで、次回からキャッシュを利用できる。
+--cache-fromによってレジストリにある指定イメージからキャッシュを取得してビルドする。
+
+#+caption: --cache-from と --build-arg BUILDKIT_INLINE_CACHE=1
+#+begin_src shell
+  docker build --target build -t ghcr.io/kijimad/roam-build:master --cache-from ghcr.io/kijimad/roam-build:master --build-arg BUILDKIT_INLINE_CACHE=1 .
+  docker push ghcr.io/kijimad/roam-build:master
+#+end_src
 ** 本番用yarn buildの例
 本番用にコンパクトにビルドする場合の例。
 node_modulesはいらなくて、ビルド成果物だけあればよい。
@@ -519,7 +531,7 @@ redis, sidekiqが本当に動いてるかわからない。
 letter openerを見る限り、できてない。
 
 追加した。
-*** DONE [#A] dockerがrootユーザでファイルを生成する問題
+*** DONE dockerがrootユーザでファイルを生成する問題
 CLOSED: [2021-12-25 Sat 23:51]
 生成したファイルがroot権限になってしまう。
 だからbundle installを実行すると、その後は通常ユーザでは編集できなくなる。
