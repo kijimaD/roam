@@ -8,6 +8,31 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
+** [[id:2d35ac9e-554a-4142-bba7-3c614cbfe4c4][GitHub Actions]]でビルドする
+[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]によるコンテナビルドには、--cache-from を使って、レジストリに送信したイメージから各ステージのキャッシュを取得していく方法と、CIのキャッシュ機能を使う方法の2つがある。
+
+レジストリからキャッシュを取る方法には弱点がある。
+
+- キャッシュが登録イメージの1つしかない。たとえば異なるブランチでキャッシュが更新されると、キャッシュが失われる
+- --mount=type=...のcacheが、pushイメージには含まれない
+- ステージごとにキャッシュ通信(取得+送信)をするが、オーバーヘッドが大きい
+- イメージに含めることができるキャッシュ(inline cache)には、minモードしか適用できない。つまりキャッシュに制限がある [[https://github.com/moby/buildkit#--export-cache-options][moby/buildkit: concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit]]
+
+のため、CIのキャッシュ機能を使うのが現実的か。複数のキャッシュ…ブランチごと、Gemfileのハッシュ値ごとでハッシュを保持できるためキャッシュがヒットしやすい。キャッシュはひとまとめで保存され、レジストリへの送信イメージは利用イメージだけになる。
+** RUN --mount=type=...オプション
+ビルド時にだけアクセスできる、cacheマウントを利用できる。マウントと言うが、ホストマシンとは関係ない。マウントディレクトリはビルド後削除されるため、イメージサイズにも優しい。
+https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md
+
+#+begin_src
+RUN --mount=type=cache,target=/root/.cache/go-build go build
+#+end_src
+
+たとえばpackage.jsonに変更があったときも途中から再開できる。ビルドキャッシュがヒットする/しないのゼロイチでなくなる。
+** rake assets:precompile高速化
+- public/assets
+- tmp/cache/assets
+
+をキャッシュしておくことで高速化できる。
 ** ビルドキャッシュをレジストリに保存し、CI環境でキャッシュを使ってビルドする
 レジストリのキャッシュを利用してビルドできる。これによって、キャッシュがローカル環境に保持されない[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]環境などでもキャッシュを利用して高速にビルドできる。
 

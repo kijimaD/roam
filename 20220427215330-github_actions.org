@@ -6,6 +6,39 @@
 GitHub Actionsは[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]が提供する[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]/[[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]環境。
 コードやプロジェクトに対するタスクを実行できる。
 * Memo
+** reuseable actionにおけるsecretsの扱い方
+#+begin_src yaml
+caller:
+```yaml
+jobs:
+  called:
+    uses: user/repo/.github/workflows/called.yml@main
+    with:
+      text: ${{ github.event.inputs.text }}
+    secrets: # ←←←
+      DUMMY: ${{ secrets.DUMMY }} # ←←← caller側ではとくになにもせずともsecretsが使える
+```
+
+called:
+```yml
+on:
+  workflow_call:
+    inputs:
+      text:
+        type: string
+        required: true
+    secrets: # ←←←
+      DUMMY: # ←←←called側ではここで定義されていて、かつ呼び出し側のsecretsで定義されてないとsecretsは参照不可
+        required: true
+
+jobs:
+  called:
+    runs-on: ubuntu-latest
+    steps:
+      - name: output secret
+        run: |
+          echo ${{ secrets.DUMMY }}
+#+end_src
 ** Stale Bot
 動きがないIssueやPRを自動的にマークしたりcloseするGitHub bot。
 [[https://github.com/probot/stale][probot/stale: A GitHub App built with Probot that closes abandoned Issues and Pull Requests after a period of inactivity.]]
