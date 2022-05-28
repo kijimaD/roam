@@ -58,14 +58,11 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Check out
-        uses: actions/checkout@v1 # MEMO: Use v1 for .git analysis
-
-      - name: release
-        run: make release
-
-      - name: user
-        run: sudo chown -R $USER:$USER .
+      - name: copy
+        run: |
+          docker run --detach --name release ${{ needs.build.outputs.git-tag }} && \
+          docker cp release:/roam/public ./public && \
+          sudo chown -R $USER:$USER ./public
 
       - name: check
         run: ls -al ./public
