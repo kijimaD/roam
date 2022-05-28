@@ -1,3 +1,5 @@
+# ruby ================
+
 FROM amazonlinux:2 AS ruby
 RUN yum -y update && \
     yum -y install \
@@ -21,6 +23,8 @@ RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-buil
     /usr/local/plugins/ruby-build/install.sh
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
+
+# build ================
 
 FROM amazonlinux:2 AS build
 
@@ -70,18 +74,9 @@ COPY --from=build /roam/public /roam/public
 
 CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
-# development ================
+# ci ================
 
-FROM node:17 AS node
-
-WORKDIR /roam
-
-COPY package.json package-lock.json ./
-RUN npm install
-
-CMD /bin/bash
-
-FROM amazonlinux:2 AS lint
+FROM build AS ci
 
 RUN yum -y update && \
     yum -y install \
