@@ -25,13 +25,15 @@ jobs:
     needs: tag
     uses: ./.github/workflows/build.yml
     with:
-      image: ghcr.io/kijimad/roam_release:${{needs.tag.outputs.git-tag}}
+      image: ghcr.io/kijimad/roam_release:${{ needs.tag.outputs.git-tag }}
       target: release
     secrets:
       WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
 
   publish:
-    needs: build
+    needs:
+      - tag
+      - build
     runs-on: ubuntu-latest
     steps:
       - name: Check out
@@ -39,7 +41,7 @@ jobs:
 
       - name: copy
         run: |
-          docker run --detach --name release ghcr.io/kijimad/roam_release:${{ needs.build.outputs.git-tag }} && \
+          docker run --detach --name release ghcr.io/kijimad/roam_release:${{ needs.tag.outputs.git-tag }} && \
           docker cp release:/roam/public ./public && \
           sudo chown -R $USER:$USER ./public
 
