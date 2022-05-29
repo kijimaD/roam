@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-29 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RSpec</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">RSpec</h1>
+<div id="outline-container-orgfccd675" class="outline-2">
+<h2 id="orgfccd675"><a href="#orgfccd675">概要</a></h2>
+<div class="outline-text-2" id="text-orgfccd675">
+<p>
+RSpecは<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>のテストフレームワーク。<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>開発でよく使われる。
+</p>
+</div>
+</div>
+<div id="outline-container-org2244523" class="outline-2">
+<h2 id="org2244523"><a href="#org2244523">Memo</a></h2>
+<div class="outline-text-2" id="text-org2244523">
+</div>
+<div id="outline-container-org5bb1c3f" class="outline-3">
+<h3 id="org5bb1c3f"><a href="#org5bb1c3f">within</a></h3>
+<div class="outline-text-3" id="text-org5bb1c3f">
+<p>
+セレクトボックスをクリックしてから選択、というような場合capybaraは不安定になることがある。
+まだ表示されてないのに、クリックするためにクリックするポイントがずれたりする。
+</p>
+
+<p>
+安直なのはsleepすることだが、いい方法もある。
+親要素全体が表示されてから、クリックする。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>withinで親要素が表示されるのを待つ</label><pre class="src src-ruby">within <span class="org-string">'&#35242;&#35201;&#32032;'</span> <span class="org-keyword">do</span>
+  find(<span class="org-string">'li'</span>, <span class="org-constant">text:</span> <span class="org-string">'&#12475;&#12524;&#12463;&#12488;&#12508;&#12483;&#12463;&#12473;&#12398;&#20013;&#36523;'</span>).click
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+<a href="https://koheisg.dreamin.cc/system_spec/random-failures">system specとそのrandom落ち (flaky test) との戦い</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgfc4dbb6" class="outline-3">
+<h3 id="orgfc4dbb6"><a href="#orgfc4dbb6">ENVをテストするためのヘルパー</a></h3>
+<div class="outline-text-3" id="text-orgfc4dbb6">
+<p>
+ENVを変えてテストしたいときがある。
+<a href="https://github.com/rspec/rspec-rails/issues/1279#issuecomment-70275896">https://github.com/rspec/rspec-rails/issues/1279#issuecomment-70275896</a>
+ヘルパーを追加する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>helper</label><pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">EnvHelpers</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">with_env_vars</span>(vars)
+    original = <span class="org-type">ENV</span>.to_hash
+    vars.each { |k, v| <span class="org-type">ENV</span>[k] = v }
+
+    <span class="org-keyword">begin</span>
+      <span class="org-keyword">yield</span>
+    <span class="org-keyword">ensure</span>
+      <span class="org-type">ENV</span>.replace(original)
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>rails_helper</label><pre class="src src-ruby"><span class="org-type">RSpec</span>.configure <span class="org-keyword">do</span> |c|
+  c.include <span class="org-type">EnvHelpers</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>rspec</label><pre class="src src-ruby">it <span class="org-string">'does something with the FOO environment variable'</span> <span class="org-keyword">do</span>
+  with_env_vars <span class="org-string">'FOO'</span> =&gt; <span class="org-string">'bar'</span> <span class="org-keyword">do</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">logic that depends upon ENV['FOO'] goes here</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9e96df3" class="outline-3">
+<h3 id="org9e96df3"><a href="#org9e96df3">テスト結果にSQLを出力する</a></h3>
+<div class="outline-text-3" id="text-org9e96df3">
+<p>
+どのようなSQLが発行されるか確認できると便利。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>発行クエリを出力する</label><pre class="src src-ruby"><span class="org-type">RSpec</span>.describe <span class="org-keyword">do</span>
+  before <span class="org-keyword">do</span>
+    <span class="org-type">ActiveRecord</span>::<span class="org-type">Base</span>.logger = <span class="org-type">Logger</span>.new(<span class="org-type">STDOUT</span>)
+  <span class="org-keyword">end</span>
+
+  it <span class="org-keyword">do</span>
+    ...
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5ddc2de" class="outline-3">
+<h3 id="org5ddc2de"><a href="#org5ddc2de">request specでsessionメソッドを使う</a></h3>
+<div class="outline-text-3" id="text-org5ddc2de">
+<div class="org-src-container">
+<pre class="src src-ruby">allow_any_instance_of(<span class="org-type">ActionDispatch</span>::<span class="org-type">Request</span>).to receive(<span class="org-constant">:session</span>).and_return({})
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5375d10" class="outline-3">
+<h3 id="org5375d10"><a href="#org5375d10">simplecovカバレッジ</a></h3>
+<div class="outline-text-3" id="text-org5375d10">
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-variable-name">COVERAGE</span>=true bundle exec rspec spec/requests/user_spec.rb
+open coverage/index.html
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org2577c73" class="outline-2">
+<h2 id="org2577c73"><a href="#org2577c73">たまに失敗するパターン</a></h2>
+<div class="outline-text-2" id="text-org2577c73">
+<p>
+system specではよくある。
+</p>
+</div>
+<div id="outline-container-org8202796" class="outline-3">
+<h3 id="org8202796"><a href="#org8202796">読み込み前に検証して失敗する</a></h3>
+<div class="outline-text-3" id="text-org8202796">
+<div class="org-src-container">
+<pre class="src src-ruby">expect(page).to have_text <span class="org-string">'aaa'</span>, <span class="org-constant">wait:</span> 5 <span class="org-comment-delimiter">#</span><span class="org-comment">&#30330;&#35211;&#12391;&#12365;&#12394;&#12363;&#12387;&#12383;&#12392;&#12365;&#12398;&#26368;&#22823;&#24453;&#12385;&#26178;&#38291;&#12434;&#20280;&#12400;&#12377;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org31b5f2d" class="outline-3">
+<h3 id="org31b5f2d"><a href="#org31b5f2d">並び順に依存したテスト</a></h3>
+<div class="outline-text-3" id="text-org31b5f2d">
+<p>
+同じ秒数に作成されたとき、createした順番に並ばない可能性がある。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">model1 = create(<span class="org-constant">:model</span>)
+model2 = create(<span class="org-constant">:model</span>)
+</pre>
+</div>
+<p>
+created_atでソートして表示しているとして、この作成順にソートされるわけではない。
+秒数が同じときはidなどがソートに使われるだろう。
+1つcreateするのにはわずかな時間なので、たまに失敗するだけで気づきにくい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd8e064d" class="outline-3">
+<h3 id="orgd8e064d"><a href="#orgd8e064d">チェックボックス</a></h3>
+<div class="outline-text-3" id="text-orgd8e064d">
+<p>
+チェックに少し時間がかかるのでたまにチェックせずに送信して失敗する。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">check aaa
+expect(page).to have_checked_field(aaa), wait 5 <span class="org-comment-delimiter"># </span><span class="org-comment">&#12481;&#12455;&#12483;&#12463;&#12434;&#30906;&#35469;&#12377;&#12427;</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb747d1f" class="outline-2">
+<h2 id="orgb747d1f"><a href="#orgb747d1f">Tasks</a></h2>
+</div>
+<div id="outline-container-org6d9be1d" class="outline-2">
+<h2 id="org6d9be1d"><a href="#org6d9be1d">Archives</a></h2>
+</div>
+<div id="outline-container-orgf8eac1c" class="outline-2">
+<h2 id="orgf8eac1c"><a href="#orgf8eac1c">Reference</a></h2>
+<div class="outline-text-2" id="text-orgf8eac1c">
+</div>
+<div id="outline-container-orgdebc042" class="outline-3">
+<h3 id="orgdebc042"><a href="#orgdebc042"><a href="https://stackoverflow.com/questions/38573131/what-is-the-purpose-of-a-transient-do-block-in-factorybot-factories">ruby on rails - What is the purpose of a `transient do` block in FactoryBot factories? - Stack Overflow</a></a></h3>
+<div class="outline-text-3" id="text-orgdebc042">
+<p>
+FactoryBotのtransientの使い方。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfd2e378" class="outline-3">
+<h3 id="orgfd2e378"><a href="#orgfd2e378"><a href="https://stackoverflow.com/questions/20196146/check-the-dimensions-of-an-img-with-rspec-capybara">ruby on rails - Check the dimensions of an img with RSpec/Capybara? - Stack Overflow</a></a></h3>
+<div class="outline-text-3" id="text-orgfd2e378">
+<p>
+jqueryを使って存在チェックする方法。
+</p>
+</div>
+</div>
+<div id="outline-container-org436f95b" class="outline-3">
+<h3 id="org436f95b"><a href="#org436f95b"><a href="https://www.betterspecs.org/">Better Specs. Testing Guidelines for Developers.</a></a></h3>
+<div class="outline-text-3" id="text-org436f95b">
+<p>
+RSpecのベストプラクティス集。
+</p>
+</div>
+</div>
+<div id="outline-container-org20b151f" class="outline-3">
+<h3 id="org20b151f"><a href="#org20b151f"><a href="https://qian-dao-zhen-yi.gitbook.io/rspec-style-guide/">Introduction - rspec-style-guide</a></a></h3>
+<div class="outline-text-3" id="text-org20b151f">
+<p>
+可読性の高いテストコードを書くためのRSpecのスタイルガイド。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb0938ba" class="outline-3">
+<h3 id="orgb0938ba"><a href="#orgb0938ba"><a href="https://dev.classmethod.jp/articles/rspec-recipe/">[Ruby] よく使うRspecのレシピ集（Rspec3.3） | DevelopersIO</a></a></h3>
+<div class="outline-text-3" id="text-orgb0938ba">
+<p>
+RSpec。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
