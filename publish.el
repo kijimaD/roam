@@ -159,10 +159,9 @@
   (setq org-roam-v2-ack t)
   (org-roam-db-sync))
 
-(setq org-todo-keywords '((type "TODO" "WAIT" "WIP" "|" "DONE" "CLOSE")))
+(setq org-todo-keywords '((type "TODO" "WIP" "|" "DONE" "CLOSE")))
 (setq org-todo-keyword-faces
       '(("TODO" . (:foreground "orange" :weight bold))
-        ("WAIT" . (:foreground "HotPink2" :weight bold))
         ("WIP" . (:foreground "DeepSkyBlue" :weight bold))
         ("DONE" . (:foreground "green" :weight bold))
         ("CLOSE" . (:foreground "DarkOrchid" :weight bold))))
