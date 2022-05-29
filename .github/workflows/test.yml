@@ -29,7 +29,9 @@ jobs:
       WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
 
   test:
-    needs: build
+    needs:
+      - tag
+      - build
     runs-on: ubuntu-latest
     steps:
       - name: Capture triggering branch name
@@ -40,6 +42,5 @@ jobs:
         with:
           user-token: ${{ secrets.CIRCLECI_USER_TOKEN_ROAM }}
           project-slug: kijimaD/roam
-          # branch: ${{ env.BRANCH_NAME }}
-          branch: main
+          branch: ${{ env.BRANCH_NAME }}
           payload: '{"test": true, "image": "ghcr.io/kijimad/roam_ci:${{ needs.tag.outputs.git-tag }}"}'
