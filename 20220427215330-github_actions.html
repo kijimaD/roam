@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub Actions</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">GitHub Actions</h1>
+<div id="outline-container-org4b022e3" class="outline-2">
+<h2 id="org4b022e3"><a href="#org4b022e3">概要</a></h2>
+<div class="outline-text-2" id="text-org4b022e3">
+<p>
+GitHub Actionsは<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>が提供する<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>/<a href="20220212141243-cd.html#ID-2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764">CD</a>環境。
+コードやプロジェクトに対するタスクを実行できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc6e9b1c" class="outline-2">
+<h2 id="orgc6e9b1c"><a href="#orgc6e9b1c">Memo</a></h2>
+<div class="outline-text-2" id="text-orgc6e9b1c">
+</div>
+<div id="outline-container-org5e47b99" class="outline-3">
+<h3 id="org5e47b99"><a href="#org5e47b99">cacheスコープ</a></h3>
+<div class="outline-text-3" id="text-org5e47b99">
+<ul class="org-ul">
+<li><a href="https://zenn.dev/mallowlabs/articles/github-actions-cache-scope#actions%2Fcache-%E3%81%AE%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97">GitHub Actions の cache アクションでキャッシュヒットしない時はスコープを確認してみる</a></li>
+<li><a href="https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache">Caching dependencies to speed up workflows - GitHub Docs</a></li>
+</ul>
+
+<p>
+pushトリガーのジョブで、こんな感じにキャッシュを使っているとする。
+</p>
+<div class="org-src-container">
+<pre class="src src-yaml">- name: Cache Docker layers
+  uses: actions/cache@v3
+  with:
+    path: /tmp/.buildx-cache
+    key: ${{ runner.os }}-buildx-${{ github.sha }}
+    restore-keys: |
+      ${{ runner.os }}-buildx-
+</pre>
+</div>
+
+<p>
+restore-keysはキャッシュ検索に使うkey。メインのkeyはgithub.shaによってすべてのコミットで別々にキャッシュ保存するので、完全一致でキャッシュ取得できることはない。ので、restore-keyが必要。キーが部分一致するので、後続のコミットで利用できる。
+</p>
+
+<p>
+が、これだけではブランチが変わったとき、ブランチの最初ではキャッシュが利用されない。これがスコープ。スコープの探索は 同じブランチ → ベースブランチ → デフォルトブランチ のみで行われるので、ブランチの最初ではヒットしないということ。これを防ぐために、デフォルトブランチで定期的にpush保存を必要がある。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org9df33b6" class="outline-3">
+<h3 id="org9df33b6"><a href="#org9df33b6">reuseable actionにおけるsecretsの扱い方</a></h3>
+<div class="outline-text-3" id="text-org9df33b6">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>caller</label><pre class="src src-yaml">jobs:
+  called:
+    uses: user/repo/.github/workflows/called.yml@main
+    with:
+      text: ${{ github.event.inputs.text }}
+      secrets: # ←←←
+      DUMMY: ${{ secrets.DUMMY }} # ←←← caller側ではとくになにもせずともsecretsが使える
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>called</label><pre class="src src-yaml">on:
+  workflow_call:
+    inputs:
+      text:
+        type: string
+        required: true
+    secrets: # ←←←
+      DUMMY: # ←←←called側ではここで定義されていて、かつ呼び出し側のsecretsで定義されてないとsecretsは参照不可
+        required: true
+
+jobs:
+  called:
+    runs-on: ubuntu-latest
+    steps:
+      - name: output secret
+        run: |
+          echo ${{ secrets.DUMMY }}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org95c2ca3" class="outline-3">
+<h3 id="org95c2ca3"><a href="#org95c2ca3">Stale Bot</a></h3>
+<div class="outline-text-3" id="text-org95c2ca3">
+<p>
+動きがないIssueやPRを自動的にマークしたりcloseするGitHub bot。
+<a href="https://github.com/probot/stale">probot/stale: A GitHub App built with Probot that closes abandoned Issues and Pull Requests after a period of inactivity.</a>
+</p>
+
+<p>
+設定の例(rubocop)。
+<a href="https://github.com/rubocop/rubocop/blob/master/.github/stale.yml">https://github.com/rubocop/rubocop/blob/master/.github/stale.yml</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org8e22e6e" class="outline-3">
+<h3 id="org8e22e6e"><a href="#org8e22e6e">PRの編集ファイルによって自動でラベルをつける</a></h3>
+<div class="outline-text-3" id="text-org8e22e6e">
+<p>
+面倒なラベル付けを自動化する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>actions <a href="https://github.com/upptime/uptime-monitor/blob/master/.github/workflows/labeler.yml">https://github.com/upptime/uptime-monitor/blob/master/.github/workflows/labeler.yml</a></label><pre class="src src-yaml">name: Pull Request Labeler
+on:
+  - pull_request
+  - pull_request_review
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label all PRs
+        uses: actions/labeler@master
+        with:
+          repo-token: "${{ secrets.GH_PAT }}"
+      - name: Label approved PRs
+        uses: koj-co/label-approved-action@master
+        with:
+          labels: "merge"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GH_PAT }}"
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>labels.yml <a href="https://github.com/upptime/uptime-monitor/blob/master/.github/labeler.yml">https://github.com/upptime/uptime-monitor/blob/master/.github/labeler.yml</a></label><pre class="src src-yaml">config:
+  - ./*
+tooling:
+  - tooling/**/*.*
+assets:
+  - static/**/*.*
+tests:
+  - any: ["src/**/*.spec.js", "cypress/**/*"]
+package:
+  - any: ["package.json", "package-lock.json"]
+source:
+  - src/**/*
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org523e46f" class="outline-3">
+<h3 id="org523e46f"><a href="#org523e46f">GitHub Actionsのトリガー</a></h3>
+<div class="outline-text-3" id="text-org523e46f">
+<p>
+pathsで特定ファイルが含まれるときのみ実行するときの注意点。
+pushは使わずに、pull_requestトリガーを使うべき。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>良い。Dockerfileが含まれるPRではすべて実行される</label><pre class="src src-yaml">on:
+  pull_request:
+    paths:
+      - 'Dockerfile'
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>悪い。Dockerfileが含まれないコミットでは実行されない。漏れやすい</label><pre class="src src-yaml">on:
+  push:
+    paths:
+      - 'Dockerfile'
+</pre>
+</div>
+
+<p>
+pushではpull_request全体の変更を追うことができないので、コミットが分かれているとジョブが走らず、あたかもパスしているように見えて危険。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org75ba3c2" class="outline-2">
+<h2 id="org75ba3c2"><a href="#org75ba3c2">Tasks</a></h2>
+<div class="outline-text-2" id="text-org75ba3c2">
+</div>
+<div id="outline-container-org503b4ce" class="outline-3">
+<h3 id="org503b4ce"><a href="#org503b4ce"><span class="done DONE">DONE</span> <a href="https://note.com/tably/n/n46041458d6b3">GitHub Actions向け自作アクションの作り方｜Tably｜note</a></a></h3>
+<div class="outline-text-3" id="text-org503b4ce">
+<p>
+作り方。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc6f1172" class="outline-2">
+<h2 id="orgc6f1172"><a href="#orgc6f1172">Reference</a></h2>
+<div class="outline-text-2" id="text-orgc6f1172">
+</div>
+<div id="outline-container-org927fbaf" class="outline-3">
+<h3 id="org927fbaf"><a href="#org927fbaf"><a href="https://zenn.dev/hsaki/articles/github-actions-component">GitHub ActionsにおけるStep/Job/Workflow設計論</a></a></h3>
+</div>
+<div id="outline-container-orgbf960c5" class="outline-3">
+<h3 id="orgbf960c5"><a href="#orgbf960c5"><a href="https://zenn.dev/snowcait/articles/787e83640746e1">Composite Action Template を作りました GitHub Actions</a></a></h3>
+<div class="outline-text-3" id="text-orgbf960c5">
+<p>
+自作アクションの作り方。ミニマルでわかりやすい。
+<a href="https://github.com/snow-actions/git-config-user">snow-actions/git-config-user: Set git user name and email address</a>
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgaf97756" class="outline-2">
+<h2 id="orgaf97756"><a href="#orgaf97756">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>digger</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">digger</h1>
+<div id="outline-container-orge9dd222" class="outline-2">
+<h2 id="orge9dd222"><a href="#orge9dd222">概要</a></h2>
+<div class="outline-text-2" id="text-orge9dd222">
+<p>
+<a href="https://github.com/kijimaD/digger">https://github.com/kijimaD/digger</a>
+diggerはシンボルエンカウント/ローグライクな要素を持った<a href="20210926145504-game.html#ID-8b79aef9-1073-4788-9e81-68cc63e4f997">game</a>である。<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>バージョンは開発途中でやめた。<a href="20210901101339-rust.html#ID-ddc21510-6693-4c1e-9070-db0dd2a8160b">Rust</a>で別のコードをベースに再開した。ゲーム開発は静的型付けでないと厳しそう。
+</p>
+
+<ul class="org-ul">
+<li>反省
+<ul class="org-ul">
+<li>機能追加が大変で挫折した</li>
+<li>データがオブジェクトの入った配列で管理が大変だった。バケツリレーが発生</li>
+<li>UIと機能が一体化</li>
+<li>参考になるコードがなかった</li>
+<li>自動テストで検知できない</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd7939f0" class="outline-2">
+<h2 id="orgd7939f0"><a href="#orgd7939f0">Goal</a></h2>
+<div class="outline-text-2" id="text-orgd7939f0">
+<ul class="org-ul">
+<li>ゲーム投稿サイト or Steamでリリースすること。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8a62d24" class="outline-2">
+<h2 id="org8a62d24"><a href="#org8a62d24">目的</a></h2>
+<div class="outline-text-2" id="text-org8a62d24">
+<ul class="org-ul">
+<li><a href="20210901101339-rust.html#ID-ddc21510-6693-4c1e-9070-db0dd2a8160b">Rust</a>に慣れる</li>
+<li>ゲーム開発に慣れる</li>
+<li>コード規模の限界を広げる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org829ff75" class="outline-2">
+<h2 id="org829ff75"><a href="#org829ff75">Design Doc</a></h2>
+<div class="outline-text-2" id="text-org829ff75">
+</div>
+<div id="outline-container-org2611e83" class="outline-3">
+<h3 id="org2611e83"><a href="#org2611e83">Characters</a></h3>
+<div class="outline-text-3" id="text-org2611e83">
+<ul class="org-ul">
+<li>主人公</li>
+<li>パーティメンバー</li>
+<li>モンスター
+<ul class="org-ul">
+<li>シンボルが種族を示す。ロボット、戦車、珠、ドラゴン、ライム</li>
+<li>種族・レベルごとの敵</li>
+<li>ダンジョンのボス</li>
+</ul></li>
+<li>NPC
+<ul class="org-ul">
+<li>アイテム屋、装備屋、市民、合成屋</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3d79383" class="outline-3">
+<h3 id="org3d79383"><a href="#org3d79383">Story</a></h3>
+<div class="outline-text-3" id="text-org3d79383">
+<ul class="org-ul">
+<li>街を拠点に、遺跡の3つの珠を手に入れる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgde0b281" class="outline-3">
+<h3 id="orgde0b281"><a href="#orgde0b281">Story progression</a></h3>
+<div class="outline-text-3" id="text-orgde0b281">
+<ul class="org-ul">
+<li>ゲームは街からスタートする。街では売買でき、会話からヒントを得られる</li>
+<li>遺跡のボスを倒すと珠を手に入れ、次の遺跡が選択できるようになる</li>
+<li>3つ手に入れるとラスボスと戦い終了</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1b46e2a" class="outline-3">
+<h3 id="org1b46e2a"><a href="#org1b46e2a">Gameplay</a></h3>
+<div class="outline-text-3" id="text-org1b46e2a">
+<ul class="org-ul">
+<li>ローグライク</li>
+<li>シンボルエンカウント</li>
+<li>RPG的戦闘</li>
+<li>合成</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfdc2295" class="outline-3">
+<h3 id="orgfdc2295"><a href="#orgfdc2295">Goals</a></h3>
+<div class="outline-text-3" id="text-orgfdc2295">
+<ul class="org-ul">
+<li>全体: 3つの珠を集める</li>
+<li>短期: 敵を倒して先に進む、出口を探す</li>
+<li>落ちているアイテムを拾ったり合成することでより強くする</li>
+<li>キャラを成長させる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9ed2978" class="outline-3">
+<h3 id="org9ed2978"><a href="#org9ed2978">User Skills</a></h3>
+<div class="outline-text-3" id="text-org9ed2978">
+<ul class="org-ul">
+<li>種類の異なるダンジョンを進む</li>
+<li>戦略的な動き。AIの挙動や地形を理解して、生存可能性を高める</li>
+<li>数値を管理する。装備品や行動のボーナスをうまく使って生存可能性を高める</li>
+<li>資源を管理する。重さ、装備品の制約があるなかで、生存可能性を高める</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdeda26c" class="outline-3">
+<h3 id="orgdeda26c"><a href="#orgdeda26c">Items and Power-Ups</a></h3>
+<div class="outline-text-3" id="text-orgdeda26c">
+<p>
+ゲームは様々なアイテムを含む。
+</p>
+
+<ul class="org-ul">
+<li>防具。アーマー、服、帽子、靴</li>
+<li>装飾品。指輪、お守り</li>
+<li>盾</li>
+<li>近接武器</li>
+<li>銃器</li>
+<li>消耗品。回復薬、栄養剤、ロケット弾</li>
+<li>素材、売却物</li>
+<li>食料</li>
+<li>キーアイテム。珠、鍵</li>
+</ul>
+
+<p>
+アイテムには重さがある。
+アイテムはテーブルにより決定する。
+</p>
+</div>
+</div>
+<div id="outline-container-org3f00ca9" class="outline-3">
+<h3 id="org3f00ca9"><a href="#org3f00ca9">Progression and challenge</a></h3>
+<div class="outline-text-3" id="text-org3f00ca9">
+<ul class="org-ul">
+<li>敵を倒すと経験値を得てレベルアップする</li>
+<li>レベルアップして能力が上がったり、生存に役立つより強力な方法を使えるようになる</li>
+<li>階を降りるごとにレベルと難易度が上がる。たまにレベルより強い敵に出会うことがある</li>
+<li>理不尽な偶然でプレイヤーを殺さない</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc1868e2" class="outline-3">
+<h3 id="orgc1868e2"><a href="#orgc1868e2">Losing</a></h3>
+<div class="outline-text-3" id="text-orgc1868e2">
+<ul class="org-ul">
+<li>ゲームオーバーになった場合、得たアイテムやキャラクターを失う</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8a66c37" class="outline-3">
+<h3 id="org8a66c37"><a href="#org8a66c37">Art Style</a></h3>
+<div class="outline-text-3" id="text-org8a66c37">
+<ul class="org-ul">
+<li>ASCII</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org28ad49b" class="outline-3">
+<h3 id="org28ad49b"><a href="#org28ad49b">Music and Sound</a></h3>
+<div class="outline-text-3" id="text-org28ad49b">
+<ul class="org-ul">
+<li>一切ない</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd00d262" class="outline-3">
+<h3 id="orgd00d262"><a href="#orgd00d262">Technical Description</a></h3>
+<div class="outline-text-3" id="text-orgd00d262">
+<ul class="org-ul">
+<li><a href="20210901101339-rust.html#ID-ddc21510-6693-4c1e-9070-db0dd2a8160b">Rust</a>, rltk</li>
+<li>OpenGL, Web Assemblyに変換しブラウザでプレイできる</li>
+<li>ローカルでの実行形式もサポートする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgee5975a" class="outline-3">
+<h3 id="orgee5975a"><a href="#orgee5975a">Marketing and Funding</a></h3>
+<div class="outline-text-3" id="text-orgee5975a">
+<ul class="org-ul">
+<li>無料で公開する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdd66805" class="outline-3">
+<h3 id="orgdd66805"><a href="#orgdd66805">Localization</a></h3>
+<div class="outline-text-3" id="text-orgdd66805">
+<ul class="org-ul">
+<li>プレイは英語</li>
+<li>ソースコードや開発用ドキュメントに日本語を含む</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orge4fa245" class="outline-2">
+<h2 id="orge4fa245"><a href="#orge4fa245">仕様</a></h2>
+<div class="outline-text-2" id="text-orge4fa245">
+<ul class="org-ul">
+<li>プレイヤーの目的: 3つのダンジョンをクリアすること。</li>
+<li>メッセージシーン、フィールド、戦闘で構成
+<ul class="org-ul">
+<li>フィールド上はローグライク</li>
+</ul></li>
+<li>空腹度が存在し、ゼロになるとダメージを受ける</li>
+<li>4人パーティ構成
+<ul class="org-ul">
+<li>4つのスロットで武器・防具を選択できる</li>
+<li>キャラはスキル、レベルを持つ</li>
+</ul></li>
+<li>3つのダンジョン
+<ul class="org-ul">
+<li>5階ごとの脱出機能を使う・遺跡のボスを倒すと帰れ、アイテムを持ち帰れる</li>
+<li>ダンジョンによって敵・アイテム・マップのセットが変わる</li>
+<li>後半のダンジョンは敵が強くなる</li>
+</ul></li>
+<li>ダンジョンは20階で構成される。最下層にはボスがいて、倒すとクリア</li>
+<li>アイテム
+<ul class="org-ul">
+<li>通貨によってアイテムを購入できる</li>
+<li>素材によってアイテムを作成できる</li>
+<li>アイテムを入手できるタイミング: マップで拾う、購入、戦闘に勝利</li>
+</ul></li>
+<li>シンボルエンカウントの戦闘</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4b192d3" class="outline-2">
+<h2 id="org4b192d3"><a href="#org4b192d3">ロードマップ</a></h2>
+<div class="outline-text-2" id="text-org4b192d3">
+</div>
+<div id="outline-container-org078a23a" class="outline-3">
+<h3 id="org078a23a"><a href="#org078a23a">2022</a></h3>
+<div class="outline-text-3" id="text-org078a23a">
+</div>
+<div id="outline-container-org1976d13" class="outline-4">
+<h4 id="org1976d13"><a href="#org1976d13">5月</a></h4>
+<div class="outline-text-4" id="text-org1976d13">
+<ul class="org-ul">
+<li>マップシステムをチュートリアルから拝借 ✓</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf5e55fd" class="outline-4">
+<h4 id="orgf5e55fd"><a href="#orgf5e55fd">6月</a></h4>
+<div class="outline-text-4" id="text-orgf5e55fd">
+<ul class="org-ul">
+<li>チュートリアルからのインポート作業</li>
+<li>戦闘システムの本格的実装</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1069e73" class="outline-4">
+<h4 id="org1069e73"><a href="#org1069e73">7月</a></h4>
+<div class="outline-text-4" id="text-org1069e73">
+<ul class="org-ul">
+<li>すべてのチュートリアルを終了</li>
+<li>hands-on Rustから持ってくる</li>
+<li>タイル画像の変更</li>
+<li>スキルシステム、パーティシステム</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3f34791" class="outline-4">
+<h4 id="org3f34791"><a href="#org3f34791">8月</a></h4>
+<div class="outline-text-4" id="text-org3f34791">
+<ul class="org-ul">
+<li>クリアまでいけるようにする</li>
+<li>ストーリー実装</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org0051577" class="outline-3">
+<h3 id="org0051577"><a href="#org0051577">2023</a></h3>
+<div class="outline-text-3" id="text-org0051577">
+</div>
+<div id="outline-container-org36f0fb7" class="outline-4">
+<h4 id="org36f0fb7"><a href="#org36f0fb7">1月</a></h4>
+<div class="outline-text-4" id="text-org36f0fb7">
+<ul class="org-ul">
+<li>リリース</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgafb38c3" class="outline-2">
+<h2 id="orgafb38c3"><a href="#orgafb38c3">開発録</a></h2>
+<div class="outline-text-2" id="text-orgafb38c3">
+<ul class="org-ul">
+<li>チュートリアルから持ってきてる時間が長すぎて辛いな。自作パートに入らないと理解できてる感じがしないし、実際できてない</li>
+<li>自分で修正できるようになるのか、使いこなせるようになるのか、という不安。実際ほとんどの場合は、見るだけでは理解できてない。何も見ずに考える状況にしないと、身につかないことが多かった</li>
+<li>コーディングで役立つ重要な概念
+<ul class="org-ul">
+<li>モジュールを組み合わせてオブジェクトの性質を決める方法</li>
+<li>継承を一切使わず、独立性高くゲームを組み立てていく方法</li>
+<li>with関数で組み合わせて、一気にbuildする方法。とくにマップエンジン</li>
+<li>フィルター。フィルターで複数のビルダーを組み合わせることができる</li>
+<li>enumによる安全な分岐</li>
+<li>jsonでデータを定義してビルドする方法</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org330a39a" class="outline-2">
+<h2 id="org330a39a"><a href="#org330a39a">todo</a></h2>
+<div class="outline-text-2" id="text-org330a39a">
+</div>
+<div id="outline-container-org083ed7e" class="outline-3">
+<h3 id="org083ed7e"><a href="#org083ed7e"><span class="todo WIP">WIP</span> 街追加(チュートリアル)&#xa0;&#xa0;&#xa0;<span class="tag"><span class="13">13</span></span></a></h3>
+<div class="outline-text-3" id="text-org083ed7e">
+</div>
+</div>
+<div id="outline-container-orgffcab3d" class="outline-3">
+<h3 id="orgffcab3d"><a href="#orgffcab3d"><span class="todo TODO">TODO</span> 攻撃方法実装&#xa0;&#xa0;&#xa0;<span class="tag"><span class="8">8</span></span></a></h3>
+<div class="outline-text-3" id="text-orgffcab3d">
+<p>
+モンスターとプレイヤーの両方が攻撃方法を選べるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb87f7e6" class="outline-3">
+<h3 id="orgb87f7e6"><a href="#orgb87f7e6"><span class="todo TODO">TODO</span> エンカウント時のモンスター決定&#xa0;&#xa0;&#xa0;<span class="tag"><span class="8">8</span></span></a></h3>
+<div class="outline-text-3" id="text-orgb87f7e6">
+<p>
+現在は固定している。
+</p>
+
+<ul class="org-ul">
+<li>階層</li>
+<li>mapエンティティ</li>
+<li>ダンジョン種別</li>
+<li>レベル</li>
+</ul>
+
+<p>
+から、エンカウントモンスターを決定する。2体出るときもある。mapの配置選択と似たような感じでいけそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org92b7421" class="outline-3">
+<h3 id="org92b7421"><a href="#org92b7421"><span class="todo TODO">TODO</span> 敵を倒した後に情報を取れるようにする&#xa0;&#xa0;&#xa0;<span class="tag"><span class="5">5</span></span></a></h3>
+<div class="outline-text-3" id="text-org92b7421">
+<p>
+現在はHPが0になったら削除してるので、例えば戦闘後に経験値を入れるといったことができない。
+もっとも、battle自体に取得予定の経験値を保存しておけばいいので、モンスター自体を保持しておくのは不要か。
+</p>
+</div>
+</div>
+<div id="outline-container-org9f38af4" class="outline-3">
+<h3 id="org9f38af4"><a href="#org9f38af4"><span class="todo TODO">TODO</span> パーティシステム&#xa0;&#xa0;&#xa0;<span class="tag"><span class="8">8</span></span></a></h3>
+<div class="outline-text-3" id="text-org9f38af4">
+<p>
+現在のプレイヤーは、マップオブジェクト=戦闘オブジェクトになっている。モンスターと同様に、エンティティを分割する。戦闘中のコマンドをどうするか決める。
+</p>
+</div>
+</div>
+<div id="outline-container-orga5b70d6" class="outline-3">
+<h3 id="orga5b70d6"><a href="#orga5b70d6"><span class="todo TODO">TODO</span> HUD改良&#xa0;&#xa0;&#xa0;<span class="tag"><span class="5">5</span></span></a></h3>
+<div class="outline-text-3" id="text-orga5b70d6">
+<p>
+メッセージボックスと重なって見にくいので。新たに追加する余地もない。
+</p>
+</div>
+</div>
+<div id="outline-container-org81d290f" class="outline-3">
+<h3 id="org81d290f"><a href="#org81d290f"><span class="todo TODO">TODO</span> 逃走コード分離&#xa0;&#xa0;&#xa0;<span class="tag"><span class="5">5</span></span></a></h3>
+<div class="outline-text-3" id="text-org81d290f">
+<p>
+全体的に分離されてないので、分離。
+</p>
+</div>
+</div>
+<div id="outline-container-orgda6d29d" class="outline-3">
+<h3 id="orgda6d29d"><a href="#orgda6d29d"><span class="todo TODO">TODO</span> 戦闘系コード整理&#xa0;&#xa0;&#xa0;<span class="tag"><span class="5">5</span></span></a></h3>
+<div class="outline-text-3" id="text-orgda6d29d">
+<p>
+生死判定、勝利判定でごちゃついていて、どこにあるかわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-org4da9f71" class="outline-3">
+<h3 id="org4da9f71"><a href="#org4da9f71"><span class="todo TODO">TODO</span> メッセージシステム&#xa0;&#xa0;&#xa0;<span class="tag"><span class="13">13</span></span></a></h3>
+</div>
+<div id="outline-container-org4f3f905" class="outline-3">
+<h3 id="org4f3f905"><a href="#org4f3f905"><span class="todo TODO">TODO</span> アイテム合成&#xa0;&#xa0;&#xa0;<span class="tag"><span class="13">13</span></span></a></h3>
+<div class="outline-text-3" id="text-org4f3f905">
+</div>
+<div id="outline-container-orgab6749a" class="outline-4">
+<h4 id="orgab6749a"><a href="#orgab6749a"><span class="todo TODO">TODO</span> 素材アイテムを追加&#xa0;&#xa0;&#xa0;<span class="tag"><span class="5">5</span></span></a></h4>
+</div>
+<div id="outline-container-org6bab537" class="outline-4">
+<h4 id="org6bab537"><a href="#org6bab537"><span class="todo TODO">TODO</span> UI作成</a></h4>
+</div>
+</div>
+<div id="outline-container-orga4ba1b8" class="outline-3">
+<h3 id="orga4ba1b8"><a href="#orga4ba1b8"><span class="todo TODO">TODO</span> 戦闘システム&#xa0;&#xa0;&#xa0;<span class="tag"><span class="21">21</span></span></a></h3>
+<div class="outline-text-3" id="text-orga4ba1b8">
+</div>
+<div id="outline-container-org8a97731" class="outline-4">
+<h4 id="org8a97731"><a href="#org8a97731"><span class="todo TODO">TODO</span> モンスターや仲間の攻撃方法の反映(かぎずめ、剣、パンチ)</a></h4>
+</div>
+<div id="outline-container-orgf8ef322" class="outline-4">
+<h4 id="orgf8ef322"><a href="#orgf8ef322"><span class="todo TODO">TODO</span> 装備武器</a></h4>
+</div>
+<div id="outline-container-org1d8ae19" class="outline-4">
+<h4 id="org1d8ae19"><a href="#org1d8ae19"><span class="todo TODO">TODO</span> コマンド…行動を選べる</a></h4>
+</div>
+<div id="outline-container-orgf8ab03e" class="outline-4">
+<h4 id="orgf8ab03e"><a href="#orgf8ab03e"><span class="todo TODO">TODO</span> SP…武器やスキルの使用にはスタミナが必要</a></h4>
+</div>
+</div>
+<div id="outline-container-org45c0122" class="outline-3">
+<h3 id="org45c0122"><a href="#org45c0122"><span class="todo TODO">TODO</span> スキル&#xa0;&#xa0;&#xa0;<span class="tag"><span class="13">13</span></span></a></h3>
+<div class="outline-text-3" id="text-org45c0122">
+<p>
+戦闘や行動によってスキルが上がり、生存に有利な補正がかかる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcc27036" class="outline-3">
+<h3 id="orgcc27036"><a href="#orgcc27036"><span class="todo TODO">TODO</span> スロット・部位ごとの装備&#xa0;&#xa0;&#xa0;<span class="tag"><span class="13">13</span></span></a></h3>
+<div class="outline-text-3" id="text-orgcc27036">
+<p>
+4つのスロットがあり自由に装備できる。同じ部位の装備はできない。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org9f90ecd" class="outline-2">
+<h2 id="org9f90ecd"><a href="#org9f90ecd">いつか</a></h2>
+<div class="outline-text-2" id="text-org9f90ecd">
+</div>
+<div id="outline-container-orgc2605c3" class="outline-3">
+<h3 id="orgc2605c3"><a href="#orgc2605c3"><span class="todo TODO">TODO</span> 日本語を表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-orgc2605c3">
+<p>
+フォントをどうやって変えるのかがわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-org876a45f" class="outline-3">
+<h3 id="org876a45f"><a href="#org876a45f"><span class="todo TODO">TODO</span> マップのシード値を取れるようにする</a></h3>
+<div class="outline-text-3" id="text-org876a45f">
+<p>
+シードを指定すると同じマップを生成できる。デバッグで便利。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orga698722" class="outline-2">
+<h2 id="orga698722"><a href="#orga698722">References</a></h2>
+<div class="outline-text-2" id="text-orga698722">
+<blockquote>
+<dl class="org-dl">
+<dt><a href="http://www.roguebasin.com/index.php/Articles">http://www.roguebasin.com/index.php/Articles</a></dt><dd>ローグライクに関する情報が集約されている。</dd>
+<dt><a href="http://www.roguebasin.com/index.php?title=How_to_Write_a_Roguelike_in_15_Steps">http://www.roguebasin.com/index.php?title=How_to_Write_a_Roguelike_in_15_Steps</a></dt><dd>ローグライクの作り方のヒント。</dd>
+<dt><a href="https://countable.hatenablog.com/entry/20120717/1342505647">https://countable.hatenablog.com/entry/20120717/1342505647</a></dt><dd>↑ページの和訳</dd>
+<dt><a href="https://techblog.sega.jp/entry/2018/08/27/100000">https://techblog.sega.jp/entry/2018/08/27/100000</a></dt><dd>ゲームのテスト</dd>
+<dt><a href="https://www.amazon.co.jp/Programming-Patterns-%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA%E3%81%AE%E5%95%8F%E9%A1%8C%E8%A7%A3%E6%B1%BA%E3%83%A1%E3%83%8B%E3%83%A5%E3%83%BC-impress-gear%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA-ebook/dp/B015R0M8W0/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;dchild=1&amp;keywords=%E3%82%B2%E3%83%BC%E3%83%A0+%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3&amp;qid=1627347211&amp;sr=8-1">https://www.amazon.co.jp/Programming-Patterns-%E3%82%BD%E3%83%95%E3%83%88%E3%82%A6%E3%82%A7%E3%82%A2%E9%96%8B%E7%99%BA%E3%81%AE%E5%95%8F%E9%A1%8C%E8%A7%A3%E6%B1%BA%E3%83%A1%E3%83%8B%E3%83%A5%E3%83%BC-impress-gear%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA-ebook/dp/B015R0M8W0/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;dchild=1&amp;keywords=%E3%82%B2%E3%83%BC%E3%83%A0+%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%91%E3%82%BF%E3%83%BC%E3%83%B3&amp;qid=1627347211&amp;sr=8-1</a></dt><dd>ゲームデザインパターン</dd>
+<dt><a href="https://www.amazon.co.jp/Hands-Rust-English-Herbert-Wolverson-ebook/dp/B09BK8Q6GY/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=26DQRMWP5RQIE&amp;keywords=hands-on+rust&amp;qid=1651655347&amp;sprefix=hands-on+ru%2Caps%2C196&amp;sr=8-1">https://www.amazon.co.jp/Hands-Rust-English-Herbert-Wolverson-ebook/dp/B09BK8Q6GY/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=26DQRMWP5RQIE&amp;keywords=hands-on+rust&amp;qid=1651655347&amp;sprefix=hands-on+ru%2Caps%2C196&amp;sr=8-1</a></dt><dd>2Dゲームのハンズオン</dd>
+</dl>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgabc74fc" class="outline-2">
+<h2 id="orgabc74fc"><a href="#orgabc74fc">Archives</a></h2>
+<div class="outline-text-2" id="text-orgabc74fc">
+</div>
+<div id="outline-container-org119a5db" class="outline-3">
+<h3 id="org119a5db"><a href="#org119a5db"><span class="done DONE">DONE</span> 移動システム</a></h3>
+<div class="outline-text-3" id="text-org119a5db">
+<ul class="org-ul">
+<li>地形判定</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9be062e" class="outline-3">
+<h3 id="org9be062e"><a href="#org9be062e"><span class="done DONE">DONE</span> マップをtxtファイルから読み込む</a></h3>
+<div class="outline-text-3" id="text-org9be062e">
+</div>
+</div>
+<div id="outline-container-org710063d" class="outline-3">
+<h3 id="org710063d"><a href="#org710063d"><span class="done DONE">DONE</span> mainファイル分割</a></h3>
+<div class="outline-text-3" id="text-org710063d">
+<p>
+同じ形にした。
+</p>
+</div>
+</div>
+<div id="outline-container-orge8a56db" class="outline-3">
+<h3 id="orge8a56db"><a href="#orge8a56db"><span class="done DONE">DONE</span> テスト追加</a></h3>
+<div class="outline-text-3" id="text-orge8a56db">
+</div>
+</div>
+<div id="outline-container-org0ff874e" class="outline-3">
+<h3 id="org0ff874e"><a href="#org0ff874e"><span class="done DONE">DONE</span> テスト環境構築</a></h3>
+<div class="outline-text-3" id="text-org0ff874e">
+<ul class="org-ul">
+<li>単独RSpec</li>
+<li>カバレッジ</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6e31047" class="outline-3">
+<h3 id="org6e31047"><a href="#org6e31047"><span class="done DONE">DONE</span> 複数ウィンドウエリア</a></h3>
+<div class="outline-text-3" id="text-org6e31047">
+<p>
+メッセージエリア、ステータスエリアなどウィンドウにエリアを追加する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb33924e" class="outline-3">
+<h3 id="orgb33924e"><a href="#orgb33924e"><span class="done DONE">DONE</span> component追加</a></h3>
+<div class="outline-text-3" id="text-orgb33924e">
+<p>
+game_objectを構成するもの。直に起動されることはなく、object_poolにもaddされない。
+</p>
+</div>
+</div>
+<div id="outline-container-orge87d46a" class="outline-3">
+<h3 id="orge87d46a"><a href="#orge87d46a"><span class="done DONE">DONE</span> inputに分割</a></h3>
+<div class="outline-text-3" id="text-orge87d46a">
+<p>
+今はすべてfield_stateでやっているが、characterのcomponentでやるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orge54ebb0" class="outline-3">
+<h3 id="orge54ebb0"><a href="#orge54ebb0"><span class="done DONE">DONE</span> 別入力</a></h3>
+<div class="outline-text-3" id="text-orge54ebb0">
+<p>
+とりあえず敵をランダム移動できるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org0cfe6da" class="outline-3">
+<h3 id="org0cfe6da"><a href="#org0cfe6da"><span class="done DONE">DONE</span> message_displayとmessageの分割</a></h3>
+<div class="outline-text-3" id="text-org0cfe6da">
+<p>
+statsを作ってそこにmessageを入れることで対応した。
+</p>
+</div>
+</div>
+<div id="outline-container-org4c1c8f5" class="outline-3">
+<h3 id="org4c1c8f5"><a href="#org4c1c8f5"><span class="done DONE">DONE</span> テストrequireを自動化する</a></h3>
+<div class="outline-text-3" id="text-org4c1c8f5">
+<p>
+めんどいので。
+</p>
+</div>
+</div>
+<div id="outline-container-org93c35e0" class="outline-3">
+<h3 id="org93c35e0"><a href="#org93c35e0"><span class="done DONE">DONE</span> RSpec lintを追加した</a></h3>
+<div class="outline-text-3" id="text-org93c35e0">
+<p>
+その日の気分で書きがちなところに基準ができた。必須だな。
+</p>
+</div>
+</div>
+<div id="outline-container-org2508561" class="outline-3">
+<h3 id="org2508561"><a href="#org2508561"><span class="done DONE">DONE</span> object_poolオブジェクト間の接触判定</a></h3>
+<div class="outline-text-3" id="text-org2508561">
+<p>
+地形判定とは異なる。オブジェクト層で起こる反応。
+game_objectとmapではやり方が異なる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc8296d0" class="outline-3">
+<h3 id="orgc8296d0"><a href="#orgc8296d0"><span class="done DONE">DONE</span> boxつけるとずれる問題</a></h3>
+<div class="outline-text-3" id="text-orgc8296d0">
+<p>
+範囲がわかりづらいのでつけたいが、横方向がずれてる。
+最初の一行だけ正しくて、改行以降はインデントがセットされてない、みたいな状況か。
+</p>
+<pre class="example">
+ aaa
+aaa
+aaa
+</pre>
+<p>
+かな。
+</p>
+
+<p>
+一行ずつ出力することで解決した。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcb85e63" class="outline-3">
+<h3 id="orgcb85e63"><a href="#orgcb85e63"><span class="done DONE">DONE</span> 基地メニュー</a></h3>
+<div class="outline-text-3" id="text-orgcb85e63">
+<p>
+2つ目state。
+まだ内容はない。
+</p>
+</div>
+</div>
+<div id="outline-container-org3915d27" class="outline-3">
+<h3 id="org3915d27"><a href="#org3915d27"><span class="done DONE">DONE</span> ウィンドウ分割</a></h3>
+<div class="outline-text-3" id="text-org3915d27">
+<p>
+対応の必要なし。
+</p>
+
+<p>
+メインウィンドウにすべて表示してたが、分割したほうがやりやすそうなので分割する。
+マップウィンドウ、メッセージウィンドウとか。
+</p>
+
+<p>
+その場合、ウィンドウ構成がモードによって変わる。どうやって表現すればよいだろう。
+うーん、やっぱり面倒なのでメインウィンドウに座標挿入でよさそう。
+</p>
+
+<p>
+stateによって使い回せるしな。
+</p>
+</div>
+</div>
+<div id="outline-container-org04b618f" class="outline-3">
+<h3 id="org04b618f"><a href="#org04b618f"><span class="done DONE">DONE</span> ゲームのおおまかな計画をやる</a></h3>
+<div class="outline-text-3" id="text-org04b618f">
+<p>
+バトルディッガーにしようとうっすら考えてたが、さすがに丸パクはできないので、混ぜよう。
+そろそろどういう仕様にするか決めないといけない段階。
+</p>
+
+<p>
+合成システムはカンタンに実装できて奥深そうなんだよな。
+なのでシステム的にはディッガーよりハタ人間。
+</p>
+
+<ul class="org-ul">
+<li>アイテム合成</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc4ad1e3" class="outline-3">
+<h3 id="orgc4ad1e3"><a href="#orgc4ad1e3"><span class="done DONE">DONE</span> フォント</a></h3>
+<div class="outline-text-3" id="text-orgc4ad1e3">
+<dl class="org-dl">
+<dt>Press Start 2p</dt><dd>横幅的には一番</dd>
+<dt>misaki font</dt><dd>日本語対応</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-orge3cc8a2" class="outline-3">
+<h3 id="orge3cc8a2"><a href="#orge3cc8a2"><span class="done DONE">DONE</span> AIキャラが消える問題</a></h3>
+<div class="outline-text-3" id="text-orge3cc8a2">
+<p>
+updateはAIキャラが動かない。
+drawは全員消える。
+</p>
+
+<p>
+game_objectにupdate, drawメソッドがあると、componentのdraw, updateが上書きされるため起こる。
+ai_inputはcomponentでupdateを使って入力を生成してるが、player_inputはbutton_downのため、問題が起きたり起きなかったりする。
+</p>
+
+<p>
+drawでは機能しないのはなぜだ。処理の順番か。field_stateの処理の順番を並べ替えるとできた。
+object_pool.draw
+map.draw
+の順番にしないといけない。
+</p>
+</div>
+</div>
+<div id="outline-container-org41bc2a9" class="outline-3">
+<h3 id="org41bc2a9"><a href="#org41bc2a9"><span class="done DONE">DONE</span> カメラ追加</a></h3>
+<div class="outline-text-3" id="text-org41bc2a9">
+</div>
+</div>
+<div id="outline-container-org5128e02" class="outline-3">
+<h3 id="org5128e02"><a href="#org5128e02"><span class="done DONE">DONE</span> アイテム追加する</a></h3>
+<div class="outline-text-3" id="text-org5128e02">
+<p>
+game_objectのアイテムと、所持品としてのアイテムをどう分ければよいだろう。
+少なくとも単語を分けることが必要そう。
+</p>
+
+<p>
+pickupはいいセンいってるが、動作っぽい。
+まあいいか。後からどうするか明確になってからで。
+</p>
+</div>
+</div>
+<div id="outline-container-org1221d0a" class="outline-3">
+<h3 id="org1221d0a"><a href="#org1221d0a"><span class="done DONE">DONE</span> プレイヤーキャラ以外を追加する</a></h3>
+<div class="outline-text-3" id="text-org1221d0a">
+<p>
+表示文字をキャラによって変える必要がある。
+inputによって分岐するようにした。
+</p>
+</div>
+</div>
+<div id="outline-container-org3f1712a" class="outline-3">
+<h3 id="org3f1712a"><a href="#org3f1712a"><span class="done DONE">DONE</span> メニュー追加する</a></h3>
+<div class="outline-text-3" id="text-org3f1712a">
+<p>
+画面追加だけできした。あとはカーソル移動とかか。
+</p>
+</div>
+</div>
+<div id="outline-container-org8d317a8" class="outline-3">
+<h3 id="org8d317a8"><a href="#org8d317a8"><span class="done DONE">DONE</span> 設定のファイル化</a></h3>
+<div class="outline-text-3" id="text-org8d317a8">
+<p>
+CDDAみたいに、設定類はすべてjsonかymlにする。
+キャラクターは完了。とはいえシルエットだけなのでそんなにパラメータはない。
+一応はできたが、これがtype objectと自信がもてない。characterはマップのシルエットとして使うくらいだからあまり必要性ないんだよな。
+</p>
+</div>
+</div>
+<div id="outline-container-orgda533a6" class="outline-3">
+<h3 id="orgda533a6"><a href="#orgda533a6"><span class="done DONE">DONE</span> ターン実装</a></h3>
+<div class="outline-text-3" id="text-orgda533a6">
+<p>
+getchでなんとなくターンぽくなっているが、移動以外でもターンが進んでしまう。
+ターンが進むのは移動だけでよさそう。ローグライクだったら攻撃でも進むが、このゲームにはない。
+</p>
+
+<p>
+player_inputかつ、移動ができたときだけexecuteフラグをオンにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org8259a1d" class="outline-3">
+<h3 id="org8259a1d"><a href="#org8259a1d"><span class="done DONE">DONE</span> characterをphysicsに分割する</a></h3>
+<div class="outline-text-3" id="text-org8259a1d">
+</div>
+</div>
+<div id="outline-container-orge87a3ac" class="outline-3">
+<h3 id="orge87a3ac"><a href="#orge87a3ac"><span class="done DONE">DONE</span> メニュー画面でカーソル移動できるようにする</a></h3>
+<div class="outline-text-3" id="text-orge87a3ac">
+<p>
+カーソル移動はメンドイのでしない。
+</p>
+</div>
+</div>
+<div id="outline-container-org8178063" class="outline-3">
+<h3 id="org8178063"><a href="#org8178063"><span class="done DONE">DONE</span> Terrainクラスを作る(flyweightパターン)</a></h3>
+<div class="outline-text-3" id="text-org8178063">
+<p>
+コードで直に地形判定をしているため。
+地形用のクラスに切り分ける。
+Terrainオブジェクトは状況非依存。つまり草地タイルはすべて同一。
+なので、Terrainオブジェクトの格子にするのではなく、Terrainオブジェクトへのポインタにする。
+</p>
+
+<ul class="org-ul">
+<li>地形情報にアクセスするために、worldから取る必要がなくなる。</li>
+<li>タイルから直にアクセスできるように。</li>
+</ul>
+
+<p>
+まず文字列のマップをオブジェクトのマップにする。
+どうやってやればいいんだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org19e15ee" class="outline-3">
+<h3 id="org19e15ee"><a href="#org19e15ee"><span class="done DONE">DONE</span> item_type</a></h3>
+<div class="outline-text-3" id="text-org19e15ee">
+<p>
+作ろうと思ったがどうしよう。どういったプロパティを持つか。
+</p>
+<ul class="org-ul">
+<li>アイテムの中身</li>
+</ul>
+
+<p>
+とりあえずイメージしやすいように名前を取り出せるようにする。
+フィールドオブジェクトしては名前くらいしか必要でない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd0c9f93" class="outline-3">
+<h3 id="orgd0c9f93"><a href="#orgd0c9f93"><span class="done DONE">DONE</span> インベントリ</a></h3>
+<div class="outline-text-3" id="text-orgd0c9f93">
+<p>
+アイテムを拾ったとき、インベントリに追加する。
+フィールドのはアイテムだが、それから別のオブジェクトにするか。
+</p>
+
+<p>
+消費物、素材は単なる数値だが、装備はさまざまなパラメータを持った別オブジェクトだ。
+</p>
+
+<p>
+単にオブジェクトを配列に追加するだけだが、仮で完了。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb73747c" class="outline-3">
+<h3 id="orgb73747c"><a href="#orgb73747c"><span class="done DONE">DONE</span> 衝突テスト</a></h3>
+<div class="outline-text-3" id="text-orgb73747c">
+<p>
+衝突関係がややこしくなってきたのでテストで確かめることにする。
+アイテム、キャラクタ(Ai, Player)
+</p>
+</div>
+</div>
+<div id="outline-container-orgd6e7cf4" class="outline-3">
+<h3 id="orgd6e7cf4"><a href="#orgd6e7cf4"><span class="done DONE">DONE</span> 自動操作テスト</a></h3>
+<div class="outline-text-3" id="text-orgd6e7cf4">
+<p>
+オートプレイさせたい。
+system spec的な。
+実際のキーボード入力をシミュレートする。
+</p>
+
+<p>
+今はgetchで止まるのでできない。直にbutton_downを受け付けるようにするとかできないか。
+そもそもgetchがよくない説もある。アニメーションは一切できないからな。
+入力は任意でよくしたい。入力しなくてもゲームループは進む。
+ターンベースだろうと、ゲームループは回すほうが表現豊か。
+</p>
+
+<p>
+テストのときはゲームループを手動で進めればよいのでは。
+キーボード入力はできないが、直に入力すればいい。一応できた。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf417cb3" class="outline-3">
+<h3 id="orgf417cb3"><a href="#orgf417cb3"><span class="done DONE">DONE</span> utilsのload_jsonをデフォルト拡張子jsonにする</a></h3>
+<div class="outline-text-3" id="text-orgf417cb3">
+</div>
+</div>
+<div id="outline-container-orgb1aa4df" class="outline-3">
+<h3 id="orgb1aa4df"><a href="#orgb1aa4df"><span class="done DONE">DONE</span> コンパイル(断念)</a></h3>
+<div class="outline-text-3" id="text-orgb1aa4df">
+<p>
+プレイヤーがいちいちbundle installとかしなくていいようにexeとか実行形式にしたいが、どうすればいいんだろう。
+ruby-packerというのがあるらしい。
+これで各環境用にコンパイルするようにすればいい。
+</p>
+
+<p>
+大変そうなので断念。
+</p>
+</div>
+</div>
+<div id="outline-container-org6ee7792" class="outline-3">
+<h3 id="org6ee7792"><a href="#org6ee7792"><span class="done DONE">DONE</span> インベントリに入れた時の挙動を変える</a></h3>
+<div class="outline-text-3" id="text-org6ee7792">
+<p>
+素材系のときは、オブジェクトは保持せず単にカウントアップするだけにする。
+武器とか消費アイテムはオブジェクトとして保持する。
+</p>
+
+<p>
+item_typeにcountを保持することにした。やや不自然だが、itemから直に数を増やす操作ができたり、問い合わせがカンタンだ。いちいち初期化しておく必要もない。
+</p>
+</div>
+</div>
+<div id="outline-container-org9425007" class="outline-3">
+<h3 id="org9425007"><a href="#org9425007"><span class="done DONE">DONE</span> アイテムをflyweightにする → item_typeを共通にする</a></h3>
+<div class="outline-text-3" id="text-org9425007">
+<p>
+今はそれぞれ別のオブジェクトになっているので、共通オブジェクトにする。
+jsonで読んでそれを各自インスタンス変数に入れるみたいなことってできるのかな。一気に全インスタンスを配列に入れ、配列をインスタンス変数にするとできる。
+</p>
+
+<p>
+正確にいうと、item_typeが共通である。itemオブジェクト自体はユニークである。取得して消えたり座標を持ってるから。
+</p>
+</div>
+</div>
+<div id="outline-container-orge9f302b" class="outline-3">
+<h3 id="orge9f302b"><a href="#orge9f302b"><span class="done DONE">DONE</span> 各state共通のinputを継承元に書く</a></h3>
+<div class="outline-text-3" id="text-orge9f302b">
+<p>
+たとえば&rsquo;c&rsquo;はどのstateでも終了にしたい。
+</p>
+
+<p>
+抽象クラスに移動した。
+</p>
+</div>
+</div>
+<div id="outline-container-orgef02178" class="outline-3">
+<h3 id="orgef02178"><a href="#orgef02178"><span class="done DONE">DONE</span> 移動AI</a></h3>
+<div class="outline-text-3" id="text-orgef02178">
+<p>
+経路選択をどうすればよいのだろう。斜めにターゲットがあるときどうやってジグザグを判定するか。
+</p>
+</div>
+</div>
+<div id="outline-container-org016ca29" class="outline-3">
+<h3 id="org016ca29"><a href="#org016ca29"><span class="done DONE">DONE</span> エンカウント追加</a></h3>
+<div class="outline-text-3" id="text-org016ca29">
+<p>
+戦闘モードへ遷移する。
+</p>
+</div>
+</div>
+<div id="outline-container-org9795598" class="outline-3">
+<h3 id="org9795598"><a href="#org9795598"><span class="done DONE">DONE</span> パーティ状況を表示する</a></h3>
+<div class="outline-text-3" id="text-org9795598">
+<p>
+まず戦闘のまえにこっちからやろう。
+連れてる仲間、HP,SPを表示する。
+</p>
+</div>
+</div>
+<div id="outline-container-org249e925" class="outline-3">
+<h3 id="org249e925"><a href="#org249e925"><span class="done CLOSE">CLOSE</span> Todo</a></h3>
+<div class="outline-text-3" id="text-org249e925">
+</div>
+<div id="outline-container-orge11a3a8" class="outline-4">
+<h4 id="orge11a3a8"><a href="#orge11a3a8">戦闘後の移動</a></h4>
+<div class="outline-text-4" id="text-orge11a3a8">
+<p>
+AIとは移動が競合するので、移動前のものになっている。
+戦闘になった瞬間ゲームオブジェクトを消すので、移動できてもよさそう。あーでもそうすると逃げることができないのか。逃げたときは前の位置に移動したいところ。
+勝利: 自分が動こうとしていた場所へ移動する。
+逃走: 自分が動く前の場所へ移動する。
+</p>
+</div>
+</div>
+<div id="outline-container-org0f69443" class="outline-4">
+<h4 id="org0f69443"><a href="#org0f69443">非同期キーボードイベント</a></h4>
+<div class="outline-text-4" id="text-org0f69443">
+<p>
+Gosuのキーボードだけ拝借できるかなと思ったが、Gosuのウィンドウにフォーカスが当たらないと検知できない。そりゃそうか。なのでncurses部分を書き換える必要がある。
+</p>
+
+<p>
+現状ncurseの問題点。
+</p>
+<ul class="org-ul">
+<li>アニメーションが一切できない。</li>
+<li>フォントが変えられない。</li>
+<li>描画単位が1マス。</li>
+</ul>
+
+<p>
+CLIでも表現力が上がる。
+</p>
+
+<p>
+テスト関係を変えないといけなそう。CIでgosu実行するとどうなるんだろう。
+単体テストはOKそうだが、結合はどうなるんだろう。ゲームループ内で操作できるのか。
+魅力的だが、別にあとでもよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org186239d" class="outline-4">
+<h4 id="org186239d"><a href="#org186239d">地図ファイルから敵やアイテム生成する</a></h4>
+<div class="outline-text-4" id="text-org186239d">
+<p>
+ランダムに加えて固定でも配置できるようにする。
+地図と思ったが、移動パターンとか指定したいので結局テキストでやらないといけないか。
+</p>
+</div>
+</div>
+<div id="outline-container-org58a3962" class="outline-4">
+<h4 id="org58a3962"><a href="#org58a3962">mapとcameraを分離</a></h4>
+<div class="outline-text-4" id="text-org58a3962">
+<p>
+すべてのベースはmapの配列。
+</p>
+<ul class="org-ul">
+<li>character,itemを埋め込む。</li>
+<li>cameraのメソッドで配列を切り取って、描画している。</li>
+<li>毎ターンリセット</li>
+</ul>
+<p>
+よくないのは、すべてmapの配列操作で密結合していることだ。
+</p>
+
+<p>
+書き換えるので、キャラがいると地形データが取れなくなる。別レイヤで処理したい。
+banbandonではどうしてるのだろう。カメラとマップは分離しているように見える。
+</p>
+
+<p>
+bbdではマップ上に描画しているのに対して、diggerでは画面のピクセルを指定して描画しないといけない違い。
+</p>
+
+<p>
+結局地形判定はflyweightのworld配列でやってるので、関係なくなった。描画だけに使われる文字列配列。
+</p>
+</div>
+</div>
+<div id="outline-container-org96a20bb" class="outline-4">
+<h4 id="org96a20bb"><a href="#org96a20bb">戦闘モード追加する</a></h4>
+<div class="outline-text-4" id="text-org96a20bb">
+<p>
+とりあえずstate切り替えだけ追加した。
+戦闘のためにはいくつかのクラス、パラメータを用意してやる必要がある。
+</p>
+
+<ul class="org-ul">
+<li>party</li>
+<li>member</li>
+<li>enemy</li>
+</ul>
+
+<blockquote>
+<p>
+<a href="http://www.lancarse.co.jp/blog/?p=194">http://www.lancarse.co.jp/blog/?p=194</a>
+</p>
+</blockquote>
+<p>
+actorからパラメータをコピーして、1ターン分の結果を先に計算。
+して、演出用メッセージを生成する。
+コードの見通しがよくなる。
+</p>
+</div>
+</div>
+<div id="outline-container-org80e55bf" class="outline-4">
+<h4 id="org80e55bf"><a href="#org80e55bf">singletonを減らす</a></h4>
+<div class="outline-text-4" id="text-org80e55bf">
+<p>
+inventoryとかは似たような状況で、singletonになっている。
+乱立するのが嫌なので1つのsingletonに、inventoryとかpartyとかを含むようにしたいな。
+メッセージなどもそっちに保持させる。characterごとでなく。
+</p>
+</div>
+</div>
+<div id="outline-container-org9ef10e5" class="outline-4">
+<h4 id="org9ef10e5"><a href="#org9ef10e5">永続値をどこで持つか</a></h4>
+<div class="outline-text-4" id="text-org9ef10e5">
+<p>
+ステートを切り替えても持ってないといけないものがある。
+仲間のHPとか装備とか。そういうのをどこで保持すればいいんだろう。
+</p>
+
+<p>
+とりあえずsignletonにしておけば良いかな。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfff0b40" class="outline-4">
+<h4 id="orgfff0b40"><a href="#orgfff0b40">戦闘の方はmemberにする</a></h4>
+<div class="outline-text-4" id="text-orgfff0b40">
+<p>
+エンカウント型にすると、map上のシンボルが複数のキャラクターを持つことがありうる。
+現状のCharacterと合わなくなるような気がする。
+map上とbattle上のcharacterは別物だ。
+</p>
+
+<p>
+=&gt;マップの方はpartyにする。
+戦闘の方をcharacterに。
+あまり直感的ではないな。
+</p>
+
+<p>
+戦闘の方はmemberにするとか。属してるニュアンスは出る。
+</p>
+
+<p>
+いろいろ違うので敵と仲間は別にしよう。かなり共通しているところもあるので組み合わせながら。
+</p>
+</div>
+</div>
+<div id="outline-container-org0697d7a" class="outline-4">
+<h4 id="org0697d7a"><a href="#org0697d7a">スキルはmemberで共通</a></h4>
+<div class="outline-text-4" id="text-org0697d7a">
+<p>
+敵もスキルを持ってる。
+</p>
+</div>
+</div>
+<div id="outline-container-orge39f497" class="outline-4">
+<h4 id="orge39f497"><a href="#orge39f497">コマンドパターンについて考える</a></h4>
+<div class="outline-text-4" id="text-orge39f497">
+<p>
+今の状況は、キーボードイべントとメソッドが直に結びついてる。
+</p>
+</div>
+</div>
+<div id="outline-container-org8fe2666" class="outline-4">
+<h4 id="org8fe2666"><a href="#org8fe2666">達成バッジ</a></h4>
+<div class="outline-text-4" id="text-org8fe2666">
+<p>
+オブザーバパターン。
+統計情報…移動した回数、経過ターン、倒した敵の数。
+動機づけになる。
+</p>
+</div>
+</div>
+<div id="outline-container-org5c69ab3" class="outline-4">
+<h4 id="org5c69ab3"><a href="#org5c69ab3">不可視にする</a></h4>
+<div class="outline-text-4" id="text-org5c69ab3">
+<p>
+視界が難しそう。AIにできるならプレイヤーにも追加すると面白そう。cataclysmみたいに、壁の向こう側は不可視にする。
+</p>
+
+<p>
+気づくまでは、固定の動きをする。T字で左折する法則。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org8af9dd2" class="outline-3">
+<h3 id="org8af9dd2"><a href="#org8af9dd2"><span class="done CLOSE">CLOSE</span> Todo(リファクタ)</a></h3>
+<div class="outline-text-3" id="text-org8af9dd2">
+</div>
+<div id="outline-container-org276efb6" class="outline-4">
+<h4 id="org276efb6"><a href="#org276efb6">カーソル系画面表示をリファクタリングする</a></h4>
+<div class="outline-text-4" id="text-org276efb6">
+<p>
+カーソル、タブがだるい。
+何かユーティリティを作ってもいい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc4b7984" class="outline-4">
+<h4 id="orgc4b7984"><a href="#orgc4b7984">Inventoryシングルトンをやめる</a></h4>
+<div class="outline-text-4" id="text-orgc4b7984">
+<p>
+inventoryをシングルトンにするのはやめよう。テストがだるい。
+とはいえ、stateを限定しないデータなので、それなりの理由はある。
+</p>
+</div>
+</div>
+<div id="outline-container-org58e0b46" class="outline-4">
+<h4 id="org58e0b46"><a href="#org58e0b46">メッセージシステム</a></h4>
+<div class="outline-text-4" id="text-org58e0b46">
+<p>
+statsが持ってるのはおかしい気がする。
+プレイヤーだけが知っていればいいことなので。
+いちいちcharacterから辿るのはメンドイし、直感的でない。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org94aecc9" class="outline-3">
+<h3 id="org94aecc9"><a href="#org94aecc9"><span class="done CLOSE">CLOSE</span> 設計</a></h3>
+<div class="outline-text-3" id="text-org94aecc9">
+</div>
+<div id="outline-container-orgdee0862" class="outline-4">
+<h4 id="orgdee0862"><a href="#orgdee0862">戦闘モード</a></h4>
+<div class="outline-text-4" id="text-orgdee0862">
+<pre class="example">
+
+  oo`'._..---.___..-   oo`'._..---.___..-
+ (_,-.        ,..'`  (_,-.        ,..'`
+      `'.    ;            `'.    ;
+         : :`                : :`
+        _;_;                _;_;
+ティラノ              ティラノ
+
+ティラノ&gt; 体当たりした
+白瀬&gt; 10のダメージを受けた
+椿&gt; 対物ライフル → ティラノに30のダメージ
+石原&gt; 木刀 → ティラノに5のダメージ
+
+--------------------------------
+→戦う　　|白瀬 HP: 55/20 SP: 40/30 **--- ****-
+ 逃げる　|椿　 HP: 90/84 SP: 50/20 ****- ***--
+ アイテム|石原 HP: 80/80 SP: 50/24 ***** **---
+ 　　　　|
+</pre>
+</div>
+</div>
+<div id="outline-container-orgab9c1d7" class="outline-4">
+<h4 id="orgab9c1d7"><a href="#orgab9c1d7">拠点メニューモード</a></h4>
+<div class="outline-text-4" id="text-orgab9c1d7">
+<p>
+拠点。
+</p>
+<pre class="example">
+→休憩
+ 合成
+ アイテム
+ 仲間
+ 装備
+ セーブ
+ ロード
+</pre>
+
+<p>
+フィールドではメニューにはアクセスしない。
+ステータスやアイテムへのショートカットキーを用意する。
+</p>
+</div>
+</div>
+<div id="outline-container-org8d392ed" class="outline-4">
+<h4 id="org8d392ed"><a href="#org8d392ed">フィールドモード</a></h4>
+<div class="outline-text-4" id="text-org8d392ed">
+<ul class="org-ul">
+<li>ターンベース</li>
+<li>イベントオブジェクトに接触して、別モードに遷移する</li>
+</ul>
+
+<p>
+ステータス、アイテム、装備へのショートカットキーを用意する。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orga54e3d2" class="outline-3">
+<h3 id="orga54e3d2"><a href="#orga54e3d2"><span class="done DONE">DONE</span> 戦闘モード追加</a></h3>
+<div class="outline-text-3" id="text-orga54e3d2">
+<p>
+接触したときにフラグを立てて、stateに入る。
+wants_to_{}系か。
+直にstateを変更するというより、フラグを使ってstateを間接的に移動する。
+wants_to_meleeの個別要素にアクセスできない。
+</p>
+
+<p>
+wants_to_attackを入れておいて、systemを一度回せばいいかな。
+一度実行するたびにメッセージを表示して、enterの入力待ちにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org3d25b6d" class="outline-3">
+<h3 id="org3d25b6d"><a href="#org3d25b6d"><span class="done DONE">DONE</span> GitHub Pagesにデプロイ</a></h3>
+<div class="outline-text-3" id="text-org3d25b6d">
+</div>
+</div>
+<div id="outline-container-orgd943122" class="outline-3">
+<h3 id="orgd943122"><a href="#orgd943122"><span class="done DONE">DONE</span> 遭遇中の敵の情報を出す</a></h3>
+<div class="outline-text-3" id="text-orgd943122">
+</div>
+</div>
+<div id="outline-container-orgd90a0ca" class="outline-3">
+<h3 id="orgd90a0ca"><a href="#orgd90a0ca"><span class="done DONE">DONE</span> 1エンカウント対複数の敵に対応する</a></h3>
+<div class="outline-text-3" id="text-orgd90a0ca">
+<p>
+今はエンカウントシンボルと敵が1対1なので、自由度が低い。
+battle_entityを作って戦闘は完全にそっちに移す。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb228b1a" class="outline-3">
+<h3 id="orgb228b1a"><a href="#orgb228b1a"><span class="done DONE">DONE</span> 戦闘終了後にマップentityを削除する</a></h3>
+<div class="outline-text-3" id="text-orgb228b1a">
+<p>
+wants_to_encounterで元entityを保持してるので、そこから削除できないか。
+</p>
+</div>
+</div>
+<div id="outline-container-org27d589a" class="outline-3">
+<h3 id="org27d589a"><a href="#org27d589a"><span class="done DONE">DONE</span> 使わない部分を消す</a></h3>
+<div class="outline-text-3" id="text-org27d589a">
+<ul class="org-ul">
+<li>既存の戦闘部分は使わないので消す</li>
+<li>遠距離アイテムは消す</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbf80b97" class="outline-3">
+<h3 id="orgbf80b97"><a href="#orgbf80b97"><span class="done DONE">DONE</span> 勝利したときに戦闘結果を表示する</a></h3>
+<div class="outline-text-3" id="text-orgbf80b97">
+</div>
+</div>
+<div id="outline-container-org443b37f" class="outline-3">
+<h3 id="org443b37f"><a href="#org443b37f"><span class="done DONE">DONE</span> 逃げるときの確率分岐</a></h3>
+<div class="outline-text-3" id="text-org443b37f">
+<p>
+今は100％なので、確率で失敗してターンを進行させる。
+</p>
+</div>
+</div>
+<div id="outline-container-org5adc607" class="outline-3">
+<h3 id="org5adc607"><a href="#org5adc607"><span class="done DONE">DONE</span> 敵一覧を真ん中寄せにする</a></h3>
+<div class="outline-text-3" id="text-org5adc607">
+<p>
+2体いるときは2体で真ん中に、倒して1体になったら1体で真ん中寄せにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc1495c2" class="outline-3">
+<h3 id="orgc1495c2"><a href="#orgc1495c2"><span class="done DONE">DONE</span> 1体倒してから逃げるとエラー</a></h3>
+<div class="outline-text-3" id="text-orgc1495c2">
+<p>
+wants_to_meleeが残っていて、おかしくなっていたよう。
+ターン毎に、リセットするようにした。
+確実に前の状態を残さないようにするとバグになりにくそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaa95771" class="outline-3">
+<h3 id="orgaa95771"><a href="#orgaa95771"><span class="done DONE">DONE</span> 戦闘用エンティティであることを明示する</a></h3>
+<div class="outline-text-3" id="text-orgaa95771">
+<p>
+現在は、combat_stats, monsterコンポーネントを持つものを敵の戦闘エンティティとしている…みたいな感じ。
+わかりにくいので直したい。
+</p>
+
+<p>
+combat_stats を持つ=戦闘エンティティで問題ない。monster, playerがあるのは区別が必要なので仕方ない。
+なのでOK。
+</p>
+</div>
+</div>
+<div id="outline-container-org0aa1a23" class="outline-3">
+<h3 id="org0aa1a23"><a href="#org0aa1a23"><span class="done DONE">DONE</span> パーティクル追加</a></h3>
+<div class="outline-text-3" id="text-org0aa1a23">
+<p>
+チュートリアルのパーティクルはマップ用。
+positionにライフタイムのあるentityを配置して、擬似的にアニメーションにしている。
+entityにすることで、map描画システムを使い、map上を上書きする形で表示できる。
+戦闘ではprintしてるので、そのまま使うことはできない。printごとに座標計算して指定してるので、重ねるためにはロジックをコピペしないといけない。
+</p>
+
+<p>
+builderの実装方法は参考になりそうなので、とりあえずコピペ追加。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd001125" class="outline-3">
+<h3 id="orgd001125"><a href="#orgd001125"><span class="done DONE">DONE</span> フィールドでHPがリアルタイムに反映されてない</a></h3>
+<div class="outline-text-3" id="text-orgd001125">
+<p>
+戦闘に入るとダメージが反映される。
+field_stateでdamage_systemが動いてないためだった。
+</p>
+</div>
+</div>
+<div id="outline-container-org3c5ddca" class="outline-3">
+<h3 id="org3c5ddca"><a href="#org3c5ddca"><span class="done DONE">DONE</span> 食料追加</a></h3>
+<div class="outline-text-3" id="text-org3c5ddca">
+</div>
+</div>
+<div id="outline-container-org113f0ef" class="outline-3">
+<h3 id="org113f0ef"><a href="#org113f0ef"><span class="done CLOSE">CLOSE</span> 画像背景</a></h3>
+<div class="outline-text-3" id="text-org113f0ef">
+<p>
+チュートリアルの内容。
+LEX paintがWINEでうまく実行できない。
+変換ツールもうまく機能してないので、一旦チュートリアルのを流用して後回しか。システムだけ入れてコメントアウト。
+</p>
+</div>
+</div>
+<div id="outline-container-org59d3c16" class="outline-3">
+<h3 id="org59d3c16"><a href="#org59d3c16"><span class="done DONE">DONE</span> プレイヤーと戦闘エンティティを分離する</a></h3>
+<div class="outline-text-3" id="text-org59d3c16">
+<p>
+分離した。影響範囲が広い。
+</p>
+</div>
+</div>
+<div id="outline-container-orged54044" class="outline-3">
+<h3 id="orged54044"><a href="#orged54044"><span class="done DONE">DONE</span> 再装備するとアイテムが消える</a></h3>
+<div class="outline-text-3" id="text-orged54044">
+<p>
+装備品のownerがキャラになっていたため、インベントリに表示されてないというものだった。
+装備中のものはownerが各戦闘用entityになり、装備してないとownerはplayer_entityになる。
+party_entityとかにしたほうがいいかもな。
+ややこしい。
+</p>
+</div>
+</div>
+<div id="outline-container-org529462d" class="outline-3">
+<h3 id="org529462d"><a href="#org529462d"><span class="done DONE">DONE</span> Design Doc</a></h3>
+<div class="outline-text-3" id="text-org529462d">
+</div>
+</div>
+<div id="outline-container-org998faf7" class="outline-3">
+<h3 id="org998faf7"><a href="#org998faf7"><span class="done DONE">DONE</span> mapをリファクタ(チュートリアル)</a></h3>
+<div class="outline-text-3" id="text-org998faf7">
+</div>
+</div>
+<div id="outline-container-orgf98611c" class="outline-3">
+<h3 id="orgf98611c"><a href="#orgf98611c"><span class="done DONE">DONE</span> mapフィルタ</a></h3>
+<div class="outline-text-3" id="text-orgf98611c">
+</div>
+</div>
+<div id="outline-container-org13738c6" class="outline-3">
+<h3 id="org13738c6"><a href="#org13738c6"><span class="done DONE">DONE</span> ドア追加(チュートリアル)</a></h3>
+<div class="outline-text-3" id="text-org13738c6">
+</div>
+</div>
+<div id="outline-container-org30551bc" class="outline-3">
+<h3 id="org30551bc"><a href="#org30551bc"><span class="done DONE">DONE</span> Warningつぶし</a></h3>
+<div class="outline-text-3" id="text-org30551bc">
+</div>
+</div>
+<div id="outline-container-org9b4666b" class="outline-3">
+<h3 id="org9b4666b"><a href="#org9b4666b"><span class="done DONE">DONE</span> builder理解</a></h3>
+<div class="outline-text-3" id="text-org9b4666b">
+</div>
+</div>
+<div id="outline-container-orgcc1af8d" class="outline-3">
+<h3 id="orgcc1af8d"><a href="#orgcc1af8d"><span class="done DONE">DONE</span> カメラ導入(チュートリアル)</a></h3>
+<div class="outline-text-3" id="text-orgcc1af8d">
+</div>
+</div>
+<div id="outline-container-org247ed02" class="outline-3">
+<h3 id="org247ed02"><a href="#org247ed02"><span class="done DONE">DONE</span> getで取れるところのリファクタ</a></h3>
+<div class="outline-text-3" id="text-org247ed02">
+<div class="org-src-container">
+<pre class="src src-rust">hc = hunger_clock.get(entity);
+</pre>
+</div>
+<p>
+のように、entityさえわかっていればgetで属性をコンポーネントを取得できる。いちいちforに長く書く必要がない。
+</p>
+</div>
+</div>
+<div id="outline-container-org53107ec" class="outline-3">
+<h3 id="org53107ec"><a href="#org53107ec"><span class="done DONE">DONE</span> データのjsonファイル化(チュートリアル)&#xa0;&#xa0;&#xa0;<span class="tag"><span class="8">8</span></span></a></h3>
+<div class="outline-text-3" id="text-org53107ec">
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

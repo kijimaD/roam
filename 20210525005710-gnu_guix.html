@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GNU Guix</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">GNU Guix</h1>
+<div id="outline-container-org98f829d" class="outline-2">
+<h2 id="org98f829d"><a href="#org98f829d">概要</a></h2>
+<div class="outline-text-2" id="text-org98f829d">
+<p>
+Gnu GuixはOSおよびパッケージ管理システム。
+</p>
+
+<ul class="org-ul">
+<li>システム設定をリポジトリで管理できる</li>
+<li>ロールバックできる</li>
+<li>マシンによって設定を変えることも可能</li>
+<li>依存性に対する完全なコントロール。完全に再現できる</li>
+</ul>
+
+<p>
+などの先進的な機能がある。<a href="20210926144913-scheme.html#ID-53a7a781-8398-4069-8735-6ac5b8c3bc05">Scheme</a>で設定ファイルを書ける。
+</p>
+</div>
+</div>
+<div id="outline-container-orgba6f78f" class="outline-2">
+<h2 id="orgba6f78f"><a href="#orgba6f78f">memo</a></h2>
+<div class="outline-text-2" id="text-orgba6f78f">
+</div>
+<div id="outline-container-org5b057ca" class="outline-3">
+<h3 id="org5b057ca"><a href="#org5b057ca">guix home とsystem</a></h3>
+<div class="outline-text-3" id="text-org5b057ca">
+<p>
+homeコマンドではユーザ個別の設定ができる。
+インストールするソフトウェア、環境変数、起動サービスなど。
+<a href="https://guix.gnu.org/manual/devel/en/html_node/Home-Configuration.html">Home Configuration (GNU Guix Reference Manual)</a>
+</p>
+
+<p>
+いっぽうでsystemの方では、ユーザ作成やパーティション、キーボードレイアウトなどシステム全体にかかることを設定できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org9e6f58e" class="outline-3">
+<h3 id="org9e6f58e"><a href="#org9e6f58e">BIOSに出ないとき</a></h3>
+<div class="outline-text-3" id="text-org9e6f58e">
+<p>
+Guixに限ったことではないが、Linuxをインストールしたドライブを認識しないときは、BIOSモードを確認する。
+UEFIモードだとLinuxを認識してくれない。
+レガシーモードにすると認識してくれ、起動もできる。
+</p>
+</div>
+</div>
+<div id="outline-container-org995d9a7" class="outline-3">
+<h3 id="org995d9a7"><a href="#org995d9a7">基本のコマンド</a></h3>
+<div class="outline-text-3" id="text-org995d9a7">
+<div class="org-src-container">
+<pre class="src src-shell">guix pull --news
+guix install {package}
+guix remove {package}
+guix package --list-generations
+guix package --list-installed
+guix package --switch-generation=42
+guix package --roll-back
+
+guix package --export-manifest
+guix refresh <span class="org-comment-delimiter"># </span><span class="org-comment">&#26356;&#26032;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org42c19b7" class="outline-3">
+<h3 id="org42c19b7"><a href="#org42c19b7">独立環境</a></h3>
+<div class="outline-text-3" id="text-org42c19b7">
+<div class="org-src-container">
+<pre class="src src-shell">guix environment
+</pre>
+</div>
+<p>
+を使う。
+<a href="https://guix.gnu.org/manual/en/html_node/Invoking-guix-environment.html">https://guix.gnu.org/manual/en/html_node/Invoking-guix-environment.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orged8c016" class="outline-3">
+<h3 id="orged8c016"><a href="#orged8c016">詳しい解説</a></h3>
+<div class="outline-text-3" id="text-orged8c016">
+<p>
+usbメモリーからインストールする方法をわかりやすく解説。
+</p>
+
+<blockquote>
+<p>
+<a href="https://github.com/daviwil/dotfiles/blob/master/Systems.org">https://github.com/daviwil/dotfiles/blob/master/Systems.org</a> (動画)
+<a href="https://www.youtube.com/watch?v=oSy-TmoxG_Y">https://www.youtube.com/watch?v=oSy-TmoxG_Y</a>
+<a href="https://systemcrafters.cc/craft-your-system-with-guix/full-system-install/">https://systemcrafters.cc/craft-your-system-with-guix/full-system-install/</a> (↑メモ)
+</p>
+</blockquote>
+
+<ul class="org-ul">
+<li>ブートusb用意</li>
+<li>インストール(TTY作業)</li>
+<li>ログイン(以後、GUI)</li>
+<li>パスワード設定</li>
+<li>guix設定ファイル準備(etcから移す)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">mkdir -p ~/.config/guix
+<span class="org-builtin">cd</span> ~/.config/guix
+cp /etc/channels.scm .
+cp /etc/config.scm ./system.scm
+chmod +w channels.scm
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>commit削除</li>
+<li>アップデート</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">guix pull
+sudo -E guix system reconfigure ~/.config/guix/system.scm
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org59cb05b" class="outline-3">
+<h3 id="org59cb05b"><a href="#org59cb05b">日本語入力</a></h3>
+<div class="outline-text-3" id="text-org59cb05b">
+<blockquote>
+<p>
+<a href="https://debbugs.gnu.org/cgi/bugreport.cgi?bug=35610#38">https://debbugs.gnu.org/cgi/bugreport.cgi?bug=35610#38</a>
+</p>
+</blockquote>
+
+<p>
+言語設定を日本語にしただけでは入力や表示ができない。手動で設定する必要がある。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">guix package -i ibus ibus-anthy font-adobe-source-han-sans
+</pre>
+</div>
+
+<p>
+<code>.bash_profile</code> などに追加。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">export GUIX_GTK2_IM_MODULE_FILE=<span class="org-string">"$HOME/.guix-profile/lib/gtk-2.0/2.10.0/immodules-gtk2.cache"</span>
+export GUIX_GTK3_IM_MODULE_FILE=<span class="org-string">"$HOME/.guix-profile/lib/gtk-3.0/3.0.0/immodules-gtk3.cache"</span>
+</pre>
+</div>
+
+<p>
+ibusのキャッシュを削除する(重要)。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">rm -rf ~/.cache/ibus
+</pre>
+</div>
+
+<p>
+再起動する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">ibus-setup
+</pre>
+</div>
+<p>
+一覧にJapanese(Anthy)が追加されているので、選択する。
+</p>
+
+<ul class="org-ul">
+<li>インプットメソッド切り替えはKeyboard Shortcutからできる。</li>
+<li>ibus設定画面はGNOME検索には出てこない。言語選択のJapanese(Anthy)歯車から設定できる。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8725974" class="outline-3">
+<h3 id="org8725974"><a href="#org8725974">vterm</a></h3>
+<div class="outline-text-3" id="text-org8725974">
+<p>
+vtermのコンパイルにCmakeが必要。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">guix install cmake
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-sh">guix install nss-certs
+<span class="org-builtin">export</span> <span class="org-variable-name">SSL_CERT_DIR</span>=<span class="org-string">"$HOME/.guix-profile/etc/ssl/certs"</span>
+<span class="org-builtin">export</span> <span class="org-variable-name">SSL_CERT_FILE</span>=<span class="org-string">"$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"</span>
+<span class="org-builtin">export</span> <span class="org-variable-name">GIT_SSL_CAINFO</span>=<span class="org-string">"$SSL_CERT_FILE"</span>
+<span class="org-builtin">export</span> <span class="org-variable-name">CURL_CA_BUNDLE</span>=<span class="org-string">"$HOME/.guix-profile/etc/ssl/certs/ca-certificates.crt"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgff2e9c9" class="outline-3">
+<h3 id="orgff2e9c9"><a href="#orgff2e9c9">caps入れ替え</a></h3>
+<div class="outline-text-3" id="text-orgff2e9c9">
+<p>
+system.scm書き換えでできるはずだが、反映させる方法がわからない。
+gnomeのコマンドを1回打って代用する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">gsettings set org.gnome.desktop.input-sources xkb-options <span class="org-string">"['ctrl:swapcaps']"</span>
+</pre>
+</div>
+
+<p>
+デスクトップ環境関係なくできる↓。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">/usr/bin/setxkbmap -option <span class="org-string">"ctrl:nocaps"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0ac07e8" class="outline-3">
+<h3 id="org0ac07e8"><a href="#org0ac07e8">パッケージを一括インストール</a></h3>
+<div class="outline-text-3" id="text-org0ac07e8">
+<div class="org-src-container">
+<pre class="src src-shell">guix package -m ~/dotfiles/.config/guix/manifests/desktop.scm
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org673f61f" class="outline-3">
+<h3 id="org673f61f"><a href="#org673f61f">フローメモ</a></h3>
+<div class="outline-text-3" id="text-org673f61f">
+<p>
+ctrl入れ替え → syncthingインストールと設定 → ssh鍵 → sshインストール。
+gitインストール → dotfilesをclone。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc78d23f" class="outline-3">
+<h3 id="orgc78d23f"><a href="#orgc78d23f">自動起動</a></h3>
+<div class="outline-text-3" id="text-orgc78d23f">
+<p>
+ファイルを配置して自動実行されるようにする。
+</p>
+
+<p>
+サービス系の自動起動はguixが利用しているサービスマネージャ<a href="https://www.gnu.org/software/shepherd/">GNU Shepherd</a>で行う。
+<a href="https://github.com/kijimaD/dotfiles/blob/develop/.config/shepherd/init.scm">https://github.com/kijimaD/dotfiles/blob/develop/.config/shepherd/init.scm</a>
+このように追加しておくと自動で実行する。
+ただし、shepherd自体が自動で起動しないよう。デスクトップ環境に合わせて、自動実行させるようにする。
+<a href="https://github.com/kijimaD/dotfiles/blob/develop/.config/autostart/gnome.desktop">https://github.com/kijimaD/dotfiles/blob/develop/.config/autostart/gnome.desktop</a>
+実行権限をつけること。
+</p>
+</div>
+</div>
+<div id="outline-container-org8b93ce0" class="outline-3">
+<h3 id="org8b93ce0"><a href="#org8b93ce0">Gnomeで Alt + Shiftが設定されてしまう問題</a></h3>
+<div class="outline-text-3" id="text-org8b93ce0">
+<p>
+いつの間にか、Alt+Shiftでinput method切り替えになっていて不便なことになっていた。
+いつからかは不明。dotfilesの影響か、そうでないかもよくわからない。
+gnome-tweaksをインストールしてAdditional OptionsにAlt+Shiftオプションがあるのでオフにした。(Emacs inputの設定項目があったので選択しておいた。)
+</p>
+
+<p>
+<a href="https://askubuntu.com/questions/967364/ubuntu-17-10-and-later-cant-change-the-input-switching-shortcut-to-altshift">https://askubuntu.com/questions/967364/ubuntu-17-10-and-later-cant-change-the-input-switching-shortcut-to-altshift</a>
+</p>
+
+<p>
+この辺configにまとめられないのか。
+gnome使いたくないな。
+</p>
+
+<p>
+ibus-anthyのショートカット一覧。
+<a href="https://wiki.ubuntulinux.jp/UbuntuTips/JapaneseEnvironment/IbusAnthy#Setting">https://wiki.ubuntulinux.jp/UbuntuTips/JapaneseEnvironment/IbusAnthy#Setting</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgbbcb5d8" class="outline-3">
+<h3 id="orgbbcb5d8"><a href="#orgbbcb5d8">AnthyにC-c C-j を奪われる問題</a></h3>
+<div class="outline-text-3" id="text-orgbbcb5d8">
+<p>
+anthyにC-c C-jが奪われるようになった。設定で変えても変更が反映されない。
+まあ、英語に切り替えてからやればいいか。
+クリーンインストールすると解決する問題か。
+</p>
+
+<p>
+C-c C-jを押すと無変換モードになるので、変換されないときは再度C-c C-jを押す必要がある。
+</p>
+</div>
+</div>
+<div id="outline-container-org96cd14a" class="outline-3">
+<h3 id="org96cd14a"><a href="#org96cd14a">Anthyの入力モード切り替え</a></h3>
+<div class="outline-text-3" id="text-org96cd14a">
+<p>
+たまにカタカナ入力なって困る。
+<code>ctrl+.</code> で入力モードを順番に切り替える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcd91df8" class="outline-3">
+<h3 id="orgcd91df8"><a href="#orgcd91df8">Ruby環境</a></h3>
+<div class="outline-text-3" id="text-orgcd91df8">
+<p>
+Guixがgemをサポートしているので、RVM, rbenv, bundlerは必要ないよう。
+<a href="https://git.genenetwork.org/pjotrp/guix-notes/src/branch/master/RUBYGEMS-Nokogiri.org#headline-33">https://git.genenetwork.org/pjotrp/guix-notes/src/branch/master/RUBYGEMS-Nokogiri.org#headline-33</a>
+</p>
+
+<p>
+だがよくわからない。ひどく面倒そうな環境変数を追加しているのを見て、これは間違ったアプローチだと思った。
+npmでlintは普通にできたので、同じようにできると思ったのだが。
+</p>
+</div>
+</div>
+<div id="outline-container-orgeede09c" class="outline-3">
+<h3 id="orgeede09c"><a href="#orgeede09c">wifi</a></h3>
+<div class="outline-text-3" id="text-orgeede09c">
+<div class="org-src-container">
+<pre class="src src-shell">nm-connection-editor
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org35a69d9" class="outline-2">
+<h2 id="org35a69d9"><a href="#org35a69d9">参考リンク</a></h2>
+<div class="outline-text-2" id="text-org35a69d9">
+<p>
+概念がわかりやすいPDF。
+<a href="https://archive.fosdem.org/2016/schedule/event/deployments_with_gnu_guix/attachments/slides/1086/export/events/attachments/deployments_with_gnu_guix/slides/1086/reproducible_deployments_gnu_guix.pdf">https://archive.fosdem.org/2016/schedule/event/deployments_with_gnu_guix/attachments/slides/1086/export/events/attachments/deployments_with_gnu_guix/slides/1086/reproducible_deployments_gnu_guix.pdf</a>
+</p>
+
+<p>
+よくわからないので実際の例を見てみる。
+</p>
+
+<p>
+ビルドしてる。
+<a href="https://notabug.org/mthl/cuirass">https://notabug.org/mthl/cuirass</a>
+</p>
+
+<p>
+ノート。
+<a href="https://github.com/pjotrp/guix-notes/blob/master/RUBY.org">https://github.com/pjotrp/guix-notes/blob/master/RUBY.org</a>
+</p>
+
+<p>
+System Crafters.
+<a href="https://www.youtube.com/channel/UCAiiOTio8Yu69c3XnR7nQBQ">https://www.youtube.com/channel/UCAiiOTio8Yu69c3XnR7nQBQ</a>
+<a href="https://github.com/daviwil/dotfiles">https://github.com/daviwil/dotfiles</a>
+</p>
+
+<p>
+guix-works。開発環境として使うための情報が豊富。
+<a href="https://www.draketo.de/software/guix-work.html">https://www.draketo.de/software/guix-work.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orga374f93" class="outline-2">
+<h2 id="orga374f93"><a href="#orga374f93">Task</a></h2>
+<div class="outline-text-2" id="text-orga374f93">
+</div>
+<div id="outline-container-org23532f4" class="outline-3">
+<h3 id="org23532f4"><a href="#org23532f4"><span class="todo TODO">TODO</span> <a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>を起動できるようにする</a></h3>
+</div>
+<div id="outline-container-org4bbaa83" class="outline-3">
+<h3 id="org4bbaa83"><a href="#org4bbaa83"><span class="todo TODO">TODO</span> インストールディスクを作成する(いちいち最初からするのが面倒なので)</a></h3>
+<div class="outline-text-3" id="text-org4bbaa83">
+<p>
+すべて整備された状態でクリーンインストールできるようにしたい。
+おそらくイメージを作るとかそういうのができるはず。system.scmではパーティションやユーザ名を入力するのだから。
+</p>
+</div>
+</div>
+<div id="outline-container-org2f5abd3" class="outline-3">
+<h3 id="org2f5abd3"><a href="#org2f5abd3"><span class="todo TODO">TODO</span> あるいはそれまでのつなぎで完全クローンを作成しておく</a></h3>
+<div class="outline-text-3" id="text-org2f5abd3">
+<p>
+少なくとも今はうまく動いてるので。
+</p>
+</div>
+</div>
+<div id="outline-container-org5071816" class="outline-3">
+<h3 id="org5071816"><a href="#org5071816"><span class="todo TODO">TODO</span> i3のmod keyを変更する</a></h3>
+<div class="outline-text-3" id="text-org5071816">
+<p>
+AltとSuperの位置が近すぎて、workspaceを打ち間違う。
+</p>
+</div>
+</div>
+<div id="outline-container-org88be82d" class="outline-3">
+<h3 id="org88be82d"><a href="#org88be82d"><span class="todo TODO">TODO</span> ibus設定をconfigで</a></h3>
+<div class="outline-text-3" id="text-org88be82d">
+<p>
+日本語入力のときのスペースが全角になってうざい。
+configで挙動を変更できないのか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc5ec0b1" class="outline-3">
+<h3 id="orgc5ec0b1"><a href="#orgc5ec0b1"><span class="todo TODO">TODO</span> 何かの拍子にカタカナ入力になってしまう</a></h3>
+<div class="outline-text-3" id="text-orgc5ec0b1">
+<p>
+ibusの何かショートカットを押している。
+<code>Ctrl+,</code> だった。
+</p>
+</div>
+</div>
+<div id="outline-container-org6f0f687" class="outline-3">
+<h3 id="org6f0f687"><a href="#org6f0f687"><span class="todo TODO">TODO</span> roamでセーブプロンプトが出る</a></h3>
+<div class="outline-text-3" id="text-org6f0f687">
+<p>
+とてもうざい。
+</p>
+</div>
+</div>
+<div id="outline-container-org2dab7db" class="outline-3">
+<h3 id="org2dab7db"><a href="#org2dab7db"><span class="todo TODO">TODO</span> ブラウザのキーバインドを設定する</a></h3>
+<div class="outline-text-3" id="text-org2dab7db">
+<p>
+emacs-exwmを使うようにするとカーソルなどはすべてEmacsキーバインドになる。
+</p>
+</div>
+</div>
+<div id="outline-container-org7342c1c" class="outline-3">
+<h3 id="org7342c1c"><a href="#org7342c1c"><span class="todo TODO">TODO</span> emacs-exwmで日本語入力できるようにする</a></h3>
+<div class="outline-text-3" id="text-org7342c1c">
+<p>
+例によって日本語入力ができない。
+Emacs以外ではできてるので、やはりi3と同じ。
+最初に起動するEmacsで環境変数を指定できれば解決なのだが。
+インストールした最初からできたので、どこで制御してるのかわからない。
+</p>
+
+<p>
+i3ではconfigに環境変数入力 &amp;&amp; emacs を直書きすることができる。emacs-exwmでは最初に起動するEmacsを記述してる箇所はどこにあるんだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb04baa1" class="outline-3">
+<h3 id="orgb04baa1"><a href="#orgb04baa1"><span class="todo TODO">TODO</span> scratchがroam-modeになって書き込み禁止モードで開始する</a></h3>
+</div>
+<div id="outline-container-org02ea0ad" class="outline-3">
+<h3 id="org02ea0ad"><a href="#org02ea0ad"><span class="todo TODO">TODO</span> メインPCのGuix完全移行</a></h3>
+</div>
+<div id="outline-container-org02bcc8c" class="outline-3">
+<h3 id="org02bcc8c"><a href="#org02bcc8c"><span class="todo TODO">TODO</span> Bluetooth設定</a></h3>
+</div>
+</div>
+<div id="outline-container-orgf5ef122" class="outline-2">
+<h2 id="orgf5ef122"><a href="#orgf5ef122">Archives</a></h2>
+<div class="outline-text-2" id="text-orgf5ef122">
+</div>
+<div id="outline-container-orgf8dbb46" class="outline-3">
+<h3 id="orgf8dbb46"><a href="#orgf8dbb46"><span class="done DONE">DONE</span> npmパッケージ</a></h3>
+<div class="outline-text-3" id="text-orgf8dbb46">
+<div class="org-src-container">
+<pre class="src src-shell">guix install node
+npm install npm
+npm install
+npx textlint .*org
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3f0e379" class="outline-3">
+<h3 id="org3f0e379"><a href="#org3f0e379"><span class="done DONE">DONE</span> キー設定(caps入れ替え)</a></h3>
+<div class="outline-text-3" id="text-org3f0e379">
+<p>
+一度Gnomeコマンドを打つ必要がある。
+システムレベルで入れ替えたいができてない。
+</p>
+</div>
+</div>
+<div id="outline-container-org02f5012" class="outline-3">
+<h3 id="org02f5012"><a href="#org02f5012"><span class="done DONE">DONE</span> フォントインストール</a></h3>
+<div class="outline-text-3" id="text-org02f5012">
+<p>
+dotfilesと統合して簡単に。
+</p>
+</div>
+</div>
+<div id="outline-container-org0d44e23" class="outline-3">
+<h3 id="org0d44e23"><a href="#org0d44e23"><span class="done DONE">DONE</span> git</a></h3>
+<div class="outline-text-3" id="text-org0d44e23">
+<p>
+gitをインストール。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc7f07cd" class="outline-3">
+<h3 id="orgc7f07cd"><a href="#orgc7f07cd"><span class="done DONE">DONE</span> ssh</a></h3>
+<div class="outline-text-3" id="text-orgc7f07cd">
+<p>
+open-sshをインストール。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcb2155e" class="outline-3">
+<h3 id="orgcb2155e"><a href="#orgcb2155e"><span class="done DONE">DONE</span> .emacs.d</a></h3>
+<div class="outline-text-3" id="text-orgcb2155e">
+<p>
+セットアップ完了。
+</p>
+</div>
+</div>
+<div id="outline-container-org73542a4" class="outline-3">
+<h3 id="org73542a4"><a href="#org73542a4"><span class="done DONE">DONE</span> dotfiles</a></h3>
+<div class="outline-text-3" id="text-org73542a4">
+<p>
+stowインストール、セットアップ完了。
+</p>
+</div>
+</div>
+<div id="outline-container-org47b2f69" class="outline-3">
+<h3 id="org47b2f69"><a href="#org47b2f69"><span class="done DONE">DONE</span> syncthing</a></h3>
+<div class="outline-text-3" id="text-org47b2f69">
+<p>
+単にインストールするだけ、コード。
+</p>
+</div>
+</div>
+<div id="outline-container-org4fcb8cd" class="outline-3">
+<h3 id="org4fcb8cd"><a href="#org4fcb8cd"><span class="done DONE">DONE</span> 日本語入力</a></h3>
+<div class="outline-text-3" id="text-org4fcb8cd">
+<p>
+anthyをインストール、コード化。
+</p>
+</div>
+</div>
+<div id="outline-container-org7fee8fe" class="outline-3">
+<h3 id="org7fee8fe"><a href="#org7fee8fe"><span class="done DONE">DONE</span> syncthingなどの自動起動</a></h3>
+<div class="outline-text-3" id="text-org7fee8fe">
+<p>
+shepherdでやるように。コード化。
+</p>
+</div>
+</div>
+<div id="outline-container-org5109f82" class="outline-3">
+<h3 id="org5109f82"><a href="#org5109f82"><span class="done DONE">DONE</span> vtermのコンパイルができない</a></h3>
+<div class="outline-text-3" id="text-org5109f82">
+<p>
+guixインストールした。
+</p>
+</div>
+</div>
+<div id="outline-container-orge60e635" class="outline-3">
+<h3 id="orge60e635"><a href="#orge60e635"><span class="done DONE">DONE</span> emacsqlが利用できない</a></h3>
+<div class="outline-text-3" id="text-orge60e635">
+<p>
+guixインストールするように。
+</p>
+</div>
+</div>
+<div id="outline-container-org3d7c583" class="outline-3">
+<h3 id="org3d7c583"><a href="#org3d7c583"><span class="done DONE">DONE</span> migemoが使えない</a></h3>
+<div class="outline-text-3" id="text-org3d7c583">
+<p>
+インストールされてない環境では読み込まない、などの対応が必要。
+コピペしたぽいコードはちゃんと対応されてたが、対応コードの外側でrequireしたためどの環境でも読み込むようになっていた。修正した。
+</p>
+</div>
+</div>
+<div id="outline-container-org67c170a" class="outline-3">
+<h3 id="org67c170a"><a href="#org67c170a"><span class="done DONE">DONE</span> パッケージリストから一気にインストールできるようにする。</a></h3>
+<div class="outline-text-3" id="text-org67c170a">
+<p>
+desktop.scmを作成した。これで必要なパッケージを一気に導入できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbbe2292" class="outline-3">
+<h3 id="orgbbe2292"><a href="#orgbbe2292"><span class="done DONE">DONE</span> システムビルド時にインストールさせたい</a></h3>
+<div class="outline-text-3" id="text-orgbbe2292">
+<p>
+パッケージ群をまとめてインストールするにはdotfileをcloneして実行すればいい。が、それをするためにsyncthingやgitをインストールする必要がある。
+ビルド時にインストールさせたい。
+よくわからんのでmakefileを作成した。
+</p>
+</div>
+</div>
+<div id="outline-container-org0e28715" class="outline-3">
+<h3 id="org0e28715"><a href="#org0e28715"><span class="done DONE">DONE</span> org-roamが使えない</a></h3>
+<div class="outline-text-3" id="text-org0e28715">
+<p>
+org-roamのバージョンが上がったためだった。コマンドが変わっていた。
+逆にMintの方が古いままになっているので、そっちを直す必要がある。
+もう大体同じことができるので乗り換えてもいい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf3c30f8" class="outline-3">
+<h3 id="orgf3c30f8"><a href="#orgf3c30f8"><span class="done DONE">DONE</span> サービスが起動しないことがある</a></h3>
+<div class="outline-text-3" id="text-orgf3c30f8">
+<p>
+ibus、syncthingが起動直後は動いているのにいつのまにか止まっている。
+</p>
+
+<ol class="org-ol">
+<li>i3ではshepherdを実行してなかった。</li>
+</ol>
+<p>
+2.ログをとってみてみると、 <code>ibus-daemon -d</code> はダメで、 <code>ibus-daemon</code> とする必要がある。つまりふつうに実行してそこでコンソールが止まる形式で実行する必要がある。
+</p>
+</div>
+</div>
+<div id="outline-container-orgff53046" class="outline-3">
+<h3 id="orgff53046"><a href="#orgff53046"><span class="done DONE">DONE</span> 画面ロック</a></h3>
+<div class="outline-text-3" id="text-orgff53046">
+<p>
+時間経過で自動画面ロックしてくれないことに気づいた。
+xautolockを入れることで解決した。
+</p>
+</div>
+</div>
+<div id="outline-container-org5f05a52" class="outline-3">
+<h3 id="org5f05a52"><a href="#org5f05a52"><span class="done DONE">DONE</span> Emacsで日本語入力</a></h3>
+<div class="outline-text-3" id="text-org5f05a52">
+<p>
+i3-wm + ibus-anthy + Emacsで日本語入力ができない問題。
+この組み合わせでだけ起きる。
+</p>
+
+<p>
+Emacsだけならともかく、ほかのブラウザなどの操作と一貫性がなくなるのを避けたい。
+ほかにも発生する人がいた。だいたい同じ環境変数の定義を示していて、いくつか試すなかでなんとかうまくいった。
+</p>
+
+<p>
+<a href="https://raawaa.github.io/2016/05/05/input-with-ibus-on-emacs/">https://raawaa.github.io/2016/05/05/input-with-ibus-on-emacs/</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">LC_CTYPE</span>=ja_JP.UTF-8
+<span class="org-builtin">export</span> <span class="org-variable-name">GTK_IM_MODULE</span>=ibus
+<span class="org-builtin">export</span> <span class="org-variable-name">QT_IM_MODULE</span>=ibus
+<span class="org-builtin">export</span> <span class="org-variable-name">XMODIFIERS</span>=@<span class="org-variable-name">im</span>=ibus
+</pre>
+</div>
+
+<p>
+重要なのは、この環境変数が評価されているセッションでEmacsを実行すること。
+ibus側の設定ではなく、Emacs側にinput methodを教えてあげる環境変数、ということだ。
+上をターミナルで実行してそのままemacsを実行すると、たぶんうまくいく。
+</p>
+
+<p>
+それを確かめてから、あとは <code>.bashrc</code> に書き込む。ターミナルでemacsを起動すると日本語が打てる。
+ランチャーから起動すると打てないので、ランチャー側を少しいじる必要がある。
+</p>
+</div>
+</div>
+<div id="outline-container-org519ef07" class="outline-3">
+<h3 id="org519ef07"><a href="#org519ef07"><span class="done DONE">DONE</span> ibusは透過させないようにする</a></h3>
+<div class="outline-text-3" id="text-org519ef07">
+<p>
+見えにくいので。
+</p>
+</div>
+</div>
+<div id="outline-container-org8965d79" class="outline-3">
+<h3 id="org8965d79"><a href="#org8965d79"><span class="done DONE">DONE</span> suspendできるようにする</a></h3>
+<div class="outline-text-3" id="text-org8965d79">
+<p>
+suspendボタンをpolybarに追加した。
+</p>
+</div>
+</div>
+<div id="outline-container-org7f14e96" class="outline-3">
+<h3 id="org7f14e96"><a href="#org7f14e96"><span class="done DONE">DONE</span> 仮想環境の使い方</a></h3>
+<div class="outline-text-3" id="text-org7f14e96">
+<p>
+gemとかnpmを使うときにどうしたらいいのか。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">guix environment -C guix --network --ad-hoc ruby ruby-sinatra
+</pre>
+</div>
+<p>
+みたく、仮想環境が作れるのだが、実際どう使えばいいのかわからない。
+</p>
+
+<p>
+当面はディレクトリにインストールしてそこで使うようにすればよい。
+グローバルにインストールしなければ普通に使える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfc62895" class="outline-3">
+<h3 id="orgfc62895"><a href="#orgfc62895"><span class="done DONE">DONE</span> 使えないキーがある</a></h3>
+<div class="outline-text-3" id="text-orgfc62895">
+<p>
+たとえばM+&lt;が使えない。単に <code>&lt;</code> 入力と判定されてしまう。
+alt+shiftが奪われてた問題と共通してるように見える。
+</p>
+
+<p>
+system.scmの &ldquo;grp:alt_shift_toggle&rdquo; を消してreconfigureしたら直った。
+理解してない設定は危険だな。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org4142ff5" class="outline-2">
+<h2 id="org4142ff5"><a href="#org4142ff5">References</a></h2>
+<div class="outline-text-2" id="text-org4142ff5">
+</div>
+<div id="outline-container-orgdd19343" class="outline-3">
+<h3 id="orgdd19343"><a href="#orgdd19343"><a href="https://guix.gnu.org/blog/2022/online-guix-days-2022-announcement-2/">Online Guix Day Conference: schedule released! — 2022 — Blog — GNU Guix</a></a></h3>
+<div class="outline-text-3" id="text-orgdd19343">
+<p>
+カンファレンス2022。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcf364cc" class="outline-3">
+<h3 id="orgcf364cc"><a href="#orgcf364cc"><a href="https://guix.gnu.org/blog/2022/online-guix-days-2022-announcement-1/">Announcing the second online Guix Days — 2022 — Blog — GNU Guix</a></a></h3>
+</div>
+<div id="outline-container-org72b5cc2" class="outline-3">
+<h3 id="org72b5cc2"><a href="#org72b5cc2"><a href="https://www.youtube.com/watch?v=7ZdMRLPZhFs">5 Reasons to Try Guix in 2022 - YouTube</a></a></h3>
+<div class="outline-text-3" id="text-org72b5cc2">
+<p>
+<a href="20210915221421-systemcrafters.html#ID-fa497359-ae3f-494a-b24a-9822eefe67ad">System Crafters</a>の動画。
+Guixを使うべき理由。仮想マシン上で実際に試す。
+</p>
+</div>
+</div>
+<div id="outline-container-org55516e6" class="outline-3">
+<h3 id="org55516e6"><a href="#org55516e6"><a href="https://guix.gnu.org/manual/devel/en/html_node/Translating-Guix.html">Translating Guix (GNU Guix Reference Manual)</a></a></h3>
+<div class="outline-text-3" id="text-org55516e6">
+<p>
+翻訳によるコミットのやり方。
+</p>
+</div>
+</div>
+<div id="outline-container-org9dcf94a" class="outline-3">
+<h3 id="org9dcf94a"><a href="#org9dcf94a"><a href="https://nonguix.org/">Cuirass</a></a></h3>
+<div class="outline-text-3" id="text-org9dcf94a">
+<p>
+guixのチャンネル。
+</p>
+</div>
+</div>
+<div id="outline-container-orgef7fbc7" class="outline-3">
+<h3 id="orgef7fbc7"><a href="#orgef7fbc7"><a href="https://wiki.ubuntulinux.jp/UbuntuTips/JapaneseEnvironment/IbusAnthy">UbuntuTips/JapaneseEnvironment/IbusAnthy - Ubuntu Japanese Wiki</a></a></h3>
+<div class="outline-text-3" id="text-orgef7fbc7">
+<p>
+IME Anthyのショートカット一覧。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf40e52c" class="outline-3">
+<h3 id="orgf40e52c"><a href="#orgf40e52c"><a href="https://www.draketo.de/software/guix-work.html">Using GNU Guix for software development</a></a></h3>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

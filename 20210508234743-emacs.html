@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Emacs</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Emacs</h1>
+<div id="outline-container-org32e2f12" class="outline-2">
+<h2 id="org32e2f12"><a href="#org32e2f12">概要</a></h2>
+<div class="outline-text-2" id="text-org32e2f12">
+<p>
+Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
+エディタに内蔵された言語<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>で柔軟に設定を変更できる。
+</p>
+
+<p>
+できること。
+</p>
+<ul class="org-ul">
+<li>情報集積(<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>, <a href="20210508233810-org_roam.html#ID-815a2c31-7ddb-40ad-bae0-f84e1cfd8de1">Org-roam</a>)</li>
+<li>タスク管理(<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>)</li>
+<li><a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>(<a href="20210922005248-magit.html#ID-5ba43a42-93cb-48fa-8578-0558c757493f">magit</a>) + <a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>(<a href="20210922004953-magit_forge.html#ID-4a80d381-2620-40dc-8588-cda910c3d785">magit-forge</a>)</li>
+<li>コマンド実行と結果出力(<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>)</li>
+<li>ウィンドウマネージャ(<a href="20210905140122-exwm.html#ID-eb196529-bdbd-48c5-9d5b-a156fe5c2f41">EXWM</a>)</li>
+<li>静的サイトジェネレータ(<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>)</li>
+<li>ブラウザ(eww)</li>
+<li>インターネットラジオプレーヤ(eradio)</li>
+<li>フィードリーダー(elfeed.el)</li>
+<li>ファイラ</li>
+<li>表計算</li>
+<li>テスト実行(rspec-mode)</li>
+<li>ターミナル実行(vterm)</li>
+<li><a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>管理(docker-mode)</li>
+<li>リマインダー(org-alert)</li>
+<li>PDF閲覧(pdf-tools)</li>
+</ul>
+
+<p>
+の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
+</p>
+</div>
+</div>
+<div id="outline-container-orga71e902" class="outline-2">
+<h2 id="orga71e902"><a href="#orga71e902">Memo</a></h2>
+<div class="outline-text-2" id="text-orga71e902">
+</div>
+<div id="outline-container-orgc91af77" class="outline-3">
+<h3 id="orgc91af77"><a href="#orgc91af77">本体コード</a></h3>
+<div class="outline-text-3" id="text-orgc91af77">
+<p>
+ほとんどは<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>で書かれている。コアな部分は<a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C language</a>。
+<code>src/*</code> にはCのコードがある。
+<code>src/lisp.h</code> は<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>そのもののコードで重要。
+</p>
+
+<p>
+<a href="https://www.reddit.com/r/emacs/comments/7i2alo/how_to_read_and_understand_gnu_emacs_source_code/">How to read (and understand) GNU Emacs source code? : emacs</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org91e3737" class="outline-3">
+<h3 id="org91e3737"><a href="#org91e3737">プロセス管理</a></h3>
+<div class="outline-text-3" id="text-org91e3737">
+<p>
+最初から入っている <code>proced</code> が便利。一覧に加えてkillもできる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb64863f" class="outline-3">
+<h3 id="orgb64863f"><a href="#orgb64863f">デフォルトの動的補完 dabbrev</a></h3>
+<div class="outline-text-3" id="text-orgb64863f">
+<p>
+dabbrevはEmacsデフォルトの補完機能。大雑把で高速。
+dabbrev-expand (M-/)
+</p>
+</div>
+</div>
+<div id="outline-container-orgd1b2b4d" class="outline-3">
+<h3 id="orgd1b2b4d"><a href="#orgd1b2b4d">デフォルトの定義探す系 xref</a></h3>
+<div class="outline-text-3" id="text-orgd1b2b4d">
+<dl class="org-dl">
+<dt>xref-find-definitions (M-.)</dt><dd>定義ジャンプ</dd>
+<dt>xref-find-references (M-?)</dt><dd>参照箇所(使われてるところ)にジャンプ</dd>
+</dl>
+
+<p>
+lspと接続しているとそっちを使って辿るようだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org05ca372" class="outline-3">
+<h3 id="org05ca372"><a href="#org05ca372">LSP設定</a></h3>
+<div class="outline-text-3" id="text-org05ca372">
+<p>
+<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>を設定する。
+</p>
+
+<ul class="org-ul">
+<li>lsp-modeは<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>全般を扱うパッケージである。lsp-install-serverで各プログラミング言語の<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a> serverをダウンロード・起動することで有効化できる。</li>
+<li>lsp-ui-modeはlsp-modeのグラフィック面を強化するパッケージである(optional)。ドキュメント表示、エラー表示などができるようになる</li>
+</ul>
+
+<p>
+<a href="20220108003324-scala.html#ID-b2f63c13-4b30-481c-9c95-8abe388254fd">Scala</a>の<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>サーバーであるmetalsはGPGエラーでインストールできない状態だった。
+<code>(setq lsp-verify-signature nil)</code> するとインストールできる。
+</p>
+
+<p>
+<a href="https://github.com/coursier/coursier/issues/2346">https://github.com/coursier/coursier/issues/2346</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgcac12fc" class="outline-3">
+<h3 id="orgcac12fc"><a href="#orgcac12fc">corfu設定</a></h3>
+<div class="outline-text-3" id="text-orgcac12fc">
+<ul class="org-ul">
+<li>ミニマルなパッケージを組み合わせる方法が主流である。</li>
+<li>各パッケージの概要: <a href="https://tam5917.hatenablog.com/entry/2022/02/05/141115">https://tam5917.hatenablog.com/entry/2022/02/05/141115</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org64ff0ab" class="outline-3">
+<h3 id="org64ff0ab"><a href="#org64ff0ab">git-timemachineで歴史を見る</a></h3>
+<div class="outline-text-3" id="text-org64ff0ab">
+<p>
+<a href="https://github.com/emacsmirror/git-timemachine">emacsmirror/git-timemachine: Walk through git revisions of a file</a>
+<code>git-timemachine</code> を使うと、ファイルごとで軽々とコミットを辿れて楽しい。すごいのにあまり有名ではないよう。
+</p>
+
+<ul class="org-ul">
+<li>n で次のコミット、p で前のコミットに移る。</li>
+<li>c でコミット内容を見る。ファイルビューではコミット時点のファイルだけなので、差分をみたいときにはこっちを使う。</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org42bf2e5" class="outline-3">
+<h3 id="org42bf2e5"><a href="#org42bf2e5">faceを調べる</a></h3>
+<div class="outline-text-3" id="text-org42bf2e5">
+<p>
+M-x list-faces-display
+</p>
+</div>
+</div>
+<div id="outline-container-org4df9f3e" class="outline-3">
+<h3 id="org4df9f3e"><a href="#org4df9f3e">diredでzip展開</a></h3>
+<div class="outline-text-3" id="text-org4df9f3e">
+<p>
+dired-modeで Z &#x2026; <code>dired-do-compress</code> で展開か圧縮できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf71192f" class="outline-3">
+<h3 id="orgf71192f"><a href="#orgf71192f">矩形選択する</a></h3>
+<div class="outline-text-3" id="text-orgf71192f">
+<p>
+<code>rectangle-mark-mode</code> &#x2013; C-x SPC
+で矩形選択できる。
+</p>
+
+<p>
+back-button-modeのキーバインドが衝突してたのでback-button-modeの方を無効化。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>無効化</label><pre class="src src-emacs-lisp">(define-key back-button-mode-map (kbd <span class="org-string">"C-x SPC"</span>) nil)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcc4df5f" class="outline-3">
+<h3 id="orgcc4df5f"><a href="#orgcc4df5f">pdf-tools</a></h3>
+<div class="outline-text-3" id="text-orgcc4df5f">
+<p>
+pdf-toolsはEmacs内でPDFを閲覧できるパッケージ。
+インストールしても、しばらくすると利用不可になってることがあるのでinstallしなおす。
+インストールするとdiredから選択するとpdf-toolsが使われる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>インストールする</label><pre class="src src-emacs-lisp">(pdf-tools-install)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org425ca8c" class="outline-3">
+<h3 id="org425ca8c"><a href="#org425ca8c">ivy-occurで一括置換する</a></h3>
+<div class="outline-text-3" id="text-org425ca8c">
+<p>
+occurの特徴はeでedit-modeに入れる点。一覧にして複数ファイルをそのまま置換できる。
+</p>
+
+<p>
+プロジェクトのファイルにすべてに対してoccurしたいとき。
+<code>counsel-git-grep</code> して絞り込んだものに対して <code>(ivy-occur)</code> = <code>C-c C-o</code> でoccurできる。
+</p>
+
+<p>
+edit-modeに入るには。
+<code>(ivy-wgrep-change-to-wgrep-mode)</code> = <code>C-x C-q</code>
+occurでの変更をコミットするには。
+<code>C-x C-s</code> 。覚えにくい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbcd4da7" class="outline-3">
+<h3 id="orgbcd4da7"><a href="#orgbcd4da7">絵文字挿入</a></h3>
+<div class="outline-text-3" id="text-orgbcd4da7">
+<p>
+<code>C-x 8 return</code>
+</p>
+</div>
+</div>
+<div id="outline-container-orgca8950a" class="outline-3">
+<h3 id="orgca8950a"><a href="#orgca8950a">elisp-refs</a></h3>
+<div class="outline-text-3" id="text-orgca8950a">
+<p>
+<a href="https://github.com/Wilfred/elisp-refs">Wilfred/elisp-refs: semantic code search for emacs lisp</a>
+関数や変数の参照を見つけるパッケージ。
+じっさいに使われている例を探し出すことができる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>popで検索してみた例</label><pre class="src src-emacs-lisp">File: /gnu/store/lnwgc4ww47vkq2wv2ay3rdm0ppnmgyfy-emacs-27.2/share/emacs/27.2/lisp/format.el.gz
+(<span class="org-keyword">setq</span> prop (<span class="org-keyword">pop</span> props))
+
+File: /gnu/store/lnwgc4ww47vkq2wv2ay3rdm0ppnmgyfy-emacs-27.2/share/emacs/27.2/lisp/window.el.gz
+(<span class="org-keyword">let</span> ((window (<span class="org-keyword">pop</span> window-state-put-stale-windows)))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3a01083" class="outline-3">
+<h3 id="org3a01083"><a href="#org3a01083">make-command-summary</a></h3>
+<div class="outline-text-3" id="text-org3a01083">
+<p>
+キーバインドの一覧を出力するコマンド。
+面白い。
+</p>
+</div>
+</div>
+<div id="outline-container-orge67c730" class="outline-3">
+<h3 id="orge67c730"><a href="#orge67c730">Emacsconf 2021</a></h3>
+<div class="outline-text-3" id="text-orge67c730">
+</div>
+<div id="outline-container-orgeef7669" class="outline-4">
+<h4 id="orgeef7669"><a href="#orgeef7669">Emacs News Highlights Sacha Chua</a></h4>
+<div class="outline-text-4" id="text-orgeef7669">
+<p>
+1年のニュース。
+Emacs本体, magit, roamのメジャーバージョンアップ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb906cdb" class="outline-4">
+<h4 id="orgb906cdb"><a href="#orgb906cdb">The True Frownies are the Friends We Made Along the Way: An Anecdote of Emacs&rsquo;s Malleability Case Duckworth</a></h4>
+<div class="outline-text-4" id="text-orgb906cdb">
+<p>
+frown-modeの開発。
+</p>
+</div>
+</div>
+<div id="outline-container-org7f3aa7e" class="outline-4">
+<h4 id="org7f3aa7e"><a href="#org7f3aa7e">Emacs manuals translation and OmegaT Jean-Christophe Helary</a></h4>
+<div class="outline-text-4" id="text-org7f3aa7e">
+<p>
+翻訳をツールを使って早く進める。
+</p>
+</div>
+</div>
+<div id="outline-container-org5d5e7b8" class="outline-4">
+<h4 id="org5d5e7b8"><a href="#org5d5e7b8">GNU&rsquo;s Not UNIX: Why Emacs Demonstrates The UNIX Philosophy Isn&rsquo;t Always The Only Answer Daniel Rose</a></h4>
+<div class="outline-text-4" id="text-org5d5e7b8">
+<p>
+UNIX哲学の概要、異なる点。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaa87937" class="outline-4">
+<h4 id="orgaa87937"><a href="#orgaa87937">Emacs and Montessori Philosophy Grant Shangreaux</a></h4>
+<div class="outline-text-4" id="text-orgaa87937">
+<p>
+Emacsとモンテッソーリ教育。
+ドキュメント化されたコード。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfaf8624" class="outline-4">
+<h4 id="orgfaf8624"><a href="#orgfaf8624">Emacs as Design Pattern Learning Greta Goetz</a></h4>
+<div class="outline-text-4" id="text-orgfaf8624">
+<p>
+Emacsのデザインパターン。
+</p>
+
+<ul class="org-ul">
+<li>エコシステム</li>
+<li>拡張性</li>
+<li>ユーザ</li>
+<li>学ぶ方法</li>
+<li>コミュニティ</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org77a10a3" class="outline-4">
+<h4 id="org77a10a3"><a href="#org77a10a3">How Emacs made me appreciate software freedom Protesilaos Stavrou</a></h4>
+<div class="outline-text-4" id="text-org77a10a3">
+<p>
+プログラマーでなかったがパッケージ開発をするようになった人。
+Emacsのドキュメント文化。
+たとえばinfoはREADMEというより本。
+そういった文書は非常に参考になる。
+初心者でもドキュメントにコミットの余地がある。
+</p>
+
+<p>
+org, magitなどのキラーアプリを使いたくても、まずEmacsを使えるようになる必要がある。
+</p>
+
+<p>
+Emacsはユーザと開発者の境界が曖昧である。
+ほかのソフトウェアは、分かれている。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcac2402" class="outline-4">
+<h4 id="orgcac2402"><a href="#orgcac2402">NonGNU ELPA Update Philip Kaludercic</a></h4>
+<div class="outline-text-4" id="text-orgcac2402">
+<p>
+よいパッケージは本体に組み込む。
+NonGNU ELPAはFSFのサインをする必要がない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd1ba748" class="outline-4">
+<h4 id="orgd1ba748"><a href="#orgd1ba748">Manual Package Management in The Era of Repositories - Why and How Dhavan (codingquark)</a></h4>
+<div class="outline-text-4" id="text-orgd1ba748">
+<p>
+最初のインストールから説明。
+git-submoduleでのパッケージ管理。
+パッケージをクローンして、ビルドする。
+</p>
+</div>
+</div>
+<div id="outline-container-orga4d1f93" class="outline-4">
+<h4 id="orga4d1f93"><a href="#orga4d1f93">Introducing N-Angulator Kevin Haddock</a></h4>
+<div class="outline-text-4" id="text-orga4d1f93">
+<p>
+UNIXファイルシステムはN次元の配列の集合体である。
+だからそれをうまく扱えればファイラになる。
+</p>
+
+<p>
+プレゼンの画面がとてつもなく古い。
+SXEmacsだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org721652a" class="outline-4">
+<h4 id="org721652a"><a href="#org721652a">telega.el and the Emacs community on Telegram Gabriele Bozzola</a></h4>
+<div class="outline-text-4" id="text-org721652a">
+<p>
+メッセージサービスTelegramのラッパー。
+拡張性が高い。
+</p>
+</div>
+</div>
+<div id="outline-container-orgeead4ec" class="outline-4">
+<h4 id="orgeead4ec"><a href="#orgeead4ec">Typesetting Gregorian Chant with Emacs Spencer King</a></h4>
+<div class="outline-text-4" id="text-orgeead4ec">
+<p>
+楽譜を書くソフトのラッパー。
+Emacsで書いて、PDFに変換できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orga253423" class="outline-4">
+<h4 id="orga253423"><a href="#orga253423">A day in the life of a janitor Stefan Monnier</a></h4>
+<div class="outline-text-4" id="text-orga253423">
+<p>
+Emacsのメンテナーのコンパイル。
+レキシカルバインディングとか、依存関係とか。
+なんだかよくわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-org6576007" class="outline-4">
+<h4 id="org6576007"><a href="#org6576007">Emacs Research Group, Season Zero: What we did together with Emacs in 2 hours a week for a year Noorah Alhasan, Joe Corneli, Raymond Puzio, Leo Vivier</a></h4>
+</div>
+<div id="outline-container-org37797e6" class="outline-4">
+<h4 id="org37797e6"><a href="#org37797e6">One effective CS grad student workflow Greg Coladonato</a></h4>
+</div>
+<div id="outline-container-orgb92d71c" class="outline-4">
+<h4 id="orgb92d71c"><a href="#orgb92d71c">Using Org-Mode For Recording Continuous Professional Development Philip Beadling</a></h4>
+</div>
+<div id="outline-container-orgdffe419" class="outline-4">
+<h4 id="orgdffe419"><a href="#orgdffe419">Creating technical API documentation and presentations using org-babel, restclient, and org-treeslide Jan Ypma</a></h4>
+</div>
+<div id="outline-container-org0371e9c" class="outline-4">
+<h4 id="org0371e9c"><a href="#org0371e9c">Org as an executable format Tom Gillespie</a></h4>
+</div>
+<div id="outline-container-orge4e28dc" class="outline-4">
+<h4 id="orge4e28dc"><a href="#orge4e28dc">The use of Org mode syntax outside of GNU/Emacs Karl Voit</a></h4>
+<div class="outline-text-4" id="text-orge4e28dc">
+<p>
+org-modeの特徴をいくつかの段階に分ける。
+最も基礎的な部分をOrgdown1とする。
+</p>
+</div>
+</div>
+<div id="outline-container-orge48da4b" class="outline-4">
+<h4 id="orge48da4b"><a href="#orge48da4b">Using Org-mode to teach programming Daniel German</a></h4>
+</div>
+<div id="outline-container-org947ec2b" class="outline-4">
+<h4 id="org947ec2b"><a href="#org947ec2b">Managing a research workflow (bibliographies, note-taking, and arXiv) Ahmed Khaled</a></h4>
+</div>
+<div id="outline-container-orge33f88a" class="outline-4">
+<h4 id="orge33f88a"><a href="#orge33f88a">Babel for academics Asilata Bapat</a></h4>
+</div>
+<div id="outline-container-org75bf2ae" class="outline-4">
+<h4 id="org75bf2ae"><a href="#org75bf2ae">Reproducible molecular graphics with Org-mode Blaine Mooers</a></h4>
+</div>
+<div id="outline-container-orgb94e789" class="outline-4">
+<h4 id="orgb94e789"><a href="#orgb94e789">Budgeting, Project Monitoring and Invoicing with Org Mode Adolfo Villafiorita</a></h4>
+</div>
+<div id="outline-container-orgd33aaa5" class="outline-4">
+<h4 id="orgd33aaa5"><a href="#orgd33aaa5">Finding Your (In)voice: Emacs for Invoicing Bala Ramadurai</a></h4>
+</div>
+<div id="outline-container-org3a9a5cb" class="outline-4">
+<h4 id="org3a9a5cb"><a href="#org3a9a5cb">Productivity Dashboards with Emacs and Kindle Mehmet Tekman</a></h4>
+</div>
+<div id="outline-container-orga325122" class="outline-4">
+<h4 id="orga325122"><a href="#orga325122">Emacs with Nyxt: extend your editor with the power of a Lisp browser Andrea</a></h4>
+</div>
+<div id="outline-container-org554aa2e" class="outline-4">
+<h4 id="org554aa2e"><a href="#org554aa2e">Emacs development updates John Wiegley</a></h4>
+</div>
+<div id="outline-container-org5e1c982" class="outline-4">
+<h4 id="org5e1c982"><a href="#org5e1c982">On the design of text editors Nicolas P. Rougier</a></h4>
+</div>
+<div id="outline-container-org270847f" class="outline-4">
+<h4 id="org270847f"><a href="#org270847f">Closing remarks day 1</a></h4>
+</div>
+<div id="outline-container-org902faf5" class="outline-4">
+<h4 id="org902faf5"><a href="#org902faf5">Opening remarks day 2</a></h4>
+</div>
+<div id="outline-container-org3fd0e13" class="outline-4">
+<h4 id="org3fd0e13"><a href="#org3fd0e13">Optimizing Emacs Lisp Code Dmitry Gutov</a></h4>
+<div class="outline-text-4" id="text-org3fd0e13">
+<p>
+<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>の高速化。
+オーバーレイがたくさんあるので、foldしまくってると表示が重い。
+</p>
+
+<p>
+最初に計測して、原因を探ることから。
+autocompleteの作者でもあるTomohiro Matsuyamaの作ったプロファイルライブラリがある。
+ほかにもいろんなベンチマークがある。
+</p>
+</div>
+</div>
+<div id="outline-container-org124469b" class="outline-4">
+<h4 id="org124469b"><a href="#org124469b">Tree-edit: Structural editing for Java, Python, C, and beyond Ethan Leba</a></h4>
+<div class="outline-text-4" id="text-org124469b">
+<p>
+DSLで展開して編集するパッケージの開発者。
+大学生。すごいなあ。
+</p>
+</div>
+</div>
+<div id="outline-container-org2595ccc" class="outline-4">
+<h4 id="org2595ccc"><a href="#org2595ccc">Yak-shaving to a UI framework Erik Anderson</a></h4>
+<div class="outline-text-4" id="text-org2595ccc">
+<p>
+React API。
+Emacs上でコンポーネントの操作をできるようにするパッケージ。
+すごすぎ。
+テーマとかフォントはクソ古い感じで、ギャップに笑う。
+</p>
+</div>
+</div>
+<div id="outline-container-org7b007d1" class="outline-4">
+<h4 id="org7b007d1"><a href="#org7b007d1">Moldable Emacs, a step towards sustainable software Andrea</a></h4>
+<div class="outline-text-4" id="text-org7b007d1">
+<p>
+<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>のクエリで図を生成する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb386b14" class="outline-4">
+<h4 id="orgb386b14"><a href="#orgb386b14">Extending the &ldquo;model&rdquo; of Emacs to other applications Laszlo Krajnikovszkij</a></h4>
+</div>
+<div id="outline-container-org2155e72" class="outline-4">
+<h4 id="org2155e72"><a href="#org2155e72">Emacs Lisp native compiler, current status and future developments Andrea Corallo</a></h4>
+</div>
+<div id="outline-container-org1acdf84" class="outline-4">
+<h4 id="org1acdf84"><a href="#org1acdf84">Old McCarthy Had a Form</a></h4>
+</div>
+<div id="outline-container-orgb598818" class="outline-4">
+<h4 id="orgb598818"><a href="#orgb598818">Turbo Bindat</a></h4>
+</div>
+<div id="outline-container-org0f6526c" class="outline-4">
+<h4 id="org0f6526c"><a href="#org0f6526c">Test blocks</a></h4>
+</div>
+<div id="outline-container-orge0b902a" class="outline-4">
+<h4 id="orge0b902a"><a href="#orge0b902a">Perso-Arabic Input Methods And Making More Emacs Apps BIDI Aware</a></h4>
+</div>
+<div id="outline-container-orge1f281c" class="outline-4">
+<h4 id="orge1f281c"><a href="#orge1f281c">Emacs Application Framework: A 2021 Update</a></h4>
+</div>
+<div id="outline-container-org54fc8b5" class="outline-4">
+<h4 id="org54fc8b5"><a href="#org54fc8b5">Imaginary Programming</a></h4>
+</div>
+<div id="outline-container-org0c24e04" class="outline-4">
+<h4 id="org0c24e04"><a href="#org0c24e04">CLEDE: the Common Lisp Emacs Development Environment</a></h4>
+</div>
+<div id="outline-container-orgf67ec19" class="outline-4">
+<h4 id="orgf67ec19"><a href="#orgf67ec19">How to help Emacs maintainers</a></h4>
+</div>
+<div id="outline-container-orgb3bf996" class="outline-4">
+<h4 id="orgb3bf996"><a href="#orgb3bf996">How to build an Emacs</a></h4>
+</div>
+<div id="outline-container-org3f49d53" class="outline-4">
+<h4 id="org3f49d53"><a href="#org3f49d53">M-x Forever: Why Emacs will outlast text editor trends</a></h4>
+</div>
+<div id="outline-container-orgf09fdeb" class="outline-4">
+<h4 id="orgf09fdeb"><a href="#orgf09fdeb">Closing remarks day 2</a></h4>
+</div>
+</div>
+<div id="outline-container-orge1238cc" class="outline-3">
+<h3 id="orge1238cc"><a href="#orge1238cc">複数行に空白挿入</a></h3>
+<div class="outline-text-3" id="text-orge1238cc">
+<p>
+複数行一気に空白を挿入してインデントを整えるとき。
+<code>C-x C-i</code> で挿入モードにあるのであとは方向キーで微調整できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc7e59cd" class="outline-3">
+<h3 id="orgc7e59cd"><a href="#orgc7e59cd">文字コード変更</a></h3>
+<div class="outline-text-3" id="text-orgc7e59cd">
+<p>
+改行コードなどで問題が生じたとき。^Mが表示されるとか。
+<code>C-x RET f utf-8-unix</code>
+で文字コードを変更して保存する。
+</p>
+</div>
+</div>
+<div id="outline-container-org04af3bc" class="outline-3">
+<h3 id="org04af3bc"><a href="#org04af3bc">カウントダウンタイマー</a></h3>
+<div class="outline-text-3" id="text-org04af3bc">
+<p>
+カップ麺の3分を測りたい、みたいなとき。
+<code>(org-timer-set-timer)</code>
+</p>
+</div>
+</div>
+<div id="outline-container-org6541a24" class="outline-3">
+<h3 id="org6541a24"><a href="#org6541a24">company-documentation</a></h3>
+<div class="outline-text-3" id="text-org6541a24">
+<p>
+Company is input complement package.
+Read document on complementation list.
+<code>Ctrl + Shift + h</code>
+</p>
+</div>
+</div>
+<div id="outline-container-orgfacdd76" class="outline-3">
+<h3 id="orgfacdd76"><a href="#orgfacdd76">vtermのbash_profileを設定する</a></h3>
+<div class="outline-text-3" id="text-orgfacdd76">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>.bash_profile</label><pre class="src src-shell"><span class="org-keyword">if</span> [[ <span class="org-string">"$INSIDE_EMACS"</span> = <span class="org-string">'vterm'</span> ]] <span class="org-sh-escaped-newline">\</span>
+    &amp;&amp; [[ -n ${<span class="org-variable-name">EMACS_VTERM_PATH</span>} ]] <span class="org-sh-escaped-newline">\</span>
+    &amp;&amp; [[ -f ${<span class="org-variable-name">EMACS_VTERM_PATH</span>}/etc/emacs-vterm-bash.sh ]]; <span class="org-keyword">then</span>
+    source ${<span class="org-variable-name">EMACS_VTERM_PATH</span>}/etc/emacs-vterm-bash.sh
+<span class="org-keyword">fi</span>
+</pre>
+</div>
+<p>
+<a href="https://naokton.hatenablog.com/entry/2020/12/08/150130">vterm-modeを使う - technokton</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orga07ab3e" class="outline-3">
+<h3 id="orga07ab3e"><a href="#orga07ab3e">パッケージのソースコードメモ</a></h3>
+<div class="outline-text-3" id="text-orga07ab3e">
+<ul class="org-ul">
+<li>org-lint
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/emacs/blob/master/lisp/org/org-lint.el#L124">https://github.com/kijimaD/emacs/blob/master/lisp/org/org-lint.el#L124</a></li>
+</ul></li>
+<li>interactive
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/emacs/blob/master/src/callint.c#L37">https://github.com/kijimaD/emacs/blob/master/src/callint.c#L37</a></li>
+</ul></li>
+<li>defun
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/byte-run.el#L280">https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/byte-run.el#L280</a></li>
+<li><a href="https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/cl-macs.el#L339">https://github.com/kijimaD/emacs/blob/master/lisp/emacs-lisp/cl-macs.el#L339</a></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0aea098" class="outline-3">
+<h3 id="org0aea098"><a href="#org0aea098">projectile-toggle-between-implementation-and-test (<code>C-c p t</code>)</a></h3>
+<div class="outline-text-3" id="text-org0aea098">
+<p>
+テストとプロダクトコードを切り替える。
+</p>
+</div>
+</div>
+<div id="outline-container-org9692e50" class="outline-3">
+<h3 id="org9692e50"><a href="#org9692e50">(magit-topic)</a></h3>
+<div class="outline-text-3" id="text-org9692e50">
+<p>
+一覧でPRとIssueにアクセスできると行き来がしやすそう。
+Forgeのトピック間移動がhelmでできたらいいのにな。
+</p>
+</div>
+</div>
+<div id="outline-container-org4cbda19" class="outline-3">
+<h3 id="org4cbda19"><a href="#org4cbda19"><a href="20210829232020-mysql.html#ID-7dab097c-60ba-43b9-949f-c58bf3151aa8">MySQL</a>と接続して<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>を直に実行する</a></h3>
+<div class="outline-text-3" id="text-org4cbda19">
+<pre class="example">
+M-x customize-variable RET sql-connection-alist RET ...
+M-x sql-connect
+open buffer...
+M-x sql-mode
+M-x sql-set-sqli-buffer RET
+sql-send-buffer (C-c C-b)
+sqlup-capitalize-keywords-in-region (C-c u)
+</pre>
+</div>
+</div>
+<div id="outline-container-org0b5afd9" class="outline-3">
+<h3 id="org0b5afd9"><a href="#org0b5afd9">Macでの置換</a></h3>
+<div class="outline-text-3" id="text-org0b5afd9">
+<ul class="org-ul">
+<li>Macでは <code>query-replace</code> (<code>M-%</code>)が奪われて押せないので、 <code>query-replace-regexp</code> (<code>C-M-%</code>)する。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org583c38b" class="outline-3">
+<h3 id="org583c38b"><a href="#org583c38b">spring <a href="20210831223434-rspec.html#ID-afccf86d-70b8-44c0-86a8-cdac25f7dfd3">RSpec</a></a></h3>
+<div class="outline-text-3" id="text-org583c38b">
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>でspringを走らせておくと<a href="20210831223434-rspec.html#ID-afccf86d-70b8-44c0-86a8-cdac25f7dfd3">RSpec</a>が高速に動作する。
+</p>
+
+<p>
+いつのまにかEmacsでspringが動かなくなっていた。コマンドでは <code>spring rspec</code> などで動かせるが、Emacsではふつうの <code>bundle exec ...</code> になっていた。前は早くできていたはず。ネットの記事を参考に修正した。
+</p>
+
+<blockquote>
+<p>
+emacsのrspec-modeで、上記のようにしてspringを使うと、自動ではspringがONにならない。 これはtmpにpidファイルが作られないため。 強制的にspringを使うには、次のように設定する。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">require</span> '<span class="org-constant">rspec-mode</span>)
+(<span class="org-keyword">defun</span> <span class="org-function-name">rspec-spring-p</span> ()
+  (<span class="org-keyword">and</span> rspec-use-spring-when-possible
+       (stringp (executable-find <span class="org-string">"spring"</span>))))
+</pre>
+</div>
+
+<p>
+springを自動で検出してくれるらしい(何より今までできてた)。
+<code>spring status</code> でspringが動いてるかチェックする。動いてなかったら <code>spring rspec</code> する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf0aa628" class="outline-3">
+<h3 id="orgf0aa628"><a href="#orgf0aa628">デバッグ起動する</a></h3>
+<div class="outline-text-3" id="text-orgf0aa628">
+<div class="org-src-container">
+<pre class="src src-shell">$ emacs -q
+<span class="org-comment-delimiter"># </span><span class="org-comment">init&#35501;&#12415;&#36796;&#12414;&#12394;&#12356;</span>
+$ emacs --debug-init
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12487;&#12496;&#12483;&#12464;&#12514;&#12540;&#12489;&#12391;&#36215;&#21205;&#12377;&#12427;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org40d5b18" class="outline-3">
+<h3 id="org40d5b18"><a href="#org40d5b18"><a href="20210915221421-systemcrafters.html#ID-fa497359-ae3f-494a-b24a-9822eefe67ad">System Crafters</a> IRC</a></h3>
+<div class="outline-text-3" id="text-org40d5b18">
+<blockquote>
+<p>
+erc-tls
+irc.libera.chat
+6697
+/join #systemcrafters
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org0563492" class="outline-3">
+<h3 id="org0563492"><a href="#org0563492">mermaid jsをEmacsで使う</a></h3>
+<div class="outline-text-3" id="text-org0563492">
+<p>
+mermaidはプレーンテキストで図を作れるツール。<a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>で書かれている。
+これをEmacsで扱えるようにするのがmermaid-mode。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/abrochard/mermaid-mode">https://github.com/abrochard/mermaid-mode</a></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">npm install -g @mermaid-js/mermaid-cli
+</pre>
+</div>
+<p>
+して、C-cで画像にコンパイルできる。
+</p>
+</div>
+</div>
+<div id="outline-container-org94acb28" class="outline-3">
+<h3 id="org94acb28"><a href="#org94acb28">各Window managerでEmacs風キーバインドにする</a></h3>
+<div class="outline-text-3" id="text-org94acb28">
+<ul class="org-ul">
+<li><a href="https://linuxfan.info/linux-emacs-keybindings-matome">https://linuxfan.info/linux-emacs-keybindings-matome</a></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-comment-delimiter"># </span><span class="org-comment">gnome</span>
+gsettings set org.gnome.desktop.interface gtk-key-theme Emacs
+<span class="org-comment-delimiter"># </span><span class="org-comment">MATE</span>
+gsettings set org.mate.interface gtk-key-theme Emacs
+<span class="org-comment-delimiter"># </span><span class="org-comment">Cinnamon</span>
+gsettings set org.cinnamon.desktop.interface gtk-key-theme Emacs
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc47fc2b" class="outline-3">
+<h3 id="orgc47fc2b"><a href="#orgc47fc2b">counsel-find-fileで新しいファイルを作る</a></h3>
+<div class="outline-text-3" id="text-orgc47fc2b">
+<p>
+補完選択になってしまって新しくファイルが作れないときは、C-M-jで新規作成できる。
+</p>
+
+<p>
+counselのリポジトリのREADMEの最後に書かれてた。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> ivy-use-selectable-prompt t)
+</pre>
+</div>
+<p>
+をすると上下選択できるようになる。
+選択一覧にはでないのでわかりにくい。
+</p>
+</div>
+</div>
+<div id="outline-container-org58f7cc3" class="outline-3">
+<h3 id="org58f7cc3"><a href="#org58f7cc3">blame系関数</a></h3>
+<div class="outline-text-3" id="text-org58f7cc3">
+<ul class="org-ul">
+<li><code>vc-annotate</code></li>
+<li><code>magit-blame</code></li>
+<li><code>blamer</code></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0f2cba2" class="outline-3">
+<h3 id="org0f2cba2"><a href="#org0f2cba2">keybinding一覧</a></h3>
+<div class="outline-text-3" id="text-org0f2cba2">
+<p>
+<code>(make-command-summary)</code> や <code>(describe-bindings)</code> で生成できる。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org3da4ae1" class="outline-2">
+<h2 id="org3da4ae1"><a href="#org3da4ae1">Tasks</a></h2>
+<div class="outline-text-2" id="text-org3da4ae1">
+</div>
+<div id="outline-container-orgf86376d" class="outline-3">
+<h3 id="orgf86376d"><a href="#orgf86376d"><span class="todo TODO">TODO</span> <a href="https://daregada.sakuraweb.com/paredit_tutorial_ja.html">ParEdit チュートリアル</a></a></h3>
+<div class="outline-text-3" id="text-orgf86376d">
+<p>
+すごい便利らしいのでやってみる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgefe5ff2" class="outline-3">
+<h3 id="orgefe5ff2"><a href="#orgefe5ff2"><span class="todo TODO">TODO</span> 設定をエクスポートして文芸的にする</a></h3>
+<div class="outline-text-3" id="text-orgefe5ff2">
+<p>
+自分だけでなく、他人も理解できるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org8f1fd83" class="outline-3">
+<h3 id="org8f1fd83"><a href="#org8f1fd83"><span class="todo TODO">TODO</span> use-packageでパッケージ設定を書き直す</a></h3>
+<div class="outline-text-3" id="text-org8f1fd83">
+<p>
+パッケージごとの設定がわかりづらい状態なので、書き直す。
+とくにhook、keybindあたりはあちこちに散らかっている。
+</p>
+</div>
+</div>
+<div id="outline-container-org7858924" class="outline-3">
+<h3 id="org7858924"><a href="#org7858924"><span class="todo TODO">TODO</span> 今日の残り時間をゲージで表示する</a></h3>
+<div class="outline-text-3" id="text-org7858924">
+<p>
+時計より視覚的にわかりやすそうなので、polybarで出すようにしよう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfbaf15c" class="outline-3">
+<h3 id="orgfbaf15c"><a href="#orgfbaf15c"><span class="todo TODO">TODO</span> recompileが別ウィンドウで立ち上がるようにする</a></h3>
+<div class="outline-text-3" id="text-orgfbaf15c">
+<p>
+recompileは直前のcompilationの再実行関数。
+実行して別ウィンドウのバッファが残るはずなのだが、何かウィンドウに関するパッケージを入れたせいで挙動が変わっている。
+消えてしまう。
+</p>
+</div>
+</div>
+<div id="outline-container-orge89a9d3" class="outline-3">
+<h3 id="orge89a9d3"><a href="#orge89a9d3"><span class="todo TODO">TODO</span> 正規表現置換が2度目以降失敗する</a></h3>
+<div class="outline-text-3" id="text-orge89a9d3">
+<p>
+プログラム関係のmodeで起こることを確認(orgでは起こらない)。
+</p>
+<blockquote>
+<p>
+vr&#x2013;perform-query-replace: Match data clobbered by buffer modification hooks
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgefbb9f6" class="outline-3">
+<h3 id="orgefbb9f6"><a href="#orgefbb9f6"><span class="todo TODO">TODO</span> Slackを見られるようにする</a></h3>
+</div>
+<div id="outline-container-org5b9b010" class="outline-3">
+<h3 id="org5b9b010"><a href="#org5b9b010"><span class="todo TODO">TODO</span> mailを読めるようにする</a></h3>
+</div>
+<div id="outline-container-org1a17119" class="outline-3">
+<h3 id="org1a17119"><a href="#org1a17119"><span class="todo TODO">TODO</span> Vtermのログ件数を増やす</a></h3>
+</div>
+<div id="outline-container-org376c890" class="outline-3">
+<h3 id="org376c890"><a href="#org376c890"><span class="todo TODO">TODO</span> <a href="https://solist.work/blog/posts/git-history-tool/">ソースコードの読み方 - Solist Work Blog</a></a></h3>
+<div class="outline-text-3" id="text-org376c890">
+<p>
+Emacs, Magitで解説している。
+</p>
+</div>
+</div>
+<div id="outline-container-orgca980c8" class="outline-3">
+<h3 id="orgca980c8"><a href="#orgca980c8"><span class="todo TODO">TODO</span> <a href="https://dev.classmethod.jp/articles/emacs-multiple-cursors/">複数カーソルを操作するパッケージ multiple-cursors.el のご紹介 | DevelopersIO</a></a></h3>
+</div>
+<div id="outline-container-org9121f0c" class="outline-3">
+<h3 id="org9121f0c"><a href="#org9121f0c"><span class="todo TODO">TODO</span> .emacs.d整理</a></h3>
+<div class="outline-text-3" id="text-org9121f0c">
+<p>
+package管理もちゃんと使って設定したい。
+</p>
+
+<ul class="org-ul">
+<li>leaf <a href="https://qiita.com/conao3/items/dc88bdadb0523ef95878">https://qiita.com/conao3/items/dc88bdadb0523ef95878</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2109e6e" class="outline-3">
+<h3 id="org2109e6e"><a href="#org2109e6e"><span class="todo TODO">TODO</span> wikipediaを直に検索できるようにする</a></h3>
+</div>
+<div id="outline-container-org8f880c8" class="outline-3">
+<h3 id="org8f880c8"><a href="#org8f880c8"><span class="todo TODO">TODO</span> popper(emacs package)</a></h3>
+<div class="outline-text-3" id="text-org8f880c8">
+<p>
+ウィンドウの出る方法を設定できるパッケージ。
+</p>
+</div>
+</div>
+<div id="outline-container-org24bc217" class="outline-3">
+<h3 id="org24bc217"><a href="#org24bc217"><span class="todo TODO">TODO</span> shackle.el設定</a></h3>
+</div>
+<div id="outline-container-orgac8190e" class="outline-3">
+<h3 id="orgac8190e"><a href="#orgac8190e"><span class="todo TODO">TODO</span> EmacsとレプリカDB接続</a></h3>
+<div class="outline-text-3" id="text-orgac8190e">
+<p>
+ローカルではできるが、SSHを使う方法がわかっていない。
+SQLを打つ時に不便なので。
+</p>
+</div>
+</div>
+<div id="outline-container-org7c59f18" class="outline-3">
+<h3 id="org7c59f18"><a href="#org7c59f18"><span class="todo TODO">TODO</span> lsp-mode が何かと競合する</a></h3>
+<div class="outline-text-3" id="text-org7c59f18">
+<p>
+消したときに近くの矩形が消されてしまう謎の挙動。
+</p>
+</div>
+</div>
+<div id="outline-container-org74f0b33" class="outline-3">
+<h3 id="org74f0b33"><a href="#org74f0b33"><span class="todo TODO">TODO</span> プロジェクトファイル限定のswitch-buffer。</a></h3>
+<div class="outline-text-3" id="text-org74f0b33">
+<p>
+projectile-switch-to-buffer (C-c p b)
+</p>
+</div>
+</div>
+<div id="outline-container-org5c62a5c" class="outline-3">
+<h3 id="org5c62a5c"><a href="#org5c62a5c"><span class="todo TODO">TODO</span> キーバインドの一覧を表示</a></h3>
+<div class="outline-text-3" id="text-org5c62a5c">
+<p>
+&lt;F1&gt; b
+</p>
+</div>
+</div>
+<div id="outline-container-org8c30a26" class="outline-3">
+<h3 id="org8c30a26"><a href="#org8c30a26"><span class="todo TODO">TODO</span> プロジェクトをag検索</a></h3>
+<div class="outline-text-3" id="text-org8c30a26">
+<p>
+projectile-ag (<code>C-c p s s</code>)
+</p>
+</div>
+</div>
+<div id="outline-container-orge0cae9d" class="outline-3">
+<h3 id="orge0cae9d"><a href="#orge0cae9d"><span class="todo TODO">TODO</span> vtermでカッコが入力できない</a></h3>
+<div class="outline-text-3" id="text-orge0cae9d">
+<p>
+vtermは互換性が高い<a href="20210606192338-shell.html#ID-585d3b5e-989d-4363-bcc3-894402fcfcf9">Shell</a>のターミナルパッケージ。
+</p>
+
+<p>
+カッコを自動入力するモードにしていると入力できなる。
+なのでカッコ関係はコピペする羽目になる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdc36777" class="outline-3">
+<h3 id="orgdc36777"><a href="#orgdc36777"><span class="todo TODO">TODO</span> HIGでコピペしたときにおかしい</a></h3>
+<div class="outline-text-3" id="text-orgdc36777">
+<p>
+<code>highlight-indent-guides-mode</code> がコピペしたときに表示がおかしい。
+faceまでコピーするから仕方ないのかな。
+</p>
+</div>
+</div>
+<div id="outline-container-org0550b44" class="outline-3">
+<h3 id="org0550b44"><a href="#org0550b44"><span class="todo TODO">TODO</span> vtermでコピーしたときにキルリングに入らない</a></h3>
+<div class="outline-text-3" id="text-org0550b44">
+<p>
+一度読み取り専用バッファにして、コピーしないといけない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgef3d21e" class="outline-3">
+<h3 id="orgef3d21e"><a href="#orgef3d21e"><span class="todo TODO">TODO</span> GTAGSを使えるようにする</a></h3>
+<div class="outline-text-3" id="text-orgef3d21e">
+<p>
+読むときにたどれないと不便。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd03102d" class="outline-3">
+<h3 id="orgd03102d"><a href="#orgd03102d"><span class="todo TODO">TODO</span> 使ってないコマンドを開拓するパッケージ</a></h3>
+<div class="outline-text-3" id="text-orgd03102d">
+<p>
+最初にコマンド一覧をどこからか出力する。
+それから、何かコマンドを打つごとに数を保存する。
+そうしてしばらく使っていくと、使ったことのないコマンドが明らかになる。
+カバレッジ率的にやっても面白そうだろう。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org91a7e98" class="outline-2">
+<h2 id="org91a7e98"><a href="#org91a7e98">Archives</a></h2>
+<div class="outline-text-2" id="text-org91a7e98">
+</div>
+<div id="outline-container-org4850217" class="outline-3">
+<h3 id="org4850217"><a href="#org4850217"><span class="done DONE">DONE</span> git-linkでコミットハッシュからリンクを取る</a></h3>
+<div class="outline-text-3" id="text-org4850217">
+<p>
+デフォルトだと現在のブランチから名前を取るため、remoteに存在しないブランチのとき無効なリンクになる。
+ブランチ名を固定もできるが、汎用性がなくなる。
+コミットハッシュから取ればいい。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> git-link-use-commit t)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0969597" class="outline-3">
+<h3 id="org0969597"><a href="#org0969597"><span class="done DONE">DONE</span> ivy化</a></h3>
+<div class="outline-text-3" id="text-org0969597">
+<p>
+<a href="https://qiita.com/takaxp/items/2fde2c119e419713342b">helm を背に ivy の門を叩く - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org2106c68" class="outline-3">
+<h3 id="org2106c68"><a href="#org2106c68"><span class="done DONE">DONE</span> esh-autosuggestを導入する</a></h3>
+<div class="outline-text-3" id="text-org2106c68">
+<p>
+履歴を自動入力。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">use-package</span> <span class="org-constant">esh-autosuggest</span>
+  <span class="org-builtin">:hook</span> (eshell-mode . esh-autosuggest-mode)
+  <span class="org-builtin">:config</span>
+  (<span class="org-keyword">setq</span> esh-autosuggest-delay 0.5)
+  (set-face-foreground 'company-preview-common <span class="org-string">"#4b5668"</span>)
+  (set-face-background 'company-preview nil))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org17050a7" class="outline-3">
+<h3 id="org17050a7"><a href="#org17050a7"><span class="done DONE">DONE</span> undo履歴を保持しないときがある</a></h3>
+<div class="outline-text-3" id="text-org17050a7">
+<p>
+3つくらいしか戻れないときがあり、原因は不明。
+undo-treeで戻れる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgad52923" class="outline-3">
+<h3 id="orgad52923"><a href="#orgad52923"><span class="done DONE">DONE</span> <code>vterm-toggle</code> をもっと良い感じに出てくるようにしたい。toggleでオフになったとき分割ウィンドウが消える。</a></h3>
+<div class="outline-text-3" id="text-orgad52923">
+<p>
+設定を追加した。
+</p>
+</div>
+</div>
+<div id="outline-container-org379dee3" class="outline-3">
+<h3 id="org379dee3"><a href="#org379dee3"><span class="done DONE">DONE</span> <code>markdown-mode</code> でHelm-M-xが作動しない。&#x2026;emacs-mozcを使っていて日本語入力モードのときhelmがうまく作動しない。</a></h3>
+<div class="outline-text-3" id="text-org379dee3">
+<p>
+よくわからないのでclose。
+</p>
+</div>
+</div>
+<div id="outline-container-org3d62940" class="outline-3">
+<h3 id="org3d62940"><a href="#org3d62940"><span class="done DONE">DONE</span> 列名を表示する</a></h3>
+<div class="outline-text-3" id="text-org3d62940">
+<p>
+(global-display-line-numbers-mode)
+linum-modeよりこっちのほうがいいらしい。
+linum-modeは重かった。
+外観も綺麗。
+</p>
+</div>
+</div>
+<div id="outline-container-orgda759fc" class="outline-3">
+<h3 id="orgda759fc"><a href="#orgda759fc"><span class="done DONE">DONE</span> diredで直に編集する</a></h3>
+<div class="outline-text-3" id="text-orgda759fc">
+<p>
+(wdired-change-to-wdired-mode)
+編集モードにして <code>C-c C-c</code> で実行する。
+</p>
+</div>
+</div>
+<div id="outline-container-org077f724" class="outline-3">
+<h3 id="org077f724"><a href="#org077f724"><span class="done DONE">DONE</span> 見出しレベル替え</a></h3>
+<div class="outline-text-3" id="text-org077f724">
+<p>
+(org-cycle-level)
+何も書いてない見出しでtab。
+</p>
+</div>
+</div>
+<div id="outline-container-org4956de4" class="outline-3">
+<h3 id="org4956de4"><a href="#org4956de4"><span class="done DONE">DONE</span> 見出し挿入</a></h3>
+<div class="outline-text-3" id="text-org4956de4">
+<p>
+C-enter
+前の項目がリストでも見出しが挿入できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgafa51d6" class="outline-3">
+<h3 id="orgafa51d6"><a href="#orgafa51d6"><span class="done DONE">DONE</span> <code>C-c n</code></a></h3>
+<div class="outline-text-3" id="text-orgafa51d6">
+<p>
+roam のプレフィクスキー。
+</p>
+</div>
+</div>
+<div id="outline-container-orgac51300" class="outline-3">
+<h3 id="orgac51300"><a href="#orgac51300"><span class="done DONE">DONE</span> wdired-change-to-wdired-mode dired</a></h3>
+<div class="outline-text-3" id="text-orgac51300">
+<p>
+便利な置換。
+</p>
+</div>
+</div>
+<div id="outline-container-org19b7a5b" class="outline-3">
+<h3 id="org19b7a5b"><a href="#org19b7a5b"><span class="done DONE">DONE</span> org-mode の各種挿入 <code>C-c C-,</code></a></h3>
+<div class="outline-text-3" id="text-org19b7a5b">
+</div>
+</div>
+<div id="outline-container-org6a51e1a" class="outline-3">
+<h3 id="org6a51e1a"><a href="#org6a51e1a"><span class="done DONE">DONE</span> <code>projectile-find-file</code> (<code>C-c p f</code>)</a></h3>
+<div class="outline-text-3" id="text-org6a51e1a">
+<p>
+プロジェクト全体のファイル名検索。
+</p>
+</div>
+</div>
+<div id="outline-container-org45451ad" class="outline-3">
+<h3 id="org45451ad"><a href="#org45451ad"><span class="done DONE">DONE</span> <code>projectile-switch-project</code> (<code>C-c p p</code>)</a></h3>
+<div class="outline-text-3" id="text-org45451ad">
+<p>
+プロジェクトを切り替える。
+CLOSED: <span class="timestamp-wrapper"><span class="timestamp">[2021-06-03 Thu 21:42]</span></span>
+</p>
+</div>
+</div>
+<div id="outline-container-org45119cc" class="outline-3">
+<h3 id="org45119cc"><a href="#org45119cc"><span class="done DONE">DONE</span> <code>robe-doc</code> (<code>C-c C-d</code>)</a></h3>
+<div class="outline-text-3" id="text-org45119cc">
+<p>
+Rubyメソッドを調べられる。gemがあるプロジェクトのGemfileで <code>pry</code>, <code>pry-doc</code> をインストールして実行するとpryが起動して、以後使えるようになる。これは補完の <code>company.el</code> と連携させているため、pryを起動しないことにはgemの補完は表示されない。
+</p>
+</div>
+</div>
+<div id="outline-container-orge639471" class="outline-3">
+<h3 id="orge639471"><a href="#orge639471"><span class="done DONE">DONE</span> <code>vterm-copy-mode</code> → <code>C-c C-t</code></a></h3>
+<div class="outline-text-3" id="text-orge639471">
+<p>
+vterm上で、eshellなどのように自由に動き回るモード。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf22b18e" class="outline-3">
+<h3 id="orgf22b18e"><a href="#orgf22b18e"><span class="done DONE">DONE</span> C-c C-w (org-refile)</a></h3>
+<div class="outline-text-3" id="text-orgf22b18e">
+<p>
+<a href="https://orgmode.org/manual/Refile-and-Copy.html#Refile-and-Copy">https://orgmode.org/manual/Refile-and-Copy.html#Refile-and-Copy</a>
+見出しの移動。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd627226" class="outline-3">
+<h3 id="orgd627226"><a href="#orgd627226"><span class="done DONE">DONE</span> 使用パッケージで分岐するとき、どうやってbyte-compileエラーを回避するのか</a></h3>
+<div class="outline-text-3" id="text-orgd627226">
+<p>
+たとえばhelmを使ってるときはこれ、ivyのときはこれとかでrequireするものは変わるものだが。既存パッケージはどうしているのだろう。
+</p>
+
+<p>
+↓とかやった。外部のコマンドは最初に定義しておいた。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defvar</span> <span class="org-variable-name">w3m-current-url</span>)
+(<span class="org-keyword">declare-function</span> w3m-current-title <span class="org-string">"ext:w3m-util"</span>)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc5e1b12" class="outline-3">
+<h3 id="orgc5e1b12"><a href="#orgc5e1b12"><span class="done CLOSE">CLOSE</span> Emacsをビルドしてみる</a></h3>
+<div class="outline-text-3" id="text-orgc5e1b12">
+<p>
+<a href="https://systemcrafters.net/live-streams/august-20-2021/">https://systemcrafters.net/live-streams/august-20-2021/</a>
+</p>
+
+<p>
+この通りにやって簡単にできた。
+</p>
+</div>
+</div>
+<div id="outline-container-org7c609ce" class="outline-3">
+<h3 id="org7c609ce"><a href="#org7c609ce"><span class="done DONE">DONE</span> roamリポジトリをサイト公開する</a></h3>
+<div class="outline-text-3" id="text-org7c609ce">
+<p>
+どうにかして静的ページとして公開できるはず。
+かっこいいのがなければ作る。
+</p>
+
+<p>
+いい感じにやっているサイトはいくつもある。
+</p>
+
+<ul class="org-ul">
+<li><a href="http://juanjose.garciaripoll.com/blog/org-mode-html-templates/index.html">http://juanjose.garciaripoll.com/blog/org-mode-html-templates/index.html</a></li>
+<li><a href="https://diego.codes/post/blogging-with-org/">https://diego.codes/post/blogging-with-org/</a></li>
+<li><a href="https://hugocisneros.com/org-config/#configuration">https://hugocisneros.com/org-config/#configuration</a></li>
+<li><a href="https://hugocisneros.com/blog/my-org-roam-notes-workflow/">https://hugocisneros.com/blog/my-org-roam-notes-workflow/</a></li>
+<li><a href="https://doubleloop.net/2020/08/21/how-publish-org-roam-wiki-org-publish/">https://doubleloop.net/2020/08/21/how-publish-org-roam-wiki-org-publish/</a></li>
+<li><a href="https://notes.alexkehayias.com/org-roam/">https://notes.alexkehayias.com/org-roam/</a></li>
+<li><a href="https://www.mtsolitary.com/20210318221148-emacs-configuration/#hugo-support">https://www.mtsolitary.com/20210318221148-emacs-configuration/#hugo-support</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga010a97" class="outline-3">
+<h3 id="orga010a97"><a href="#orga010a97"><span class="done DONE">DONE</span> org-publishのスタイルを設定する</a></h3>
+<div class="outline-text-3" id="text-orga010a97">
+<p>
+<a href="https://ogbe.net/blog/blogging_with_org.html">https://ogbe.net/blog/blogging_with_org.html</a>
+</p>
+
+<p>
+contentのhtmlをいじることができなかったが、とりあえずcssで指定してOK。
+</p>
+</div>
+</div>
+<div id="outline-container-org4d46f25" class="outline-3">
+<h3 id="org4d46f25"><a href="#org4d46f25"><span class="done DONE">DONE</span> autosaveが出てきてうざい</a></h3>
+<div class="outline-text-3" id="text-org4d46f25">
+<p>
+Guixでは編集すると毎回プロンプトが出てくる。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">ask-user-about-supersession-threat</span> (fn)
+  <span class="org-doc">"blatantly ignore files that changed on disk"</span>
+)
+(<span class="org-keyword">defun</span> <span class="org-function-name">ask-user-about-lock</span> (file opponent)
+  <span class="org-doc">"always grab lock"</span>
+t)
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">or</span>
+
+(<span class="org-keyword">setq</span> revert-without-query '(<span class="org-string">".*"</span>))
+</pre>
+</div>
+<p>
+を実行したが、変わらなかった。
+</p>
+
+<p>
+↓できた。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> auto-save-timeout 2)
+(<span class="org-keyword">setq</span> auto-save-visited-interval 2)
+(<span class="org-keyword">setq</span> auto-save-no-message t)
+(auto-save-visited-mode)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org934401e" class="outline-3">
+<h3 id="org934401e"><a href="#org934401e"><span class="done CLOSE">CLOSE</span> Projectileの幅がせまくて見づらい</a></h3>
+<div class="outline-text-3" id="text-org934401e">
+<p>
+ほかのcompletionは幅いっぱいにハイライトされるが、projectileは文字のあるところしかハイライトされないので短い検索のときに見えにくい。たとえば <code>counsel-find-file</code> とか <code>counsel-find-file</code> と比べるとわかる。
+</p>
+
+<p>
+counsel-projectileを使えば問題ない。でもデフォルトの動作がおかしいので修正したいところ。
+いや、ivyの問題ぽい。ivy yasnippetをすると同じような状態になる。テーマを変えてもそうなる。
+</p>
+
+<p>
+org-refileでも同じような感じ。要調査。
+共通点は、右側にアノテーションが出ないときか。そのときはfaceが設定されないので右側まで伸びない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb09e33f" class="outline-3">
+<h3 id="orgb09e33f"><a href="#orgb09e33f"><span class="done DONE">DONE</span> org-mode のキーバインド</a></h3>
+<div class="outline-text-3" id="text-orgb09e33f">
+<p>
+見出し移動とか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf6ab270" class="outline-3">
+<h3 id="orgf6ab270"><a href="#orgf6ab270"><span class="done DONE">DONE</span> lsp setup(<a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>)</a></h3>
+<div class="outline-text-3" id="text-orgf6ab270">
+<ol class="org-ol">
+<li>install language-server</li>
+</ol>
+<p>
+<a href="https://deno.land/#installation">https://deno.land/#installation</a>
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">curl -fsSL https://deno.land/x/install/install.sh | sh
+</pre>
+</div>
+<ol class="org-ol">
+<li>Install lsp-mode package</li>
+<li>Add lsp settings to init.el</li>
+
+<li value="reference"><a href="https://takeokunn.xyz/blog/post/emacs-lsp-mode">emacsにlsp-mode入れた - takeokunn&rsquo;s blog</a></li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org6dbacd9" class="outline-3">
+<h3 id="org6dbacd9"><a href="#org6dbacd9"><span class="done DONE">DONE</span> Vterm settings</a></h3>
+<div class="outline-text-3" id="text-org6dbacd9">
+<ul class="org-ul">
+<li>prompt settings</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8bb3bd5" class="outline-3">
+<h3 id="org8bb3bd5"><a href="#org8bb3bd5"><span class="done DONE">DONE</span> lispxmpを設定する</a></h3>
+<div class="outline-text-3" id="text-org8bb3bd5">
+<p>
+xmp-filterのelisp版。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">require</span> '<span class="org-constant">lispxmp</span>)
+(define-key emacs-lisp-mode-map (kbd <span class="org-string">"C-c C-d"</span>) 'lispxmp)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org553ba0e" class="outline-3">
+<h3 id="org553ba0e"><a href="#org553ba0e"><span class="done DONE">DONE</span> pareditを設定する</a></h3>
+<div class="outline-text-3" id="text-org553ba0e">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span class="org-comment-delimiter">;;;</span><span class="org-comment">&#25324;&#24359;&#12398;&#23550;&#24540;&#12434;&#20445;&#25345;&#12375;&#12390;&#32232;&#38598;&#12377;&#12427;&#35373;&#23450;</span>
+(<span class="org-keyword">require</span> '<span class="org-constant">paredit</span>)
+(add-hook 'emacs-lisp-mode-hook 'enable-paredit-mode)
+(add-hook 'lisp-interaction-mode-hook 'enable-paredit-mode)
+(add-hook 'lisp-mode-hook 'enable-paredit-mode)
+(add-hook 'ielm-mode-hook 'enable-paredit-mode)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org02f0814" class="outline-3">
+<h3 id="org02f0814"><a href="#org02f0814"><span class="done DONE">DONE</span> リンクを保存する方法をどうにかする</a></h3>
+<div class="outline-text-3" id="text-org02f0814">
+<p>
+ブラウザからコピペするのがメンドイのでどうにかする。
+org-protocolを設定して簡単に保存できるようにした。
+</p>
+</div>
+</div>
+<div id="outline-container-org1cd2081" class="outline-3">
+<h3 id="org1cd2081"><a href="#org1cd2081"><span class="done DONE">DONE</span> 踏み台SSH接続を簡単にできるように</a></h3>
+<div class="outline-text-3" id="text-org1cd2081">
+<p>
+Emacsはあまり関係ない。
+pecoを設定して簡単に接続できるようにした。
+<a href="https://qiita.com/jagio/items/7b020df50c4b1bdc6ad0">Ubuntuにpecoを導入する(for bash) (for fish) - Qiita</a>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>~/.bashrc</label><pre class="src src-shell">alias <span class="org-variable-name">sshp</span>=<span class="org-string">'ssh $(grep Host ~/.ssh/config | grep -v HostName | cut -d" " -f2 | peco)'</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org07beb4b" class="outline-3">
+<h3 id="org07beb4b"><a href="#org07beb4b"><span class="done DONE">DONE</span> EXWMとの連携を行う</a></h3>
+<div class="outline-text-3" id="text-org07beb4b">
+<p>
+<a href="https://www.youtube.com/watch?v=usCfMstCZ7E">The Perfect Panel: Integrating Polybar with Emacs - Emacs Desktop Environment #5 - YouTube</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org978d51d" class="outline-3">
+<h3 id="org978d51d"><a href="#org978d51d"><span class="done DONE">DONE</span> vterm-toggleで初回崩れるのを直す</a></h3>
+<div class="outline-text-3" id="text-org978d51d">
+<p>
+READMEに書かれている設定を書いたら直った。前もコピペしてたはずなので、修正されたのだろう。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org4701685" class="outline-2">
+<h2 id="org4701685"><a href="#org4701685">References</a></h2>
+<div class="outline-text-2" id="text-org4701685">
+</div>
+<div id="outline-container-org8c5ff7e" class="outline-3">
+<h3 id="org8c5ff7e"><a href="#org8c5ff7e"><a href="http://pragmaticemacs.com/">Pragmatic Emacs | practical tips for everyday emacs</a></a></h3>
+<div class="outline-text-3" id="text-org8c5ff7e">
+<p>
+役立つtipsが紹介されているサイト。
+</p>
+</div>
+</div>
+<div id="outline-container-org43903ef" class="outline-3">
+<h3 id="org43903ef"><a href="#org43903ef"><a href="http://www.modernemacs.com/post/pretty-magit/">Pretty Magit - Integrating commit leaders | Modern Emacs</a></a></h3>
+<div class="outline-text-3" id="text-org43903ef">
+<p>
+<a href="20211209223810-conventional_commits.html#ID-36da3e35-29c9-480f-99b3-4a297345bd5d">Conventional Commits</a>を絵文字表示にする。
+</p>
+</div>
+</div>
+<div id="outline-container-org1d218ca" class="outline-3">
+<h3 id="org1d218ca"><a href="#org1d218ca"><a href="https://www.slideshare.net/yukihiro_matz/how-emacs-changed-my-life">How Emacs changed my life</a></a></h3>
+<div class="outline-text-3" id="text-org1d218ca">
+<p>
+Matzのスライド。
+Emacsを単に道具として使うだけでなく、<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>を書く上での参考にもなったという。
+</p>
+</div>
+</div>
+<div id="outline-container-org282a00a" class="outline-3">
+<h3 id="org282a00a"><a href="#org282a00a"><a href="https://zenn.dev/lambdagonbei/articles/1b2bce27673078">【Emacs入門】②バージョン28で新たにビルトインされるModus Themesを使おう</a></a></h3>
+<div class="outline-text-3" id="text-org282a00a">
+<p>
+新しく追加されたthemeとその設定方法。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd44541f" class="outline-3">
+<h3 id="orgd44541f"><a href="#orgd44541f"><a href="https://masteringemacs.org/">Mastering Emacs</a></a></h3>
+<div class="outline-text-3" id="text-orgd44541f">
+<p>
+Emacsの本。
+</p>
+</div>
+</div>
+<div id="outline-container-org9eecb70" class="outline-3">
+<h3 id="org9eecb70"><a href="#org9eecb70"><a href="https://karthinks.com/software/avy-can-do-anything/">Avy can do anything | Karthinks</a></a></h3>
+<div class="outline-text-3" id="text-org9eecb70">
+<p>
+avyの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-org77f048e" class="outline-3">
+<h3 id="org77f048e"><a href="#org77f048e"><a href="https://www.emacswiki.org/emacs/HackerGuide">EmacsWiki: Hacker Guide</a></a></h3>
+<div class="outline-text-3" id="text-org77f048e">
+<p>
+Emacsの簡単な概要。
+</p>
+</div>
+</div>
+<div id="outline-container-org1db40c7" class="outline-3">
+<h3 id="org1db40c7"><a href="#org1db40c7"><a href="https://leanpub.com/hacking-your-way-emacs/">Hacking your way around in… by Marcin Borkowski</a></a></h3>
+<div class="outline-text-3" id="text-org1db40c7">
+<p>
+Emacsの本。買うか迷ってる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgde0ec90" class="outline-3">
+<h3 id="orgde0ec90"><a href="#orgde0ec90"><a href="https://www.slideshare.net/nanasess/emacs-5282932">Emacs アイコンがコミットされるまで</a></a></h3>
+<div class="outline-text-3" id="text-orgde0ec90">
+<p>
+こんな流れなんだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org3231a35" class="outline-3">
+<h3 id="org3231a35"><a href="#org3231a35"><span class="todo TODO">TODO</span> <a href="http://www.takuichi.net/hobby/symbolic/lisp/build-in.html">Emacs Lisp 組込み関数</a></a></h3>
+<div class="outline-text-3" id="text-org3231a35">
+<p>
+基本的な関数をまとめたリスト。
+</p>
+</div>
+</div>
+<div id="outline-container-org9f4c64f" class="outline-3">
+<h3 id="org9f4c64f"><a href="#org9f4c64f"><span class="todo TODO">TODO</span> <a href="https://www.gnu.org/software/emacs/manual/html_node/elisp/Tips.html">Appendix D Tips and Conventions</a></a></h3>
+<div class="outline-text-3" id="text-org9f4c64f">
+<p>
+Emacs Lisp Manual。いくつか面白そうな章がある。
+</p>
+</div>
+</div>
+<div id="outline-container-orge984037" class="outline-3">
+<h3 id="orge984037"><a href="#orge984037"><a href="https://www.macs.hw.ac.uk/~rs46/posts/2018-12-29-textlint-flycheck.html">A textlint flycheck checker in Emacs</a></a></h3>
+<div class="outline-text-3" id="text-orge984037">
+<p>
+EmacsでのTextlint設定方法。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd1c114f" class="outline-3">
+<h3 id="orgd1c114f"><a href="#orgd1c114f"><a href="https://rubikitch.hatenadiary.org/entry/20101109/mouse">Emacsでマウスを有効活用する方法 - http://rubikitch.com/に移転しました</a></a></h3>
+<div class="outline-text-3" id="text-orgd1c114f">
+<p>
+マウス活用の方法。
+</p>
+</div>
+</div>
+<div id="outline-container-org47a0c8d" class="outline-3">
+<h3 id="org47a0c8d"><a href="#org47a0c8d"><span class="todo TODO">TODO</span> <a href="https://stackoverflow.com/questions/15272841/how-to-remove-a-function-from-run-with-idle-timer">emacs - How to remove a function from run-with-idle-timer? - Stack Overflow</a></a></h3>
+<div class="outline-text-3" id="text-org47a0c8d">
+<p>
+timerのキャンセル方法。
+</p>
+</div>
+</div>
+<div id="outline-container-org3cd2739" class="outline-3">
+<h3 id="org3cd2739"><a href="#org3cd2739"><a href="https://spin.atomicobject.com/2016/05/27/write-emacs-package/">A Simple Guide to Writing &amp; Publishing Emacs Packages</a></a></h3>
+<div class="outline-text-3" id="text-org3cd2739">
+<p>
+パッケージを作ってみる記事。
+</p>
+</div>
+</div>
+<div id="outline-container-org7a11bd2" class="outline-3">
+<h3 id="org7a11bd2"><a href="#org7a11bd2"><a href="https://github.com/alphapapa/emacs-package-dev-handbook">alphapapa/emacs-package-dev-handbook</a></a></h3>
+<div class="outline-text-3" id="text-org7a11bd2">
+<p>
+Emacsパッケージのハンドブック。
+</p>
+</div>
+</div>
+<div id="outline-container-org6cfaefd" class="outline-3">
+<h3 id="org6cfaefd"><a href="#org6cfaefd">org-modeのキーバインド</a></h3>
+<div class="outline-text-3" id="text-org6cfaefd">
+<p>
+<a href="https://qiita.com/takaxp/items/a5a3383d7358c58240d0">https://qiita.com/takaxp/items/a5a3383d7358c58240d0</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgeb639ef" class="outline-3">
+<h3 id="orgeb639ef"><a href="#orgeb639ef"><a href="https://zeekat.nl/articles/making-emacs-work-for-me.html">Making Emacs Work For Me</a></a></h3>
+<div class="outline-text-3" id="text-orgeb639ef">
+<p>
+設定解説。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

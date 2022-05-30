@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dotfiles</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">dotfiles</h1>
+<div id="outline-container-org81b83d7" class="outline-2">
+<h2 id="org81b83d7"><a href="#org81b83d7">概要</a></h2>
+<div class="outline-text-2" id="text-org81b83d7">
+<p>
+Linux系のプログラムでは、dotfileと呼ばれる <code>.</code> から始まるプレーンテキストで設定を書くことが多い。
+</p>
+
+<ul class="org-ul">
+<li><a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>管理できる</li>
+<li>別のマシンでも全く同じ環境を作り出すことができる</li>
+</ul>
+
+<p>
+などのメリットがある。
+</p>
+
+<p>
+<a href="https://github.com/kijimaD/dotfiles">kijimaD/dotfiles: System settings</a>
+</p>
+
+<p>
+todo: <a href="20211218210950-system.html#ID-49971784-7850-4d24-92f2-9c6f29bd332e">system</a>とかぶるところが大きいので統合してよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf4c838d" class="outline-2">
+<h2 id="orgf4c838d"><a href="#orgf4c838d">Memo</a></h2>
+</div>
+<div id="outline-container-orgb25c105" class="outline-2">
+<h2 id="orgb25c105"><a href="#orgb25c105">ビルド手順</a></h2>
+<div class="outline-text-2" id="text-orgb25c105">
+<p>
+すべてクリーンな状況から、システムを構築するまでをまとめておく。
+</p>
+</div>
+<div id="outline-container-org0ba7912" class="outline-3">
+<h3 id="org0ba7912"><a href="#org0ba7912">基本コマンドインストール</a></h3>
+<div class="outline-text-3" id="text-org0ba7912">
+<p>
+syncthingはディレクトリ同期ツール。
+<a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>はあとで<a href="20210912124846-dotfiles.html#ID-32295609-a416-4227-9aa9-47aefc42eefc">dotfiles</a>を<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>からクローンしてくるときに使う。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>aptからインストールする</label><pre class="src src-shell">sudo apt-get install syncthing git
+</pre>
+</div>
+
+<p>
+ssh鍵を生成する。それから適切な権限を付与する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>権限を付与する</label><pre class="src src-shell">sudo chmod 600 .ssh/id_rsa
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>~/.gitconfig を配置する</label><pre class="src src-yaml">[user]
+	email = norimaking777@gmail.com
+	name = kijimaD
+[github]
+	user = kijimaD
+[http]
+	sslVerify = false
+</pre>
+</div>
+<p>
+これでgit pullできるようになる。
+</p>
+</div>
+</div>
+<div id="outline-container-org2009253" class="outline-3">
+<h3 id="org2009253"><a href="#org2009253"><a href="20210912124846-dotfiles.html#ID-32295609-a416-4227-9aa9-47aefc42eefc">dotfiles</a> pull・実行</a></h3>
+<div class="outline-text-3" id="text-org2009253">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>ホームディレクトリで実行する</label><pre class="src src-shell">git clone git@github.com:kijimaD/dotfiles.git
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>makeタスク実行</label><pre class="src src-shell">make batch
+</pre>
+</div>
+
+<p>
+↓をやってくれる。
+</p>
+<ul class="org-ul">
+<li>必要パッケージの一括ダウンロード</li>
+<li>メモ用リポジトリのclone</li>
+<li>stowによるdotfilesの配置</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0a79e06" class="outline-3">
+<h3 id="org0a79e06"><a href="#org0a79e06">その他インストールの流れ</a></h3>
+<div class="outline-text-3" id="text-org0a79e06">
+<p>
+いくつか手動でやる必要がある。
+</p>
+
+<ul class="org-ul">
+<li>Google Chrome
+<ul class="org-ul">
+<li><code>chrome://flags/#sharing-desktop-screenshots</code> でベータ版機能を利用できる。</li>
+<li>org-protocolを設定する</li>
+</ul></li>
+<li>DBeaver
+<ul class="org-ul">
+<li>apt-get版はバージョンが古いらしく起動できなかったので、公式サイトからダウンロードする。</li>
+</ul></li>
+<li>Dockerのデーモン登録</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5071e52" class="outline-3">
+<h3 id="org5071e52"><a href="#org5071e52">docker pullできないとき</a></h3>
+<div class="outline-text-3" id="text-org5071e52">
+<p>
+インストール確認 + デーモン登録。
+guixでインストールしてもよさそうなのだが、サービス起動する方法がわからないので、手軽なapt経由で行った。
+<a href="https://www.trifields.jp/how-to-install-docker-on-ubuntu-2004-4436">Ubuntu 20.04にDockerをインストールする手順 | トライフィールズ</a>
+</p>
+
+<p>
+docker pull時にproxyエラー。↓で直った。
+</p>
+<ul class="org-ul">
+<li><a href="https://www.s-watanabe.work/2021/09/docker-compose-up-proxyconnect-tcp-dial.html?utm_source=feedburner&amp;utm_medium=feed&amp;utm_campaign=Feed:+blogspot/Czhqy+(%E3%81%95%E3%81%99%E3%82%89%E3%81%84%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%83%BC%E3%81%AEIT%E6%8A%80%E8%A1%93%E3%83%96%E3%83%AD%E3%82%B0)&amp;m=1">docker-compose up で proxyconnect tcp: dial tcp: lookup proxy.example.com: no such host</a></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>この2行をコメントアウトして、使わないようにする</label><pre class="src src-shell">sudo cat /etc/systemd/system/docker.service.d/http-proxy.conf
+
+[Service]
+<span class="org-comment-delimiter"># </span><span class="org-comment">Environment="HTTP_PROXY=http://proxy.example.com:8080/"</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">Environment="HTTPS_PROXY=http://proxy.example.com:8080/"</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>デーモン再起動</label><pre class="src src-shell">sudo systemctl daemon-reload
+sudo systemctl restart docker
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8126c8c" class="outline-3">
+<h3 id="org8126c8c"><a href="#org8126c8c">Spotify</a></h3>
+<div class="outline-text-3" id="text-org8126c8c">
+<p>
+サイトで方法を見てダウンロードする。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">snap install spotify
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orga62ea7f" class="outline-2">
+<h2 id="orga62ea7f"><a href="#orga62ea7f">Tasks</a></h2>
+<div class="outline-text-2" id="text-orga62ea7f">
+</div>
+<div id="outline-container-org685c7eb" class="outline-3">
+<h3 id="org685c7eb"><a href="#org685c7eb"><span class="done CLOSE">CLOSE</span> mozcのdotfilesを用意する</a></h3>
+<div class="outline-text-3" id="text-org685c7eb">
+<p>
+configファイルはないようだ。なのでファイル管理できない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdfa970f" class="outline-3">
+<h3 id="orgdfa970f"><a href="#orgdfa970f"><span class="todo TODO">TODO</span> 実行テストのエラー解消</a></h3>
+</div>
+</div>
+<div id="outline-container-org5be429f" class="outline-2">
+<h2 id="org5be429f"><a href="#org5be429f">Reference</a></h2>
+<div class="outline-text-2" id="text-org5be429f">
+</div>
+<div id="outline-container-org2c7faf7" class="outline-3">
+<h3 id="org2c7faf7"><a href="#org2c7faf7"><a href="https://config.daviwil.com/desktop">Desktop Environment - config.daviwil.com</a></a></h3>
+<div class="outline-text-3" id="text-org2c7faf7">
+<p>
+すごいdotfile。
+</p>
+</div>
+</div>
+<div id="outline-container-org8074d8d" class="outline-3">
+<h3 id="org8074d8d"><a href="#org8074d8d"><a href="https://gitlab.com/dnsmichi/dotfiles">Michael Friedrich / dotfiles · GitLab</a></a></h3>
+<div class="outline-text-3" id="text-org8074d8d">
+<p>
+dotfilesの例。
+</p>
+</div>
+</div>
+<div id="outline-container-org2c0b1d2" class="outline-3">
+<h3 id="org2c0b1d2"><a href="#org2c0b1d2"><a href="https://sachachua.com/dotemacs/">Sacha Chua&rsquo;s Emacs configuration</a>(Sacha Chua)</a></h3>
+<div class="outline-text-3" id="text-org2c0b1d2">
+<p>
+Emacsで有名な人のdotfiles。設定が莫大。
+</p>
+</div>
+</div>
+<div id="outline-container-org7fa7a52" class="outline-3">
+<h3 id="org7fa7a52"><a href="#org7fa7a52"><a href="https://sqrtminusone.xyz/configs/readme/">My dotfiles</a>(SqrtMinusOne)</a></h3>
+<div class="outline-text-3" id="text-org7fa7a52">
+<p>
+Emacs界隈で見かける人。
+グラフ化していて良い。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orga23dfb4" class="outline-2">
+<h2 id="orga23dfb4"><a href="#orga23dfb4">Archives</a></h2>
+<div class="outline-text-2" id="text-orga23dfb4">
+</div>
+<div id="outline-container-org6c12a46" class="outline-3">
+<h3 id="org6c12a46"><a href="#org6c12a46"><span class="done DONE">DONE</span> dotfilesをCIテストする</a></h3>
+<div class="outline-text-3" id="text-org6c12a46">
+<p>
+
+</p>
+<ul class="org-ul">
+<li><a href="https://uu64.me/blog/2020/11/dotfiles">Github Actions を使って dotfiles の CI を Ubuntu/macOS 上で実行する | uu64.me</a></li>
+</ul>
+
+<p>
+テスト、Lintはセットしたが、実行時エラーが解消できない。guixに依存した <code>.bash_profile</code> なんだよな。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb08af08" class="outline-3">
+<h3 id="orgb08af08"><a href="#orgb08af08"><span class="done DONE">DONE</span> <a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>でテストする</a></h3>
+<div class="outline-text-3" id="text-orgb08af08">
+<p>
+クリーンな環境で一連のインストール作業ができるかチェックすると安心だろう。
+<a href="20210525005710-gnu_guix.html#ID-d694ecaa-6a8b-4669-a95c-f76de6dcbd2c">GNU Guix</a>関連をどうするかで詰まっている。使いこなせれば<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>でやる必要はなくなるはずだが。
+docker ubuntuではsystemctlが起動できないようになっているなので、<a href="20210525005710-gnu_guix.html#ID-d694ecaa-6a8b-4669-a95c-f76de6dcbd2c">GNU Guix</a>が起動せず、依存関係が満たせない。
+GitHub Actionでは実行できるのでそれでやった。実行テストさえできればいいだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-org5f4558e" class="outline-3">
+<h3 id="org5f4558e"><a href="#org5f4558e"><span class="done DONE">DONE</span> dotfilesにSSH設定の例を追加する</a></h3>
+<div class="outline-text-3" id="text-org5f4558e">
+<p>
+少なくとも例だけのせておくと便利だろう。
+環境を楽に選択できるようconfigを設定する。
+<a href="https://qiita.com/hkak03key/items/3b0c4752bfbcc52e676d">https://qiita.com/hkak03key/items/3b0c4752bfbcc52e676d</a>
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

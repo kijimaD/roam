@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>projectile</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">projectile</h1>
+<div id="outline-container-org80e1c30" class="outline-2">
+<h2 id="org80e1c30"><a href="#org80e1c30">概要</a></h2>
+<div class="outline-text-2" id="text-org80e1c30">
+<p>
+projectileは<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a> packageの1つ。
+<a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>リポジトリ単位でプロジェクトとし、その中でファイル検索してファイル切り替えをすばやく行える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdebd61e" class="outline-2">
+<h2 id="orgdebd61e"><a href="#orgdebd61e">Repository</a></h2>
+<div class="outline-text-2" id="text-orgdebd61e">
+<ul class="org-ul">
+<li><a href="https://github.com/bbatsov/projectile">bbatsov/projectile</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org12a1ffc" class="outline-2">
+<h2 id="org12a1ffc"><a href="#org12a1ffc">Memo</a></h2>
+</div>
+<div id="outline-container-orgb6a1bcf" class="outline-2">
+<h2 id="orgb6a1bcf"><a href="#orgb6a1bcf">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgb6a1bcf">
+</div>
+<div id="outline-container-org21d4e26" class="outline-3">
+<h3 id="org21d4e26"><a href="#org21d4e26"><span class="todo TODO">TODO</span> <a href="https://github.com/bbatsov/projectile/issues/1551">Don&rsquo;t save nonexistent files in the Projectile cache · Issue #1551 · bbatsov/projectile</a></a></h3>
+<div class="outline-text-3" id="text-org21d4e26">
+<p>
+もう解決したのか、再現しない。
+保存しなければキャッシュに保存されない。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf715daf" class="outline-2">
+<h2 id="orgf715daf"><a href="#orgf715daf">Reference</a></h2>
+</div>
+<div id="outline-container-orgb5bb7b7" class="outline-2">
+<h2 id="orgb5bb7b7"><a href="#orgb5bb7b7">Archives</a></h2>
+<div class="outline-text-2" id="text-orgb5bb7b7">
+</div>
+<div id="outline-container-org37efafa" class="outline-3">
+<h3 id="org37efafa"><a href="#org37efafa"><span class="done DONE">DONE</span> projectile issue#1709</a></h3>
+<div class="outline-text-3" id="text-org37efafa">
+<ul class="org-ul">
+<li><a href="https://github.com/bbatsov/projectile/issues/1709">projectile-switch-buffers with prefix argument plus k also kills current buffer · Issue #1709 · bbatsov/projectile</a></li>
+</ul>
+
+<p>
+<code>projectile-project-buffer-p</code> が誤検知してる。現在のバッファがプロジェクトでないのにプロジェクト判定し、それで消すときに含まれてしまう。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">projectile-project-buffer-p</span> (buffer project-root)
+<span class="org-doc">"Check if BUFFER is under PROJECT-ROOT."</span>
+(<span class="org-keyword">with-current-buffer</span> buffer
+  (<span class="org-keyword">and</span> (not (string-prefix-p <span class="org-string">" "</span> (buffer-name buffer)))
+       (not (projectile-ignored-buffer-p buffer))
+       default-directory <span class="org-comment-delimiter">;; </span><span class="org-comment">&#12371;&#12428;&#12364;&#24618;&#12375;&#12356;&#12290;&#12393;&#12371;&#12363;&#12425;&#21462;&#12387;&#12390;&#12427;&#65311;</span>
+       (string-equal (file-remote-p default-directory)
+                     (file-remote-p project-root))
+       (not (string-match-p <span class="org-string">"^http</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">(</span></span><span class="org-string">s</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">)</span></span><span class="org-string">?://"</span> default-directory))
+       (string-prefix-p project-root (file-truename default-directory) (eq system-type 'windows-nt)))))
+</pre>
+</div>
+
+<p>
+<code>default-directory</code> が、switch先のdirectoryを指している。なのでtrueになる。
+つまり消そうとしているdirectoryではないがtrueを返し誤って消される。
+</p>
+
+<p>
+初回のループで変数 <code>default-directory</code> が引数のbufferと合っていない。現在開いているバッファが入り、現在開いているものまで消してしまう。
+無理やり <code>(cd ...)</code> とすれば変更できるが、いかしてない。
+</p>
+
+<p>
+<code>default-directory</code> を使わない方法でやるとこうなる。
+ほかにも変更が必要そうだな。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">projectile-project-buffer-p</span> (buffer project-root)
+  <span class="org-doc">"Check if BUFFER is under PROJECT-ROOT."</span>
+  (<span class="org-keyword">with-current-buffer</span> buffer
+    (<span class="org-keyword">and</span> (not (string-prefix-p <span class="org-string">" "</span> (buffer-name buffer)))
+         (not (projectile-ignored-buffer-p buffer))
+         (file-name-directory buffer-file-name)
+         (string-equal (file-remote-p (file-name-directory buffer-file-name))
+                       (file-remote-p project-root))
+         (not (string-match-p <span class="org-string">"^http</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">(</span></span><span class="org-string">s</span><span class="org-string"><span class="org-regexp-grouping-backslash">\\</span></span><span class="org-string"><span class="org-regexp-grouping-construct">)</span></span><span class="org-string">?://"</span> (file-name-directory buffer-file-name)))
+         (string-prefix-p project-root (file-truename (file-name-directory buffer-file-name)) (eq system-type 'windows-nt)))))
+</pre>
+</div>
+
+<p>
+取得できない理由。current buffer以外にセットされているから。
+ループを進んだ後はなぜできてるのか。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://stackoverflow.com/questions/28196228/emacs-how-to-get-directory-of-current-buffer">elisp - Emacs, how to get directory of current buffer? - Stack Overflow</a></li>
+</ul>
+
+<blockquote>
+<p>
+Sometimes default-directory for the current buffer may be set to something other than the current directory of the file the buffer is currently visiting, in which case the solution above wouldn&rsquo;t give what the asker was looking for.
+</p>
+
+<p>
+In such cases, you can use the file-name-directory method, like so: (file-name-directory buffer-file-name)
+</p>
+</blockquote>
+
+<p>
+初回以降の <code>default-directory</code> を変えている要素は何だ。何か変わっているはずだが、単なるループで他の条件は一切変わってないようだな…。
+</p>
+
+<p>
+テストで再現できない。
+</p>
+
+<p>
+project-root: <code>/home/kijima/.emacs.d/</code>
+buffer: projectile.el
+default-directory: .emacs.d → これがおかしい。
+</p>
+
+<p>
+projectile-switch-project → projectile-switch-project-by-name(名前で選択) → アクション選択
+projectile-project-buffers → projectile-project-buffer-p
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(it <span class="org-string">"ensures the buffer is switched immediately"</span>
+      (<span class="org-keyword">let</span> ((projectile-switch-project-action
+             (<span class="org-keyword">lambda</span> () (switch-to-buffer (find-file-noselect <span class="org-string">"file"</span> t)))))
+        (projectile-test-with-sandbox
+         (projectile-test-with-files
+          (<span class="org-string">"project/"</span>
+           <span class="org-string">"project/file"</span>)
+          (projectile-add-known-project (file-name-as-directory (expand-file-name <span class="org-string">"project"</span>)))
+          (projectile-switch-project-by-name (file-name-as-directory (expand-file-name <span class="org-string">"project"</span>)))
+
+          (expect (current-buffer) <span class="org-builtin">:to-be</span> (get-file-buffer <span class="org-string">"project/file"</span>))))))
+</pre>
+</div>
+
+<p>
+テストでprojectバッファを開いてる状態にするにはどうしたらいいんだ。ディレクトリが間違っていた。
+printデバッグで原因を把握する。
+</p>
+
+<p>
+(projectile-acquire-root)が正しいディレクトリを取得していない。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(message (format <span class="org-string">"relevant: %s"</span> (projectile-relevant-known-projects)))
+(message (format <span class="org-string">"2: %s"</span> (projectile-project-buffers)))
+(message (format <span class="org-string">"%s"</span> (projectile-acquire-root)))
+(message (format <span class="org-string">"bbb  %s"</span> (buffer-list)))
+</pre>
+</div>
+
+<p>
+失敗するのは、scratchなどbuffer-file-nameを持たないとき(file-name-directory nil)となってエラーになるから。問題が起こるのは、実行されたディレクトリがプロジェクトディレクトリではないとき。
+</p>
+
+<p>
+PR出したが、この方法だとshellなどで特殊bufferのときうまくいかない。修正してPR open。マージされた。
+安易にcloseするのでなく、よく考えてからだな。焦って恥ずかしい、となるのだが耐える。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

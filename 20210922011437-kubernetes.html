@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-05-30 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kubernetes</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Kubernetes</h1>
+<div id="outline-container-org0d58b75" class="outline-2">
+<h2 id="org0d58b75"><a href="#org0d58b75">概要</a></h2>
+<div class="outline-text-2" id="text-org0d58b75">
+<p>
+Kubernetesは複数の<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>コンテナを連携させるためのシステム。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd53c57c" class="outline-2">
+<h2 id="orgd53c57c"><a href="#orgd53c57c">Memo</a></h2>
+<div class="outline-text-2" id="text-orgd53c57c">
+</div>
+<div id="outline-container-orgb808baa" class="outline-3">
+<h3 id="orgb808baa"><a href="#orgb808baa">命令的な記述から宣言的な記述に移行する</a></h3>
+<div class="outline-text-3" id="text-orgb808baa">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>エクスポートできる</label><pre class="src src-shell">kubectl run newdemo --image=cloudnatived/demo:hello --port=8888--labels <span class="org-variable-name">app</span>=newdemo <span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12398;&#12424;&#12358;&#12394;&#35373;&#23450;&#12364;&#12354;&#12427;&#12392;&#12377;&#12427;</span>
+kubectl get deployments newdemo -o yaml --export &gt;deployment.yaml
+</pre>
+</div>
+<p>
+現在の設定をファイルにエクスポートして、それを<a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>管理するとすばやく移行できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org72ba83e" class="outline-3">
+<h3 id="org72ba83e"><a href="#org72ba83e">差分チェック</a></h3>
+<div class="outline-text-3" id="text-org72ba83e">
+<div class="org-src-container">
+<pre class="src src-shell">kubectl diff -f deployment.yaml
+</pre>
+</div>
+
+<pre class="example">
+-  replicas: 10
++  replicas: 5
+</pre>
+</div>
+</div>
+<div id="outline-container-orgbde9a39" class="outline-3">
+<h3 id="orgbde9a39"><a href="#orgbde9a39">minikubeでlocalhost8080エラーが出たときの対応</a></h3>
+<div class="outline-text-3" id="text-orgbde9a39">
+<p>
+kubectl runを実行すると実行できないときがある。
+</p>
+<pre class="example">
+$ kubectl run ...
+The connection to the server localhost:8080 was refused - did you specify the right host or port?
+</pre>
+
+<p>
+落ち着いてstatusを確認する。
+</p>
+<pre class="example">
+$ kubectl status
+
+minikube
+type: Control Plane
+host: Stopped
+kubelet: Stopped
+apiserver: Stopped
+kubeconfig: Stopped
+</pre>
+
+<p>
+単に動いてないことがわかったので、起動する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>起動する</label><pre class="src src-shell">$ minikube start
+</pre>
+</div>
+
+<p>
+再度kubectl runする。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>無事podが作成される</label><pre class="src src-shell">$ kubectl run ...
+pod/demo created
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4535811" class="outline-3">
+<h3 id="org4535811"><a href="#org4535811">kubectlでcontextを確認する</a></h3>
+<div class="outline-text-3" id="text-org4535811">
+<p>
+kubectlが、どのコンテキストにいるか確認できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">kubectl config current-context
+</pre>
+</div>
+
+<div class="results" id="org56284aa">
+<p>
+minikube
+</p>
+
+</div>
+
+<p>
+これは、minikube、つまりローカル環境のcontextにいて、Kubernetesとの通信のcontextにはなっていないことを示す。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf14c7bc" class="outline-3">
+<h3 id="orgf14c7bc"><a href="#orgf14c7bc">基本コマンド類</a></h3>
+<div class="outline-text-3" id="text-orgf14c7bc">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>起動しているIPアドレスを調べる</label><pre class="src src-shell">minikube ip
+</pre>
+</div>
+
+<div class="results" id="org6e01cc2">
+<p>
+172.17.0.2
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>起動状況確認</label><pre class="src src-shell">minikube dashboard
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>作ったPod(postgres)を確認</label><pre class="src src-shell">kubectl describe deployment postgres
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>podsの情報確認</label><pre class="src src-shell">kubectl get Pods
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>起動サービスを開く。webappはサービス名</label><pre class="src src-shell">minikube service webapp
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>詳細情報</label><pre class="src src-shell">kubectl describe service webapp
+</pre>
+</div>
+
+<div class="results" id="orgc4040ed">
+<p>
+Name:                     webapp
+Namespace:                default
+Labels:                   app=webapp
+Annotations:              &lt;none&gt;
+Selector:                 app=webapp,tier=frontend
+Type:                     NodePort
+IP Family Policy:         SingleStack
+IP Families:              IPv4
+IP:                       10.109.7.196
+IPs:                      10.109.7.196
+Port:                     &lt;unset&gt;  80/TCP
+TargetPort:               80/TCP
+NodePort:                 &lt;unset&gt;  30020/TCP
+Endpoints:                172.18.0.6:80,172.18.0.7:80,172.18.0.8:80
+Session Affinity:         None
+External Traffic Policy:  Cluster
+Events:                   &lt;none&gt;
+</p>
+
+</div>
+
+<p>
+チェックしたIPアドレスにpostしてみて、データベースに値を保存・登録できるのを確認する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgef00c62" class="outline-3">
+<h3 id="orgef00c62"><a href="#orgef00c62">minikubeで試す</a></h3>
+<div class="outline-text-3" id="text-orgef00c62">
+<p>
+Kubernetesをローカルで動かすことは難しいので、代替手段が必要。
+minikubeによってローカルで試したり、開発に使うことができる。
+</p>
+
+<p>
+<a href="https://github.com/kubernetes/minikube">kubernetes/minikube: Run Kubernetes locally</a>
+</p>
+
+<p>
+導入手順。
+<a href="https://minikube.sigs.k8s.io/docs/start/">minikube start | minikube</a>
+</p>
+
+<p>
+kubectlも動かすために必要。
+<a href="https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-kubectl-binary-with-curl-on-linux">Install and Set Up kubectl on Linux | Kubernetes</a>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>実行</label><pre class="src src-shell">minikube start
+</pre>
+</div>
+
+<blockquote>
+<p>
+🏄  Done! kubectl is now configured to use &ldquo;minikube&rdquo; cluster and &ldquo;default&rdquo; namespace by default
+</p>
+</blockquote>
+
+<p>
+AWS上で動かすためにはまた別のインストールが必要。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">KUBERNETES_PROVIDER</span>=aws; curl -sS https://get.k8s.io | bash
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org20bbc1e" class="outline-2">
+<h2 id="org20bbc1e"><a href="#org20bbc1e">Tasks</a></h2>
+<div class="outline-text-2" id="text-org20bbc1e">
+</div>
+<div id="outline-container-orgde6114e" class="outline-3">
+<h3 id="orgde6114e"><a href="#orgde6114e"><span class="todo TODO">TODO</span> <a href="https://tech.drecom.co.jp/migrate-rails-app-to-container/">古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom</a></a></h3>
+</div>
+</div>
+<div id="outline-container-orgbddc9f2" class="outline-2">
+<h2 id="orgbddc9f2"><a href="#orgbddc9f2">Reference</a></h2>
+<div class="outline-text-2" id="text-orgbddc9f2">
+</div>
+<div id="outline-container-orgc01dc5b" class="outline-3">
+<h3 id="orgc01dc5b"><a href="#orgc01dc5b"><a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">kelseyhightower/kubernetes-the-hard-way: Bootstrap Kubernetes the hard way on Google Cloud Platform. No scripts.</a></a></h3>
+<div class="outline-text-3" id="text-orgc01dc5b">
+<p>
+kubernetesの仕組みから学ぶ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd81d00f" class="outline-3">
+<h3 id="orgd81d00f"><a href="#orgd81d00f"><a href="https://kubernetes.io/ja/docs/home/">Kubernetesドキュメント | Kubernetes</a></a></h3>
+<div class="outline-text-3" id="text-orgd81d00f">
+<p>
+公式ドキュメント。
+</p>
+</div>
+</div>
+<div id="outline-container-org392f5d1" class="outline-3">
+<h3 id="org392f5d1"><a href="#org392f5d1"><a href="https://ja.wikipedia.org/wiki/Kubernetes">Kubernetes - Wikipedia</a></a></h3>
+</div>
+</div>
+<div id="outline-container-org60aea55" class="outline-2">
+<h2 id="org60aea55"><a href="#org60aea55">Archives</a></h2>
+<div class="outline-text-2" id="text-org60aea55">
+</div>
+<div id="outline-container-org6065635" class="outline-3">
+<h3 id="org6065635"><a href="#org6065635"><span class="done DONE">DONE</span> <a href="https://www.oreilly.co.jp/books/9784873119014/">O&rsquo;Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps</a></a></h3>
+<div class="outline-text-3" id="text-org6065635">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>説明に使うデモアプリをcloneする</label><pre class="src src-shell">git clone git://github.com/cloudnativedevops/demo.git
+</pre>
+</div>
+
+<p>
+マネージドkubernetesが絶対にいい。差別化につながらない面倒な作業は、アウトソーシングするべき。
+リソースを解放してコアビジネスへ投入できるようになるから。
+</p>
+
+<p>
+メトリクスは「なぜか」という疑問の解決に役立つ。動作している/してないの単純な判断を超えて、監視の新しい次元を切り開く。スピードメータや温度計のように、現在の状況に関する数値情報を与える。
+メトリクスは、内部から監視する。従来のブラックボックス監視と異なる。
+</p>
+
+<p>
+ソフトウェアはデフォルトで不透明である。ソフトウェア自体を測定できるようにして、何を実行しているかについて人間が推論できるよう情報を生成させることが必要。
+</p>
+
+<p>
+4大シグナル。
+</p>
+
+<ul class="org-ul">
+<li>リクエスト</li>
+<li>エラー</li>
+<li>持続期間</li>
+<li>飽和度</li>
+</ul>
+
+<p>
+<a href="https://github.com/prometheus/prometheus">prometheus/prometheus: The Prometheus monitoring system and time series database.</a> OSSの監視ツール。
+</p>
+
+<p>
+クラウドネイティブの世界では、適切なメトリクスとオブザーバビリティデータがなければ、現在の状況を的確に把握するのは極めて難しくなる。
+</p>
+
+<p>
+<a href="https://kubernetespodcast.com/">Kubernetes Podcast from Google</a> kubernetesのポッドキャスト。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
