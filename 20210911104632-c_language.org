@@ -1,5 +1,6 @@
 :PROPERTIES:
 :ID:       656a0aa4-e5d3-416f-82d5-f909558d0639
+:header-args+: :wrap :results raw
 :END:
 #+title: C language
 * 概要
@@ -14,9 +15,69 @@ OS、プログラミング言語、ハードウェアとの接続といった基
 
 現在基盤として使われている多くのプログラムがCで書かれていて、[[id:bb71747d-8599-4aee-b747-13cb44c05773][OSS]]として公開されている。別の言語で書くにしても、既存の巨大なコード群を参考にできるのは大きな利点。
 * Memo
+** 配列変数は先頭の要素へのポインタ
+配列変数には先頭の要素へのポインタが入っていて、インデックスをその分ずらすことで要素を取得できる。配列が0から始まるのはそのため。
+
+- 最初の要素は、*doses もしくは doses[0] で取得できる。
+
+#+caption: 等価なさまざまな表記
+#+begin_src C
+doses[3] == *(doses + 3) == *(3 + doses) == 3[doses]
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+#+caption: ポインタをずらすことで、文字列をスキップできる
+#+begin_src C
+  void skip(char *msg)
+  {
+    puts(msg + 6);
+  }
+  char *msg_from_amy = "Dont call me";
+  skip(msg_from_amy);
+#+end_src
+
+#+RESULTS:
+#+begin_results
+all me
+#+end_results
+
+** 引数の渡し方
+関数呼び出しのとき、デフォルトは値渡しで、コピーされた値が使用される。コピーされるので、呼び出し元の引数の値は変化しない。変化させたいときは、参照を渡す必要がある。
+#+caption: main内で座標を保持して、移動するための関数で座標を変化させるような場合、参照渡しでないといけない。
+#+begin_src C
+  void move(int *lat, int *lon) {
+    ,*lat = *lat + 1; // 引数で渡されたlatにはメモリアドレスが入っているので、格納している値を読み込むために*を使う。
+    ,*lon = *lon + 1;
+  }
+
+  int main() {
+    int latitude = 32;
+    int longitude = 64;
+    move(&latitude, &longitude); // 参照を渡す。参照でない場合、単なる値のコピーとなって、move()内で全く関係ないローカル変数の値が変わるだけになる。main()内の値は変わらない。
+    printf("停止...現在位置：[%i, %i]\n", latitude, longitude);
+    return 0;
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+停止...現在位置：[33, 65]
+#+end_results
+
+渡したメモリ位置を更新する関数といえる。
 * Tasks
 ** TODO [[https://9cguide.appspot.com/][総合目次 - 苦しんで覚えるC言語]]
 WEB版の入門書。
+** TODO [[https://www.oreilly.co.jp/books/9784873116099/][O'Reilly Japan - Head First C]]
+:LOGBOOK:
+CLOCK: [2022-06-10 Fri 10:10]--[2022-06-10 Fri 10:35] =>  0:25
+CLOCK: [2022-06-09 Thu 10:17]--[2022-06-09 Thu 10:42] =>  0:25
+:END:
+- 41, 59
+楽しい入門書。
 * Reference
 ** [[https://kuina.ch/l6prog][６さいからのプログラミング]]
 C言語のチュートリアル。
