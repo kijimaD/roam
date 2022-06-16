@@ -6,6 +6,228 @@
 * 概要
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]で使われている[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]、Lispの方言。
 Emacs自体のコードの多くがEmacs Lispで構成されているほか、拡張するために用いる。
+* memo
+** modus-themeを切り替える
+modus-themes-toggleでダークテーマ、ライトテーマを切り替えられる。便利。
+** 現在のメジャーモードの調べ方
+判定や使いかたを調べるのに使える。
+#+begin_src ruby
+major-mode
+#+end_src
+
+#+begin_src
+-> "org-mode"
+#+end_src
+** ~format-spec~ で設定の幅を広げる
+~(format-spec)~ で文字と関数をマッピングして、ユーザが設定しやすくできる。
+
+- https://github.com/magit/magit/blob/f805f6a7720aeb894e9a58f0b36769ebdb53dd7c/lisp/magit-mode.el#L921
+#+begin_src emacs-lisp
+  (format-spec
+       magit-buffer-name-format ;; "%x%M%v: %t%x"
+       `((?m . ,m)
+         (?M . ,(if (eq mode 'magit-status-mode) "magit" m))
+         (?v . ,(or v ""))
+         (?V . ,(if v (concat " " v) ""))
+         (?t . ,n)
+         (?x . ,(if magit-uniquify-buffer-names "" "*"))
+         (?T . ,(if magit-uniquify-buffer-names n (concat n "*")))))
+#+end_src
+** 必須ではない依存パッケージの書き方
+変数なら
+(defvar w3m-current-url)
+
+関数なら
+(declare-function w3m-current-title "ext:w3m-util")
+
+と書くことで、読み込み先を指定されてることになるのでbyte-compileのエラーにならなくなる。
+** 依存インストール
+requireかと思いがちだが、一番上の ~;; Package-Requires: ((emacs "25.1"))~ で依存インストールに利用されてる。requireはあくまでパッケージを読み込むだけ。
+** アクションと検索をわける
+ace-link.elを見ていて、アクションとリンク検索を分けていた。リンク検索する → 決定を押したときのアクションを、それぞれのメジャーモードで判断するというわけだ。
+単純で強力。
+あとから追加するときも、その例にならえばいくらでもメジャーモードごとの追加ができるというわけだ。
+ここから学べることは多いように思える。
+
+- (ace-link-info) - エントリーポイント
+- (ace-link-info-action) - アクション
+- (ace-link--info-current) - collectで使われるユーティリティ
+- (ace-link--info-collect) - リンクに番号をふる
+#+begin_src emacs-lisp
+  (defun ace-link-info ()
+    "Open a visible link in an `Info-mode' buffer."
+    (interactive)
+    (let ((pt (avy-with ace-link-info
+                (avy-process
+                 (mapcar #'cdr
+                         (ace-link--info-collect))
+                 (avy--style-fn avy-style)))))
+      (ace-link--info-action pt)))
+
+  (defun ace-link--info-action (pt)
+    (when (numberp pt)
+      (push-mark)
+      (goto-char pt)
+      (let ((we (window-end)))
+        (while (not (ignore-errors
+                      (Info-follow-nearest-node)))
+          (forward-char 1)
+          (when (> (point) we)
+            (error "Could not follow link"))))))
+
+  (declare-function Info-follow-nearest-node "info")
+  (declare-function Info-next-reference "info")
+  (declare-function Info-try-follow-nearest-node "info")
+  (declare-function Info-goto-node "info")
+
+  (defun ace-link--info-current ()
+    "Return the node at point."
+    (cons (cl-letf (((symbol-function #'Info-goto-node)
+                     (lambda (node _) node))
+                    (browse-url-browser-function
+                     (lambda (url &rest _) url)))
+            (Info-try-follow-nearest-node))
+          (point)))
+
+  (defun ace-link--info-collect ()
+    "Collect the positions of visible links in the current `Info-mode' buffer."
+    (let ((end (window-end))
+          points)
+      (save-excursion
+        (goto-char (window-start))
+        (when (ignore-errors (Info-next-reference) t)
+          (push (ace-link--info-current) points)
+          (Info-next-reference)
+          (while (and (< (point) end)
+                      (> (point) (cdar points)))
+            (push (ace-link--info-current) points)
+            (Info-next-reference))
+          (nreverse points)))))
+#+end_src
+** マッピング
+(ace-link-setup-default)でマッピングしているところを見つけた。参考になる。
+** ディレクトリ探索
+(add-node-modules-path)はディレクトリ探索の参考になる。1つづつ上がって、node_modules/binを探索する。
+コードが短いのも良い。
+** 名前変換
+引数の、関数のsymbolを取得する関数。いいな。
+#+begin_src emacs-lisp
+  (defun all-the-icons--data-name (name)
+    "Get the symbol for an icon family function for icon set NAME."
+    (intern (concat "all-the-icons-" (downcase (symbol-name name)) "-data")))
+#+end_src
+
+↓みたいに使える。
+
+#+begin_src emacs-lisp
+  (funcall (all-the-icons--data-name family))
+#+end_src
+** mapcar
+関数引数の関数はミソ。
+#+begin_src emacs-lisp
+  Function: mapcar function sequence
+
+  この関数は、sequence の各要素に function を適用(訳注：apply)し、その結果のリストを返します。sequence が nil で終るリストでない場合、エラーになります。
+#+end_src
+
+#+begin_src emacs-lisp
+  (mapcar (function car) '((a b) (c d) (e f)))
+  => (a c e)
+#+end_src
+** debugger を起動しないようにする
+何かの拍子に、debugger実行されるようになり、普通に実行できなくなった。
+(debugger-list-functions)
+で関数を確認。adviceされてるとわかった。
+(advice-remove '登録関数 'debug--implement-debug-on-entry) を削除して戻った。
+** すべてdebug対象に
+(edebug-all-defs)
+でevalしただけで対象にするように設定する。→ 結局 C-uつけないとできない気が。
+regionを選択して、 C-u M-x eval-region
+すると範囲内すべてが対象に。
+
+オフにするときは(edebug-all-defs)をトグルしてオフにしてから、region指定して ~M-x eval-region~
+** 外部コマンド系パッケージ
+1. ユーザ入力やフラグを通してひたすら引数を収集して、compilation に渡す。
+2. コマンドを実行する。
+3. バッファを作成して外部コマンドの結果をいい感じに出力する。
+** avyの流れ
+#+begin_src emacs-lisp
+  (let ((pt (avy-with ace-link-custom
+              (avy-process
+               (ace-link--custom-collect) ; 元バッファからリンクを収集して((名前1 . 位置1) (名前2 . 位置2)...)リストにする
+               (avy--style-fn avy-style))))) ; リンク文字を表示して操作を待つ。
+    (ace-link--custom-action pt)) ; アクション
+#+end_src
+** リストのcustomの例
+
+あとから追加、削除、編集が自由にできる。
+#+begin_src emacs-lisp
+(defcustom devdocs-alist
+  '((c-mode           . "c")
+    (c++-mode         . "c++")
+    (clojure-mode     . "clojure")
+    (coffee-mode      . "CoffeeScript")
+    (common-lisp-mode . "lisp")
+    (cperl-mode       . "perl")
+    (css-mode         . "css")
+    (elixir-mode      . "elixir")
+    (enh-ruby-mode    . "ruby")
+    (erlang-mode      . "erlang")
+    (gfm-mode         . "markdown")
+    (go-mode          . "go")
+    (groovy-mode      . "groovy")
+    (haskell-mode     . "haskell")
+    (html-mode        . "html")
+    (java-mode        . "java")
+    (js2-mode         . "javascript")
+    (js3-mode         . "javascript")
+    (less-css-mode    . "less")
+    (lua-mode         . "lua")
+    (markdown-mode    . "markdown")
+    (perl-mode        . "perl")
+    (php-mode         . "php")
+    (processing-mode  . "processing")
+    (puppet-mode      . "puppet")
+    (python-mode      . "python")
+    (ruby-mode        . "ruby")
+    (sass-mode        . "sass")
+    (scala-mode       . "scala")
+    (tcl-mode         . "tcl"))
+  "Alist which maps major modes to names of DevDocs documentations."
+  :type '(repeat (cons (symbol :tag "Major mode")
+                       (string :tag "DevDocs documentation")))
+  :group 'devdocs)
+#+end_src
+
+使う関数すらcustomにできる。
+
+#+begin_src emacs-lisp
+(defcustom devdocs-build-search-pattern-function
+  'devdocs-build-search-pattern-function
+  "A function to be called by `devdocs-search'.
+It builds search pattern base on some context."
+  :type 'function
+  :group 'devdocs)
+#+end_src
+** Gitリポジトリを調べる
+(locate-dominating-file directory file)
+#+begin_src emacs-lisp
+(cl-defun eshell-git-prompt--git-root-dir
+    (&optional (directory default-directory))
+  "Return Git root directory name if exist, otherwise, return nil."
+  (let ((root (locate-dominating-file directory ".git")))
+    (and root (file-name-as-directory root))))
+#+end_src
+** 変数が束縛されていれば、という表現
+#+begin_src emacs-lisp
+(defun eshell-git-prompt-last-command-status ()
+  "Return Eshell last command execution status.
+When Eshell just launches, `eshell-last-command-status' is not defined yet,
+return 0 (i.e., success)."
+  (if (not (boundp 'eshell-last-command-status))
+      0
+    eshell-last-command-status))
+#+end_src
 * arielコードメモ
 http://dev.ariel-networks.com/articles/workshop/emacs-lisp-basic/
 の元の内容に、たまにコメントをつけて読んだ。
@@ -975,226 +1197,6 @@ nil値が返されるような要素全てをリストにして返す。
 #+end_quote
 
 文言のところどころを読んだ覚えがあるのだが、コードは全然覚えてない…。
-* memo
-** 現在のメジャーモードの調べ方
-判定や使いかたを調べるのに使える。
-#+begin_src ruby
-major-mode
-#+end_src
-
-#+begin_src
--> "org-mode"
-#+end_src
-** ~format-spec~ で設定の幅を広げる
-~(format-spec)~ で文字と関数をマッピングして、ユーザが設定しやすくできる。
-
-- https://github.com/magit/magit/blob/f805f6a7720aeb894e9a58f0b36769ebdb53dd7c/lisp/magit-mode.el#L921
-#+begin_src emacs-lisp
-  (format-spec
-       magit-buffer-name-format ;; "%x%M%v: %t%x"
-       `((?m . ,m)
-         (?M . ,(if (eq mode 'magit-status-mode) "magit" m))
-         (?v . ,(or v ""))
-         (?V . ,(if v (concat " " v) ""))
-         (?t . ,n)
-         (?x . ,(if magit-uniquify-buffer-names "" "*"))
-         (?T . ,(if magit-uniquify-buffer-names n (concat n "*")))))
-#+end_src
-** 必須ではない依存パッケージの書き方
-変数なら
-(defvar w3m-current-url)
-
-関数なら
-(declare-function w3m-current-title "ext:w3m-util")
-
-と書くことで、読み込み先を指定されてることになるのでbyte-compileのエラーにならなくなる。
-** 依存インストール
-requireかと思いがちだが、一番上の ~;; Package-Requires: ((emacs "25.1"))~ で依存インストールに利用されてる。requireはあくまでパッケージを読み込むだけ。
-** アクションと検索をわける
-ace-link.elを見ていて、アクションとリンク検索を分けていた。リンク検索する → 決定を押したときのアクションを、それぞれのメジャーモードで判断するというわけだ。
-単純で強力。
-あとから追加するときも、その例にならえばいくらでもメジャーモードごとの追加ができるというわけだ。
-ここから学べることは多いように思える。
-
-- (ace-link-info) - エントリーポイント
-- (ace-link-info-action) - アクション
-- (ace-link--info-current) - collectで使われるユーティリティ
-- (ace-link--info-collect) - リンクに番号をふる
-#+begin_src emacs-lisp
-  (defun ace-link-info ()
-    "Open a visible link in an `Info-mode' buffer."
-    (interactive)
-    (let ((pt (avy-with ace-link-info
-                (avy-process
-                 (mapcar #'cdr
-                         (ace-link--info-collect))
-                 (avy--style-fn avy-style)))))
-      (ace-link--info-action pt)))
-
-  (defun ace-link--info-action (pt)
-    (when (numberp pt)
-      (push-mark)
-      (goto-char pt)
-      (let ((we (window-end)))
-        (while (not (ignore-errors
-                      (Info-follow-nearest-node)))
-          (forward-char 1)
-          (when (> (point) we)
-            (error "Could not follow link"))))))
-
-  (declare-function Info-follow-nearest-node "info")
-  (declare-function Info-next-reference "info")
-  (declare-function Info-try-follow-nearest-node "info")
-  (declare-function Info-goto-node "info")
-
-  (defun ace-link--info-current ()
-    "Return the node at point."
-    (cons (cl-letf (((symbol-function #'Info-goto-node)
-                     (lambda (node _) node))
-                    (browse-url-browser-function
-                     (lambda (url &rest _) url)))
-            (Info-try-follow-nearest-node))
-          (point)))
-
-  (defun ace-link--info-collect ()
-    "Collect the positions of visible links in the current `Info-mode' buffer."
-    (let ((end (window-end))
-          points)
-      (save-excursion
-        (goto-char (window-start))
-        (when (ignore-errors (Info-next-reference) t)
-          (push (ace-link--info-current) points)
-          (Info-next-reference)
-          (while (and (< (point) end)
-                      (> (point) (cdar points)))
-            (push (ace-link--info-current) points)
-            (Info-next-reference))
-          (nreverse points)))))
-#+end_src
-** マッピング
-(ace-link-setup-default)でマッピングしているところを見つけた。参考になる。
-** ディレクトリ探索
-(add-node-modules-path)はディレクトリ探索の参考になる。1つづつ上がって、node_modules/binを探索する。
-コードが短いのも良い。
-** 名前変換
-引数の、関数のsymbolを取得する関数。いいな。
-#+begin_src emacs-lisp
-  (defun all-the-icons--data-name (name)
-    "Get the symbol for an icon family function for icon set NAME."
-    (intern (concat "all-the-icons-" (downcase (symbol-name name)) "-data")))
-#+end_src
-
-↓みたいに使える。
-
-#+begin_src emacs-lisp
-  (funcall (all-the-icons--data-name family))
-#+end_src
-** mapcar
-関数引数の関数はミソ。
-#+begin_src emacs-lisp
-  Function: mapcar function sequence
-
-  この関数は、sequence の各要素に function を適用(訳注：apply)し、その結果のリストを返します。sequence が nil で終るリストでない場合、エラーになります。
-#+end_src
-
-#+begin_src emacs-lisp
-  (mapcar (function car) '((a b) (c d) (e f)))
-  => (a c e)
-#+end_src
-** debugger を起動しないようにする
-何かの拍子に、debugger実行されるようになり、普通に実行できなくなった。
-(debugger-list-functions)
-で関数を確認。adviceされてるとわかった。
-(advice-remove '登録関数 'debug--implement-debug-on-entry) を削除して戻った。
-** すべてdebug対象に
-(edebug-all-defs)
-でevalしただけで対象にするように設定する。→ 結局 C-uつけないとできない気が。
-regionを選択して、 C-u M-x eval-region
-すると範囲内すべてが対象に。
-
-オフにするときは(edebug-all-defs)をトグルしてオフにしてから、region指定して ~M-x eval-region~
-** 外部コマンド系パッケージ
-1. ユーザ入力やフラグを通してひたすら引数を収集して、compilation に渡す。
-2. コマンドを実行する。
-3. バッファを作成して外部コマンドの結果をいい感じに出力する。
-** avyの流れ
-#+begin_src emacs-lisp
-  (let ((pt (avy-with ace-link-custom
-              (avy-process
-               (ace-link--custom-collect) ; 元バッファからリンクを収集して((名前1 . 位置1) (名前2 . 位置2)...)リストにする
-               (avy--style-fn avy-style))))) ; リンク文字を表示して操作を待つ。
-    (ace-link--custom-action pt)) ; アクション
-#+end_src
-** リストのcustomの例
-
-あとから追加、削除、編集が自由にできる。
-#+begin_src emacs-lisp
-(defcustom devdocs-alist
-  '((c-mode           . "c")
-    (c++-mode         . "c++")
-    (clojure-mode     . "clojure")
-    (coffee-mode      . "CoffeeScript")
-    (common-lisp-mode . "lisp")
-    (cperl-mode       . "perl")
-    (css-mode         . "css")
-    (elixir-mode      . "elixir")
-    (enh-ruby-mode    . "ruby")
-    (erlang-mode      . "erlang")
-    (gfm-mode         . "markdown")
-    (go-mode          . "go")
-    (groovy-mode      . "groovy")
-    (haskell-mode     . "haskell")
-    (html-mode        . "html")
-    (java-mode        . "java")
-    (js2-mode         . "javascript")
-    (js3-mode         . "javascript")
-    (less-css-mode    . "less")
-    (lua-mode         . "lua")
-    (markdown-mode    . "markdown")
-    (perl-mode        . "perl")
-    (php-mode         . "php")
-    (processing-mode  . "processing")
-    (puppet-mode      . "puppet")
-    (python-mode      . "python")
-    (ruby-mode        . "ruby")
-    (sass-mode        . "sass")
-    (scala-mode       . "scala")
-    (tcl-mode         . "tcl"))
-  "Alist which maps major modes to names of DevDocs documentations."
-  :type '(repeat (cons (symbol :tag "Major mode")
-                       (string :tag "DevDocs documentation")))
-  :group 'devdocs)
-#+end_src
-
-使う関数すらcustomにできる。
-
-#+begin_src emacs-lisp
-(defcustom devdocs-build-search-pattern-function
-  'devdocs-build-search-pattern-function
-  "A function to be called by `devdocs-search'.
-It builds search pattern base on some context."
-  :type 'function
-  :group 'devdocs)
-#+end_src
-** Gitリポジトリを調べる
-(locate-dominating-file directory file)
-#+begin_src emacs-lisp
-(cl-defun eshell-git-prompt--git-root-dir
-    (&optional (directory default-directory))
-  "Return Git root directory name if exist, otherwise, return nil."
-  (let ((root (locate-dominating-file directory ".git")))
-    (and root (file-name-as-directory root))))
-#+end_src
-** 変数が束縛されていれば、という表現
-#+begin_src emacs-lisp
-(defun eshell-git-prompt-last-command-status ()
-  "Return Eshell last command execution status.
-When Eshell just launches, `eshell-last-command-status' is not defined yet,
-return 0 (i.e., success)."
-  (if (not (boundp 'eshell-last-command-status))
-      0
-    eshell-last-command-status))
-#+end_src
 * 関数メモ
 ** --map
 ~map(FORM LIST)~ はフォームとリストを引数にとり、リストにフォームを適用していく関数。
