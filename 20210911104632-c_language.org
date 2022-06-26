@@ -15,6 +15,264 @@ OS、プログラミング言語、ハードウェアとの接続といった基
 
 現在基盤として使われている多くのプログラムがCで書かれていて、[[id:bb71747d-8599-4aee-b747-13cb44c05773][OSS]]として公開されている。別の言語で書くにしても、既存の巨大なコード群を参考にできるのは大きな利点。
 * Memo
+** 配列
+#+caption: 配列要素があらかじめわかっている場合の初期化
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L869-L871
+#+end_src
+
+#+RESULTS:
+#+begin_results
+static const int	year_lengths[2] = {
+	DAYSPERNYEAR, DAYSPERLYEAR
+};
+#+end_results
+
+#+caption: 通常の年と潤年の日数
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L864-L867
+#+end_src
+
+#+RESULTS:
+#+begin_results
+static const int	mon_lengths[2][MONSPERYEAR] = {
+	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+};
+#+end_results
+
+** データの内部構造を表現する
+#+caption: tarが各ファイルの情報を表現するために使用する構造体
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/file/dist/src/tar.h#L53-L71
+#+end_src
+
+#+RESULTS:
+#+begin_results
+union record {
+	unsigned char	charptr[RECORDSIZE];
+	struct header {
+		char	name[NAMSIZ];
+		char	mode[8];
+		char	uid[8];
+		char	gid[8];
+		char	size[12];
+		char	mtime[12];
+		char	chksum[8];
+		char	linkflag;
+		char	linkname[NAMSIZ];
+		char	magic[8];
+		char	uname[TUNMLEN];
+		char	gname[TGNMLEN];
+		char	devmajor[8];
+		char	devminor[8];
+	} header;
+};
+#+end_results
+** 多態の実装
+#+caption: データの種類を定義。名前にtypeをつける慣例
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L54-L57
+#+end_src
+
+#+RESULTS:
+#+begin_results
+enum msg_type {
+	CALL=0,
+	REPLY=1
+};
+#+end_results
+
+#+caption: msg_typeで2つの型が識別される
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L149-L155
+#+end_src
+
+#+RESULTS:
+#+begin_results
+struct rpc_msg {
+	uint32_t		rm_xid;
+	enum msg_type		rm_direction;
+	union {
+		struct call_body RM_cmb;
+		struct reply_body RM_rmb;
+	} ru;
+#+end_results
+
+** 共用体の使用例
+共用体はメモリを共用し、節約するために用いる。
+
+#+caption: mallocのコードから
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libbsdmalloc/malloc.c#L75-L89
+#+end_src
+
+#+RESULTS:
+#+begin_results
+union	overhead {
+	union	overhead *ov_next;	/* when free */
+	struct {
+		u_char	ovu_magic;	/* magic number */
+		u_char	ovu_index;	/* bucket # */
+#ifdef RCHECK
+		u_short	ovu_rmagic;	/* range magic number */
+		u_long	ovu_size;	/* actual block size */
+#endif
+	} ovu;
+#define	ov_magic	ovu.ovu_magic
+#define	ov_index	ovu.ovu_index
+#define	ov_rmagic	ovu.ovu_rmagic
+#define	ov_size		ovu.ovu_size
+};
+#+end_results
+
+空き状態と専有状態を同時にとることはないので、同じメモリ空間を共用できる。
+
+** 構造体の使用例
+外部媒体のデータ構造を表現するために構造体が用いられる。
+
+#+caption: ネットワークインターフェースカードのコマンドブロックのデータ構造
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/dev/ic/i82557reg.h#L147-L151
+#+end_src
+
+#+RESULTS:
+#+begin_results
+struct fxp_cb_nop {
+	volatile uint16_t cb_status;
+	volatile uint16_t cb_command;
+	volatile uint32_t link_addr;
+};
+#+end_results
+
+#+caption: TCPパケットヘッダの定義
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/tcpdump/dist/tcp.h#L37-L47
+#+end_src
+
+#+RESULTS:
+#+begin_results
+struct tcphdr {
+	uint16_t	th_sport;		/* source port */
+	uint16_t	th_dport;		/* destination port */
+	tcp_seq		th_seq;			/* sequence number */
+	tcp_seq		th_ack;			/* acknowledgement number */
+	uint8_t		th_offx2;		/* data offset, rsvd */
+	uint8_t		th_flags;
+	uint16_t	th_win;			/* window */
+	uint16_t	th_sum;			/* checksum */
+	uint16_t	th_urp;			/* urgent pointer */
+} UNALIGNED;
+#+end_results
+
+構造体にメソッドやプロパティに相当する定義をすることで、オブジェクト風に使える。
+
+#+caption: オブジェクト指向的に使う
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/sys/domain.h#L55-L93
+#+end_src
+
+#+RESULTS:
+#+begin_results
+struct	domain {
+	int	dom_family;		/* AF_xxx */
+	const char *dom_name;
+	void	(*dom_init)		/* initialize domain data structures */
+			(void);
+	int	(*dom_externalize)	/* externalize access rights */
+			(struct mbuf *, struct lwp *, int);
+	void	(*dom_dispose)		/* dispose of internalized rights */
+			(struct mbuf *);
+	const struct protosw *dom_protosw, *dom_protoswNPROTOSW;
+	int	(*dom_rtattach)		/* initialize routing table */
+			(rtbl_t **, int);
+	int	dom_rtoffset;		/* an arg to rtattach, in bits */
+	int	dom_maxrtkey;		/* for routing layer */
+	void	(*dom_if_up)		/* ifnet brought up */
+			(struct ifnet *);
+	void	(*dom_if_down)		/* ifnet brought down */
+			(struct ifnet *);
+	void	*(*dom_ifattach)	/* attach af-dependent data on ifnet */
+			(struct ifnet *);
+	void	(*dom_ifdetach)		/* detach af-dependent data on ifnet */
+			(struct ifnet *, void *);
+	void	(*dom_if_link_state_change)
+			(struct ifnet *, int);
+	const void *(*dom_sockaddr_const_addr)(const struct sockaddr *,
+					       socklen_t *);
+	void	*(*dom_sockaddr_addr)(struct sockaddr *, socklen_t *);
+	int	(*dom_sockaddr_cmp)(const struct sockaddr *,
+	                            const struct sockaddr *);
+	struct sockaddr *(*dom_sockaddr_externalize)(struct sockaddr *,
+	                                             socklen_t,
+						     const struct sockaddr *);
+	const struct sockaddr *dom_sa_any;
+	struct ifqueue *dom_ifqueues[2]; /* ifqueue for domain */
+	STAILQ_ENTRY(domain) dom_link;
+	struct	mowner dom_mowner;
+	uint_fast8_t	dom_sa_cmpofs;
+	uint_fast8_t	dom_sa_cmplen;
+};
+#+end_results
+
+** strlenの実装
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/common/lib/libc/string/strlen.c#L49-L56
+#+end_src
+
+#+RESULTS:
+#+begin_results
+strlen(const char *str)
+{
+	const char *s;
+
+	for (s = str; *s; ++s)
+		continue;
+	return(s - str);
+}
+#+end_results
+
+ポインタを文字列の終端に達するまでインクリメントして、先頭のアドレスを差し引く。
+#+begin_src C :results output
+  #include <stdio.h>
+  #include <string.h>
+  int test_strlen(char *str) # strは先頭のアドレス
+  {
+    char *s;
+
+    for (s = str; *s; ++s)
+      continue; # 要素の数だけインクリメント
+    return(s - str); # 進んだ分を求める
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+** 無限ループのイディオム
+無限ループの書き方。条件を指定しない。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/lib-src/emacsclient.c#L275-L286
+#+end_src
+
+#+RESULTS:
+#+begin_results
+      for (;;)
+	{
+	  char *buf = malloc (buf_size);
+	  if (!buf)
+	    return NULL;
+	  if (getcwd (buf, buf_size) == buf)
+	    return buf;
+	  free (buf);
+	  if (errno != ERANGE || buf_size == bufsize_max)
+	    return NULL;
+	  buf_size = buf_size <= bufsize_max / 2 ? 2 * buf_size : bufsize_max;
+	}
+#+end_results
+
 ** 配列変数は先頭の要素へのポインタ
 配列変数には先頭の要素へのポインタが入っていて、インデックスをその分ずらすことで要素を取得できる。配列が0から始まるのはそのため。
 

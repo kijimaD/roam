@@ -26,6 +26,84 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
 * Memo
+** TODO message関数はどうやっているか                                :Write:
+message関数はメッセージをmessageバッファ、モードラインに表示する関数である。フォーマットを指定できる機能もある。これはどうやって動いているのだろうか。
+
+#+caption: コード。読みやすくするためにコメントを削除・追加している
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/src/editfns.c#L2849-L2884
+#+end_src
+
+#+RESULTS:
+#+begin_example
+DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
+       doc: /* Display a message at the bottom of the screen.
+  (ptrdiff_t nargs, Lisp_Object *args)
+{
+  if (NILP (args[0])
+      || (STRINGP (args[0])
+	  && SBYTES (args[0]) == 0))
+    {
+      ;; 無効な引数を指定したときはここが呼び出される
+      message1 (0);
+      return args[0];
+    }
+  else
+    ;; 正常
+    {
+      Lisp_Object val = Fformat_message (nargs, args); ;; フォーマット
+      message3 (val); ;; 表示
+      return val;;
+    }
+}
+#+end_example
+
+message3とmessage1の違いは何。この関数名の意味。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/src/xdisp.c#L11588-L11608
+#+end_src
+
+#+RESULTS:
+#+begin_example
+void
+message3 (Lisp_Object m)
+{
+  clear_message (true, true);
+  cancel_echoing ();
+
+  /* First flush out any partial line written with print.  */
+  message_log_maybe_newline ();
+  if (STRINGP (m))
+    {
+      ptrdiff_t nbytes = SBYTES (m);
+      bool multibyte = STRING_MULTIBYTE (m);
+      char *buffer;
+      USE_SAFE_ALLOCA;
+      SAFE_ALLOCA_STRING (buffer, m);
+      message_dolog (buffer, nbytes, true, multibyte);
+      SAFE_FREE ();
+    }
+  if (! inhibit_message)
+    message3_nolog (m);
+}
+#+end_example
+
+#+caption: message1はmessage3によって定義される
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/src/xdisp.c#L11693-L11697
+#+end_src
+
+#+RESULTS:
+: void
+: message1 (const char *m)
+: {
+:   message3 (m ? build_unibyte_string (m) : Qnil);
+: }
+
+** TODO カッコのパース方法                                           :Write:
+Emacsというか、Lispの話だな。
+** TODO 起動時何をやっているのか                                     :Write:
 ** 本体コードを読む
 ほとんどは[[id:c7e81fac-9f8b-4538-9851-21d4ff3c2b08][Emacs Lisp]]で書かれている。コアな部分は[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]。
 ~src/*~ にはCのコードがある。
