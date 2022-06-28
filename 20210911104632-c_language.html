@@ -1,13 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2022-06-26 -->
+<!-- 2022-06-28 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>C language</title>
 <meta name="generator" content="Org mode">
 <meta name="author" content="root">
 <link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
 </head>
 <body>
 <div id="preamble" class="status">
@@ -15,9 +37,9 @@
 </div>
 <div id="content">
 <h1 class="title">C language</h1>
-<div id="outline-container-orge8408dc" class="outline-2">
-<h2 id="orge8408dc"><a href="#orge8408dc">概要</a></h2>
-<div class="outline-text-2" id="text-orge8408dc">
+<div id="outline-container-org44832c0" class="outline-2">
+<h2 id="org44832c0"><a href="#org44832c0">概要</a></h2>
+<div class="outline-text-2" id="text-org44832c0">
 <p>
 C言語は汎用の<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>。
 OS、プログラミング言語、ハードウェアとの接続といった基盤的な部分で使われる。
@@ -38,19 +60,389 @@ OS、プログラミング言語、ハードウェアとの接続といった基
 </p>
 </div>
 </div>
-<div id="outline-container-orgc54960e" class="outline-2">
-<h2 id="orgc54960e"><a href="#orgc54960e">Memo</a></h2>
-<div class="outline-text-2" id="text-orgc54960e">
+<div id="outline-container-orge9f25ea" class="outline-2">
+<h2 id="orge9f25ea"><a href="#orge9f25ea">Memo</a></h2>
+<div class="outline-text-2" id="text-orge9f25ea">
 </div>
-<div id="outline-container-orgf16bc5c" class="outline-3">
-<h3 id="orgf16bc5c"><a href="#orgf16bc5c">配列</a></h3>
-<div class="outline-text-3" id="text-orgf16bc5c">
+<div id="outline-container-org57f6939" class="outline-3">
+<h3 id="org57f6939"><a href="#org57f6939">shellのノード定義</a></h3>
+<div class="outline-text-3" id="text-org57f6939">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>配列要素があらかじめわかっている場合の初期化</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L869-L871
+<pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/sh/nodetypes#L56-L61
 </pre>
 </div>
 
-<div class="results" id="org4fdec5b">
+<div class="results" id="org28bd883">
+<p>
+NCMD ncmd			# a simple command
+	type	  int
+	backgnd	  int			# set to run command in background
+	args	  nodeptr		# the arguments
+	redirect  nodeptr		# list of file redirections
+	lineno	  int
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org35aa4ad" class="outline-3">
+<h3 id="org35aa4ad"><a href="#org35aa4ad">バイナリツリー</a></h3>
+<div class="outline-text-3" id="text-org35aa4ad">
+<p>
+バイナリツリーの中にはleft, rightを持つものがあり、leftは小さい、rightは大きいとしてノードの順番を決定する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>バイナリツリーの定義。各ノードはほかのノードを最高2つまで持つことができる</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/include/isc/tree.h#L44-L49
+</pre>
+</div>
+
+<div class="results" id="orgcd38eb2">
+<p>
+typedef	struct tree_s {
+		tree_t  data;
+		struct tree_s *left, *right;
+		short		bal;
+	}
+	tree;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>ツリー内の要素を再帰的に検索する</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/isc/tree.c#L105-L130
+</pre>
+</div>
+
+<div class="results" id="org6e45a2e">
+<p>
+tree_t
+tree_srch(tree **ppr_tree, int (*pfi_compare)(tree_t, tree_t), tree_t p_user) {
+	ENTER(&ldquo;tree_srch&rdquo;)
+</p>
+
+<p>
+if (*ppr_tree) {
+	int i_comp = (*pfi_compare)(p_user, (**ppr_tree).data);
+</p>
+
+<p>
+if (i_comp &gt; 0)
+	RET(tree_srch(&amp;(**ppr_tree).right,
+		      pfi_compare,
+		      p_user))
+</p>
+
+<p>
+if (i_comp &lt; 0)
+	RET(tree_srch(&amp;(**ppr_tree).left,
+		      pfi_compare,
+		      p_user))
+</p>
+
+<p>
+	<i>* not higher, not lower&#x2026; this must be the one.
+	 *</i>
+	RET((**ppr_tree).data)
+}
+</p>
+
+<p>
+	<i>* grounded. NOT found.
+	 *</i>
+	RET(NULL)
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>系統的にツリーをたどる</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/isc/tree.c#L155-L169
+</pre>
+</div>
+
+<div class="results" id="org7400edc">
+<p>
+int
+tree_trav(tree **ppr_tree, int (*pfi_uar)(tree_t)) {
+	ENTER(&ldquo;tree_trav&rdquo;)
+</p>
+
+<p>
+if (!*ppr_tree)
+	RET(TRUE)
+</p>
+
+<p>
+	if (!tree_trav(&amp;(**ppr_tree).left, pfi_uar))
+		RET(FALSE)
+	if (!(*pfi_uar)((**ppr_tree).data))
+		RET(FALSE)
+	if (!tree_trav(&amp;(**ppr_tree).right, pfi_uar))
+		RET(FALSE)
+	RET(TRUE)
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>ツリーは言語構造の表現ができる</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>lintでの例</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/xlint/lint1/lint1.h#L284-L305
+</pre>
+</div>
+
+<div class="results" id="org40c3bde">
+<p>
+typedef	struct tnode {
+	op_t tn_op;		<i>* operator *</i>
+	type_t <b>tn_type;	/</b> type <b>/
+	bool	tn_lvalue:1;	/</b> node is lvalue <b>/
+	bool	tn_cast:1;	/</b> if tn_op == CVT, it&rsquo;s an explicit cast */
+	bool	tn_parenthesized:1;
+	bool	tn_sys:1;	/* in strict bool mode, allow mixture between
+</p>
+<ul class="org-ul">
+<li>bool and scalar, for code from system</li>
+<li>headers that may be a mixture between</li>
+<li>scalar types and bool</li>
+</ul>
+<p>
+				 <b>/
+	bool	tn_system_dependent:1; /</b> depends on sizeof or offsetof */
+	union {
+		struct {
+			struct	tnode <b>_tn_left;	/</b> (left) operand <b>/
+			struct	tnode *_tn_right;	/</b> right operand */
+		} tn_s;
+		sym_t <b>_tn_sym;	/</b> symbol if op <code>= NAME */
+		val_t	*_tn_val;	/* value if op =</code> CON <b>/
+		strg_t *_tn_string;	/</b> string if op == STRING */
+	} tn_u;
+} tnode_t;
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgadb1f96" class="outline-3">
+<h3 id="orgadb1f96"><a href="#orgadb1f96">ハッシュテーブルエントリに複数の要素を格納する</a></h3>
+<div class="outline-text-3" id="text-orgadb1f96">
+<p>
+シンボルテーブルの構築によく使われる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/games/battlestar/parse.c#L75-L84
+</pre>
+</div>
+
+<div class="results" id="org46c358d">
+<p>
+static struct wlist *
+lookup(const char   *s)
+{
+	struct wlist *wp;
+</p>
+
+<p>
+	for (wp = hashtab[hash(s)]; wp != NULL; wp = wp-&gt;next)
+		if (*s <code>= *wp-&gt;string &amp;&amp; strcmp(s, wp-&gt;string) =</code> 0)
+			return wp;
+	return NULL;
+}
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org600c4a1" class="outline-3">
+<h3 id="org600c4a1"><a href="#org600c4a1">循環リスト実装</a></h3>
+<div class="outline-text-3" id="text-org600c4a1">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>終端がないので、forを使えない。最初の要素を保存して、同じ要素にあたるまでループする</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/csh/lex.c#L176-L189
+</pre>
+</div>
+
+<div class="results" id="org65950d1">
+<p>
+prlex(FILE *fp, struct wordent *sp0)
+{
+    struct wordent *sp;
+</p>
+
+<p>
+    sp = sp0-&gt;next;
+    for (;;) {
+	(void)fprintf(fp, &ldquo;%s&rdquo;, vis_str(sp-&gt;word));
+	sp = sp-&gt;next;
+	if (sp == sp0)
+	    break;
+	if (sp-&gt;word[0] != &rsquo;\n&rsquo;)
+	    (void) fputc(&rsquo; &rsquo;, fp);
+    }
+}
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0fb58ee" class="outline-3">
+<h3 id="org0fb58ee"><a href="#org0fb58ee">リスト処理</a></h3>
+<div class="outline-text-3" id="text-org0fb58ee">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>host_listを定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L63-L70
+</pre>
+</div>
+
+<div class="results" id="org332ceb1">
+<p>
+static struct host_list {
+	struct host_list *next;
+	int family;
+	union {
+		struct in6_addr _addr6;
+		struct in_addr _addr4;
+	} addr;
+} *hosts;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>リストを辿りforで処理する</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L79-L105
+</pre>
+</div>
+
+<div class="results" id="org7aa3792">
+<p>
+search_host(struct sockaddr *sa)
+{
+	struct host_list *hp;
+</p>
+
+<p>
+if (!hosts)
+	return 0;
+</p>
+
+<p>
+	for (hp = hosts; hp != NULL; hp = hp-&gt;next) {
+		switch (hp-&gt;family) {
+		case AF_INET6:
+			if (!memcmp(&amp;hp-&gt;addr6,
+			    &amp;((struct sockaddr_in6 *)(void *)sa)-&gt;sin6_addr,
+			    sizeof (struct in6_addr)))
+				return 1;
+			break;
+		case AF_INET:
+			if (!memcmp(&amp;hp-&gt;addr4,
+			    &amp;((struct sockaddr_in *)(void *)sa)-&gt;sin_addr,
+			    sizeof (struct in_addr)))
+				return 1;
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+</p>
+
+</div>
+
+<p>
+nextという要素を持つ構造体は1方向リスト連結リストのノードを定義する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>nextを追加して辿れるようにする</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L108-L134
+</pre>
+</div>
+
+<div class="results" id="org93e91b9">
+<p>
+remember_host(struct sockaddr *sa)
+{
+	struct host_list *hp;
+</p>
+
+<p>
+	if ((hp = malloc(sizeof(struct host_list))) == NULL) {
+		err(1, &ldquo;malloc&rdquo;);
+		<i>* NOTREACHED *</i>
+	}
+	hp-&gt;family = sa-&gt;sa_family;
+	hp-&gt;next = hosts;
+	switch (sa-&gt;sa_family) {
+	case AF_INET6:
+		(void)memcpy(&amp;hp-&gt;addr6,
+		    &amp;((struct sockaddr_in6 *)(void *)sa)-&gt;sin6_addr,
+		    sizeof (struct in6_addr));
+		break;
+	case AF_INET:
+		(void)memcpy(&amp;hp-&gt;addr4,
+		    &amp;((struct sockaddr_in *)(void *)sa)-&gt;sin_addr,
+		    sizeof (struct in_addr));
+		break;
+	default:
+		errx(1, &ldquo;unknown address family&rdquo;);
+		<i>* NOTREACHED *</i>
+	}
+	hosts = hp;
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>ダブル連結リストから要素epを削除</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/telnet/commands.c#L1700-L1716
+</pre>
+</div>
+
+<div class="results" id="org14d5ef5">
+<p>
+struct env_lst *
+env_undefine(const char *var, char *d)
+{
+	struct env_lst *ep;
+</p>
+
+<p>
+	if ((ep = env_find(var)) != NULL) {
+		ep-&gt;prev-&gt;next = ep-&gt;next;
+		if (ep-&gt;next)
+			ep-&gt;next-&gt;prev = ep-&gt;prev;
+		if (ep-&gt;var)
+			free(ep-&gt;var);
+		if (ep-&gt;value)
+			free(ep-&gt;value);
+		free(ep);
+	}
+	return NULL;
+}
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org962f485" class="outline-3">
+<h3 id="org962f485"><a href="#org962f485">配列定義</a></h3>
+<div class="outline-text-3" id="text-org962f485">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>配列要素があらかじめわかっている場合の初期化</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L869-L871
+</pre>
+</div>
+
+<div class="results" id="org6cbe168">
 <p>
 static const int	year_lengths[2] = {
 	DAYSPERNYEAR, DAYSPERLYEAR
@@ -60,11 +452,11 @@ static const int	year_lengths[2] = {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>通常の年と潤年の日数</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L864-L867
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>通常の年と潤年の日数</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L864-L867
 </pre>
 </div>
 
-<div class="results" id="org6bc9871">
+<div class="results" id="org9884fdf">
 <p>
 static const int	mon_lengths[2][MONSPERYEAR] = {
 	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
@@ -76,15 +468,15 @@ static const int	mon_lengths[2][MONSPERYEAR] = {
 </div>
 </div>
 
-<div id="outline-container-org1a42047" class="outline-3">
-<h3 id="org1a42047"><a href="#org1a42047">データの内部構造を表現する</a></h3>
-<div class="outline-text-3" id="text-org1a42047">
+<div id="outline-container-orgf81e0d3" class="outline-3">
+<h3 id="orgf81e0d3"><a href="#orgf81e0d3">データの内部構造を表現する</a></h3>
+<div class="outline-text-3" id="text-orgf81e0d3">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>tarが各ファイルの情報を表現するために使用する構造体</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/file/dist/src/tar.h#L53-L71
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>tarが各ファイルの情報を表現するために使用する構造体</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/file/dist/src/tar.h#L53-L71
 </pre>
 </div>
 
-<div class="results" id="orgd25b1cd">
+<div class="results" id="orgd0da05d">
 <p>
 union record {
 	unsigned char	charptr[RECORDSIZE];
@@ -110,15 +502,15 @@ union record {
 </div>
 </div>
 </div>
-<div id="outline-container-org9016b2c" class="outline-3">
-<h3 id="org9016b2c"><a href="#org9016b2c">多態の実装</a></h3>
-<div class="outline-text-3" id="text-org9016b2c">
+<div id="outline-container-org203932c" class="outline-3">
+<h3 id="org203932c"><a href="#org203932c">多態の実装</a></h3>
+<div class="outline-text-3" id="text-org203932c">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>データの種類を定義。名前にtypeをつける慣例</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L54-L57
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>データの種類を定義。名前にtypeをつける慣例</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L54-L57
 </pre>
 </div>
 
-<div class="results" id="orgbb07f93">
+<div class="results" id="org7ccbf82">
 <p>
 enum msg_type {
 	CALL=0,
@@ -129,11 +521,11 @@ enum msg_type {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>msg_typeで2つの型が識別される</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L149-L155
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>msg_typeで2つの型が識別される</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/include/rpc/rpc_msg.h#L149-L155
 </pre>
 </div>
 
-<div class="results" id="orga2d9938">
+<div class="results" id="orgc8f69f6">
 <p>
 struct rpc_msg {
 	uint32_t  rm_xid;
@@ -148,19 +540,19 @@ struct rpc_msg {
 </div>
 </div>
 
-<div id="outline-container-org292378e" class="outline-3">
-<h3 id="org292378e"><a href="#org292378e">共用体の使用例</a></h3>
-<div class="outline-text-3" id="text-org292378e">
+<div id="outline-container-orgc4b0977" class="outline-3">
+<h3 id="orgc4b0977"><a href="#orgc4b0977">共用体の使用例</a></h3>
+<div class="outline-text-3" id="text-orgc4b0977">
 <p>
 共用体はメモリを共用し、節約するために用いる。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>mallocのコードから</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libbsdmalloc/malloc.c#L75-L89
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>mallocのコードから</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libbsdmalloc/malloc.c#L75-L89
 </pre>
 </div>
 
-<div class="results" id="orge6aba6e">
+<div class="results" id="orgbd386d3">
 <p>
 union	overhead {
 	union	overhead <b>ov_next;	/</b> when free */
@@ -187,19 +579,19 @@ union	overhead {
 </div>
 </div>
 
-<div id="outline-container-org898eaea" class="outline-3">
-<h3 id="org898eaea"><a href="#org898eaea">構造体の使用例</a></h3>
-<div class="outline-text-3" id="text-org898eaea">
+<div id="outline-container-org180bd38" class="outline-3">
+<h3 id="org180bd38"><a href="#org180bd38">構造体の使用例</a></h3>
+<div class="outline-text-3" id="text-org180bd38">
 <p>
 外部媒体のデータ構造を表現するために構造体が用いられる。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>ネットワークインターフェースカードのコマンドブロックのデータ構造</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/dev/ic/i82557reg.h#L147-L151
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>ネットワークインターフェースカードのコマンドブロックのデータ構造</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/dev/ic/i82557reg.h#L147-L151
 </pre>
 </div>
 
-<div class="results" id="org4c79488">
+<div class="results" id="orgd774578">
 <p>
 struct fxp_cb_nop {
 	volatile uint16_t cb_status;
@@ -211,11 +603,11 @@ struct fxp_cb_nop {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>TCPパケットヘッダの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/tcpdump/dist/tcp.h#L37-L47
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>TCPパケットヘッダの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/tcpdump/dist/tcp.h#L37-L47
 </pre>
 </div>
 
-<div class="results" id="org36eda4c">
+<div class="results" id="orge40ff38">
 <p>
 struct tcphdr {
 	uint16_t th_sport;		<i>* source port *</i>
@@ -237,11 +629,11 @@ struct tcphdr {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>オブジェクト指向的に使う</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/sys/domain.h#L55-L93
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>オブジェクト指向的に使う</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/sys/domain.h#L55-L93
 </pre>
 </div>
 
-<div class="results" id="orgef2cd3d">
+<div class="results" id="org5d1a1d9">
 <p>
 struct	domain {
 	int	dom_family;		<i>* AF_xxx *</i>
@@ -288,15 +680,15 @@ struct	domain {
 </div>
 </div>
 
-<div id="outline-container-orgd3f2746" class="outline-3">
-<h3 id="orgd3f2746"><a href="#orgd3f2746">strlenの実装</a></h3>
-<div class="outline-text-3" id="text-orgd3f2746">
+<div id="outline-container-orgdf96256" class="outline-3">
+<h3 id="orgdf96256"><a href="#orgdf96256">strlenの実装</a></h3>
+<div class="outline-text-3" id="text-orgdf96256">
 <div class="org-src-container">
 <pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/common/lib/libc/string/strlen.c#L49-L56
 </pre>
 </div>
 
-<div class="results" id="orga69af48">
+<div class="results" id="org4636176">
 <p>
 strlen(const char *str)
 {
@@ -329,15 +721,15 @@ strlen(const char *str)
 </pre>
 </div>
 
-<div class="results" id="org995f8a4">
+<div class="results" id="orgf427204">
 
 </div>
 </div>
 </div>
 
-<div id="outline-container-org5806915" class="outline-3">
-<h3 id="org5806915"><a href="#org5806915">無限ループのイディオム</a></h3>
-<div class="outline-text-3" id="text-org5806915">
+<div id="outline-container-orge92cd49" class="outline-3">
+<h3 id="orge92cd49"><a href="#orge92cd49">無限ループのイディオム</a></h3>
+<div class="outline-text-3" id="text-orge92cd49">
 <p>
 無限ループの書き方。条件を指定しない。
 </p>
@@ -347,7 +739,7 @@ strlen(const char *str)
 </pre>
 </div>
 
-<div class="results" id="orgb6273f6">
+<div class="results" id="org6e66ff9">
 <p>
 for (;;)
   {
@@ -367,9 +759,9 @@ for (;;)
 </div>
 </div>
 
-<div id="outline-container-org0db9c62" class="outline-3">
-<h3 id="org0db9c62"><a href="#org0db9c62">配列変数は先頭の要素へのポインタ</a></h3>
-<div class="outline-text-3" id="text-org0db9c62">
+<div id="outline-container-orgcfdaadc" class="outline-3">
+<h3 id="orgcfdaadc"><a href="#orgcfdaadc">配列変数は先頭の要素へのポインタ</a></h3>
+<div class="outline-text-3" id="text-orgcfdaadc">
 <p>
 配列変数には先頭の要素へのポインタが入っていて、インデックスをその分ずらすことで要素を取得できる。配列が0から始まるのはそのため。
 </p>
@@ -379,16 +771,16 @@ for (;;)
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>等価なさまざまな表記</label><pre class="src src-C"><span class="org-type">doses</span>[3] == *(doses + 3) == *(3 + doses) == 3[doses]
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>等価なさまざまな表記</label><pre class="src src-C"><span class="org-type">doses</span>[3] == *(doses + 3) == *(3 + doses) == 3[doses]
 </pre>
 </div>
 
-<div class="results" id="org42a6323">
+<div class="results" id="org9ff91bc">
 
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 11: </span>ポインタをずらすことで、文字列をスキップできる</label><pre class="src src-C"><span class="org-type">void</span> <span class="org-function-name">skip</span>(<span class="org-type">char</span> *<span class="org-variable-name">msg</span>)
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>ポインタをずらすことで、文字列をスキップできる</label><pre class="src src-C"><span class="org-type">void</span> <span class="org-function-name">skip</span>(<span class="org-type">char</span> *<span class="org-variable-name">msg</span>)
 {
   puts(msg + 6);
 }
@@ -397,7 +789,7 @@ for (;;)
 </pre>
 </div>
 
-<div class="results" id="org6b5464b">
+<div class="results" id="orgb956893">
 <p>
 all me
 </p>
@@ -406,14 +798,14 @@ all me
 </div>
 </div>
 
-<div id="outline-container-orga23efc3" class="outline-3">
-<h3 id="orga23efc3"><a href="#orga23efc3">引数の渡し方</a></h3>
-<div class="outline-text-3" id="text-orga23efc3">
+<div id="outline-container-org7c220dc" class="outline-3">
+<h3 id="org7c220dc"><a href="#org7c220dc">引数の渡し方</a></h3>
+<div class="outline-text-3" id="text-org7c220dc">
 <p>
 関数呼び出しのとき、デフォルトは値渡しで、コピーされた値が使用される。コピーされるので、呼び出し元の引数の値は変化しない。変化させたいときは、参照を渡す必要がある。
 </p>
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 12: </span>main内で座標を保持して、移動するための関数で座標を変化させるような場合、参照渡しでないといけない。</label><pre class="src src-C"><span class="org-type">void</span> <span class="org-function-name">move</span>(<span class="org-type">int</span> *<span class="org-variable-name">lat</span>, <span class="org-type">int</span> *<span class="org-variable-name">lon</span>) {
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>main内で座標を保持して、移動するための関数で座標を変化させるような場合、参照渡しでないといけない。</label><pre class="src src-C"><span class="org-type">void</span> <span class="org-function-name">move</span>(<span class="org-type">int</span> *<span class="org-variable-name">lat</span>, <span class="org-type">int</span> *<span class="org-variable-name">lon</span>) {
   *lat = *lat + 1; <span class="org-comment-delimiter">// </span><span class="org-comment">&#24341;&#25968;&#12391;&#28193;&#12373;&#12428;&#12383;lat&#12395;&#12399;&#12513;&#12514;&#12522;&#12450;&#12489;&#12524;&#12473;&#12364;&#20837;&#12387;&#12390;&#12356;&#12427;&#12398;&#12391;&#12289;&#26684;&#32013;&#12375;&#12390;&#12356;&#12427;&#20516;&#12434;&#35501;&#12415;&#36796;&#12416;&#12383;&#12417;&#12395;*&#12434;&#20351;&#12358;&#12290;</span>
   *lon = *lon + 1;
 }
@@ -428,7 +820,7 @@ all me
 </pre>
 </div>
 
-<div class="results" id="orgd4a9ac0">
+<div class="results" id="org5681b0b">
 <p>
 停止&#x2026;現在位置：[33, 65]
 </p>
@@ -441,94 +833,94 @@ all me
 </div>
 </div>
 </div>
-<div id="outline-container-org6010c28" class="outline-2">
-<h2 id="org6010c28"><a href="#org6010c28">Tasks</a></h2>
-<div class="outline-text-2" id="text-org6010c28">
+<div id="outline-container-org8ef54ab" class="outline-2">
+<h2 id="org8ef54ab"><a href="#org8ef54ab">Tasks</a></h2>
+<div class="outline-text-2" id="text-org8ef54ab">
 </div>
-<div id="outline-container-org3b950e3" class="outline-3">
-<h3 id="org3b950e3"><a href="#org3b950e3"><span class="todo TODO">TODO</span> <a href="https://9cguide.appspot.com/">総合目次 - 苦しんで覚えるC言語</a></a></h3>
-<div class="outline-text-3" id="text-org3b950e3">
+<div id="outline-container-org2c3d20c" class="outline-3">
+<h3 id="org2c3d20c"><a href="#org2c3d20c"><span class="todo TODO">TODO</span> <a href="https://9cguide.appspot.com/">総合目次 - 苦しんで覚えるC言語</a></a></h3>
+<div class="outline-text-3" id="text-org2c3d20c">
 <p>
 WEB版の入門書。
 </p>
 </div>
 </div>
-<div id="outline-container-org042b12e" class="outline-3">
-<h3 id="org042b12e"><a href="#org042b12e"><span class="todo WIP">WIP</span> <a href="https://www.oreilly.co.jp/books/9784873116099/">O&rsquo;Reilly Japan - Head First C</a></a></h3>
-<div class="outline-text-3" id="text-org042b12e">
+<div id="outline-container-orgc6b65eb" class="outline-3">
+<h3 id="orgc6b65eb"><a href="#orgc6b65eb"><span class="todo WIP">WIP</span> <a href="https://www.oreilly.co.jp/books/9784873116099/">O&rsquo;Reilly Japan - Head First C</a></a></h3>
+<div class="outline-text-3" id="text-orgc6b65eb">
 <ul class="org-ul">
-<li>41, 59, 67</li>
+<li>41, 59, 67, 103, 105</li>
 </ul>
 <p>
 楽しい入門書。
 </p>
 </div>
-<div id="outline-container-org198cffe" class="outline-4">
-<h4 id="org198cffe"><a href="#org198cffe"><span class="done DONE">DONE</span> -50</a></h4>
-<div class="outline-text-4" id="text-org198cffe">
+<div id="outline-container-org66b2c9c" class="outline-4">
+<h4 id="org66b2c9c"><a href="#org66b2c9c"><span class="done DONE">DONE</span> -50</a></h4>
+<div class="outline-text-4" id="text-org66b2c9c">
 </div>
 </div>
-<div id="outline-container-orga7ce228" class="outline-4">
-<h4 id="orga7ce228"><a href="#orga7ce228"><span class="todo TODO">TODO</span> -100</a></h4>
+<div id="outline-container-org4bbb107" class="outline-4">
+<h4 id="org4bbb107"><a href="#org4bbb107"><span class="todo TODO">TODO</span> -100</a></h4>
 </div>
-<div id="outline-container-org37455b5" class="outline-4">
-<h4 id="org37455b5"><a href="#org37455b5"><span class="todo TODO">TODO</span> -150</a></h4>
+<div id="outline-container-orgfd6cadc" class="outline-4">
+<h4 id="orgfd6cadc"><a href="#orgfd6cadc"><span class="todo TODO">TODO</span> -150</a></h4>
 </div>
-<div id="outline-container-org255e6c7" class="outline-4">
-<h4 id="org255e6c7"><a href="#org255e6c7"><span class="todo TODO">TODO</span> -200</a></h4>
+<div id="outline-container-orgc751b5b" class="outline-4">
+<h4 id="orgc751b5b"><a href="#orgc751b5b"><span class="todo TODO">TODO</span> -200</a></h4>
 </div>
-<div id="outline-container-org0b3d2d9" class="outline-4">
-<h4 id="org0b3d2d9"><a href="#org0b3d2d9"><span class="todo TODO">TODO</span> -250</a></h4>
+<div id="outline-container-org0ba4f5d" class="outline-4">
+<h4 id="org0ba4f5d"><a href="#org0ba4f5d"><span class="todo TODO">TODO</span> -250</a></h4>
 </div>
 </div>
 </div>
-<div id="outline-container-org3d6a3cf" class="outline-2">
-<h2 id="org3d6a3cf"><a href="#org3d6a3cf">Reference</a></h2>
-<div class="outline-text-2" id="text-org3d6a3cf">
+<div id="outline-container-org17fa8e7" class="outline-2">
+<h2 id="org17fa8e7"><a href="#org17fa8e7">Reference</a></h2>
+<div class="outline-text-2" id="text-org17fa8e7">
 </div>
-<div id="outline-container-org95e54be" class="outline-3">
-<h3 id="org95e54be"><a href="#org95e54be"><a href="https://kuina.ch/l6prog">６さいからのプログラミング</a></a></h3>
-<div class="outline-text-3" id="text-org95e54be">
+<div id="outline-container-orgddbe671" class="outline-3">
+<h3 id="orgddbe671"><a href="#orgddbe671"><a href="https://kuina.ch/l6prog">６さいからのプログラミング</a></a></h3>
+<div class="outline-text-3" id="text-orgddbe671">
 <p>
 C言語のチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-org13e8dd9" class="outline-3">
-<h3 id="org13e8dd9"><a href="#org13e8dd9"><a href="http://www.kouno.jp/home/c_faq/">Language C FAQ</a></a></h3>
-<div class="outline-text-3" id="text-org13e8dd9">
+<div id="outline-container-org060e48b" class="outline-3">
+<h3 id="org060e48b"><a href="#org060e48b"><a href="http://www.kouno.jp/home/c_faq/">Language C FAQ</a></a></h3>
+<div class="outline-text-3" id="text-org060e48b">
 <p>
 日本語版。
 </p>
 </div>
 </div>
-<div id="outline-container-org550f9f1" class="outline-3">
-<h3 id="org550f9f1"><a href="#org550f9f1"><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2137r0.html">P2137R0: Goals and priorities for C++</a></a></h3>
-<div class="outline-text-3" id="text-org550f9f1">
+<div id="outline-container-org18e5ec5" class="outline-3">
+<h3 id="org18e5ec5"><a href="#org18e5ec5"><a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p2137r0.html">P2137R0: Goals and priorities for C++</a></a></h3>
+<div class="outline-text-3" id="text-org18e5ec5">
 <p>
 C++の提案書。
 </p>
 </div>
 </div>
-<div id="outline-container-orgba2e104" class="outline-3">
-<h3 id="orgba2e104"><a href="#orgba2e104"><a href="http://www.nurs.or.jp/~sug/soft/index.htm">杉浦とソフトウェア開発</a></a></h3>
-<div class="outline-text-3" id="text-orgba2e104">
+<div id="outline-container-orgd194c17" class="outline-3">
+<h3 id="orgd194c17"><a href="#orgd194c17"><a href="http://www.nurs.or.jp/~sug/soft/index.htm">杉浦とソフトウェア開発</a></a></h3>
+<div class="outline-text-3" id="text-orgd194c17">
 <p>
 なんだかすごい人。
 </p>
 </div>
 </div>
-<div id="outline-container-org5966b9c" class="outline-3">
-<h3 id="org5966b9c"><a href="#org5966b9c"><a href="http://www.kh.rim.or.jp/~nagamura/misc/stroustrup-interview.html">Bjarne Stroustrup インタビュー (？)</a></a></h3>
-<div class="outline-text-3" id="text-org5966b9c">
+<div id="outline-container-org2c636ca" class="outline-3">
+<h3 id="org2c636ca"><a href="#org2c636ca"><a href="http://www.kh.rim.or.jp/~nagamura/misc/stroustrup-interview.html">Bjarne Stroustrup インタビュー (？)</a></a></h3>
+<div class="outline-text-3" id="text-org2c636ca">
 <p>
 C++の開発者へのインタビュー。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orgbaf4191" class="outline-2">
-<h2 id="orgbaf4191"><a href="#orgbaf4191">Archives</a></h2>
+<div id="outline-container-org680a425" class="outline-2">
+<h2 id="org680a425"><a href="#org680a425">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
