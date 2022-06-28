@@ -15,7 +15,296 @@ OS、プログラミング言語、ハードウェアとの接続といった基
 
 現在基盤として使われている多くのプログラムがCで書かれていて、[[id:bb71747d-8599-4aee-b747-13cb44c05773][OSS]]として公開されている。別の言語で書くにしても、既存の巨大なコード群を参考にできるのは大きな利点。
 * Memo
-** 配列
+** shellのノード定義
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/sh/nodetypes#L56-L61
+#+end_src
+
+#+RESULTS:
+#+begin_results
+NCMD ncmd			# a simple command
+	type	  int
+	backgnd	  int			# set to run command in background
+	args	  nodeptr		# the arguments
+	redirect  nodeptr		# list of file redirections
+	lineno	  int
+#+end_results
+
+** バイナリツリー
+バイナリツリーの中にはleft, rightを持つものがあり、leftは小さい、rightは大きいとしてノードの順番を決定する。
+
+#+caption: バイナリツリーの定義。各ノードはほかのノードを最高2つまで持つことができる
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/include/isc/tree.h#L44-L49
+#+end_src
+
+#+RESULTS:
+#+begin_results
+typedef	struct tree_s {
+		tree_t		data;
+		struct tree_s	*left, *right;
+		short		bal;
+	}
+	tree;
+#+end_results
+
+#+caption: ツリー内の要素を再帰的に検索する
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/isc/tree.c#L105-L130
+#+end_src
+
+#+RESULTS:
+#+begin_results
+tree_t
+tree_srch(tree **ppr_tree, int (*pfi_compare)(tree_t, tree_t), tree_t	p_user) {
+	ENTER("tree_srch")
+
+	if (*ppr_tree) {
+		int i_comp = (*pfi_compare)(p_user, (**ppr_tree).data);
+
+		if (i_comp > 0)
+			RET(tree_srch(&(**ppr_tree).right,
+				      pfi_compare,
+				      p_user))
+
+		if (i_comp < 0)
+			RET(tree_srch(&(**ppr_tree).left,
+				      pfi_compare,
+				      p_user))
+
+		/* not higher, not lower... this must be the one.
+		 */
+		RET((**ppr_tree).data)
+	}
+
+	/* grounded. NOT found.
+	 */
+	RET(NULL)
+}
+#+end_results
+
+#+caption: 系統的にツリーをたどる
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/external/bsd/libbind/dist/isc/tree.c#L155-L169
+#+end_src
+
+#+RESULTS:
+#+begin_results
+int
+tree_trav(tree **ppr_tree, int (*pfi_uar)(tree_t)) {
+	ENTER("tree_trav")
+
+	if (!*ppr_tree)
+		RET(TRUE)
+
+	if (!tree_trav(&(**ppr_tree).left, pfi_uar))
+		RET(FALSE)
+	if (!(*pfi_uar)((**ppr_tree).data))
+		RET(FALSE)
+	if (!tree_trav(&(**ppr_tree).right, pfi_uar))
+		RET(FALSE)
+	RET(TRUE)
+}
+#+end_results
+
+- ツリーは言語構造の表現ができる
+
+#+caption: lintでの例
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/xlint/lint1/lint1.h#L284-L305
+#+end_src
+
+#+RESULTS:
+#+begin_results
+typedef	struct tnode {
+	op_t	tn_op;		/* operator */
+	type_t	*tn_type;	/* type */
+	bool	tn_lvalue:1;	/* node is lvalue */
+	bool	tn_cast:1;	/* if tn_op == CVT, it's an explicit cast */
+	bool	tn_parenthesized:1;
+	bool	tn_sys:1;	/* in strict bool mode, allow mixture between
+				 * bool and scalar, for code from system
+				 * headers that may be a mixture between
+				 * scalar types and bool
+				 */
+	bool	tn_system_dependent:1; /* depends on sizeof or offsetof */
+	union {
+		struct {
+			struct	tnode *_tn_left;	/* (left) operand */
+			struct	tnode *_tn_right;	/* right operand */
+		} tn_s;
+		sym_t	*_tn_sym;	/* symbol if op == NAME */
+		val_t	*_tn_val;	/* value if op == CON */
+		strg_t	*_tn_string;	/* string if op == STRING */
+	} tn_u;
+} tnode_t;
+#+end_results
+
+** ハッシュテーブルエントリに複数の要素を格納する
+シンボルテーブルの構築によく使われる。
+
+#+caption:
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/games/battlestar/parse.c#L75-L84
+#+end_src
+
+#+RESULTS:
+#+begin_results
+static struct wlist *
+lookup(const char   *s)
+{
+	struct wlist *wp;
+
+	for (wp = hashtab[hash(s)]; wp != NULL; wp = wp->next)
+		if (*s == *wp->string && strcmp(s, wp->string) == 0)
+			return wp;
+	return NULL;
+}
+#+end_results
+
+** 循環リスト実装
+#+caption: 終端がないので、forを使えない。最初の要素を保存して、同じ要素にあたるまでループする
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/csh/lex.c#L176-L189
+#+end_src
+
+#+RESULTS:
+#+begin_results
+prlex(FILE *fp, struct wordent *sp0)
+{
+    struct wordent *sp;
+
+    sp = sp0->next;
+    for (;;) {
+	(void)fprintf(fp, "%s", vis_str(sp->word));
+	sp = sp->next;
+	if (sp == sp0)
+	    break;
+	if (sp->word[0] != '\n')
+	    (void) fputc(' ', fp);
+    }
+}
+#+end_results
+
+** リスト処理
+#+caption: host_listを定義
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L63-L70
+#+end_src
+
+#+RESULTS:
+#+begin_results
+static struct host_list {
+	struct host_list *next;
+	int family;
+	union {
+		struct in6_addr _addr6;
+		struct in_addr _addr4;
+	} addr;
+} *hosts;
+#+end_results
+
+#+caption: リストを辿りforで処理する
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L79-L105
+#+end_src
+
+#+RESULTS:
+#+begin_results
+search_host(struct sockaddr *sa)
+{
+	struct host_list *hp;
+
+	if (!hosts)
+		return 0;
+
+	for (hp = hosts; hp != NULL; hp = hp->next) {
+		switch (hp->family) {
+		case AF_INET6:
+			if (!memcmp(&hp->addr6,
+			    &((struct sockaddr_in6 *)(void *)sa)->sin6_addr,
+			    sizeof (struct in6_addr)))
+				return 1;
+			break;
+		case AF_INET:
+			if (!memcmp(&hp->addr4,
+			    &((struct sockaddr_in *)(void *)sa)->sin_addr,
+			    sizeof (struct in_addr)))
+				return 1;
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+#+end_results
+
+nextという要素を持つ構造体は1方向リスト連結リストのノードを定義する。
+
+#+caption: nextを追加して辿れるようにする
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/rup/rup.c#L108-L134
+#+end_src
+
+#+RESULTS:
+#+begin_results
+remember_host(struct sockaddr *sa)
+{
+	struct host_list *hp;
+
+	if ((hp = malloc(sizeof(struct host_list))) == NULL) {
+		err(1, "malloc");
+		/* NOTREACHED */
+	}
+	hp->family = sa->sa_family;
+	hp->next = hosts;
+	switch (sa->sa_family) {
+	case AF_INET6:
+		(void)memcpy(&hp->addr6,
+		    &((struct sockaddr_in6 *)(void *)sa)->sin6_addr,
+		    sizeof (struct in6_addr));
+		break;
+	case AF_INET:
+		(void)memcpy(&hp->addr4,
+		    &((struct sockaddr_in *)(void *)sa)->sin_addr,
+		    sizeof (struct in_addr));
+		break;
+	default:
+		errx(1, "unknown address family");
+		/* NOTREACHED */
+	}
+	hosts = hp;
+}
+#+end_results
+
+#+caption: ダブル連結リストから要素epを削除
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/usr.bin/telnet/commands.c#L1700-L1716
+#+end_src
+
+#+RESULTS:
+#+begin_results
+struct env_lst *
+env_undefine(const char *var, char *d)
+{
+	struct env_lst *ep;
+
+	if ((ep = env_find(var)) != NULL) {
+		ep->prev->next = ep->next;
+		if (ep->next)
+			ep->next->prev = ep->prev;
+		if (ep->var)
+			free(ep->var);
+		if (ep->value)
+			free(ep->value);
+		free(ep);
+	}
+	return NULL;
+}
+#+end_results
+
+** 配列定義
 #+caption: 配列要素があらかじめわかっている場合の初期化
 #+begin_src git-permalink
 https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/lib/libc/time/localtime.c#L869-L871
@@ -337,7 +626,7 @@ CLOCK: [2022-06-11 Sat 22:38]--[2022-06-11 Sat 23:03] =>  0:25
 CLOCK: [2022-06-10 Fri 10:10]--[2022-06-10 Fri 10:35] =>  0:25
 CLOCK: [2022-06-09 Thu 10:17]--[2022-06-09 Thu 10:42] =>  0:25
 :END:
-- 41, 59, 67
+- 41, 59, 67, 103, 105
 楽しい入門書。
 *** DONE -50
 CLOSED: [2022-06-12 Sun 15:57]

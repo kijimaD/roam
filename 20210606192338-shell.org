@@ -7,6 +7,166 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
+** シェルのバックグラウンド実行
+#+caption: 再帰で処理する
+#+begin_src git-permalink
+https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/sh/jobs.c#L1716-L1865
+#+end_src
+
+#+RESULTS:
+#+begin_results C
+STATIC void
+cmdtxt(union node *n)
+{
+	union node *np;
+	struct nodelist *lp;
+	const char *p;
+	int i;
+
+	if (n == NULL || cmdnleft <= 0)
+		return;
+	switch (n->type) {
+	case NSEMI:
+		cmdtxt(n->nbinary.ch1);
+		cmdputs("; ");
+		cmdtxt(n->nbinary.ch2);
+		break;
+	case NAND:
+		cmdtxt(n->nbinary.ch1);
+		cmdputs(" && ");
+		cmdtxt(n->nbinary.ch2);
+		break;
+	case NOR:
+		cmdtxt(n->nbinary.ch1);
+		cmdputs(" || ");
+		cmdtxt(n->nbinary.ch2);
+		break;
+	case NDNOT:
+		cmdputs("! ");
+		/* FALLTHROUGH */
+	case NNOT:
+		cmdputs("! ");
+		cmdtxt(n->nnot.com);
+		break;
+	case NPIPE:
+		for (lp = n->npipe.cmdlist ; lp ; lp = lp->next) {
+			cmdtxt(lp->n);
+			if (lp->next)
+				cmdputs(" | ");
+		}
+		if (n->npipe.backgnd)
+			cmdputs(" &");
+		break;
+	case NSUBSHELL:
+		cmdputs("(");
+		cmdtxt(n->nredir.n);
+		cmdputs(")");
+		break;
+	case NREDIR:
+	case NBACKGND:
+		cmdtxt(n->nredir.n);
+		break;
+	case NIF:
+		cmdputs("if ");
+		cmdtxt(n->nif.test);
+		cmdputs("; then ");
+		cmdtxt(n->nif.ifpart);
+		if (n->nif.elsepart) {
+			cmdputs("; else ");
+			cmdtxt(n->nif.elsepart);
+		}
+		cmdputs("; fi");
+		break;
+	case NWHILE:
+		cmdputs("while ");
+		goto until;
+	case NUNTIL:
+		cmdputs("until ");
+ until:
+		cmdtxt(n->nbinary.ch1);
+		cmdputs("; do ");
+		cmdtxt(n->nbinary.ch2);
+		cmdputs("; done");
+		break;
+	case NFOR:
+		cmdputs("for ");
+		cmdputs(n->nfor.var);
+		cmdputs(" in ");
+		cmdlist(n->nfor.args, 1);
+		cmdputs("; do ");
+		cmdtxt(n->nfor.body);
+		cmdputs("; done");
+		break;
+	case NCASE:
+		cmdputs("case ");
+		cmdputs(n->ncase.expr->narg.text);
+		cmdputs(" in ");
+		for (np = n->ncase.cases; np; np = np->nclist.next) {
+			cmdtxt(np->nclist.pattern);
+			cmdputs(") ");
+			cmdtxt(np->nclist.body);
+			switch (n->type) {	/* switch (not if) for later */
+			case NCLISTCONT:
+				cmdputs(";& ");
+				break;
+			default:
+				cmdputs(";; ");
+				break;
+			}
+		}
+		cmdputs("esac");
+		break;
+	case NDEFUN:
+		cmdputs(n->narg.text);
+		cmdputs("() { ... }");
+		break;
+	case NCMD:
+		cmdlist(n->ncmd.args, 1);
+		cmdlist(n->ncmd.redirect, 0);
+		if (n->ncmd.backgnd)
+			cmdputs(" &");
+		break;
+	case NARG:
+		cmdputs(n->narg.text);
+		break;
+	case NTO:
+		p = ">";  i = 1;  goto redir;
+	case NCLOBBER:
+		p = ">|";  i = 1;  goto redir;
+	case NAPPEND:
+		p = ">>";  i = 1;  goto redir;
+	case NTOFD:
+		p = ">&";  i = 1;  goto redir;
+	case NFROM:
+		p = "<";  i = 0;  goto redir;
+	case NFROMFD:
+		p = "<&";  i = 0;  goto redir;
+	case NFROMTO:
+		p = "<>";  i = 0;  goto redir;
+ redir:
+		if (n->nfile.fd != i)
+			cmdputi(n->nfile.fd);
+		cmdputs(p);
+		if (n->type == NTOFD || n->type == NFROMFD) {
+			if (n->ndup.dupfd < 0)
+				cmdputs("-");
+			else
+				cmdputi(n->ndup.dupfd);
+		} else {
+			cmdtxt(n->nfile.fname);
+		}
+		break;
+	case NHERE:
+	case NXHERE:
+		cmdputs("<<...");
+		break;
+	default:
+		cmdputs("???");
+		break;
+	}
+}
+#+end_results
+
 ** ファイルサイズのランキング
 サイズ順に、最も大きい10ディレクトリを表示する。
 
