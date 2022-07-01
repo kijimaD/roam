@@ -146,7 +146,7 @@
       :html-link-up ""
       :html-link-home ""
       :with-timestamps nil
-      :with-toc nil
+      :with-toc t
 
       :sitemap-title "Sitemap"
       :auto-sitemap t ; generate sitemap.org automagically
