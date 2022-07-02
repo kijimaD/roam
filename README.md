@@ -10,6 +10,13 @@
 + staging: https://roam-staging.herokuapp.com/
 + monitor: https://kijimad.github.io/roam_upptime/
 
+## development
+
+```shell
+make org2html
+make server
+```
+
 ## lint
 ```shell
 npm install

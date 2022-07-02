@@ -5,6 +5,45 @@
 * 概要
 Railsは[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]でWEBサイトを作るためのフレームワーク。
 * Memo
+** 集計時のN+1回避
+異なる条件の複数の件数を表示したいとき。たとえば↓レコードで、Receiptsに載っているproductの数ごとに集計したい。
+
+- 最終型
+| products.name | count |
+| おにぎり      |     2 |
+| お茶          |     1 |
+
+
+
+- Receipts
+| id | product_id |   |
+|  1 |          1 |   |
+|  2 |          1 |   |
+|  3 |          2 |   |
+
+- Products
+| id | name     |
+|  1 | おにぎり |
+|  2 | お茶     |
+
+こうやって書くと明らかにSQLのgroup関数を使おう、となる。が、実際のコードでは気づかずに条件を変えてeachで繰り返す…としてN+1にしてしまうことがある。こうする。
+
+#+begin_src ruby
+  Receipt.group(Product.arel_table[:id]).count
+#+end_src
+
+このようなハッシュテーブルを返す。
+
+#+begin_src json
+// product_id => count
+{
+  1=>2,
+  2=>1
+}
+#+end_src
+
+product_idがわかっているので、あとはProductをfindして名前を引けばいい。
+
 ** エラー表示
 ブラウザでのエラー表示は、configで設定できる。
 デフォルトのproduction, sandbox, stagingではfalseになっていて、エラーは表示されない。
