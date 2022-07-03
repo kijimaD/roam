@@ -14,7 +14,410 @@ RustはC言語、C++の置換を目指した[[id:868ac56a-2d42-48d7-ab7f-7047c85
 
 [[id:4270d99a-d2b5-429e-b33c-c2e097b20730][Zig]]と方向性が同じ。
 * Memo
+** トレイトの概要
+[[https://doc.rust-jp.rs/book-ja/ch10-02-traits.html][トレイト：共通の振る舞いを定義する - The Rust Programming Language 日本語版]]
+
+トレイトを使用すると、あるジェネリックが、特定の振る舞いをもつあらゆる型になり得ることを指定できる。
+
+#+caption: メソッドシグニチャのあとに、セミコロンを使用している。このトレイトに実装する型はそれぞれ、メソッドの本体に独自の振る舞いを提供しなければならない
+#+begin_src rust
+  pub trait Summary {
+      fn summarize(&self) -> String;
+  }
+#+end_src
+
+トレイトを型に実装する。
+
+#+caption: 同じメソッド名summarizeで型によって振る舞いが異なる
+#+begin_src rust
+  pub trait Summary {
+      fn summarize(&self) -> String;
+  }
+
+  pub struct NewsArticle {
+      pub headline: String,
+      pub location: String,
+      pub author: String,
+      pub content: String,
+  }
+
+  impl Summary for NewsArticle {
+      fn summarize(&self) -> String {
+          format!("{}, by {} ({})", self.headline, self.author, self.location)
+      }
+  }
+
+  pub struct Tweet {
+      pub username: String,
+      pub content: String,
+      pub reply: bool,
+      pub retweet: bool,
+  }
+
+  impl Summary for Tweet {
+      fn summarize(&self) -> String {
+          format!("{}: {}", self.username, self.content)
+      }
+  }
+#+end_src
+
+** ジェネリクスの概要
+[[https://doc.rust-jp.rs/book-ja/ch10-00-generics.html][ジェネリック型、トレイト、ライフタイム - The Rust Programming Language 日本語版]]
+
+#+caption: Option enumの定義にもジェネリック型が使われている。
+#+begin_src rust
+  enum Option<T> {
+    Some(T),
+    None,
+  }
+#+end_src
+
+型Tの値を保持するSomeと、値を何も保持しないNone。
+
+複数のジェネリックな型を使用できる。
+
+#+caption: Result Enumの定義
+#+begin_src rust
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+#+end_src
+
+メソッド定義にも使える。
+
+#+caption: implの直後にTを宣言しなければならない。そうすることでPointの山カッコ内の方が、具体的な型ではなくジェネリックな型であることを認識できる
+#+begin_src rust
+    struct Point<T> {
+      x: T,
+      y: T,
+    }
+
+  impl<T> Point<T> {
+    fn x(&self) -> &T {
+      &self.x
+    }
+  }
+
+  fn main() {
+    let p = Point { x: 5, y: 10};
+    println!("p.x = {}", p.x());
+  }
+#+end_src
+
+** matchとOption
+[[https://doc.rust-jp.rs/book-ja/ch06-02-match.html][match制御フロー演算子 - The Rust Programming Language 日本語版]]
+
+#+begin_src rust
+  enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+  }
+
+  fn value_in_cents(coin: Coin) -> u32 {
+    match Coin {
+      Coin::Penny => 1,
+      Coin::Nickel => 5,
+      Coin::Dime => 10,
+      Coin::Quarter => 25,
+    }
+  }
+#+end_src
+
+値に束縛されるパターン。Quarterが保持するenumを増やす。
+
+#+caption: Quarterにenumが増えた
+#+begin_src rust :results output
+  #[derive(Debug)]
+  enum UsState {
+      Alabama,
+      Alaska,
+  }
+
+  enum Coin {
+      Penny,
+      Nickel,
+      Dime,
+      Quarter(UsState),
+  }
+
+  fn value_in_cents(coin: Coin) -> u32 {
+      match coin {
+          Coin::Penny => 1,
+          Coin::Nickel => 5,
+          Coin::Dime => 10,
+          Coin::Quarter(state) => {
+              // stateに束縛されるのは、UsState::Alabama
+              println!("state quarter from {:?}!", state);
+              25
+          },
+      }
+  }
+
+  value_in_cents(Coin::Quarter(UsState::Alabama))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+state quarter from Alabama!
+25
+#+end_results
+
+Option<T>とのマッチ。
+- マッチは包括的なので、もしNoneアームがなかったとしたらエラーを出してくれる。
+
+#+caption: 中に値があったらその値に1を足す。値がなければNoneを返す
+#+begin_src rust
+  fn plus_one(x: Option<i32>) -> Option<i32> {
+      match x {
+          None => None,
+          Some(i) => Some(i + 1),
+      }
+  }
+
+  fn main() {
+      let five = Some(5);
+      let six = plus_one(five);
+      let none = plus_one(None);
+  }
+
+#+end_src
+
+単にif letで短く書ける。
+
+#+begin_src rust
+  if let Some(thing) = thing {
+     // 中身の値があるとき実行
+    ｝else {
+     // 中身の値がないとき実行
+#+end_src
+  }
+
+#+RESULTS:
+#+begin_results
+error[E0433]: failed to resolve: use of undeclared type `Coin`
+ --> /tmp/babel-Mwh0df/rust-jR2DGi:4:12
+  |
+4 |     if let Coin::Quarter(state) = coin {
+  |            ^^^^ use of undeclared type `Coin`
+
+error[E0425]: cannot find value `coin` in this scope
+ --> /tmp/babel-Mwh0df/rust-jR2DGi:4:35
+  |
+4 |     if let Coin::Quarter(state) = coin {
+  |                                   ^^^^ not found in this scope
+
+error: aborting due to 2 previous errors
+
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+#+end_results
+
+** enumと構造体
+[[https://doc.rust-jp.rs/book-ja/ch06-01-defining-an-enum.html][Enumを定義する - The Rust Programming Language 日本語版]]
+
+#+caption: enumの各列挙子にデータを直接添付できる
+#+begin_src rust
+  enum IpAddr {
+      V4(String),
+      V6(String),
+  }
+
+  fn main () {
+      let home = IpAddr::V4(String::from("127.0.0.1"));
+      let loopback = IpAddr::V6(String::from("::1"));
+  }
+
+  main()
+#+end_src
+
+別の例。
+
+#+caption: これは当然、異なる構造体でも実現できる。しかしenumだと、この種のメッセージいずれもとる関数を簡単に定義できるメリットがある
+#+begin_src rust
+  enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+  }
+#+end_src
+
+Optionも、標準ライブラリにより定義されているEnum。初期化処理(prelude)に含まれているため、明示的にスコープに導入する必要がない。
+
+#+caption: 定義
+#+begin_src git-permalink
+https://github.com/kd-collective/rust/blob/8b954910c59a7a362c60959e93110892b6e9a691/library/core/src/option.rs#L514-L523
+#+end_src
+
+#+RESULTS:
+#+begin_results rust
+pub enum Option<T> {
+    /// No value
+    #[lang = "None"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    None,
+    /// Some value `T`
+    #[lang = "Some"]
+    #[stable(feature = "rust1", since = "1.0.0")]
+    Some(#[stable(feature = "rust1", since = "1.0.0")] T),
+}
+#+end_results
+
+Option値を使って数値型や文字列型を保持する例。
+#+begin_src rust
+    let some_number = Some(5);
+    let some_string = Some("a string");
+
+    let absent_number: Option<i32> = None;
+#+end_src
+
+Option<T>とTは異なる。Option<T>を使うためには変換が必要になる。nullである場合を明示的に処理する必要がある。
+
+** 構造体のインスタンス化
+[[https://doc.rust-jp.rs/book-ja/ch05-03-method-syntax.html][メソッド記法 - The Rust Programming Language 日本語版]]
+
+newはない。
+
+#+begin_src rust :results outputs
+  struct Rectangle {
+      width: u32,
+      height: u32,
+  }
+
+  fn main() {
+      let rect1 = Rectangle { width: 30, height: 50 };
+
+      println!("The area of the rectangle is {} square pixels.", area(&rect1));
+  }
+
+  fn area(rectangle: &Rectangle) -> u32{ rectangle.width *
+                                         rectangle.height }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+The area of the rectangle is 1500 square pixels.
+()
+#+end_results
+
+構造体で情報出力するために、debug注釈を追加する。
+
+#+caption: 注釈を追加して、構造体の中身を表示できるようになる
+#+begin_src rust :results outputs
+  #[derive(Debug)]
+  struct Rectangle {
+    width: u32,
+    height: u32,
+  }
+
+  fn main() {
+    let rect = Rectangle { width: 1, height: 1};
+    println!("rect is {:?}", rect);
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+rect is Rectangle { width: 1, height: 1 }
+()
+#+end_results
+
+構造体上にメソッドを実装する。
+
+#+caption: rect1.area()で呼び出せる。型に実装することでグルーピングできる
+#+begin_src rust :results outputs
+  #[derive(Debug)]
+  struct Rectangle {
+      width: i32,
+      height: i32,
+  }
+
+  impl Rectangle {
+      // メソッドなので、selfはRectangle。
+      fn area(&self) -> u32 {
+          self.width * self.height
+      }
+  }
+
+  fn main() {
+      let rect1 = Rectangle{ width: 1, height: 1 }
+      println!(
+          "The area of the rectangle is {} square pixels.",
+          rect1.area()
+      );
+  }
+#+end_src
+
+新しいメソッド。
+
+#+begin_src rust :results outputs
+  #[derive(Debug)]
+  struct Rectangle {
+      width: i32,
+      height: i32,
+  }
+
+  impl Rectangle {
+      fn can_hold(&self, other: &Rectangle) -> bool {
+          self.width > other.width && self.height > other.height
+      }
+  }
+
+  fn main() {
+      let rect1 = Rectangle{ width: 30, height: 50 };
+      let rect2 = Rectangle{ width: 10, height: 40 };
+      let rect3 = Rectangle{ width: 60, height: 45 };
+
+      println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+      println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Can rect1 hold rect2? true
+Can rect1 hold rect3? false
+()
+#+end_results
+
+** ライフタイム
+ライフタイムを使うと、構造体に他の何かに所有されたデータへの参照を保持させることができる。
+** フィールドのない構造体: ユニット様構造体
+[[https://doc.rust-jp.rs/book-ja/ch05-01-defining-structs.html#%E3%83%95%E3%82%A3%E3%83%BC%E3%83%AB%E3%83%89%E3%81%AE%E3%81%AA%E3%81%84%E3%83%A6%E3%83%8B%E3%83%83%E3%83%88%E6%A7%98%E3%82%88%E3%81%86%E6%A7%8B%E9%80%A0%E4%BD%93][構造体を定義し、インスタンス化する - The Rust Programming Language 日本語版]]
+
+#+begin_quote
+また、一切フィールドのない構造体を定義することもできます！これらは、()、ユニット型と似たような振る舞いをすることから、 ユニット様構造体と呼ばれます。ユニット様構造体は、ある型にトレイトを実装するけれども、 型自体に保持させるデータは一切ない場面に有効になります。トレイトについては第10章で議論します。
+#+end_quote
+
+#+caption: 使用例
+#+begin_src rust
+pub struct Monster {}
+#+end_src
+
 ** マクロ作成
+コンパイル前に動的にコードを展開して、実行することで柔軟性を得られる。
+
+#+caption: &ast.identでパースした関数名が取れる
+#+begin_src git-permalink
+https://github.com/kd-collective/specs/blob/f07c484ad3caf8dccbf55c96af4ef1e3475dea28/specs-derive/src/lib.rs#L56-L57
+#+end_src
+
+#+RESULTS:
+#+begin_results
+fn impl_component(ast: &DeriveInput) -> proc_macro2::TokenStream {
+    let name = &ast.ident;
+#+end_results
+
+#+caption: 取得した関数名を使って、quote!でマクロ展開する。quote!内が実際にコードとして実行される
 #+begin_src git-permalink
 https://github.com/kd-collective/specs/blob/f07c484ad3caf8dccbf55c96af4ef1e3475dea28/specs-derive/src/lib.rs#L71-L75
 #+end_src
@@ -207,6 +610,12 @@ Microsoftのチュートリアル。
 ** TODO [[https://doc.rust-jp.rs/rust-by-example-ja/][Introduction - Rust By Example 日本語版]]
 ** WIP [[https://doc.rust-jp.rs/book-ja/title-page.html][The Rust Programming Language 日本語版]]
 :LOGBOOK:
+CLOCK: [2022-07-03 Sun 11:47]--[2022-07-03 Sun 12:12] =>  0:25
+CLOCK: [2022-07-03 Sun 11:14]--[2022-07-03 Sun 11:39] =>  0:25
+CLOCK: [2022-07-03 Sun 10:38]--[2022-07-03 Sun 11:03] =>  0:25
+CLOCK: [2022-07-03 Sun 00:40]--[2022-07-03 Sun 01:05] =>  0:25
+CLOCK: [2022-07-02 Sat 22:12]--[2022-07-02 Sat 22:37] =>  0:25
+CLOCK: [2022-07-02 Sat 21:44]--[2022-07-02 Sat 22:09] =>  0:25
 CLOCK: [2022-06-16 Thu 23:00]--[2022-06-16 Thu 23:25] =>  0:25
 CLOCK: [2022-06-11 Sat 18:10]--[2022-06-11 Sat 18:35] =>  0:25
 CLOCK: [2022-06-11 Sat 17:32]--[2022-06-11 Sat 17:57] =>  0:25
