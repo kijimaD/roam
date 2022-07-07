@@ -14,6 +14,184 @@ RustはC言語、C++の置換を目指した[[id:868ac56a-2d42-48d7-ab7f-7047c85
 
 [[id:4270d99a-d2b5-429e-b33c-c2e097b20730][Zig]]と方向性が同じ。
 * Memo
+** マクロの例
+マクロの例。identはidentityの略。
+
+#+caption: lintを定義するマクロ
+#+begin_src git-permalink
+https://github.com/kd-collective/rust/blob/a3beeaa84da241f35888338ded6659938206ff13/src/librustdoc/lint.rs#L66-L83
+#+end_src
+
+#+RESULTS:
+#+begin_results
+macro_rules! declare_rustdoc_lint {
+    ($(#[$attr:meta])* $name: ident, $level: ident, $descr: literal $(,)?) => {
+        declare_tool_lint! {
+            $(#[$attr])* pub rustdoc::$name, $level, $descr
+        }
+    }
+}
+
+declare_rustdoc_lint! {
+    /// The `broken_intra_doc_links` lint detects failures in resolving
+    /// intra-doc link targets. This is a `rustdoc` only lint, see the
+    /// documentation in the [rustdoc book].
+    ///
+    /// [rustdoc book]: ../../../rustdoc/lints.html#broken_intra_doc_links
+    BROKEN_INTRA_DOC_LINKS,
+    Warn,
+    "failures in resolving intra-doc link targets"
+}
+#+end_results
+
+printlnマクロの定義。
+
+#+caption: println
+#+begin_src git-permalink
+https://github.com/kd-collective/rust/blob/a3beeaa84da241f35888338ded6659938206ff13/library/std/src/macros.rs#L101-L108
+#+end_src
+
+#+RESULTS:
+#+begin_results
+macro_rules! println {
+    () => {
+        $crate::print!("\n")
+    };
+    ($($arg:tt)*) => {{
+        $crate::io::_print($crate::format_args_nl!($($arg)*));
+    }};
+}
+#+end_results
+
+** ライフタイムの概要
+[[https://doc.rust-jp.rs/book-ja/ch10-03-lifetime-syntax.html][ライフタイムで参照を検証する - The Rust Programming Language 日本語版]]
+
+Rustにおいて参照はすべてライフタイムを保持する。ライフタイムは、その参照が有効になるスコープ。ライフタイムも暗黙的に推論される。複数の型の可能性があるときには、型を注釈しなければならない。
+
+ライフタイムの主な目的は、ダングリング参照…参照するつもりだったデータ以外のデータを参照してしまうこと…を回避すること。コンパイラは借用チェッカーによってチェックしてエラーを出す。
+
+#+caption: 値がスコープを抜けてしまった参照を使用しようとする
+#+begin_src rust
+  fn main() {
+    {
+      let r;
+
+      {
+        let x = 5;
+        r = &x;
+      }
+
+      println!("r: {}", r);
+    }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+error[E0597]: `x` does not live long enough
+  --> /tmp/babel-Mwh0df/rust-H3aWMg:8:11
+   |
+8  |       r = &x;
+   |           ^^ borrowed value does not live long enough
+9  |     }
+   |     - `x` dropped here while still borrowed
+10 |
+11 |     println!("r: {}", r);
+   |                       - borrow later used here
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain E0597`.
+#+end_results
+
+関数のジェネリックなライフタイム。
+
+#+caption: 2つの文字列スライスのうち長い方を返す関数。が、ライフタイムに言及するエラーでコンパイルできない
+#+begin_src rust
+  // 引数は参照である。longest関数に引数の所有権を奪ってほしくないから
+  fn longest(x: &str, y: &str) -> &str {
+      if x.len() > y.len() {
+          x
+      } else {
+          y
+      }
+  }
+
+  fn main() {
+      let string1 = String::from("abcd");
+      let string2 = "xyz";
+
+      let result = longest(string1.as_str(), string2);
+      println!("The longest string is {}", result);
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+error[E0106]: missing lifetime specifier
+ --> /tmp/babel-Mwh0df/rust-eT95tY:2:33
+  |
+2 | fn longest(x: &str, y: &str) -> &str {
+  |               ----     ----     ^ expected named lifetime parameter
+  |
+  = help: this function's return type contains a borrowed value, but the signature does not say whether it is borrowed from `x` or `y`
+help: consider introducing a named lifetime parameter
+  |
+2 | fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+  |           ++++     ++          ++          ++
+
+error: aborting due to previous error
+
+For more information about this error, try `rustc --explain E0106`.
+#+end_results
+
+↑戻り値の型はジェネリックなライフタイム引数である引数であるといっている。返している参照が ~x~ か ~y~ のどちらを参照しているか、コンパイラにはわからないから。ifブロックは ~x~ への参照を返し、elseブロックは ~y~ への参照を返すので、どちらかわからない。
+
+エラーを修正するためには、借用チェッカーが解析できるように、参照間の関係を定義するジェネリックなライフタイム引数を追加する。ライフタイム注釈は、参照の生存期間を変えることはない。ライフタイム注釈は、ライフタイムに影響することなく、複数の参照のライフタイムのお互いの関係を記述する。
+
+ライフタイム引数の名前はアポストロフィーで始まらなければならず、通常全部小文字で、ジェネリック型のように短い。慣例的に ~'a~ という名前を使う。
+
+#+begin_src rust
+  &i32 // ただの参照
+  &'a i32 // 明示的なライフタイム付きの参照
+  &'a mut i32 // 明示的なライフタイム付きの可変参照
+#+end_src
+
+ライフタイム注釈をつける。
+- 何らかのライフタイム'aに対して、関数は2つの引数を取り、どちらも少なくともライフタイム'aと同じだけ生きる文字列スライスであるとコンパイラに教えるようになった
+- 返る文字列スライスもライフタイム'aと同じだけ生きると、コンパイラに教えている。実際にはlongest関数が返す参照のライフタイムは、渡された参照のうち、小さい方のライフタイムと同じということになる
+
+#+caption: ライフタイム注釈を引数、返り値につける
+#+begin_src rust
+  fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+      if x.len() > y.len() {
+          x
+      } else {
+          y
+      }
+  }
+
+  fn main() {
+      let string1 = String::from("abcd");
+      let string2 = "xyz";
+
+      let result = longest(string1.as_str(), string2);
+      println!("The longest string is {}", result);
+  }
+  main();
+#+end_src
+
+#+RESULTS:
+#+begin_results
+The longest string is abcd
+()
+#+end_results
+
+- ライフタイム引数を指定する時、いかなる値のライフタイムも変更していない。longest関数は、 ~x~ と ~y~ の正確な生存期間を知っている必要はなく、このシグニチャを満たすようなスコープを'aに代入できることを知っているだけ
+- 関数にライフタイムを注釈するときは、注釈は関数の本体ではなくシグニチャに付与する
+  - コンパイラは注釈がなくとも関数内のコードを解析できる。が、関数に関数外からの参照や関数外への参照がある場合、コンパイラが引数や戻り値のライフタイムも自力で解決することはほとんど不可能になる。
+  - そのライフタイムは関数が呼び出されるたびに異なる可能性があるので、手動でライフタイムを注釈する必要がある
+
 ** トレイトの概要
 [[https://doc.rust-jp.rs/book-ja/ch10-02-traits.html][トレイト：共通の振る舞いを定義する - The Rust Programming Language 日本語版]]
 
@@ -41,6 +219,7 @@ RustはC言語、C++の置換を目指した[[id:868ac56a-2d42-48d7-ab7f-7047c85
       pub content: String,
   }
 
+  // impl トレイト for 構造体
   impl Summary for NewsArticle {
       fn summarize(&self) -> String {
           format!("{}, by {} ({})", self.headline, self.author, self.location)
@@ -59,7 +238,356 @@ RustはC言語、C++の置換を目指した[[id:868ac56a-2d42-48d7-ab7f-7047c85
           format!("{}: {}", self.username, self.content)
       }
   }
+
+  fn main() {
+      let article = NewsArticle {
+          headline: String::from("Big news!"),
+          location: String::from("Tokyo"),
+          author: String::from("Me"),
+          content: String::from("Birthday"),
+      };
+
+      println!("1 new news: {}", article.summarize());
+
+      let tweet = Tweet {
+          username: String::from("horse_ebooks"),
+          content: String::from(
+              "of course, as you probably already know, people",
+          ),
+          reply: false,
+          retweet: false,
+      };
+
+      println!("1 new tweet: {}", tweet.summarize());
+  }
+  main()
 #+end_src
+
+#+RESULTS:
+#+begin_results
+1 new news: Big news!, by Me (Tokyo)
+1 new tweet: horse_ebooks: of course, as you probably already know, people
+()
+#+end_results
+
+制約: 外部のトレイトを外部の型に対して実装できない。コヒーレンス、孤児のルールと呼ばれる特性の一部。この制約によって、他の人のコードが自分のコードを壊したり、その逆が起きないことを保証する。
+
+デフォルト実装。各メソッドのデフォルト実装があると、すべての型に対して実装を要求しないので便利。
+
+#+caption: Summaryトレイトのsummarizeメソッドにデフォルト実装を指定する
+#+begin_src rust :results output
+  pub struct NewsArticle {
+      pub headline: String,
+      pub location: String,
+      pub author: String,
+      pub content: String,
+  }
+
+  pub trait Summary {
+      fn summarize(&self) -> String {
+          String::from("(Read more...)")
+      }
+  }
+
+  impl Summary for NewsArticle { }
+
+  fn main() {
+      let article = NewsArticle {
+          headline: String::from("Big news!"),
+          location: String::from("Tokyo"),
+          author: String::from("Me"),
+          content: String::from("Birthday"),
+      };
+      println!("New article available! {}", article.summarize());
+  }
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+New article available! (Read more...)
+()
+#+end_results
+
+デフォルト実装は、自らのトレイトのデフォルト実装を持たない他のメソッドを呼び出すことができる。↑の場合は実装メソッドがないため、デフォルト実装が使われた。
+
+一部だけデフォルト実装にする例。
+
+#+begin_src rust
+  pub struct Tweet {
+      pub username: String,
+      pub content: String,
+      pub reply: bool,
+      pub retweet: bool,
+  }
+
+  pub trait Summary {
+      fn summarize_author(&self) -> String;
+
+      fn summarize(&self) -> String {
+          format!("Read more from {}...", self.summarize_author())
+      }
+  }
+
+  impl Summary for Tweet {
+      fn summarize_author(&self) -> String {
+          format!("@{}", self.username)
+      }
+  }
+
+  fn main() {
+      let tweet = Tweet {
+          username: String::from("horse_ebooks"),
+          content: String::from(
+              "of course, as you probably already know, people",
+          ),
+          reply: false,
+          retweet: false,
+      };
+
+      println!("summarize: {}", tweet.summarize());
+      println!("summarize_author: {}", tweet.summarize_author());
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+summarize: Read more from @horse_ebooks...
+summarize_author: @horse_ebooks
+()
+#+end_results
+
+引数itemのsummarizeメソッドを呼ぶ関数notifyを定義する。引数itemはSummaryトレイトを実装している何らかの型。
+
+#+begin_src rust
+  pub struct Tweet {
+      pub username: String,
+      pub content: String,
+      pub reply: bool,
+      pub retweet: bool,
+  }
+
+  pub trait Summary {
+      fn summarize_author(&self) -> String;
+
+      fn summarize(&self) -> String {
+          format!("Read more from {}...", self.summarize_author())
+      }
+  }
+
+  impl Summary for Tweet {
+      fn summarize_author(&self) -> String {
+          format!("@{}", self.username)
+      }
+  }
+
+  // 引数: &impl トレイト
+  pub fn notify(item: &impl Summary) {
+      println!("Breaking news! {}", item.summarize());
+  }
+
+  // ↑と等価で、冗長に書いたバージョン。トレイト境界
+  // 山カッコの中にジェネリックな型引数の宣言を書き、型引数の後ろにコロンを挟んでトレイト境界を置く
+  // pub fn notify<T: Summary>(item: &T) {
+  //   // 速報! {}
+  //   println!("Breaking news! {}", item.summarize());
+  // }
+
+  fn main() {
+      let tweet = Tweet {
+          username: String::from("horse_ebooks"),
+          content: String::from(
+              "of course, as you probably already know, people",
+          ),
+          reply: false,
+          retweet: false,
+      };
+
+      notify(&tweet);
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+Breaking news! Read more from @horse_ebooks...
+()
+#+end_results
+
+トレイトを実装している型を返す。impl Trait構文を戻り値型のところで使うことで、あるトレイトを実装する何らかの型を返す。
+
+#+begin_src rust
+  pub struct Tweet {
+      pub username: String,
+      pub content: String,
+      pub reply: bool,
+      pub retweet: bool,
+  }
+
+  pub trait Summary {
+      fn summarize_author(&self) -> String;
+
+      fn summarize(&self) -> String {
+          format!("Read more from {}...", self.summarize_author())
+      }
+  }
+
+  impl Summary for Tweet {
+      fn summarize_author(&self) -> String {
+          format!("@{}", self.username)
+      }
+  }
+
+  // impl Trait構文を戻り値型のところで使うことで、**あるトレイトを実装する**何らかの型を返す
+  // 具体的な型を指定してないところがポイント
+  // これはクロージャとイテレータを扱うときに特に便利。ある関数はIteratorトレイトを実装するある型を返すのだ、と簡潔に指定できる
+  fn returns_summarizable() -> impl Summary {
+      Tweet {
+          username: String::from("horse_ebooks"),
+          content: String::from(
+              "of course, as you probably already know, people",
+          ),
+          reply: false,
+          retweet: false,
+      }
+  }
+
+  fn main() {
+    let tweet = returns_summarizable();
+    println!("result: {}", tweet.summarize_author());
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+result: @horse_ebooks
+()
+#+end_results
+
+- ただしimpl Traitの制約として、1種類の型を返す場合にのみ使える
+
+関数に渡したスライスの値の型が、PartialOrdとCopyを実装する限りコンパイルできる、ジェネリックなlargest関数。
+
+#+begin_src rust :result :outputs
+  fn largest<T: PartialOrd + Copy>(list: &[T]) -> T {
+      let mut largest = list[0];
+
+      for &item in list {
+          if item > largest {
+              largest = item;
+          }
+      }
+
+      largest
+  }
+
+  fn main() {
+      let number_list = vec![34, 50, 25, 100, 65];
+      let result = largest(&number_list);
+      println!("The largest number is {}", result);
+
+      let char_list = vec!['y', 'm', 'a', 'q'];
+      let result = largest(&char_list);
+      println!("The largest char is {}", result);
+  }
+
+  main()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+The largest number is 100
+The largest char is y
+()
+#+end_results
+
+トレイト境界を使用して、メソッド実装を条件分けする。
+- Pair<T>は常にnew関数を実装する。
+- Pair<T>は、内部の型Tが比較を可能にするPartialOrdトレイトと出力を可能にするDisplayトレイトを実装しているときのみ、cmp_displayメソッドを実装する。
+
+#+caption: トレイト境界によってジェネリックな型に対するメソッド実装を条件分けする
+#+begin_src rust :result outputs
+    use std::fmt::Display;
+
+    struct Pair<T> {
+        x: T,
+        y: T,
+    }
+
+    impl<T> Pair<T>{
+        fn new(x: T, y: T) -> Self {
+            Self { x, y }
+        }
+    }
+
+    impl <T: Display + PartialOrd> Pair<T> {
+        fn cmp_display(&self) {
+            if self.x >= self.y {
+                println!("The largest member is x = {}", self.x);
+            } else {
+                println!("The largest member is y = {}", self.y);
+            }
+        }
+    }
+
+    fn main() {
+        let pair = Pair{ x: 1, y: 2};
+        pair.cmp_display();
+    }
+  main();
+
+#+end_src
+
+#+RESULTS:
+#+begin_results
+The largest member is y = 2
+()
+#+end_results
+
+別のトレイトを実装するあらゆる型に対するトレイト実装を条件分けできる。トレイト境界を満たすあらゆる型にトレイトを実装することは、ブランケット実装と呼ばれ、Rustの標準ライブラリで広く使用される。
+
+#+caption: rustのソースコード。標準ライブラリは、Displayトレイトを実装するあらゆる型にToStringトレイトを実装している
+#+begin_src git-permalink
+https://github.com/kd-collective/rust/blob/8b954910c59a7a362c60959e93110892b6e9a691/library/alloc/src/string.rs#L2388-L2402
+#+end_src
+
+#+RESULTS:
+#+begin_results rust
+impl<T: fmt::Display + ?Sized> ToString for T {
+    // A common guideline is to not inline generic functions. However,
+    // removing `#[inline]` from this method causes non-negligible regressions.
+    // See <https://github.com/rust-lang/rust/pull/74852>, the last attempt
+    // to try to remove it.
+    #[inline]
+    default fn to_string(&self) -> String {
+        let mut buf = String::new();
+        let mut formatter = core::fmt::Formatter::new(&mut buf);
+        // Bypass format_args!() to avoid write_str with zero-length strs
+        fmt::Display::fmt(self, &mut formatter)
+            .expect("a Display implementation returned an error unexpectedly");
+        buf
+    }
+}
+#+end_results
+
+整数はDisplayを実装するので、整数値を対応するString値に変換できる。
+#+begin_src rust
+  fn main() {
+      println!("{}", 3.to_string());
+  }
+  main();
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3
+()
+#+end_results
 
 ** ジェネリクスの概要
 [[https://doc.rust-jp.rs/book-ja/ch10-00-generics.html][ジェネリック型、トレイト、ライフタイム - The Rust Programming Language 日本語版]]
@@ -610,6 +1138,15 @@ Microsoftのチュートリアル。
 ** TODO [[https://doc.rust-jp.rs/rust-by-example-ja/][Introduction - Rust By Example 日本語版]]
 ** WIP [[https://doc.rust-jp.rs/book-ja/title-page.html][The Rust Programming Language 日本語版]]
 :LOGBOOK:
+CLOCK: [2022-07-03 Sun 23:24]--[2022-07-03 Sun 23:49] =>  0:25
+CLOCK: [2022-07-03 Sun 21:57]--[2022-07-03 Sun 22:22] =>  0:25
+CLOCK: [2022-07-03 Sun 21:09]--[2022-07-03 Sun 21:34] =>  0:25
+CLOCK: [2022-07-03 Sun 19:47]--[2022-07-03 Sun 20:12] =>  0:25
+CLOCK: [2022-07-03 Sun 19:15]--[2022-07-03 Sun 19:40] =>  0:25
+CLOCK: [2022-07-03 Sun 17:04]--[2022-07-03 Sun 17:29] =>  0:25
+CLOCK: [2022-07-03 Sun 16:39]--[2022-07-03 Sun 17:04] =>  0:25
+CLOCK: [2022-07-03 Sun 16:05]--[2022-07-03 Sun 16:30] =>  0:25
+CLOCK: [2022-07-03 Sun 15:40]--[2022-07-03 Sun 16:05] =>  0:25
 CLOCK: [2022-07-03 Sun 11:47]--[2022-07-03 Sun 12:12] =>  0:25
 CLOCK: [2022-07-03 Sun 11:14]--[2022-07-03 Sun 11:39] =>  0:25
 CLOCK: [2022-07-03 Sun 10:38]--[2022-07-03 Sun 11:03] =>  0:25
