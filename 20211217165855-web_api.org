@@ -6,6 +6,10 @@
 幅広いAPIという概念のなかで、とくにWebのこと、Web APIについてまとめる。
 [[id:e04aa1a3-509c-45b2-ac64-53d69c961214][Rails]]などWEBアプリケーションを開発する場合、必ず使う。
 * Memo
+** クエリパラメータを使うとき
+[[https://qiita.com/mserizawa/items/b833e407d89abd21ee72][翻訳: WebAPI 設計のベストプラクティス - Qiita]]
+
+フィルタ・ソート・検索はクエリパラメータを使う。ベースとなるURLはできるだけシンプルにリソースを示したものにする。機能はクエリパラメータで指定する。
 ** URLとURIの違い
 [[https://qiita.com/NagaokaKenichi/items/6298eb8960570c7ad2e9][RESTful APIのURI設計(エンドポイント設計) - Qiita]]
 
@@ -30,10 +34,22 @@ SwaggerはAPIドキュメントツールである。ymlやjsonを記述して、
 * Tasks
 ** TODO [[https://www.amazon.co.jp/Web-API-Parts-%E6%B0%B4%E9%87%8E-%E8%B2%B4%E6%98%8E/dp/4873116864/ref=sr_1_2?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=176CX1TFR474&keywords=web+api&qid=1640733660&sprefix=web%2Caps%2C1017&sr=8-2][Web API: The Good Parts | 水野 貴明 |本 | 通販 | Amazon]]
 :LOGBOOK:
+CLOCK: [2022-07-11 Mon 10:14]
+CLOCK: [2022-07-10 Sun 22:42]--[2022-07-10 Sun 23:07] =>  0:25
+CLOCK: [2022-07-10 Sun 22:16]--[2022-07-10 Sun 22:41] =>  0:25
+CLOCK: [2022-07-10 Sun 17:39]--[2022-07-10 Sun 18:04] =>  0:25
+CLOCK: [2022-07-10 Sun 11:12]--[2022-07-10 Sun 11:37] =>  0:25
+CLOCK: [2022-07-10 Sun 08:59]--[2022-07-10 Sun 09:24] =>  0:25
+CLOCK: [2022-07-09 Sat 21:44]--[2022-07-09 Sat 22:09] =>  0:25
+CLOCK: [2022-07-09 Sat 21:08]--[2022-07-09 Sat 21:33] =>  0:25
+CLOCK: [2022-07-09 Sat 20:34]--[2022-07-09 Sat 20:59] =>  0:25
 CLOCK: [2022-07-09 Sat 11:22]--[2022-07-09 Sat 11:47] =>  0:25
 :END:
 
+- 90
+
 - URIとメソッドの関係は、操作するもの(リソース)と操作方法(何をするか)の関係であるといえる。
+- だから名詞と動詞
 - webページの通常のリンクはGETを使ってアクセスするものとみなされる。formを使うとpostとgetを選択できる。
 
 HTTPのメソッドはHTTPリクエストヘッダの先頭行の最初に以下のようにつけられて、サーバに送信される。
@@ -47,12 +63,30 @@ POSTメソッドは指定したURIに属する新しいリソースを送信す�
 - POSTは指定したURIの配下にデータを登録する。
 - PUTはリソースがすでにあって、それを更新する。
 - PUTは完全に上書きし、PATCHは一部を上書きする。
-** TODO [[https://railsguides.jp/routing.html][Rails のルーティング - Railsガイド]]
-** TODO [[https://d4192.hatenablog.com/entry/2019/04/10/190800][Railsルーティングのあれこれ(routes.rb) - プログラミングのメモ帳]]
-** TODO [[https://techracho.bpsinc.jp/baba/2020_11_20/15619][Railsのルーティングを極める (後編)｜TechRacho by BPS株式会社]]
-** TODO [[https://qiita.com/ryo88c/items/0a3c7861015861026e00][「WebAPI 設計のベストプラクティス」に対する所感 - Qiita]]
+- 他のサイトを参考にしながら単語を決める
+- APIがバックエンドのテーブル構造を反映する必要はない
+- すべてのAPIが同じデータ構造を返すために実際のデータをくるむための構造をエンベロープという。ステータスはHTTPヘッダにやらせればよいことで、冗長な表現となる。
+- JSON構造はなるべくフラットにすべきだけど階層化したほうが絶対によい場合は階層化もあり
+- 多くのAPIで同じ意味に利用されている一般的な単語を用いる
+- なるべく少ない単語数で表現する
+- 複数の単語を連結する場合、その連結方法はAPI全体を通して統一する
+- 変な省略形は極力利用しない
+- 単数形/複数形に気をつける
+- 性別をどうするか
+  - 文字列保持のケースが多い
+  - 生物学的な性別が必要な場合はsex
+  - そうでない場合…社会的・文化的な性別の場合はgender
+- エラーの形式を統一し、クライアント側でエラー詳細を機械的に理解可能にする
+- 認証と認可の違い。
+  - 認証(Authentication)とは、「アクセスしてきたのが誰であるのかを識別すること」
+  - 認可(Authorization)とは、「特定のユーザに対してある操作の権限を許可すること」
+
 * Reference
+** [[https://railsguides.jp/routing.html][Rails のルーティング - Railsガイド]]
+** [[https://d4192.hatenablog.com/entry/2019/04/10/190800][Railsルーティングのあれこれ(routes.rb) - プログラミングのメモ帳]]
+** [[https://techracho.bpsinc.jp/baba/2020_11_20/15619][Railsのルーティングを極める (後編)｜TechRacho by BPS株式会社]]
 ** [[https://qiita.com/mserizawa/items/b833e407d89abd21ee72][翻訳: WebAPI 設計のベストプラクティス - Qiita]]
+** [[https://qiita.com/ryo88c/items/0a3c7861015861026e00][「WebAPI 設計のベストプラクティス」に対する所感 - Qiita]]
 ** [[https://www.programmableweb.com/apis][APIs Dashboard | ProgrammableWeb]]
 パブリックAPI集。設計の例としても使える。
 * Archives

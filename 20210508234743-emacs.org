@@ -1,6 +1,6 @@
 :PROPERTIES:
 :ID:       1ad8c3d5-97ba-4905-be11-e6f2626127ad
-:header-args+: :wrap
+:header-args+: :wrap :results raw
 :END:
 #+title: Emacs
 * 概要
@@ -27,6 +27,212 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
 * Memo
+** 起動できないとき
+cask-initializeがWrong type argument: stringp になって、パッケージを読み込めないとき。shell環境変数を指定する。
+https://github.com/syl20bnr/spacemacs/issues/3652#issuecomment-180946962
+
+org-roam, forgeあたりがdeleted bufferになるときは、sqlite関連のパッケージを疑う。
+** リストの重複を削除する
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/subr.el#L731-L751
+#+end_src
+
+#+RESULTS:
+#+begin_results emacs-lisp
+(defun delete-dups (list)
+  "Destructively remove `equal' duplicates from LIST.
+Store the result in LIST and return it.  LIST must be a proper list.
+Of several `equal' occurrences of an element in LIST, the first
+one is kept.  See `seq-uniq' for non-destructive operation."
+  (let ((l (length list)))
+    (if (> l 100)
+        (let ((hash (make-hash-table :test #'equal :size l))
+              (tail list) retail)
+          (puthash (car list) t hash)
+          (while (setq retail (cdr tail))
+            (let ((elt (car retail)))
+              (if (gethash elt hash)
+                  (setcdr tail (cdr retail))
+                (puthash elt t hash)
+                (setq tail retail)))))
+      (let ((tail list))
+        (while tail
+          (setcdr tail (delete (car tail) (cdr tail)))
+          (setq tail (cdr tail))))))
+  list)
+#+end_results
+
+*** 100以下の処理
+
+リストの長さによって処理が分岐していることがわかる。まず100行以下での処理を見る。
+
+#+caption: 100行以下の処理
+#+begin_src emacs-lisp
+(let ((tail list))
+        (while tail
+          (setcdr tail (delete (car tail) (cdr tail)))
+          (setq tail (cdr tail))))
+#+end_src
+
+これで重複削除になるのか、と不思議な感じがする。不明な関数を調べる。
+
+*** setcdr
+[[https://ayatakesi.github.io/emacs/24.5/elisp_html/Setcdr.html][Setcdr (GNU Emacs Lisp Reference Manual)]]
+
+setcdrが非常に重要な処理をしているように見えるので調べる。
+
+#+begin_src emacs-lisp
+  (setq x '(1 2 3))
+  (setcdr x '(4))
+  x
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 4)
+#+end_results
+
+コンスセルのcdrを変更することで、他のリストに置き換える働きをする。
+
+*** delete
+
+#+begin_src emacs-lisp
+  (setq x '(1 2 3 4))
+  (delete x '(3))
+  x
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3 4)
+#+end_results
+
+*** 処理に戻る
+
+本筋に戻る。
+
+#+caption: 抜粋。削除
+#+begin_src emacs-lisp
+  (delete (car tail) (cdr tail))
+#+end_src
+
+は、値を決めて(car tail)、それをリストから取り除く。
+例) '(1 1 2 3) -> '(2 3) になる。carの1を取り上げて、cdrに含まれる1を削除する。
+
+#+caption: 抜粋。連結
+#+begin_src emacs-lisp
+(setcdr tail (delete (car tail) (cdr tail)))
+#+end_src
+
+そしてsetcdrによって、1つになった値と残りの値を連結する。
+'(1) + '(2 3) -> '(1 2 3)
+
+#+caption: 次ループに向けて
+#+begin_src emacs-lisp
+(setq tail (cdr tail))
+#+end_src
+
+次の値を計算するために、単独になった値を除いたリストにする。
+'(1 2 3) -> '(2 3)
+
+ここでは、tailだけが次の計算に向けて再代入されたのであって、値の元になったlistは再代入されずに'(1 2 3)が入ったままになっている。すべての計算が終わったあとlistを評価すれば、望みの値が得られる。tailはループ用で、最終的にnilになる。
+
+*** ハッシュテーブルを使うバージョン
+
+リストの要素が100より大きいとき、ハッシュテーブルを使う実装になっている。100は何基準だろうか。
+
+#+caption: ハッシュテーブルを使う
+#+begin_src emacs-lisp
+  (let ((hash (make-hash-table :test #'equal :size l))
+        (tail list) retail)
+    (puthash (car list) t hash)
+    (while (setq retail (cdr tail))
+      (let ((elt (car retail)))
+        (if (gethash elt hash)
+            (setcdr tail (cdr retail))
+          (puthash elt t hash)
+          (setq tail retail)))))
+#+end_src
+
+- ハッシュに既に入っている値であれば、その要素を取り除いて次の探索へ
+- ハッシュに入っていなければ登録して次の探索
+
+この方法だとループは多いけど、メモリ消費がとても少ないということか。一度のループで比較するのは最初の要素とハッシュの要素だけだ。
+
+** defsubst
+[[https://www.mew.org/~kazu/doc/elisp/defsubst.html][Emacs Lisp]]
+defsubstで定義した関数はbyte compileのときにインライン展開される。つまり、コンパイルして関数実行時の関数呼び出しのコストがなくなり高速になる。頻繁に用いられる小さな関数で有効。
+
+#+caption: defunで定義した場合は、lst plus2と、関数名がそのまま表示され、インライン展開されない
+#+begin_src emacs-lisp
+  (defun plus2 (x)
+    (+ x 2))
+  (byte-compile 'plus2)
+
+  (defun foo (lst)
+    (plus2 lst))
+  (byte-compile 'foo)
+#+end_src
+p
+#+RESULTS:
+#+begin_results
+#[(lst) "\301!\207" [lst plus2] 2]
+#+end_results
+
+#+caption: plus2をdefsubstに変更する。関数の中身lst x 2とインライン展開されていることがわかる
+#+begin_src emacs-lisp
+  (defsubst plus2 (x)
+    (+ x 2))
+  (byte-compile 'plus2)
+
+  (defun foo (lst)
+    (plus2 lst))
+  (byte-compile 'foo)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#[(lst) "\211\302\\)\207" [lst x 2] 3]
+#+end_results
+
+#+caption: optimizerをつけていることがわかる
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/byte-run.el#L480-L495
+#+end_src
+
+#+RESULTS:
+#+begin_results emacs-lisp
+(defmacro defsubst (name arglist &rest body)
+  "Define an inline function.  The syntax is just like that of `defun'.
+
+\(fn NAME ARGLIST &optional DOCSTRING DECL &rest BODY)"
+  (declare (debug defun) (doc-string 3) (indent 2))
+  (or (memq (get name 'byte-optimizer)
+	    '(nil byte-compile-inline-expand))
+      (error "`%s' is a primitive" name))
+  `(prog1
+       (defun ,name ,arglist ,@body)
+     (eval-and-compile
+       ;; Never native-compile defsubsts as we need the byte
+       ;; definition in `byte-compile-unfold-bcf' to perform the
+       ;; inlining (Bug#42664, Bug#43280, Bug#44209).
+       ,(byte-run--set-speed name nil -1)
+       (put ',name 'byte-optimizer 'byte-compile-inline-expand))))
+#+end_results
+
+** simple.sh
+/lisp/simple.shには基本的な編集関数がある。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/simple.el#L1
+#+end_src
+
+#+RESULTS:
+#+begin_results
+;;; simple.el --- basic editing commands for Emacs  -*- lexical-binding: t -*-
+#+end_results
+
 ** 正規表現置換
 入れ替えとかしたい。
 ** 検索結果に対する置換 counsel-git-grep-query-replace
@@ -112,6 +318,27 @@ message1 (const char *m)
 Emacsというか、Lispの話だな。
 ** TODO 起動時何をやっているのか                                     :Write:
 ** 本体コードを読む
+:LOGBOOK:
+CLOCK: [2022-07-10 Sun 23:19]--[2022-07-10 Sun 23:44] =>  0:25
+CLOCK: [2022-07-10 Sun 21:41]--[2022-07-10 Sun 22:06] =>  0:25
+CLOCK: [2022-07-10 Sun 16:57]--[2022-07-10 Sun 17:22] =>  0:25
+CLOCK: [2022-07-10 Sun 16:28]--[2022-07-10 Sun 16:53] =>  0:25
+CLOCK: [2022-07-10 Sun 15:39]--[2022-07-10 Sun 15:55] =>  0:16
+CLOCK: [2022-07-10 Sun 12:13]--[2022-07-10 Sun 12:30] =>  0:17
+CLOCK: [2022-07-10 Sun 11:48]--[2022-07-10 Sun 12:13] =>  0:25
+CLOCK: [2022-07-09 Sat 23:36]--[2022-07-10 Sun 00:01] =>  0:25
+CLOCK: [2022-07-09 Sat 23:00]--[2022-07-09 Sat 23:25] =>  0:25
+CLOCK: [2022-07-09 Sat 22:23]--[2022-07-09 Sat 22:48] =>  0:25
+:END:
+
+https://systemcrafters.net/live-streams/august-20-2021/
+まずビルドする。
+
+#+caption: Guix環境の場合
+#+begin_src shell
+  guix environment --pure emacs-next --ad-hoc git
+#+end_src
+
 ほとんどは[[id:c7e81fac-9f8b-4538-9851-21d4ff3c2b08][Emacs Lisp]]で書かれている。コアな部分は[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]。
 ~src/*~ にはCのコードがある。
 ~src/lisp.h~ は[[id:c7e81fac-9f8b-4538-9851-21d4ff3c2b08][Emacs Lisp]]そのもののコードで重要。
