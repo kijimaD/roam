@@ -238,7 +238,12 @@ https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95
 ** 検索結果に対する置換 counsel-git-grep-query-replace
 counsel-git-grep したあとに counsel-git-grep-query-replace(M-q)することで、git grepした結果に対して置換をかけられる。
 ** TODO message関数はどうやっているか                                :Write:
-message関数はメッセージをmessageバッファ、モードラインに表示する関数である。フォーマットを指定できる機能もある。これはどうやって動いているのだろうか。
+:LOGBOOK:
+CLOCK: [2022-07-15 Fri 00:01]--[2022-07-15 Fri 00:26] =>  0:25
+CLOCK: [2022-07-12 Tue 23:44]--[2022-07-13 Wed 00:09] =>  0:25
+:END:
+
+message関数はメッセージをmessageバッファ、モードラインに表示する関数である。フォーマットを指定できる機能もある。これはどうやって動いているのだろうか。Lispの形をしたC言語で定義されている。
 
 #+caption: コード。読みやすくするためにコメントを削除・追加している
 #+begin_src git-permalink
@@ -246,7 +251,7 @@ https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_results C
 DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
        doc: /* Display a message at the bottom of the screen.
   (ptrdiff_t nargs, Lisp_Object *args)
@@ -255,12 +260,12 @@ DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
       || (STRINGP (args[0])
 	  && SBYTES (args[0]) == 0))
     {
-      ;; 無効な引数を指定したときはここが呼び出される
+      ;; 最初の引数(表示文字列)がないときはクリア
       message1 (0);
       return args[0];
     }
   else
-    ;; 正常
+    ;; 引数があるとき、オプションをLisp Objectにして関数に渡す
     {
       Lisp_Object val = Fformat_message (nargs, args); ;; フォーマット
       message3 (val); ;; 表示
@@ -269,14 +274,14 @@ DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
 }
 #+end_results
 
-message3とmessage1の違いは何。この関数名の意味。
+文字列のときはそのまま表示し、フォーマットが必要なときはフォーマットする、ということか。message3とmessage1の違いは何。この関数名の意味。
 
 #+begin_src git-permalink
 https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/src/xdisp.c#L11588-L11608
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_results C
 void
 message3 (Lisp_Object m)
 {
@@ -306,7 +311,7 @@ https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_results C
 void
 message1 (const char *m)
 {
