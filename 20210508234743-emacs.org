@@ -27,11 +27,6 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
 * Memo
-** 起動できないとき
-cask-initializeがWrong type argument: stringp になって、パッケージを読み込めないとき。shell環境変数を指定する。
-https://github.com/syl20bnr/spacemacs/issues/3652#issuecomment-180946962
-
-org-roam, forgeあたりがdeleted bufferになるときは、sqlite関連のパッケージを疑う。
 ** リストの重複を削除する
 
 #+begin_src git-permalink
@@ -221,8 +216,8 @@ https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95
        (put ',name 'byte-optimizer 'byte-compile-inline-expand))))
 #+end_results
 
-** simple.sh
-/lisp/simple.shには基本的な編集関数がある。
+** simple.el
+/lisp/simple.elには基本的な編集関数がある。
 
 #+begin_src git-permalink
 https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/simple.el#L1
@@ -237,8 +232,11 @@ https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95
 入れ替えとかしたい。
 ** 検索結果に対する置換 counsel-git-grep-query-replace
 counsel-git-grep したあとに counsel-git-grep-query-replace(M-q)することで、git grepした結果に対して置換をかけられる。
-** TODO message関数はどうやっているか                                :Write:
+** message関数はどう動いているか
+CLOSED: [2022-07-17 Sun 23:43]
 :LOGBOOK:
+CLOCK: [2022-07-17 Sun 23:19]--[2022-07-17 Sun 23:43] =>  0:24
+CLOCK: [2022-07-17 Sun 22:50]--[2022-07-17 Sun 23:15] =>  0:25
 CLOCK: [2022-07-15 Fri 00:01]--[2022-07-15 Fri 00:26] =>  0:25
 CLOCK: [2022-07-12 Tue 23:44]--[2022-07-13 Wed 00:09] =>  0:25
 :END:
@@ -276,6 +274,7 @@ DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
 
 文字列のときはそのまま表示し、フォーマットが必要なときはフォーマットする、ということか。message3とmessage1の違いは何。この関数名の意味。
 
+#+caption: messageの定義
 #+begin_src git-permalink
 https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3cd94/src/xdisp.c#L11588-L11608
 #+end_src
@@ -285,8 +284,8 @@ https://github.com/kd-collective/emacs/blob/d983e080e027bd7b680b1e40ccfa0c71d6a3
 void
 message3 (Lisp_Object m)
 {
-  clear_message (true, true);
-  cancel_echoing ();
+  clear_message (true, true); // メッセージ削除
+  cancel_echoing (); // エコーエリアをリセット
 
   /* First flush out any partial line written with print.  */
   message_log_maybe_newline ();
@@ -297,13 +296,15 @@ message3 (Lisp_Object m)
       char *buffer;
       USE_SAFE_ALLOCA;
       SAFE_ALLOCA_STRING (buffer, m);
-      message_dolog (buffer, nbytes, true, multibyte);
+      message_dolog (buffer, nbytes, true, multibyte); // 本筋の処理
       SAFE_FREE ();
     }
   if (! inhibit_message)
     message3_nolog (m);
 }
 #+end_results
+
+本筋はmessage_dologを呼ぶこと。ほかはそのための準備とか、オプションに対応してる部分。
 
 #+caption: message1はmessage3によって定義される
 #+begin_src git-permalink
@@ -319,9 +320,273 @@ message1 (const char *m)
 }
 #+end_results
 
+#+caption: 改行を入れる処理。message_dologに空文字と改行オプションを指定して、改行する
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/src/xdisp.c#L11430-L11435
+#+end_src
+
+#+RESULTS:
+#+begin_results C
+void
+message_log_maybe_newline (void)
+{
+  if (message_log_need_newline)
+    message_dolog ("", 0, true, false);
+}
+#+end_results
+
+#+caption: message_dologする前に呼び出してる関数
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/src/lisp.h#L5292-L5294
+#+end_src
+
+#+RESULTS:
+#+begin_results C
+#define USE_SAFE_ALLOCA			\
+  ptrdiff_t sa_avail = MAX_ALLOCA;	\
+  specpdl_ref sa_count = SPECPDL_INDEX ()
+#+end_results
+
+#+caption: message_dologする前に呼び出してる関数2。memcpyでメモリをコピーする
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/src/lisp.h#L5319-L5325
+#+end_src
+
+#+RESULTS:
+#+begin_results C
+/* SAFE_ALLOCA_STRING allocates a C copy of a Lisp string.  */
+
+#define SAFE_ALLOCA_STRING(ptr, string)			\
+  do {							\
+    (ptr) = SAFE_ALLOCA (SBYTES (string) + 1);		\
+    memcpy (ptr, SDATA (string), SBYTES (string) + 1);	\
+  } while (false)
+#+end_results
+
+#+caption: メッセージログに追加する関数。長い
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/src/xdisp.c#L11438-L11633
+#+end_src
+
+#+RESULTS:
+#+begin_results C
+/* Add a string M of length NBYTES to the message log, optionally
+   terminated with a newline when NLFLAG is true.  MULTIBYTE, if
+   true, means interpret the contents of M as multibyte.  This
+   function calls low-level routines in order to bypass text property
+   hooks, etc. which might not be safe to run.
+
+   This may GC (insert may run before/after change hooks),
+   so the buffer M must NOT point to a Lisp string.  */
+
+void
+message_dolog (const char *m, ptrdiff_t nbytes, bool nlflag, bool multibyte)
+{
+  const unsigned char *msg = (const unsigned char *) m;
+
+  if (!NILP (Vmemory_full))
+    return;
+
+  if (!NILP (Vmessage_log_max))
+    {
+      struct buffer *oldbuf;
+      Lisp_Object oldpoint, oldbegv, oldzv;
+      int old_windows_or_buffers_changed = windows_or_buffers_changed;
+      ptrdiff_t point_at_end = 0;
+      ptrdiff_t zv_at_end = 0;
+      Lisp_Object old_deactivate_mark;
+
+      old_deactivate_mark = Vdeactivate_mark;
+      oldbuf = current_buffer;
+
+      /* Sanity check, in case the variable has been set to something
+	 invalid.  */
+      if (! STRINGP (Vmessages_buffer_name))
+	Vmessages_buffer_name = build_string ("*Messages*");
+      /* Ensure the Messages buffer exists, and switch to it.
+         If we created it, set the major-mode.  */
+      bool newbuffer = NILP (Fget_buffer (Vmessages_buffer_name));
+      Fset_buffer (Fget_buffer_create (Vmessages_buffer_name, Qnil));
+      if (newbuffer
+	  && !NILP (Ffboundp (intern ("messages-buffer-mode"))))
+	call0 (intern ("messages-buffer-mode"));
+
+      bset_undo_list (current_buffer, Qt);
+      bset_cache_long_scans (current_buffer, Qnil);
+
+      oldpoint = message_dolog_marker1;
+      set_marker_restricted_both (oldpoint, Qnil, PT, PT_BYTE);
+      oldbegv = message_dolog_marker2;
+      set_marker_restricted_both (oldbegv, Qnil, BEGV, BEGV_BYTE);
+      oldzv = message_dolog_marker3;
+      set_marker_restricted_both (oldzv, Qnil, ZV, ZV_BYTE);
+
+      if (PT == Z)
+	point_at_end = 1;
+      if (ZV == Z)
+	zv_at_end = 1;
+
+      BEGV = BEG;
+      BEGV_BYTE = BEG_BYTE;
+      ZV = Z;
+      ZV_BYTE = Z_BYTE;
+      TEMP_SET_PT_BOTH (Z, Z_BYTE);
+
+      /* Insert the string--maybe converting multibyte to single byte
+	 or vice versa, so that all the text fits the buffer.  */
+      if (multibyte
+	  && NILP (BVAR (current_buffer, enable_multibyte_characters)))
+	{
+	  /* Convert a multibyte string to single-byte
+	     for the *Message* buffer.  */
+	  for (ptrdiff_t i = 0; i < nbytes; )
+	    {
+	      int char_bytes, c = check_char_and_length (msg + i, &char_bytes);
+	      char work = CHAR_TO_BYTE8 (c);
+	      insert_1_both (&work, 1, 1, true, false, false);
+	      i += char_bytes;
+	    }
+	}
+      else if (! multibyte
+	       && ! NILP (BVAR (current_buffer, enable_multibyte_characters)))
+	{
+	  /* Convert a single-byte string to multibyte
+	     for the *Message* buffer.  */
+	  for (ptrdiff_t i = 0; i < nbytes; i++)
+	    {
+	      int c = make_char_multibyte (msg[i]);
+	      unsigned char str[MAX_MULTIBYTE_LENGTH];
+	      int char_bytes = CHAR_STRING (c, str);
+	      insert_1_both ((char *) str, 1, char_bytes, true, false, false);
+	    }
+	}
+      else if (nbytes)
+	insert_1_both (m, chars_in_text (msg, nbytes), nbytes,
+		       true, false, false);
+
+      if (nlflag)
+	{
+	  ptrdiff_t this_bol, this_bol_byte, prev_bol, prev_bol_byte;
+	  intmax_t dups;
+
+          /* Since we call del_range_both passing false for PREPARE,
+             we aren't prepared to run modification hooks (we could
+             end up calling modification hooks from another buffer and
+             only with AFTER=t, Bug#21824).  */
+          specpdl_ref count = SPECPDL_INDEX ();
+          specbind (Qinhibit_modification_hooks, Qt);
+
+	  insert_1_both ("\n", 1, 1, true, false, false);
+
+	  scan_newline (Z, Z_BYTE, BEG, BEG_BYTE, -2, false);
+	  this_bol = PT;
+	  this_bol_byte = PT_BYTE;
+
+	  /* See if this line duplicates the previous one.
+	     If so, combine duplicates.  */
+	  if (this_bol > BEG)
+	    {
+	      scan_newline (PT, PT_BYTE, BEG, BEG_BYTE, -2, false);
+	      prev_bol = PT;
+	      prev_bol_byte = PT_BYTE;
+
+	      dups = message_log_check_duplicate (prev_bol_byte,
+                                                  this_bol_byte);
+	      if (dups)
+		{
+		  del_range_both (prev_bol, prev_bol_byte,
+				  this_bol, this_bol_byte, false);
+		  if (dups > 1)
+		    {
+		      char dupstr[sizeof " [ times]"
+				  + INT_STRLEN_BOUND (dups)];
+
+		      /* If you change this format, don't forget to also
+			 change message_log_check_duplicate.  */
+		      int duplen = sprintf (dupstr, " [%"PRIdMAX" times]",
+					    dups);
+		      TEMP_SET_PT_BOTH (Z - 1, Z_BYTE - 1);
+		      insert_1_both (dupstr, duplen, duplen,
+				     true, false, true);
+		    }
+		}
+	    }
+
+	  /* If we have more than the desired maximum number of lines
+	     in the *Messages* buffer now, delete the oldest ones.
+	     This is safe because we don't have undo in this buffer.  */
+
+	  if (FIXNATP (Vmessage_log_max))
+	    {
+	      scan_newline (Z, Z_BYTE, BEG, BEG_BYTE,
+			    -XFIXNAT (Vmessage_log_max) - 1, false);
+	      del_range_both (BEG, BEG_BYTE, PT, PT_BYTE, false);
+	    }
+
+          unbind_to (count, Qnil);
+	}
+      BEGV = marker_position (oldbegv);
+      BEGV_BYTE = marker_byte_position (oldbegv);
+
+      if (zv_at_end)
+	{
+	  ZV = Z;
+	  ZV_BYTE = Z_BYTE;
+	}
+      else
+	{
+	  ZV = marker_position (oldzv);
+	  ZV_BYTE = marker_byte_position (oldzv);
+	}
+
+      if (point_at_end)
+	TEMP_SET_PT_BOTH (Z, Z_BYTE);
+      else
+	/* We can't do Fgoto_char (oldpoint) because it will run some
+           Lisp code.  */
+	TEMP_SET_PT_BOTH (marker_position (oldpoint),
+			  marker_byte_position (oldpoint));
+
+      unchain_marker (XMARKER (oldpoint));
+      unchain_marker (XMARKER (oldbegv));
+      unchain_marker (XMARKER (oldzv));
+
+      /* We called insert_1_both above with its 5th argument (PREPARE)
+	 false, which prevents insert_1_both from calling
+	 prepare_to_modify_buffer, which in turns prevents us from
+	 incrementing windows_or_buffers_changed even if *Messages* is
+	 shown in some window.  So we must manually set
+	 windows_or_buffers_changed here to make up for that.  */
+      windows_or_buffers_changed = old_windows_or_buffers_changed;
+      bset_redisplay (current_buffer);
+
+      set_buffer_internal (oldbuf);
+
+      message_log_need_newline = !nlflag;
+      Vdeactivate_mark = old_deactivate_mark;
+    }
+}
+#+end_results
+
 ** TODO カッコのパース方法                                           :Write:
 Emacsというか、Lispの話だな。
 ** TODO 起動時何をやっているのか                                     :Write:
+** TODO 定義方法の違いはなにか                                      :Write:
+同じC言語部分のソースコードでも、DEFUNを使ってlispに書かれたコードと、生のCっぽく書かれたものがある。違いはなにか。
+
+#+caption: message3関数の定義
+#+begin_src c
+void
+message3 (Lisp_Object m)
+{
+  clear_message (true, true);
+#+end_src
+
+#+caption: message関数の定義
+#+begin_src C
+DEFUN ("message", Fmessage, Smessage, 1, MANY, 0,
+       doc: /* Display a message at the bottom of the screen.
+#+end_src
 ** 本体コードを読む
 :LOGBOOK:
 CLOCK: [2022-07-10 Sun 23:19]--[2022-07-10 Sun 23:44] =>  0:25
