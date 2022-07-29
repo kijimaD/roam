@@ -17,10 +17,58 @@ EXWM([[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]] X Window Manager)は、�
 - ~google-chrome~ :: Chrome
 - nemo :: Linux Mintのファイルマネージャ
 ** X Windowとは
+
+[[https://docs.freebsd.org/doc/5.0-RELEASE/usr/share/doc/ja_JP.eucJP/books/handbook/x-understanding.html][X を理解する]]
+
+#+begin_quote
+X は最初からネットワークを意識してデザインされており、"クライアント - サーバ"モデルを採用しています。 X では、"X サーバ"はキーボードやモニター、マウスが接続されたコンピュータ上で動きます。このサーバはディスプレイの表示を管理したり、キーボード、マウスなどからの入力を処理したりします。各 X アプリケーション (XTerm や Netscape など) は "クライアント"になります。クライアントは"この座標にウィンドウを描いてください"といったメッセージをサーバへ送り、サーバは"ユーザが OK ボタンを押しました"といったようなメッセージを送り返します。
+#+end_quote
+* Code
+** 再起動のコード
+
+- 新しいEmacsを起動してから、現在のemacsをkill
+- 起動中のプロセスIDを取り、emacsclientだったときは親プロセスをkillする
+- 終了する前にhookを実行する
+
+#+caption: 再起動のコード
+#+begin_src git-permalink
+https://github.com/kd-collective/exwm/blob/10bd12234e896d35a2c4eafabc62a31126d23bf3/exwm.el#L126-L153
+#+end_src
+
+#+RESULTS:
+#+begin_example emacs-lisp
+(defun exwm-restart ()
+  "Restart EXWM."
+  (interactive)
+  (exwm--log)
+  (when (exwm--confirm-kill-emacs "[EXWM] Restart? " 'no-check)
+    (let* ((attr (process-attributes (emacs-pid)))
+           (args (cdr (assq 'args attr)))
+           (ppid (cdr (assq 'ppid attr)))
+           (pargs (cdr (assq 'args (process-attributes ppid)))))
+      (cond
+       ((= ppid 1)
+        ;; The parent is the init process.  This probably means this
+        ;; instance is an emacsclient.  Anyway, start a control instance
+        ;; to manage the subsequent ones.
+        (call-process (car command-line-args))
+        (kill-emacs))
+       ((string= args pargs)
+        ;; This is a subordinate instance.  Return a magic number to
+        ;; inform the parent (control instance) to start another one.
+        (kill-emacs ?R))
+       (t
+        ;; This is the control instance.  Keep starting subordinate
+        ;; instances until told to exit.
+        ;; Run `server-force-stop' if it exists.
+        (run-hooks 'kill-emacs-hook)
+        (with-temp-buffer
+          (while (= ?R (shell-command-on-region (point) (point) args))))
+        (kill-emacs))))))
+#+end_example
 * Tasks
 ** TODO Chromeに切り替えたときフォーカスしない
-[[id:b69fe713-7aef-4282-b6e3-f83bc8cb7f6d][qutebrowser]]では起きないのでChromeの問題の可能性。
-** TODO 通知ができない
+[[id:b69fe713-7aef-4282-b6e3-f83bc8cb7f6d][qutebrowser]]やFirefoxでは起きないのでChromeの問題の可能性が高い。
 ** TODO ブラウザが個別に開く設定にし、各バッファ選択から直に移動できるようにする
 どこか[[id:fa497359-ae3f-494a-b24a-9822eefe67ad][System Crafters]]の動画で紹介されていたはずだ。
 ** TODO 再帰でEmacsを開く方法を調べる
