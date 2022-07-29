@@ -176,13 +176,20 @@
         (htmlize-output-type 'inline-css)))
 
 (setq org-agenda-custom-commands
-      '(("X" agenda ""
+      '(("Future" agenda ""
          ((org-agenda-span 60)
           (org-agenda-start-day "0d")
           (org-agenda-start-with-log-mode t)
           (org-agenda-tag-filter-preset '("-Habit"))
           (org-agenda-files '("./")))
-         ("./public/agenda.html"))))
+         ("./public/future-agenda.html"))
+        ("Past" agenda ""
+         ((org-agenda-span 365)
+          (org-agenda-start-day "-365d")
+          (org-agenda-start-with-log-mode t)
+          (org-agenda-tag-filter-preset '("-Habit"))
+          (org-agenda-files '("./")))
+         ("./public/past-agenda.html"))))
 
 (setq org-agenda-prefix-format
       `((agenda . " %i %-12(vulpea-agenda-category)%?-12t% s")
@@ -214,7 +221,8 @@
 
 (defun kd/publish ()
   (org-publish-all t)
-  (org-agenda nil "X")
+  ;; (org-agenda nil "Future") ;; test
+  ;; (org-agenda nil "Past") ;; test
   (org-batch-store-agenda-views))
 
 (provide 'publish)
