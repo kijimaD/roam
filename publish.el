@@ -177,9 +177,10 @@
 
 (setq org-agenda-custom-commands
       '(("X" agenda ""
-         ((org-agenda-span 7)
-          (org-agenda-start-day "-7d")
+         ((org-agenda-span 60)
+          (org-agenda-start-day "0d")
           (org-agenda-start-with-log-mode t)
+          (org-agenda-tag-filter-preset '("-Habit"))
           (org-agenda-files '("./")))
          ("./public/agenda.html"))))
 
