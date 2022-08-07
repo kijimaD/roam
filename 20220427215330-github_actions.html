@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2022-08-06 -->
+<!-- 2022-08-07 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>GitHub Actions</title>
@@ -19,50 +19,50 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgdbfa85c">概要</a></li>
-<li><a href="#org78dc51a">Memo</a>
+<li><a href="#org312dcd6">概要</a></li>
+<li><a href="#orge3574a9">Memo</a>
 <ul>
-<li><a href="#org82b3585">cacheスコープ</a></li>
-<li><a href="#org94dc900">reuseable actionにおけるsecretsの扱い方</a></li>
-<li><a href="#orgfb8e6ef">Stale Bot</a></li>
-<li><a href="#orgcba7579">PRの編集ファイルによって自動でラベルをつける</a></li>
-<li><a href="#orgd4820ab">GitHub Actionsのトリガー</a></li>
+<li><a href="#orgc097056">cacheスコープ</a></li>
+<li><a href="#orgcfa9222">reuseable actionにおけるsecretsの扱い方</a></li>
+<li><a href="#org1558ab1">Stale Bot</a></li>
+<li><a href="#org997e0ba">PRの編集ファイルによって自動でラベルをつける</a></li>
+<li><a href="#orge783f16">GitHub Actionsのトリガー</a></li>
 </ul>
 </li>
-<li><a href="#org7efbf73">Tasks</a>
+<li><a href="#org589c95e">Tasks</a>
 <ul>
-<li><a href="#org194709d"><span class="done DONE">DONE</span> GitHub Actions向け自作アクションの作り方｜Tably｜note</a></li>
+<li><a href="#org2258f81"><span class="done DONE">DONE</span> GitHub Actions向け自作アクションの作り方｜Tably｜note</a></li>
 </ul>
 </li>
-<li><a href="#org977087b">Reference</a>
+<li><a href="#orge16dc5f">Reference</a>
 <ul>
-<li><a href="#orgbffac40">release-drafter/release-drafter: Drafts your next release notes as pull requests are merged into master.</a></li>
-<li><a href="#org122ceae">GitHub Actions - 再利用可能ワークフローを使う | 豆蔵デベロッパーサイト</a></li>
-<li><a href="#orgb3cd1ab">continuous integration - Secret interpolation is giving syntax error in caller workflow when calling a resusable workflow in GitHub Action - Stack Overflow</a></li>
-<li><a href="#org87b6795">GitHub ActionsにおけるStep/Job/Workflow設計論</a></li>
-<li><a href="#orgce93c82">Composite Action Template を作りました GitHub Actions</a></li>
+<li><a href="#org0c5029e">release-drafter/release-drafter: Drafts your next release notes as pull requests are merged into master.</a></li>
+<li><a href="#orgd9eeeef">GitHub Actions - 再利用可能ワークフローを使う | 豆蔵デベロッパーサイト</a></li>
+<li><a href="#org36c54de">continuous integration - Secret interpolation is giving syntax error in caller workflow when calling a resusable workflow in GitHub Action - Stack Overflow</a></li>
+<li><a href="#org209e791">GitHub ActionsにおけるStep/Job/Workflow設計論</a></li>
+<li><a href="#org11b3472">Composite Action Template を作りました GitHub Actions</a></li>
 </ul>
 </li>
-<li><a href="#org4b11534">Archives</a></li>
+<li><a href="#orgfd715e3">Archives</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgdbfa85c" class="outline-2">
-<h2 id="orgdbfa85c"><a href="#orgdbfa85c">概要</a></h2>
-<div class="outline-text-2" id="text-orgdbfa85c">
+<div id="outline-container-org312dcd6" class="outline-2">
+<h2 id="org312dcd6"><a href="#org312dcd6">概要</a></h2>
+<div class="outline-text-2" id="text-org312dcd6">
 <p>
 GitHub Actionsは<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>が提供する<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>/<a href="20220212141243-cd.html#ID-2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764">CD</a>環境。
 コードやプロジェクトに対するタスクを実行できる。
 </p>
 </div>
 </div>
-<div id="outline-container-org78dc51a" class="outline-2">
-<h2 id="org78dc51a"><a href="#org78dc51a">Memo</a></h2>
-<div class="outline-text-2" id="text-org78dc51a">
+<div id="outline-container-orge3574a9" class="outline-2">
+<h2 id="orge3574a9"><a href="#orge3574a9">Memo</a></h2>
+<div class="outline-text-2" id="text-orge3574a9">
 </div>
-<div id="outline-container-org82b3585" class="outline-3">
-<h3 id="org82b3585"><a href="#org82b3585">cacheスコープ</a></h3>
-<div class="outline-text-3" id="text-org82b3585">
+<div id="outline-container-orgc097056" class="outline-3">
+<h3 id="orgc097056"><a href="#orgc097056">cacheスコープ</a></h3>
+<div class="outline-text-3" id="text-orgc097056">
 <ul class="org-ul">
 <li><a href="https://zenn.dev/mallowlabs/articles/github-actions-cache-scope#actions%2Fcache-%E3%81%AE%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97">GitHub Actions の cache アクションでキャッシュヒットしない時はスコープを確認してみる</a></li>
 <li><a href="https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache">Caching dependencies to speed up workflows - GitHub Docs</a></li>
@@ -92,9 +92,9 @@ restore-keysはキャッシュ検索に使うkey。メインのkeyはgithub.sha�
 </div>
 </div>
 
-<div id="outline-container-org94dc900" class="outline-3">
-<h3 id="org94dc900"><a href="#org94dc900">reuseable actionにおけるsecretsの扱い方</a></h3>
-<div class="outline-text-3" id="text-org94dc900">
+<div id="outline-container-orgcfa9222" class="outline-3">
+<h3 id="orgcfa9222"><a href="#orgcfa9222">reuseable actionにおけるsecretsの扱い方</a></h3>
+<div class="outline-text-3" id="text-orgcfa9222">
 <div class="org-src-container">
 <label class="org-src-name"><span class="listing-number">Listing 1: </span>caller</label><pre class="src src-yaml">jobs:
   called:
@@ -128,9 +128,9 @@ jobs:
 </div>
 </div>
 </div>
-<div id="outline-container-orgfb8e6ef" class="outline-3">
-<h3 id="orgfb8e6ef"><a href="#orgfb8e6ef">Stale Bot</a></h3>
-<div class="outline-text-3" id="text-orgfb8e6ef">
+<div id="outline-container-org1558ab1" class="outline-3">
+<h3 id="org1558ab1"><a href="#org1558ab1">Stale Bot</a></h3>
+<div class="outline-text-3" id="text-org1558ab1">
 <p>
 動きがないIssueやPRを自動的にマークしたりcloseするGitHub bot。
 <a href="https://github.com/probot/stale">probot/stale: A GitHub App built with Probot that closes abandoned Issues and Pull Requests after a period of inactivity.</a>
@@ -142,9 +142,9 @@ jobs:
 </p>
 </div>
 </div>
-<div id="outline-container-orgcba7579" class="outline-3">
-<h3 id="orgcba7579"><a href="#orgcba7579">PRの編集ファイルによって自動でラベルをつける</a></h3>
-<div class="outline-text-3" id="text-orgcba7579">
+<div id="outline-container-org997e0ba" class="outline-3">
+<h3 id="org997e0ba"><a href="#org997e0ba">PRの編集ファイルによって自動でラベルをつける</a></h3>
+<div class="outline-text-3" id="text-org997e0ba">
 <p>
 面倒なラベル付けを自動化する。
 </p>
@@ -188,9 +188,9 @@ source:
 </div>
 </div>
 </div>
-<div id="outline-container-orgd4820ab" class="outline-3">
-<h3 id="orgd4820ab"><a href="#orgd4820ab">GitHub Actionsのトリガー</a></h3>
-<div class="outline-text-3" id="text-orgd4820ab">
+<div id="outline-container-orge783f16" class="outline-3">
+<h3 id="orge783f16"><a href="#orge783f16">GitHub Actionsのトリガー</a></h3>
+<div class="outline-text-3" id="text-orge783f16">
 <p>
 pathsで特定ファイルが変更されたときのみ実行するときの注意点。
 pushは使わずに、pull_requestトリガーを使うべき。
@@ -218,53 +218,53 @@ pushではpull_request全体の変更を追うことができないので、コ�
 </div>
 </div>
 </div>
-<div id="outline-container-org7efbf73" class="outline-2">
-<h2 id="org7efbf73"><a href="#org7efbf73">Tasks</a></h2>
-<div class="outline-text-2" id="text-org7efbf73">
+<div id="outline-container-org589c95e" class="outline-2">
+<h2 id="org589c95e"><a href="#org589c95e">Tasks</a></h2>
+<div class="outline-text-2" id="text-org589c95e">
 </div>
-<div id="outline-container-org194709d" class="outline-3">
-<h3 id="org194709d"><a href="#org194709d"><span class="done DONE">DONE</span> <a href="https://note.com/tably/n/n46041458d6b3">GitHub Actions向け自作アクションの作り方｜Tably｜note</a></a></h3>
-<div class="outline-text-3" id="text-org194709d">
+<div id="outline-container-org2258f81" class="outline-3">
+<h3 id="org2258f81"><a href="#org2258f81"><span class="done DONE">DONE</span> <a href="https://note.com/tably/n/n46041458d6b3">GitHub Actions向け自作アクションの作り方｜Tably｜note</a></a></h3>
+<div class="outline-text-3" id="text-org2258f81">
 <p>
 作り方。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org977087b" class="outline-2">
-<h2 id="org977087b"><a href="#org977087b">Reference</a></h2>
-<div class="outline-text-2" id="text-org977087b">
+<div id="outline-container-orge16dc5f" class="outline-2">
+<h2 id="orge16dc5f"><a href="#orge16dc5f">Reference</a></h2>
+<div class="outline-text-2" id="text-orge16dc5f">
 </div>
-<div id="outline-container-orgbffac40" class="outline-3">
-<h3 id="orgbffac40"><a href="#orgbffac40"><a href="https://github.com/release-drafter/release-drafter">release-drafter/release-drafter: Drafts your next release notes as pull requests are merged into master.</a></a></h3>
-<div class="outline-text-3" id="text-orgbffac40">
+<div id="outline-container-org0c5029e" class="outline-3">
+<h3 id="org0c5029e"><a href="#org0c5029e"><a href="https://github.com/release-drafter/release-drafter">release-drafter/release-drafter: Drafts your next release notes as pull requests are merged into master.</a></a></h3>
+<div class="outline-text-3" id="text-org0c5029e">
 <p>
 タグを自動で打ち、リリースを作成する便利なアクション。
 </p>
 </div>
 </div>
-<div id="outline-container-org122ceae" class="outline-3">
-<h3 id="org122ceae"><a href="#org122ceae"><a href="https://developer.mamezou-tech.com/blogs/2022/03/08/github-actions-reuse-workflows/">GitHub Actions - 再利用可能ワークフローを使う | 豆蔵デベロッパーサイト</a></a></h3>
-<div class="outline-text-3" id="text-org122ceae">
+<div id="outline-container-orgd9eeeef" class="outline-3">
+<h3 id="orgd9eeeef"><a href="#orgd9eeeef"><a href="https://developer.mamezou-tech.com/blogs/2022/03/08/github-actions-reuse-workflows/">GitHub Actions - 再利用可能ワークフローを使う | 豆蔵デベロッパーサイト</a></a></h3>
+<div class="outline-text-3" id="text-orgd9eeeef">
 <p>
 reuseable workflowの説明。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb3cd1ab" class="outline-3">
-<h3 id="orgb3cd1ab"><a href="#orgb3cd1ab"><a href="https://stackoverflow.com/questions/69521380/secret-interpolation-is-giving-syntax-error-in-caller-workflow-when-calling-a-re">continuous integration - Secret interpolation is giving syntax error in caller workflow when calling a resusable workflow in GitHub Action - Stack Overflow</a></a></h3>
-<div class="outline-text-3" id="text-orgb3cd1ab">
+<div id="outline-container-org36c54de" class="outline-3">
+<h3 id="org36c54de"><a href="#org36c54de"><a href="https://stackoverflow.com/questions/69521380/secret-interpolation-is-giving-syntax-error-in-caller-workflow-when-calling-a-re">continuous integration - Secret interpolation is giving syntax error in caller workflow when calling a resusable workflow in GitHub Action - Stack Overflow</a></a></h3>
+<div class="outline-text-3" id="text-org36c54de">
 <p>
 reuseable workflowでは secrets専用で渡す。
 </p>
 </div>
 </div>
-<div id="outline-container-org87b6795" class="outline-3">
-<h3 id="org87b6795"><a href="#org87b6795"><a href="https://zenn.dev/hsaki/articles/github-actions-component">GitHub ActionsにおけるStep/Job/Workflow設計論</a></a></h3>
+<div id="outline-container-org209e791" class="outline-3">
+<h3 id="org209e791"><a href="#org209e791"><a href="https://zenn.dev/hsaki/articles/github-actions-component">GitHub ActionsにおけるStep/Job/Workflow設計論</a></a></h3>
 </div>
-<div id="outline-container-orgce93c82" class="outline-3">
-<h3 id="orgce93c82"><a href="#orgce93c82"><a href="https://zenn.dev/snowcait/articles/787e83640746e1">Composite Action Template を作りました GitHub Actions</a></a></h3>
-<div class="outline-text-3" id="text-orgce93c82">
+<div id="outline-container-org11b3472" class="outline-3">
+<h3 id="org11b3472"><a href="#org11b3472"><a href="https://zenn.dev/snowcait/articles/787e83640746e1">Composite Action Template を作りました GitHub Actions</a></a></h3>
+<div class="outline-text-3" id="text-org11b3472">
 <p>
 自作アクションの作り方。ミニマルでわかりやすい。
 <a href="https://github.com/snow-actions/git-config-user">snow-actions/git-config-user: Set git user name and email address</a>
@@ -272,8 +272,8 @@ reuseable workflowでは secrets専用で渡す。
 </div>
 </div>
 </div>
-<div id="outline-container-org4b11534" class="outline-2">
-<h2 id="org4b11534"><a href="#org4b11534">Archives</a></h2>
+<div id="outline-container-orgfd715e3" class="outline-2">
+<h2 id="orgfd715e3"><a href="#orgfd715e3">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
