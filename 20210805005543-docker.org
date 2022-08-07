@@ -514,8 +514,50 @@ docker logs 1111... # idを入れる
   docker rmi $(docker images -q)
 #+end_src
 * Tasks
-** TODO なぜ仮想化できるのか                                     :DontKnow:
+** TODO コンテナはどういう仕組みか                               :DontKnow:
+:LOGBOOK:
+CLOCK: [2022-08-07 Sun 12:05]--[2022-08-07 Sun 12:30] =>  0:25
+:END:
 仮想化をどうやっているか、なぜ独立した環境にできるのか知らない。
+
+解説は↓にある。非常にわかりやすい。[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]のミニマル実装もある。
+- [[https://kaminashi-developer.hatenablog.jp/entry/dive-into-swamp-container-scratch][【Go言語】自作コンテナ沼。スクラッチでミニDockerを作ろう - カミナシ エンジニアブログ]]
+
+dockerの構成。
+
+- Docker Host
+  - Docker Daemon
+  - Container
+  - Images
+  - Network
+- Docker client
+  - build, pull, runとか
+
+network, container, image, volumesはCli経由でDocker daemonの機能を呼び出す。
+コンテナを一言で言うと「 システムから分離されたプロセス 」。Linux上でunshareコマンドを打つことにより、最速でコンテナを作成できる。
+
+#+caption: 最低限のコンテナ。この立ち上がったプロセスがコンテナ
+#+begin_src shell
+  $ sudo unshare -u /bin/bash
+  # ユーザがrootになった
+  $ hostname newhost && hostname
+  -> newhost
+  # ホスト名を変更した
+  $ which emacs
+  -> /usr/bin/emacs # unshareしてない状態だとEmacsはguixディレクトリ化に入っているので、確かに環境が別になっている
+#+end_src
+
+コンテナに必要な[[id:7a81eb7c-8e2b-400a-b01a-8fa597ea527a][Linux]]の機能3つ。
+
+- Namespace
+  - プロセスはそれぞれでNamespaceを持っている。unshareはプロセスを分離させNamespaceを作成した
+- Control Group
+  - アプリケーションを特定のリソースセットに制限する。メモリの最大利用数や、プロセス最大実行数を制限できる
+  - ~cat /sys/fs/cgroup/cpuset/cpuset.cpus~
+- File System
+  - 親からマウントされたFile Systemに関するデータのコピーを取得し、親と同じデータ構造へのポインタを取得して変更できるようにする
+  - cat ~/proc/mounts~
+
 ** TODO [[https://www.youtube.com/watch?v=HPuvDm8IC-4][Golang UK Conf. 2016 - Liz Rice - What is a container, really? Let's write one in Go from scratch - YouTube]]
 コンテナランタイムを使わずに[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]でコンテナを作ることで、コンテナとは何かを学ぶ。
 ** TODO [[https://gihyo.jp/book/2020/978-4-297-11837-2][イラストでわかる DockerとKubernetes：書籍案内｜技術評論社]]
@@ -525,8 +567,6 @@ docker logs 1111... # idを入れる
 ** TODO [[https://qiita.com/tatsurou313/items/ad86da1bb9e8e570b6fa][BuildKitによりDockerとDocker Composeで外部キャッシュを使った効率的なビルドをする方法 - Qiita]]
 BuildKitの解説。
 ** TODO [[https://www.slideshare.net/zembutsu/dockerfile-bestpractices-19-and-advice][Dockerfileを改善するためのBest Practice 2019年版]]
-** TODO タスクを簡単に実行する方法を調べる
-[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
 ** TODO ゴミファイルができないようにする
 キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
 
@@ -538,15 +578,17 @@ CLOCK: [2022-02-11 Fri 18:25]--[2022-02-11 Fri 18:50] =>  0:25
 CLOCK: [2022-02-04 Fri 10:15]--[2022-02-04 Fri 10:40] =>  0:25
 :END:
 <2022-02-28 Mon>
-** Rails Docker環境化[6/9]
+** Rails開発 Docker環境化[7/9]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
-仕事をLinuxで行えるようにする。
+仕事をLinuxで行えるようにする。基本的なところはカバーしたが、一部できないものがある状態。
+
 *** TODO rails c内で日本語が含まれると失敗する
-*** TODO JS system specが失敗する
+*** TODO CapybaraでJavascriptをオンにしたときsystem specが失敗する
 js: trueのときだけ。
-*** TODO migration時にschemaに変な差分が出る
+*** DONE migration時にschemaに変な差分が出る
+CLOSED: [2022-08-07 Sun 17:59]
 DB設定がおかしいようだ。
 *** DONE 非同期処理の動作確認
 CLOSED: [2022-01-12 Wed 23:08]
@@ -732,6 +774,11 @@ hostを加える必要があった。
 ** DONE [[https://www.forcia.com/blog/002273.html][社内のDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
 CLOSED: [2022-02-11 Fri 18:27]
 非常に詳しい情報。
+** DONE タスクを簡単に実行する方法を調べる
+CLOSED: [2022-08-07 Sun 17:58]
+[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
+
+ありがちなbundle-installなどはdocker-composeにワンショットのコマンドを書くことで、定形コマンドを実行することが少なくなった。自動で動かしたいやつはこれでOK。コマンドはdockerだから特殊ということはなく、ローカルと同じようにやれば良い。
 * References
 ** [[https://containers.gitbook.io/build-containers-the-hard-way/][Build Containers the Hard Way (WIP) - Build Containers the Hard Way]]
 コンテナ技術の低レイヤーの仕組み。

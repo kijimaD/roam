@@ -27,7 +27,7 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
 * Memo
-** リンクを開くときにブラザにフォーカスさせない
+** リンクを開くときにブラウザにフォーカスさせない
 firefox側で設定する。about:config をURLバーに打ち込み、設定項目 browser.tabs.loadDivertedInBackground を true にする。
 https://stackoverflow.com/questions/10506496/run-browse-url-in-emacs-without-giving-focus-to-the-browser
 ** バッファ管理
@@ -587,7 +587,7 @@ message_dolog (const char *m, ptrdiff_t nbytes, bool nlflag, bool multibyte)
 
 ** TODO 起動時何をやっているのか                                     :DontKnow:
 いろいろ走るけど、何をしているのだろう。
-** TODO 定義方法の違いはなにか                                      :Write:
+** TODO C部分の定義方法の違い                                    :DontKnow:
 同じC言語部分のソースコードでも、DEFUNを使ってlisp風に書かれたコードと、生のCっぽく書かれたものがある。違いはなにか。
 
 #+caption: message3関数の定義
@@ -842,10 +842,57 @@ counselのリポジトリのREADMEの最後に書かれてた。
 ** keybinding一覧
 ~(make-command-summary)~ や ~(describe-bindings)~ で生成できる。
 * Tasks
-** TODO leaf.elはどうやって動いているか
+** TODO leaf.elはどうやって動いているか                          :DontKnow:
+:LOGBOOK:
+CLOCK: [2022-08-07 Sun 18:01]--[2022-08-07 Sun 18:26] =>  0:25
+:END:
 - [[https://github.com/conao3/leaf.el][conao3/leaf.el: Flexible, declarative, and modern init.el package configuration]]
 
 キーワードを指定することで、インストール、フック、キーボードバインドまで、パッケージ周りの設定をうまくやってくれる。これはどうやっているのだろうか。
+
+- キーワードをマクロで変換して、処理を実行してるぽい。たとえばpackageキーワードの場合、最終的にpackage.elのpackage-installが呼ばれてインストールする、というように。leaf自体が処理を持っているわけではない
+- leaf関数がメイン。各キーワードをapplyして、対応する関数を実行している
+- leaf keywordで定義されているキーワードの処理の中身はhandler系
+- defmacroが大量に使われている。マクロを理解していないと読めない
+  - [[https://www.tohoho-web.com/ex/lisp.html#defmacro][とほほのLISP入門 - とほほのWWW入門]] でdefmacroをおさらいする
+
+#+caption: (* 2 3) というマクロが生成され、実行される
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '* 2 x))
+  (double 3)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+6
+#+end_results
+
+#+caption: 式が生成されたあと、a1が2回インクリメントされる
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '+ x x))
+  (defvar a1 2)
+  (double (incf a1))
+  ;; (+ (incf a1) (incf a1))
+  ;; (+ 3 4)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+7
+#+end_results
+
+#+caption: マクロの展開形を確認する
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '+ x x))
+  (defvar a1 2)
+  (macroexpand '(double (incf a1)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(+ (incf a1) (incf a1))
+#+end_results
+
 ** TODO [[https://daregada.sakuraweb.com/paredit_tutorial_ja.html][ParEdit チュートリアル]]
 すごい便利らしいのでやってみる。
 ** TODO 設定をエクスポートして文芸的にする
