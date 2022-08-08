@@ -6,6 +6,21 @@
 GitHub Actionsは[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]が提供する[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]/[[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]環境。
 コードやプロジェクトに対するタスクを実行できる。
 * Memo
+** キャッシュ破棄ポリシーの落とし穴
+毎回ビルドキャッシュ保存をしてるのに、あまりキャッシュヒットせず、毎回最初からになる現象に悩まされていた。デフォルトブランチでもマージするたびに行っていたので、キャッシュのブランチスコープの問題ではないように見えた。
+
+問題の原因は、キャッシュ破棄ポリシーだった。1週間という期間と、リポジトリ合計で10GBという制限がある。
+
+#+begin_quote
+利用制限と退去のポリシー
+GitHubは、7日間以上アクセスされていないキャッシュエントリを削除します。 There is no limit on the number of caches you can store, but the total size of all caches in a repository is limited to 10 GB.
+この制限を超えた場合、GitHubは新しいキャッシュを保存しますが、合計サイズがリポジトリの制限以下になるまでキャッシュを退去させはじめます。
+#+end_quote
+
+キャッシュサイズは2GBあったため、5回分しか保持されない計算。その回数のうちで、デフォルトブランチ以外のビルドでキャッシュが追い出されていくため、デフォルトブランチでのキャッシュがない状態になる。そのため、キャッシュヒットしない状態になる。妥協点はデフォルトブランチでのみキャッシュ保存し、別のブランチでは読み込みだけにすることだが、cacheアクションには保存だけするオプションがない。
+
+- https://github.com/actions/cache/pull/489
+
 ** cacheスコープ
 - [[https://zenn.dev/mallowlabs/articles/github-actions-cache-scope#actions%2Fcache-%E3%81%AE%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97][GitHub Actions の cache アクションでキャッシュヒットしない時はスコープを確認してみる]]
 - [[https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#restrictions-for-accessing-a-cache][Caching dependencies to speed up workflows - GitHub Docs]]
@@ -24,6 +39,12 @@ pushトリガーのジョブで、こんな感じにキャッシュを使って�
 restore-keysはキャッシュ検索に使うkey。メインのkeyはgithub.shaによってすべてのコミットで別々にキャッシュ保存するので、完全一致でキャッシュ取得できることはない。ので、restore-keyが必要。キーが部分一致するので、後続のコミットで利用できる。
 
 が、これだけではブランチが変わったとき、ブランチの最初ではキャッシュが利用されない。これがスコープ。スコープの探索は 同じブランチ → ベースブランチ → デフォルトブランチ のみで行われるので、ブランチの最初ではヒットしないということ。これを防ぐために、デフォルトブランチで定期的にpush保存を必要がある。
+
+#+begin_quote
+キャッシュキーのマッチング
+cache アクションは最初に、ワークフロー実行を含むブランチで key および restore-keys のキャッシュヒットを検索します。 現在のブランチにヒットがない場合、cache アクションは、親ブランチと上流のブランチで key および restore-keys を検索します。
+restore-keys allows you to specify a list of alternate restore keys to use when there is a cache miss on key. 特定の度合いが強いものから弱いものへ並べて複数のリストアキーを作成できます。 The cache action searches the restore-keys in sequential order. キーが直接マッチしなかった場合、アクションはリストアキーでプレフィックスされたキーを検索します。 リストアキーに対して複数の部分一致があった場合、アクションは最も最近に作成されたキャッシュを返します。
+#+end_quote
 
 ** reuseable actionにおけるsecretsの扱い方
 #+caption: caller
