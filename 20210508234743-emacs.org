@@ -886,50 +886,6 @@ rails開発で処理が多くのファイルに分散していて、同じよう
   - ブラウザのように、タブに表示する。結局ファイル名が長かったり、ファイル名が多くなるとやりにくくなるのだが、直近3つくらいのファイルが見られるだけでも改善する
 
 良いページを発見した。[[https://wikemacs.org/wiki/Buffer_management][Buffer management - WikEmacs]]
-** リストの重複を削除する
-
-#+begin_src git-permalink
-https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/subr.el#L731-L751
-#+end_src
-
-#+RESULTS:
-#+begin_results emacs-lisp
-(defun delete-dups (list)
-  "Destructively remove `equal' duplicates from LIST.
-Store the result in LIST and return it.  LIST must be a proper list.
-Of several `equal' occurrences of an element in LIST, the first
-one is kept.  See `seq-uniq' for non-destructive operation."
-  (let ((l (length list)))
-    (if (> l 100)
-        (let ((hash (make-hash-table :test #'equal :size l))
-              (tail list) retail)
-          (puthash (car list) t hash)
-          (while (setq retail (cdr tail))
-            (let ((elt (car retail)))
-              (if (gethash elt hash)
-                  (setcdr tail (cdr retail))
-                (puthash elt t hash)
-                (setq tail retail)))))
-      (let ((tail list))
-        (while tail
-          (setcdr tail (delete (car tail) (cdr tail)))
-          (setq tail (cdr tail))))))
-  list)
-#+end_results
-
-*** 100以下の処理
-
-リストの長さによって処理が分岐していることがわかる。まず100行以下での処理を見る。
-
-#+caption: 100行以下の処理
-#+begin_src emacs-lisp
-(let ((tail list))
-        (while tail
-          (setcdr tail (delete (car tail) (cdr tail)))
-          (setq tail (cdr tail))))
-#+end_src
-
-これで重複削除になるのか、と不
 
 ** TODO [[https://daregada.sakuraweb.com/paredit_tutorial_ja.html][ParEdit チュートリアル]]
 すごい便利らしいのでやってみる。
