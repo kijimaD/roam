@@ -1,5 +1,6 @@
 :PROPERTIES:
 :ID:       815a2c31-7ddb-40ad-bae0-f84e1cfd8de1
+:header-args+: :wrap
 :END:
 #+title: Org-roam
 
@@ -19,7 +20,35 @@ dbへ書き込みできませんエラーが出たとき。
 - .dbファイルを削除。
 - ~(org-roam-db-clear-all)~ でキャッシュ削除。
 - ~(org-roam-db-sync)~ によってdbファイルを再作成。
+* Source
+** バックエンドの違いを吸収する関数
+いわゆるコネクターパターン。接続に使用する関数を返す関数。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L123-L137
+#+end_src
+
+#+RESULTS:
+#+begin_results emacs-lisp
+(defun org-roam-db--conn-fn ()
+  "Return the function for creating the database connection."
+  (cl-case org-roam-database-connector
+    (sqlite
+     (progn
+       (require 'emacsql-sqlite)
+       #'emacsql-sqlite))
+    (libsqlite3
+     (progn
+       (require 'emacsql-libsqlite3)
+       #'emacsql-libsqlite3))
+    (sqlite3
+     (progn
+       (require 'emacsql-sqlite3)
+       #'emacsql-sqlite3))))
+#+end_results
 * Tasks
+** TODO dbとどう協調しているのか                                 :DontKnow:
+デフォルトではsqliteに何か保存しているのは知っているが、実際どういうことをしているのだろうか。
 * References
 ** [[https://www.orgroam.com/manual.html][Org-roam User Manual]]
 マニュアル。

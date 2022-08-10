@@ -27,6 +27,8 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 の機能を、共通の効率的なキーボード操作、プレーンテキストベースで行える。
 * Memo
+** 現在実行しているコマンドが入る変数
+- ~this-command~
 ** リンクを開くときにブラウザにフォーカスさせない
 firefox側で設定する。about:config をURLバーに打ち込み、設定項目 browser.tabs.loadDivertedInBackground を true にする。
 https://stackoverflow.com/questions/10506496/run-browse-url-in-emacs-without-giving-focus-to-the-browser
@@ -842,78 +844,92 @@ counselのリポジトリのREADMEの最後に書かれてた。
 ** keybinding一覧
 ~(make-command-summary)~ や ~(describe-bindings)~ で生成できる。
 * Tasks
-** TODO leaf.elはどうやって動いているか                          :DontKnow:
+** TODO hydraはどうやって登録キーをマップに登録しているか        :DontKnow:
 :LOGBOOK:
-CLOCK: [2022-08-07 Sun 18:01]--[2022-08-07 Sun 18:26] =>  0:25
+CLOCK: [2022-08-10 Wed 11:08]--[2022-08-10 Wed 11:33] =>  0:25
 :END:
-- [[https://github.com/conao3/leaf.el][conao3/leaf.el: Flexible, declarative, and modern init.el package configuration]]
+アルファベットで指定して初期化するだけでメニュー表示に追加し、キーバインドを作成する。これはどうやっているか。hydra起動中はキーバインドが一切衝突しないのも気になる。
 
-キーワードを指定することで、インストール、フック、キーボードバインドまで、パッケージ周りの設定をうまくやってくれる。これはどうやっているのだろうか。
-
-- キーワードをマクロで変換して、処理を実行してるぽい。たとえばpackageキーワードの場合、最終的にpackage.elのpackage-installが呼ばれてインストールする、というように。leaf自体が処理を持っているわけではない
-- leaf関数がメイン。各キーワードをapplyして、対応する関数を実行している
-- leaf keywordで定義されているキーワードの処理の中身はhandler系
-- defmacroが大量に使われている。マクロを理解していないと読めない
-  - [[https://www.tohoho-web.com/ex/lisp.html#defmacro][とほほのLISP入門 - とほほのWWW入門]] でdefmacroをおさらいする
-
-#+caption: (* 2 3) というマクロが生成され、実行される
+#+caption: hydraメニュー定義の例
 #+begin_src emacs-lisp
-  (defmacro double (x) (list '* 2 x))
-  (double 3)
+  (defhydra hydra-zoom (global-map "<f2>")
+    "zoom"
+    ("g" text-scale-increase "in")
+    ("l" text-scale-decrease "out"))
+#+end_src
+
+#+caption: ポップ中のキーバインドを限定してそうな部分
+#+begin_src git-permalink
+https://github.com/kd-collective/hydra/blob/2d553787aca1aceb3e6927e426200e9bb9f056f1/hydra.el#L160-L161
 #+end_src
 
 #+RESULTS:
 #+begin_results
-6
+      (when overriding-terminal-local-map
+        (internal-pop-keymap hydra-curr-map 'overriding-terminal-local-map))))
 #+end_results
 
-#+caption: 式が生成されたあと、a1が2回インクリメントされる
-#+begin_src emacs-lisp
-  (defmacro double (x) (list '+ x x))
-  (defvar a1 2)
-  (double (incf a1))
-  ;; (+ (incf a1) (incf a1))
-  ;; (+ 3 4)
+** リンクを開くときにブラウザにフォーカスさせない
+firefox側で設定する。about:config をURLバーに打ち込み、設定項目 browser.tabs.loadDivertedInBackground を true にする。
+https://stackoverflow.com/questions/10506496/run-browse-url-in-emacs-without-giving-focus-to-the-browser
+** バッファ管理
+rails開発で処理が多くのファイルに分散していて、同じような名前のファイルが多い場合、集中のスイッチングコストが大きくなる。今まではあまりファイル分散してなかったので ~counsel-switch-buffer~ ひとつで問題なかったが、タスクやコードの構造によって問題になりうる。ファイル移動しようとするたびに思考が中断される。
+
+- 方法1: projectile-railsのキーバインドを覚える https://qiita.com/yoshinarl/items/8e3c4b075a181f224591
+  - projectile-rails-find-current-spec(C-c r P) 対応するテストファイルを開く
+  - MVC系の移動 C-c r M、C-c r C、C-c r V
+- 方法2: バッファをリセットする
+  - 無関係な似たような名前のバッファが溜まるのが問題であって、そもそもこまめにリセットすれば見やすくなる説
+- 方法3: ブックマーク
+  - 必要なものはブックマークしておく。メンドイ。
+- 方法4: タブ表示
+  - ブラウザのように、タブに表示する。結局ファイル名が長かったり、ファイル名が多くなるとやりにくくなるのだが、直近3つくらいのファイルが見られるだけでも改善する
+
+良いページを発見した。[[https://wikemacs.org/wiki/Buffer_management][Buffer management - WikEmacs]]
+** リストの重複を削除する
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/subr.el#L731-L751
 #+end_src
 
 #+RESULTS:
-#+begin_results
-7
+#+begin_results emacs-lisp
+(defun delete-dups (list)
+  "Destructively remove `equal' duplicates from LIST.
+Store the result in LIST and return it.  LIST must be a proper list.
+Of several `equal' occurrences of an element in LIST, the first
+one is kept.  See `seq-uniq' for non-destructive operation."
+  (let ((l (length list)))
+    (if (> l 100)
+        (let ((hash (make-hash-table :test #'equal :size l))
+              (tail list) retail)
+          (puthash (car list) t hash)
+          (while (setq retail (cdr tail))
+            (let ((elt (car retail)))
+              (if (gethash elt hash)
+                  (setcdr tail (cdr retail))
+                (puthash elt t hash)
+                (setq tail retail)))))
+      (let ((tail list))
+        (while tail
+          (setcdr tail (delete (car tail) (cdr tail)))
+          (setq tail (cdr tail))))))
+  list)
 #+end_results
 
-#+caption: マクロの展開形を確認する
+*** 100以下の処理
+
+リストの長さによって処理が分岐していることがわかる。まず100行以下での処理を見る。
+
+#+caption: 100行以下の処理
 #+begin_src emacs-lisp
-  (defmacro double (x) (list '+ x x))
-  (defvar a1 2)
-  (macroexpand '(double (incf a1)))
+(let ((tail list))
+        (while tail
+          (setcdr tail (delete (car tail) (cdr tail)))
+          (setq tail (cdr tail))))
 #+end_src
 
-#+RESULTS:
-#+begin_results
-(+ (incf a1) (incf a1))
-#+end_results
-
-バッククォートでマクロを表現。コンマで部分評価する。
-
-#+caption: ↓同じ意味のふたつの書き方
-#+begin_src emacs-lisp
-  (defmacro add(x y) (list '+ x y)) ; `を使わないと、若干面倒
-  (defmacro add(x y) `(+ ,x ,y)) ;; x, yを評価
-  (add 1 2)
-#+end_src
-
-#+RESULTS:
-#+begin_results
-3
-#+end_results
-
-リスト展開。
-#+caption: シングルクォートの中で@,で、リスト展開する
-#+begin_src emacs-lisp
-  (defmacro if-do (test &body do-list)
-    `(if ,test (progn ,@do-list)))
-  (if-do (> 5 3) (print "AAA") (print "BBB"))
-#+end_src
+これで重複削除になるのか、と不
 
 ** TODO [[https://daregada.sakuraweb.com/paredit_tutorial_ja.html][ParEdit チュートリアル]]
 すごい便利らしいのでやってみる。
@@ -1291,6 +1307,83 @@ CLOCK: [2022-07-23 Sat 10:44]--[2022-07-23 Sat 11:09] =>  0:25
 :END:
 
 すぐ自分で設定したキーバインドを忘れる対策で、hydraを設定した。
+** DONE leaf.elはどうやって動いているか                          :DontKnow:
+CLOSED: [2022-08-10 Wed 01:05]
+:LOGBOOK:
+CLOCK: [2022-08-10 Wed 00:49]--[2022-08-10 Wed 01:14] =>  0:25
+CLOCK: [2022-08-07 Sun 18:01]--[2022-08-07 Sun 18:26] =>  0:25
+:END:
+- [[https://github.com/conao3/leaf.el][conao3/leaf.el: Flexible, declarative, and modern init.el package configuration]]
+
+基本の動きは把握した。
+
+キーワードを指定することで、インストール、フック、キーボードバインドまで、パッケージ周りの設定をうまくやってくれる。これはどうやっているのだろうか。
+
+- キーワードをマクロで変換して、処理を実行してるぽい。たとえばpackageキーワードの場合、最終的にpackage.elのpackage-installが呼ばれてインストールする、というように。leaf自体が処理を持っているわけではない
+- leaf関数がメイン。各キーワードをapplyして、対応する関数を実行している
+- leaf keywordで定義されているキーワードの処理の中身はhandler系
+- defmacroが大量に使われている。マクロを理解していないと読めない
+  - [[https://www.tohoho-web.com/ex/lisp.html#defmacro][とほほのLISP入門 - とほほのWWW入門]] でdefmacroをおさらいする
+
+#+caption: (* 2 3) というマクロが生成され、実行される
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '* 2 x))
+  (double 3)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+6
+#+end_results
+
+#+caption: 式が生成されたあと、a1が2回インクリメントされる
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '+ x x))
+  (defvar a1 2)
+  (double (incf a1))
+  ;; (+ (incf a1) (incf a1))
+  ;; (+ 3 4)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+7
+#+end_results
+
+#+caption: マクロの展開形を確認する
+#+begin_src emacs-lisp
+  (defmacro double (x) (list '+ x x))
+  (defvar a1 2)
+  (macroexpand '(double (incf a1)))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(+ (incf a1) (incf a1))
+#+end_results
+
+バッククォートでマクロを表現。コンマで部分評価する。
+
+#+caption: ↓同じ意味のふたつの書き方
+#+begin_src emacs-lisp
+  (defmacro add(x y) (list '+ x y)) ; `を使わないと、若干面倒
+  (defmacro add(x y) `(+ ,x ,y)) ;; x, yを評価
+  (add 1 2)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3
+#+end_results
+
+リスト展開。
+#+caption: シングルクォートの中で@,で、リスト展開する
+#+begin_src emacs-lisp
+  (defmacro if-do (test &body do-list)
+    `(if ,test (progn ,@do-list)))
+  (if-do (> 5 3) (print "AAA") (print "BBB"))
+#+end_src
+
 * References
 ** [[http://pragmaticemacs.com/][Pragmatic Emacs | practical tips for everyday emacs]]
 役立つtipsが紹介されているサイト。
