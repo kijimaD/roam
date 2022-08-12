@@ -16,6 +16,53 @@ org-modeは[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]の機能の1つ。
 
 などが可能。
 * Memo
+** orgエレメントの情報を取得する
+
+org-modeをパースした結果が保持されているので、APIによって簡単に扱うことができる。
+
+#+caption: 細かい情報を取得できる
+#+begin_src emacs-lisp :results raw
+(org-element-context)
+#+end_src
+
+#+RESULTS:
+(src-block (:language emacs-lisp :switches nil :parameters :results raw :begin 448 :end 517 :number-lines nil :preserve-indent nil :retain-labels t :use-labels t :label-fmt nil :value (org-element-context)
+ :post-blank 1 :post-affiliated 448 :parent nil))
+
+org-modeが各エレメントをどのように扱っているか少し想像がつく。
+
+#+caption: アクセスして取得する用の関数もある
+#+begin_src emacs-lisp
+(org-element-type (org-element-context))
+#+end_src
+
+#+RESULTS:
+: src-block
+
+** orgファイルからkeywordsを取得する
+
+(org-collect-keywords)を使うとorgファイルの情報を取得できる。
+
+#+caption: (org-collect-keywords)を使ってタイトルを取得しているコード例
+#+begin_src git-permalink
+https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L299-L309
+#+end_src
+
+#+RESULTS:
+#+begin_example
+(defun org-roam-db--file-title ()
+  "In current Org buffer, get the title.
+If there is no title, return the file name relative to
+`org-roam-directory'."
+  (org-link-display-format
+   (or (cadr (assoc "TITLE" (org-collect-keywords '("title"))))
+       (file-name-sans-extension (file-relative-name
+                                  (buffer-file-name (buffer-base-buffer))
+                                  org-roam-directory)))))
+
+(defun org-roam-db-insert-file ()
+#+end_example
+
 ** メモをつける
 タスクの状態が遷移したときに、メモを開く設定ができる。
 
@@ -51,15 +98,6 @@ WIPとかつけるようにすると便利そう。
 基本的なカテゴリは階層で、一時的な状態はタグでやるようにするのがよさそう。
 
  ~C-c / m~ で検索できる。
-** pdf閲覧(ださい方法)
-読書をEmacsでしたいときはpdfから変換する。あまりEmacs関係ない。
-
-#+begin_src shell
-  sudo apt-get install pdftotext
-  pdftotext text.pdf
-#+end_src
-
-あるいは、HTMLに変換してewwで閲覧すればいい可能性がある。
 ** 可変幅と等幅フォント
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]はテキストエディタなので、文字表示のほとんどは等幅フォントだ。が、
 org-modeでは自然言語の文章なので、幅の違うフォントのほうが読みやすい。
