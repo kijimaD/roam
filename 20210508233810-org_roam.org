@@ -47,8 +47,136 @@ https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b85669
        #'emacsql-sqlite3))))
 #+end_results
 * Tasks
-** TODO dbで何をしているのか                                     :DontKnow:
+* References
+** [[https://www.orgroam.com/manual.html][Org-roam User Manual]]
+マニュアル。
+** [[https://www.youtube.com/watch?v=AyhPmypHDEw][Getting Started with Org Roam - Build a Second Brain in Emacs - YouTube]]
+[[id:fa497359-ae3f-494a-b24a-9822eefe67ad][System Crafters]]のOrg Roam紹介。
+** [[https://www.mhatta.org/wp/2021/02/20/org-mode-101-9/#org125e180][Org mode 教室 その9: org-roam でアイデアをひねり出す]]
+具体的なワークフローがわかりやすい。
+** https://blog.jethro.dev/posts/introducing_org_roam/
+作者サイトのマニュアル。
+** https://blog.jethro.dev/posts/org_mode_workflow_preview/
+org-modeのワークフロー。
+* Archives
+** CLOSE Unify workflow management with roam
+CLOSED: [2021-09-04 Sat 12:42]
+https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html
+** CLOSE CI, sqliteを入れて試してみる
+CLOSED: [2021-09-04 Sat 12:07]
+- search emacsql
+Default install sqlite on ubuntu, so does not matter.
+** DONE 基本的キーバインド
+CLOSED: [2021-08-29 Sun 21:18]
+ - find(C-c n f)
+ - バックリンク(C-c n l)
+ - Roamリンク挿入(C-c n i)補完を有効にすることであまり使わなくなる。
+** DONE idリンクをpublishできない問題
+CLOSED: [2021-08-29 Sun 19:53]
+roamのidがhtmlに変換できないよう。
+#+begin_quote
+Unable to resolve link
+#+end_quote
+になる。
+
+#+begin_src emacs-lisp
+  (setq org-hugo-base-dir ".")
+  (setq org-export-with-broken-links t)
+#+end_src
+するとできるが、idリンクを辿れない。
+ほかのサイトではidがあってもできてるように見える。
+https://hugocisneros.com/blog/my-org-roam-notes-workflow/
+orgのバージョンを最新にしたが変わらず。
+
+公式で言及。
+https://github.com/org-roam/org-roam/wiki/Hitchhiker's-Rough-Guide-to-Org-roam-V2#export
+
+#+begin_src emacs-lisp
+(setq org-id-link-to-org-use-id t)
+(setq org-id-extra-files (org-roam--list-files org-roam-directory))
+#+end_src
+↓で設定していた。これを設定すると成功した。
+https://hugocisneros.com/org-config/#configuration
+
+https://gist.github.com/hugcis/1f2d2ad4b98b07ee543f10232ba1b025
+#+begin_src emacs-lisp
+  (require 'find-lisp)
+  (defun hugcis/publish-note (file)
+    "Publish a note in FILE."
+    (interactive)
+    (with-current-buffer (find-file-noselect file)
+      (projectile-mode -1)
+      (setq org-hugo-section "notes"
+            org-hugo-base-dir "."
+            citeproc-org-org-bib-header "* Bibliography\n<ol class=\"biblio-list\">"
+            citeproc-org-org-bib-footer "</ol>")
+      (let ((org-id-extra-files (find-lisp-find-files org-roam-directory "\.org$")))
+          (org-hugo-export-wim-to-md))))
+#+end_src
+
+#+begin_src shell
+  find . -name '*.org' | emacs --batch -l ./publish.el --funcall kd/publish
+#+end_src
+** DONE 初期設定
+CLOSED: [2021-08-29 Sun 21:17]
+⚠バージョンが上がって設定が変わった。この内容は古い。
+roamのデフォルトディレクトリを作成して、そこでファイルが作成されたり、検索対象になる。
+
+#+begin_src emacs-lisp
+  (require 'org-roam)
+  (add-hook 'after-init-hook 'org-roam-mode)
+  (make-directory "~/roam" t)
+  (setq org-roam-directory "~/roam")
+#+end_src
+
+#+begin_src emacs-lisp
+  (setq org-roam-completion-everywhere t)
+  (define-key org-mode-map (kbd "C-M-i") 'completion-at-point)
+#+end_src
+リンク補完が有効になります。非常に便利。
+
+#+begin_src emacs-lisp
+  (define-key org-roam-mode-map (kbd "C-c n l") 'org-roam)
+  (define-key org-roam-mode-map (kbd "C-c n f") 'org-roam-find-file)
+  (define-key org-roam-mode-map (kbd "C-c n g") 'org-roam-graph)
+  (define-key org-mode-map (kbd "C-c n i") 'org-roam-insert)
+  (define-key org-mode-map (kbd "C-c n I") 'org-roam-insert-immediate)
+#+end_src
+** DONE 外部リンクをグラフに表示したくない
+CLOSED: [2021-09-02 Thu 10:30]
+
+~org-roam-graph~ でファイルリンクだけのつながりを表示したい。
+v1ではファイルリンクだけで、外部リンクは出てなくてわかりやすかった。
+
+[[https://github.com/org-roam/org-roam-ui][org-roam-ui]]を使ってみた。めちゃかっこいい。
+
+org-roam-graph-link-hidden-types でhttp, httpsを指定すると消せた。
+これでCIでも出力できるはず。
+#+begin_src emacs-lisp
+(setq org-roam-graph-link-hidden-types '("https" "http" "file"))
+#+end_src
+** DONE d3でのグラフ出力
+CLOSED: [2021-12-25 Sat 16:36]
 :LOGBOOK:
+CLOCK: [2021-12-25 Sat 15:34]--[2021-12-25 Sat 16:36] =>  1:02
+:END:
+
+1. org-roam-db-syncでdbファイルを生成する
+2. dbファイルをグラフとしてjsonに変換する
+3. [[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]のd3ライブラリでjsonを読み込む
+4. ブラウザ描画
+** CLOSE Selecting deleted bufferエラー
+CLOSED: [2022-05-15 Sun 19:05]
+新しく構築した環境にて、 ~(org-roam-db-sync)~ をやると ~Selecting deleted buffer~ がエラーが出る。
+依存しているemacs-sqlite関係でなにかおかしくなっているよう。同じくemacs-sqliteに依存しているmagit-forgeも動かない。
+
+メインマシン、[[id:2d35ac9e-554a-4142-bba7-3c614cbfe4c4][GitHub Actions]]環境ではうまくいっているので、sqlite関係か、.emacs.dで何か起きている。
+うまくいくようになった。関連ライブラリが修正されたよう。
+** DONE dbを使って何をしているのか                               :DontKnow:
+CLOSED: [2022-08-12 Fri 22:13]
+:LOGBOOK:
+CLOCK: [2022-08-12 Fri 21:32]--[2022-08-12 Fri 21:57] =>  0:25
+CLOCK: [2022-08-12 Fri 20:56]--[2022-08-12 Fri 21:21] =>  0:25
 CLOCK: [2022-08-12 Fri 20:25]--[2022-08-12 Fri 20:50] =>  0:25
 CLOCK: [2022-08-12 Fri 11:00]--[2022-08-12 Fri 11:25] =>  0:25
 CLOCK: [2022-08-12 Fri 10:27]--[2022-08-12 Fri 10:52] =>  0:25
@@ -212,132 +340,8 @@ The TEMPLATES, if provided, override the list of capture templates (see
        :props '(:finalize find-file)))))
 #+end_results
 
-- nodeが存在していればvisitを使ってファイルを開く
+- nodeが存在していればファイルを開く。そうでなければorg-roam-captureでテンプレート画面を開く
+- 開くときもdbに接続して情報を取ってくるはずだが、コードのどの箇所かわからなかった
 
-* References
-** [[https://www.orgroam.com/manual.html][Org-roam User Manual]]
-マニュアル。
-** [[https://www.youtube.com/watch?v=AyhPmypHDEw][Getting Started with Org Roam - Build a Second Brain in Emacs - YouTube]]
-[[id:fa497359-ae3f-494a-b24a-9822eefe67ad][System Crafters]]のOrg Roam紹介。
-** [[https://www.mhatta.org/wp/2021/02/20/org-mode-101-9/#org125e180][Org mode 教室 その9: org-roam でアイデアをひねり出す]]
-具体的なワークフローがわかりやすい。
-** https://blog.jethro.dev/posts/introducing_org_roam/
-作者サイトのマニュアル。
-** https://blog.jethro.dev/posts/org_mode_workflow_preview/
-org-modeのワークフロー。
-* Archives
-** CLOSE Unify workflow management with roam
-CLOSED: [2021-09-04 Sat 12:42]
-https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html
-** CLOSE CI, sqliteを入れて試してみる
-CLOSED: [2021-09-04 Sat 12:07]
-- search emacsql
-Default install sqlite on ubuntu, so does not matter.
-** DONE 基本的キーバインド
-CLOSED: [2021-08-29 Sun 21:18]
- - find(C-c n f)
- - バックリンク(C-c n l)
- - Roamリンク挿入(C-c n i)補完を有効にすることであまり使わなくなる。
-** DONE idリンクをpublishできない問題
-CLOSED: [2021-08-29 Sun 19:53]
-roamのidがhtmlに変換できないよう。
-#+begin_quote
-Unable to resolve link
-#+end_quote
-になる。
-
-#+begin_src emacs-lisp
-  (setq org-hugo-base-dir ".")
-  (setq org-export-with-broken-links t)
-#+end_src
-するとできるが、idリンクを辿れない。
-ほかのサイトではidがあってもできてるように見える。
-https://hugocisneros.com/blog/my-org-roam-notes-workflow/
-orgのバージョンを最新にしたが変わらず。
-
-公式で言及。
-https://github.com/org-roam/org-roam/wiki/Hitchhiker's-Rough-Guide-to-Org-roam-V2#export
-
-#+begin_src emacs-lisp
-(setq org-id-link-to-org-use-id t)
-(setq org-id-extra-files (org-roam--list-files org-roam-directory))
-#+end_src
-↓で設定していた。これを設定すると成功した。
-https://hugocisneros.com/org-config/#configuration
-
-https://gist.github.com/hugcis/1f2d2ad4b98b07ee543f10232ba1b025
-#+begin_src emacs-lisp
-  (require 'find-lisp)
-  (defun hugcis/publish-note (file)
-    "Publish a note in FILE."
-    (interactive)
-    (with-current-buffer (find-file-noselect file)
-      (projectile-mode -1)
-      (setq org-hugo-section "notes"
-            org-hugo-base-dir "."
-            citeproc-org-org-bib-header "* Bibliography\n<ol class=\"biblio-list\">"
-            citeproc-org-org-bib-footer "</ol>")
-      (let ((org-id-extra-files (find-lisp-find-files org-roam-directory "\.org$")))
-          (org-hugo-export-wim-to-md))))
-#+end_src
-
-#+begin_src shell
-  find . -name '*.org' | emacs --batch -l ./publish.el --funcall kd/publish
-#+end_src
-** DONE 初期設定
-CLOSED: [2021-08-29 Sun 21:17]
-⚠バージョンが上がって設定が変わった。この内容は古い。
-roamのデフォルトディレクトリを作成して、そこでファイルが作成されたり、検索対象になる。
-
-#+begin_src emacs-lisp
-  (require 'org-roam)
-  (add-hook 'after-init-hook 'org-roam-mode)
-  (make-directory "~/roam" t)
-  (setq org-roam-directory "~/roam")
-#+end_src
-
-#+begin_src emacs-lisp
-  (setq org-roam-completion-everywhere t)
-  (define-key org-mode-map (kbd "C-M-i") 'completion-at-point)
-#+end_src
-リンク補完が有効になります。非常に便利。
-
-#+begin_src emacs-lisp
-  (define-key org-roam-mode-map (kbd "C-c n l") 'org-roam)
-  (define-key org-roam-mode-map (kbd "C-c n f") 'org-roam-find-file)
-  (define-key org-roam-mode-map (kbd "C-c n g") 'org-roam-graph)
-  (define-key org-mode-map (kbd "C-c n i") 'org-roam-insert)
-  (define-key org-mode-map (kbd "C-c n I") 'org-roam-insert-immediate)
-#+end_src
-** DONE 外部リンクをグラフに表示したくない
-CLOSED: [2021-09-02 Thu 10:30]
-
-~org-roam-graph~ でファイルリンクだけのつながりを表示したい。
-v1ではファイルリンクだけで、外部リンクは出てなくてわかりやすかった。
-
-[[https://github.com/org-roam/org-roam-ui][org-roam-ui]]を使ってみた。めちゃかっこいい。
-
-org-roam-graph-link-hidden-types でhttp, httpsを指定すると消せた。
-これでCIでも出力できるはず。
-#+begin_src emacs-lisp
-(setq org-roam-graph-link-hidden-types '("https" "http" "file"))
-#+end_src
-** DONE d3でのグラフ出力
-CLOSED: [2021-12-25 Sat 16:36]
-:LOGBOOK:
-CLOCK: [2021-12-25 Sat 15:34]--[2021-12-25 Sat 16:36] =>  1:02
-:END:
-
-1. org-roam-db-syncでdbファイルを生成する
-2. dbファイルをグラフとしてjsonに変換する
-3. [[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]のd3ライブラリでjsonを読み込む
-4. ブラウザ描画
-** CLOSE Selecting deleted bufferエラー
-CLOSED: [2022-05-15 Sun 19:05]
-新しく構築した環境にて、 ~(org-roam-db-sync)~ をやると ~Selecting deleted buffer~ がエラーが出る。
-依存しているemacs-sqlite関係でなにかおかしくなっているよう。同じくemacs-sqliteに依存しているmagit-forgeも動かない。
-
-メインマシン、[[id:2d35ac9e-554a-4142-bba7-3c614cbfe4c4][GitHub Actions]]環境ではうまくいっているので、sqlite関係か、.emacs.dで何か起きている。
-うまくいくようになった。関連ライブラリが修正されたか。
 * 脚注
 [fn:1] https://roamresearch.com/ Webでのアウトラインツール。
