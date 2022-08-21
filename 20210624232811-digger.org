@@ -207,6 +207,8 @@ getで特定のpoolを取得できる。
 let target_pools = pools.get(wants_melee.target).unwrap(); # targetにはEntityが入ってる
 #+end_src
 ** entity削除の方法
+entityを削除する。
+
 #+begin_src rust
   ecs.delete_entity(entity).expect("Unable to delete");;
 #+end_src
@@ -214,12 +216,16 @@ let target_pools = pools.get(wants_melee.target).unwrap(); # targetにはEntity�
 #+begin_src rust
   entities.delete(entity).expect("Delete failed")
 #+end_src
+** component削除の方法
+entityに付属したcomponentを削除する。
 
+#+caption: component削除
 #+begin_src rust
   let entity = ecs.fetch::<Entity>();
   combatants.remove(*entity);
 #+end_src
 
+#+caption: component削除
 #+begin_src rust
   let mut battle = ecs.write_storage::<Battle>();
   battle.clear();
@@ -293,50 +299,22 @@ position componentをremove + InBackPackをinsertで、落ちているアイテ�
 
 なんらかのパラメータ変更を即座、何ターンかに渡ってもたらすものはeffect。永続的な属性、容れものを表すものはcomponent。がよさそう。
 * todo
-** TODO 攻撃方法実装
-
-** TODO エンカウント時のモンスター決定
-現在は固定している。
-
-- 階層
-- 接触したmapエンティティ
-- ダンジョン種別
-- レベル
-
-から、エンカウントモンスターを決定する。2体出るときもある。mapの配置選択と似たような感じでいけそう。
-** TODO 敵を倒した後に情報を取れるようにする
-現在はHPが0になった瞬間、経験値追加してる。レベルアップがわからないし、戦闘の勝利に対して経験値を発行するようにしたい。battle自体に取得予定の経験値を保存して、戦闘が終了したときに確定すればよさそうか。また、戦闘勝利以外でレベルアップすることはないので、そのへんの表示も変更する。
-** TODO パーティシステム
-現在のプレイヤーは、マップオブジェクト=戦闘オブジェクトになっている。モンスターと同様に、エンティティを分割する。戦闘中のコマンドをどうするか決める。
 ** TODO 戦闘メッセージボックスをバッチ化
+DEADLINE: <2022-08-28 Sun>
 通常のメッセージボックスと同じ形式にする。
-** TODO HUD改良
-メッセージボックスと重なって見にくいので。新たに追加する余地もない。
-** TODO 逃走コード分離
-全体的に分離されてないので、分離。
-** TODO 戦闘系コード整理
-:LOGBOOK:
-CLOCK: [2022-04-12 Tue 22:20]--[2022-04-12 Tue 22:45] =>  0:25
-CLOCK: [2022-04-12 Tue 21:50]--[2022-04-12 Tue 22:15] =>  0:25
-CLOCK: [2022-04-12 Tue 09:14]--[2022-04-12 Tue 09:39] =>  0:25
-CLOCK: [2022-04-11 Mon 23:08]--[2022-04-11 Mon 23:33] =>  0:25
-CLOCK: [2022-04-11 Mon 22:37]--[2022-04-11 Mon 23:02] =>  0:25
-:END:
-生死判定、勝利判定でごちゃついていて、どこにあるかわからない。かつ、フィールドでのそれらと混ざっていて危険。
-** TODO メッセージシステム
-** TODO アイテム合成
-*** TODO 素材アイテムを追加
-*** TODO UI作成
+** TODO 戦闘用GUIを分割する
+同じにまとまってbattle.rsになっていてわかりづらいので、フィールドと同様に分割する。
 ** TODO 戦闘システム
 *** TODO 設計
-DEADLINE: <2022-08-21 Sun>
+DEADLINE: <2022-08-28 Sun>
 :LOGBOOK:
+CLOCK: [2022-08-21 Sun 14:57]--[2022-08-21 Sun 15:22] =>  0:25
 CLOCK: [2022-08-19 Fri 15:43]--[2022-08-19 Fri 16:08] =>  0:25
 CLOCK: [2022-08-19 Fri 11:47]--[2022-08-19 Fri 12:12] =>  0:25
 CLOCK: [2022-08-19 Fri 11:18]--[2022-08-19 Fri 11:43] =>  0:25
 :END:
 
-曖昧にしか考えてないので、図にまとめて実装できる状態にする。
+曖昧にしか考えてないので、図にまとめて実装できる状態にする。戦闘関連のリファクタの後に実装する。
 
 攻撃の属性。
 
@@ -346,15 +324,36 @@ CLOCK: [2022-08-19 Fri 11:18]--[2022-08-19 Fri 11:43] =>  0:25
 戦闘用エンティティと分けたほうがいいのだろうか。
 
 *** TODO モンスターや仲間の攻撃方法の反映(かぎづめ、剣、パンチ)
-*** TODO 装備武器
+*** TODO 装備武器追加
+- 部位ごとに1つ装備できる
+- 装飾品、武器は部位制限がない
+- スロットは全部で4つ
 *** TODO コマンド…行動を選べる
 *** TODO SP…武器やスキルの使用にはスタミナが必要
+*** TODO エンカウント時のモンスター決定
+現在は固定している。
+
+- 階層
+- 接触したmapエンティティ
+- ダンジョン種別
+- レベル
+
+から、エンカウントモンスターを決定する。2体出るときもある。mapの配置選択と似たような感じでいけそう。
+*** TODO 敵を倒した後に情報を取れるようにする
+現在はHPが0になった瞬間、経験値追加してる。レベルアップがわからないし、戦闘の勝利に対して経験値を発行するようにしたい。battle自体に取得予定の経験値を保存して、戦闘が終了したときに確定すればよさそうか。また、戦闘勝利以外でレベルアップすることはないので、そのへんの表示も変更する。
+** TODO パーティシステム
+現在のプレイヤーは、マップオブジェクト=戦闘オブジェクトになっている。モンスターと同様に、エンティティを分割する。戦闘中のコマンドをどうするか決める。
+** TODO アイテム合成
+*** TODO 素材アイテムを追加
+*** TODO UI作成
 ** TODO スキル設計
 戦闘や行動によってスキルが上がり、生存に有利な補正がかかる。
 ** TODO スロット・部位ごとの装備
 4つのスロットがあり自由に装備できる。同じ部位の装備はできない。
+** TODO アイテム欄のペジネーション
+たくさん拾ったときに表示があふれるので。複数あるアイテム系で共通の処理・表示・操作にしたい。
 ** TODO 画像フォントを設定する
-.with_font("dungeonfont.png", 32, 32) で設定できる。複数のフォントを設定することで、敵をアイコンにしつつ、UIのアルファベットはそのままにできる。
+~.with_font("dungeonfont.png", 32, 32)~ で設定できる。複数のフォントを設定することで、敵をアイコンにしつつ、UIのアルファベットはそのままにできる。
 
 日本語表示は数が多すぎるため厳しいよう。フォントと画像をマッピングしている仕組みはどうなっているのだろう。ひらがなカタカナでも難しいように見える。
 ** TODO マップのシード値を取れるようにする
@@ -363,34 +362,35 @@ CLOCK: [2022-05-22 Sun 00:47]--[2022-05-22 Sun 01:12] =>  0:25
 :END:
 
 シードを指定すると同じマップを生成できる。デバッグで便利。
-** TODO 中立の敵
-自分から接触しようとしてこないが、こっちから接触すると戦闘に入れる敵を追加する。動物とか。
 ** TODO エンカウント時のアニメーション
+アニメーションを入れる。
 ** TODO 最低限のテストを作成、CI実行する
 
 自動テストをやりたいが、どうやったらいいのかわからない。ログをテキストファイルに書き出すようにすれば、チェックできるのでは。結局正しく挙動しているかはわからないが、実行時エラーにならないのはわかる。
 
 ** TODO バイナリを配布する
-それぞれのOSで実行できるようにする。
+それぞれのOSですぐ実行できるようにする。
+** TODO cargoに登録する
+cargo installでもすぐ実行できるようにする。
 ** TODO 画面エフェクト追加
 追加はchapter63が参考になりそう。
 
 https://bfnightly.bracketproductions.com/chapter_63.html
-** TODO ミニマップ
-全体の概略を表示する。全体表示してもよさそう。アイテム、敵、階段だけを視界内に限定すれば。
+** TODO ミニマップ表示
+周囲の概略を表示する。アイテム、敵、階段だけを視界内に限定すれば。
+
+視野限定をやめれば、実装しなくてよさそう。
 ** TODO カメラをどう実装しているか                               :DontKnow:
 いまいち理解してないままだ。
 ** TODO ランダムテーブルの重み付けの方法                         :DontKnow:
 ピンと来てない。
-** TODO 戦闘ログとフィールドログを共通の仕組みにする
-表示データが異なるだけなので。
 ** TODO アイテムのレア度で色を変える
 - レア度の実装
 - 色を変える
-** TODO 腹減りでHPが減らないのを修正する
-なぜかダメージが通らなくなっている。
-** TODO systemをmoduleにする
-わかりづらいので。
+** TODO 最初から視界オープン状態にする
+探索がだるいので、可視状態にする。アイテムや敵は視界内でないと見えない。
+** TODO アイテムと階段が重なって見えなくなるときがある
+アイテムを拾えない+階段が発見できなくなるので、階段上に生成しなくするか、常に階段を上に表示する。
 * References
 #+begin_quote
 - http://www.roguebasin.com/index.php/Articles :: ローグライクに関する情報が集約されている。
@@ -1576,3 +1576,201 @@ CLOCK: [2022-08-19 Fri 18:01]--[2022-08-19 Fri 18:26] =>  0:25
 - run_systemを一度実行すると敵シンボルは消えドロップアイテムが見えるのだが、その座標に1ターン経過しないと移動できない状態になる
 - run_systemsを2度実行すると自然な状態になる。よくわからない
 - delete_the_deadがターンの関係で敵が消えてないのでは
+** DONE 戦闘系コード整理
+CLOSED: [2022-08-20 Sat 14:36] DEADLINE: <2022-08-21 Sun>
+:LOGBOOK:
+CLOCK: [2022-08-20 Sat 14:19]--[2022-08-20 Sat 14:36] =>  0:17
+CLOCK: [2022-08-20 Sat 13:54]--[2022-08-20 Sat 14:19] =>  0:25
+CLOCK: [2022-08-20 Sat 13:29]--[2022-08-20 Sat 13:54] =>  0:25
+CLOCK: [2022-08-20 Sat 11:20]--[2022-08-20 Sat 11:45] =>  0:25
+CLOCK: [2022-08-20 Sat 10:55]--[2022-08-20 Sat 11:20] =>  0:25
+CLOCK: [2022-08-20 Sat 10:16]--[2022-08-20 Sat 10:41] =>  0:25
+CLOCK: [2022-08-20 Sat 09:45]--[2022-08-20 Sat 10:10] =>  0:25
+CLOCK: [2022-08-20 Sat 08:48]--[2022-08-20 Sat 09:13] =>  0:25
+CLOCK: [2022-08-20 Sat 08:23]--[2022-08-20 Sat 08:48] =>  0:25
+CLOCK: [2022-08-20 Sat 07:40]--[2022-08-20 Sat 08:05] =>  0:25
+CLOCK: [2022-08-20 Sat 07:15]--[2022-08-20 Sat 07:40] =>  0:25
+CLOCK: [2022-04-12 Tue 22:20]--[2022-04-12 Tue 22:45] =>  0:25
+CLOCK: [2022-04-12 Tue 21:50]--[2022-04-12 Tue 22:15] =>  0:25
+CLOCK: [2022-04-12 Tue 09:14]--[2022-04-12 Tue 09:39] =>  0:25
+CLOCK: [2022-04-11 Mon 23:08]--[2022-04-11 Mon 23:33] =>  0:25
+CLOCK: [2022-04-11 Mon 22:37]--[2022-04-11 Mon 23:02] =>  0:25
+:END:
+生死判定、勝利判定でごちゃついていて、どこにあるかわからない。かつ、フィールドでのそれらと混ざっていて危険。
+
+それぞれsystemに分割したが、うまく動かない。1ターン進めないと、死体が消えない、戦闘勝利判定が入らない。困った。ステートも切り替わらないな。ほかのシステムとの連動が、イメージと異なるようだ。
+
+- 逃げるのは機構が別なのでできる。mainファイルから正しくstateが切り替わっている
+- プレイヤーの体力判定も動いてない
+- サンプルのdelete_the_deadもsystemになっていないことはヒントか。run_systemで実行せず、state共通で毎ループ実行するようになっている
+- とはいえあとちょっとでできそうなんだよな。問題は死体が消えず体力が1ターンマイナスになることだけだ。ecs.maintain()をすると削除できるようになった。system内でのentity削除は、ecs.maintain()を実行しないと削除されないようだ
+- とはいえ、アイテムドロップにecsが必要でsystemでどういう対応すれば良いかわからず
+
+#+caption: できなかったコード。damage_system.rs
+#+begin_quote rust
+use super::{
+    gamelog::BattleLog, Attributes, Combatant, Equipped, InBackpack, LootTable, Map, Monster, Name,
+    OnBattle, Player, Pools, Position, RunState,
+};
+use specs::prelude::*;
+
+pub struct DamageSystem {}
+
+impl<'a> System<'a> for DamageSystem {
+    type SystemData = (
+        ReadStorage<'a, Pools>,
+        ReadStorage<'a, Player>,
+        ReadStorage<'a, Name>,
+        ReadStorage<'a, Combatant>,
+        Entities<'a>,
+        WriteExpect<'a, BattleLog>,
+        WriteExpect<'a, RunState>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (
+            pools,
+            players,
+            names,
+            combatant,
+            entities,
+            mut log,
+            mut runstate,
+        ) = data;
+
+        let mut dead: Vec<Entity> = Vec::new();
+        // Using a scope to make the borrow checker happy
+
+        for (entity, pools, _combatant) in (&entities, &pools, &combatant).join() {
+            if pools.hit_points.current < 1 {
+                let player = players.get(entity);
+                match player {
+                    None => {
+                        let victim_name = names.get(entity);
+                        if let Some(victim_name) = victim_name {
+                            log.entries.push(format!("{} is dead", &victim_name.name));
+                        }
+                        dead.push(entity);
+                    }
+                    Some(_) => {
+                        *runstate = RunState::GameOver;
+                    }
+                }
+            }
+        }
+
+        // HPが0になったentityの削除
+        // entity削除をしても存在し続けているように見える
+        for victim in dead {
+            entities.delete(victim).expect("Delete failed");
+        }
+
+        // 勝利判定
+        // if maybe_win {
+        //     check_battle_win(ecs);
+        // }
+    }
+}
+
+pub struct WinSystem {}
+
+impl<'a> System<'a> for WinSystem {
+    type SystemData = (
+        Entities<'a>,
+        ReadStorage<'a, Pools>,
+        ReadStorage<'a, Monster>,
+        ReadStorage<'a, Combatant>,
+        WriteStorage<'a, OnBattle>,
+        WriteStorage<'a, Equipped>,
+        WriteStorage<'a, InBackpack>,
+        WriteStorage<'a, Position>,
+        ReadStorage<'a, LootTable>,
+        WriteExpect<'a, rltk::RandomNumberGenerator>,
+        WriteExpect<'a, BattleLog>,
+        WriteExpect<'a, RunState>,
+    );
+
+    fn run(&mut self, data: Self::SystemData) {
+        let (
+            entities,
+            pools,
+            monster,
+            combatant,
+            mut on_battle,
+            mut equipped,
+            mut carried,
+            mut positions,
+            loot_tables,
+            rng,
+            mut log,
+            mut runstate
+        ) = data;
+
+        let mut dead: Vec<Entity> = Vec::new();
+
+        if (&entities, &pools, &monster, &combatant).join().count() == 0 {
+            for (_entity, on_battle) in (&entities, &on_battle).join() {
+                dead.push(on_battle.monster);
+            }
+        }
+
+        for victim in dead {
+            log.entries.push(format!("You win!"));
+            entities.delete(victim).expect("Delete failed");
+            *runstate = RunState::BattleResult;
+            on_battle.clear();
+        }
+    }
+}
+#+end_quote
+** DONE battle用を分ける
+CLOSED: [2022-08-21 Sun 08:47] DEADLINE: <2022-08-21 Sun>
+:LOGBOOK:
+CLOCK: [2022-08-21 Sun 08:22]--[2022-08-21 Sun 08:47] =>  0:25
+CLOCK: [2022-08-21 Sun 07:51]--[2022-08-21 Sun 08:16] =>  0:25
+CLOCK: [2022-08-21 Sun 07:26]--[2022-08-21 Sun 07:51] =>  0:25
+CLOCK: [2022-08-20 Sat 20:15]--[2022-08-20 Sat 20:40] =>  0:25
+CLOCK: [2022-08-20 Sat 19:43]--[2022-08-20 Sat 20:08] =>  0:25
+CLOCK: [2022-08-20 Sat 19:10]--[2022-08-20 Sat 19:35] =>  0:25
+CLOCK: [2022-08-20 Sat 16:53]--[2022-08-20 Sat 17:18] =>  0:25
+CLOCK: [2022-08-20 Sat 15:55]--[2022-08-20 Sat 16:20] =>  0:25
+CLOCK: [2022-08-20 Sat 14:45]--[2022-08-20 Sat 15:10] =>  0:25
+:END:
+stateがごっちゃになっているので別にする。systemは別でやる。
+
+- 複数の型をとりうるとき、orってどうするんだ。enumで。
+- stateのenumをネストしたenumにすればよいのでは、と考えたがうまくいかず
+** DONE 逃走コード分離
+CLOSED: [2022-08-21 Sun 11:27] DEADLINE: <2022-08-21 Sun>
+:LOGBOOK:
+CLOCK: [2022-08-21 Sun 11:00]--[2022-08-21 Sun 11:25] =>  0:25
+CLOCK: [2022-08-21 Sun 10:29]--[2022-08-21 Sun 10:54] =>  0:25
+CLOCK: [2022-08-21 Sun 10:04]--[2022-08-21 Sun 10:29] =>  0:25
+CLOCK: [2022-08-21 Sun 09:22]--[2022-08-21 Sun 09:47] =>  0:25
+CLOCK: [2022-08-21 Sun 08:53]--[2022-08-21 Sun 09:18] =>  0:25
+:END:
+
+GUI部分に書いている。全体的に分離されてないので、分離。
+
+- systemにしたところ、また逃走成功時のエンティティ削除がうまくいかない
+- エンティティ削除部分が実行されてないようで、逃走成功メッセージが出ない + 次の戦闘時に2体表示される
+- 逃走では即stateが切り替わるようになってるから、そのへんな気もする。systemを使う場合だと、wants_run_away生成→ターン処理→逃走となり実行タイミングがよくわからないことになる。delete_the_deadと同じように、ターン処理を待たずに即実行したい感じなのでsystemにしない
+** DONE 腹減りでHPが減らないのを修正する
+CLOSED: [2022-08-21 Sun 14:41] DEADLINE: <2022-08-21 Sun>
+:LOGBOOK:
+CLOCK: [2022-08-21 Sun 14:23]--[2022-08-21 Sun 14:41] =>  0:18
+:END:
+なぜかダメージが通らなくなっている。
+
+攻撃主と対象が同じのため、ダメージが通らなくなっていた。腹減り時のeffectの攻撃主をNoneに設定して完了。
+** DONE systemをmoduleにする
+CLOSED: [2022-08-21 Sun 17:08] DEADLINE: <2022-08-28 Sun>
+:LOGBOOK:
+CLOCK: [2022-08-21 Sun 16:42]--[2022-08-21 Sun 17:07] =>  0:25
+CLOCK: [2022-08-21 Sun 15:59]--[2022-08-21 Sun 16:24] =>  0:25
+CLOCK: [2022-08-21 Sun 15:34]--[2022-08-21 Sun 15:59] =>  0:25
+:END:
+多くてディレクトリがわかりづらくなっている。チュートリアルの最終盤にあったがまだやってない。
+** DONE 戦闘ログとフィールドログを共通の仕組みにする
+CLOSED: [2022-08-21 Sun 17:09]
+表示データが異なるだけで、操作は同じなので。引数でデータを選択できるようにした。
