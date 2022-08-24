@@ -7,6 +7,47 @@ Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85
 * Memo
 * Tasks
 * Reference
-** [[https://www.amazon.co.jp/Go%E3%81%AA%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4908686033/ref=sr_1_3?keywords=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0&qid=1653145833&sprefix=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%2Caps%2C206&sr=8-3][Goならわかるシステムプログラミング | 渋川 よしき, ごっちん |本 | 通販 - Amazon.co.jp]]
+** WIP [[https://www.amazon.co.jp/Go%E3%81%AA%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4908686033/ref=sr_1_3?keywords=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0&qid=1653145833&sprefix=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%2Caps%2C206&sr=8-3][Goならわかるシステムプログラミング | 渋川 よしき, ごっちん |本 | 通販 - Amazon.co.jp]]
+:LOGBOOK:
+CLOCK: [2022-08-23 Tue 10:55]--[2022-08-23 Tue 11:20] =>  0:25
+CLOCK: [2022-08-22 Mon 09:00]--[2022-08-22 Mon 09:25] =>  0:25
+CLOCK: [2022-08-22 Mon 08:35]--[2022-08-22 Mon 09:00] =>  0:25
+CLOCK: [2022-08-22 Mon 08:10]--[2022-08-22 Mon 08:35] =>  0:25
+:END:
+
+- 36
+
 低レイヤ処理をGoで学ぶ本。
+
+- まずデバッガ環境を整えることから
+- ファイルディスクリプタに対応するものは、通常のファイルに限らない。標準入出力/ソケット/OS/CPUに内蔵されている乱数生成の仕組みなど、ファイルではないものにもファイルディスクリプタが割り当てられ、どれもファイルと同じようにアクセスできる
+- OSは、プロセスが起動されるとまず3つの疑似ファイルを作成し、それぞれにファイルディスクリプタを割り当てる。0が標準入力、1が標準出力、2が標準エラー出力
+- 可能な限りすべてのものがファイルとして抽象化されている
+- go言語ではファイルディスクリプタのような共通化の仕組みを言語レベルで持ってOSによる差異を吸収している。io.Writer
+- インターフェースは、構造体と違って何かしら実態を持つものを表すのではなく、「どんなことができるか」を宣言しているだけ
 * Archives
+** DONE EmacsにLSP+DAPを設定する
+CLOSED: [2022-08-22 Mon 12:44]
+:LOGBOOK:
+CLOCK: [2022-08-22 Mon 11:41]--[2022-08-22 Mon 12:06] =>  0:25
+CLOCK: [2022-08-22 Mon 10:57]--[2022-08-22 Mon 11:22] =>  0:25
+:END:
+DAP(Debug Adapter Protocol)はデバッガー補助。エディタ関係なくIDEのようにエディタ上でブレークポイントをセットできるプロトコル。[[id:eb807577-cd69-478c-8f82-264243c67354][LSP]]のデバッガーバージョン。
+
+go用のファイルはemacs側で自動インストールできず、手動でインストールする必要がある。
+
+- [[https://emacs-lsp.github.io/dap-mode/page/configuration/#go][Configuration - DAP Mode]]
+  - 外部コマンドをgo installでインストール
+    - LSPは ~gopls~
+    - Debuggerは ~delve~ (注意: VScode用のプログラムを用いる方法はdeprecatedで、現在は直接installするのが最新)
+  - Emacs側で設定、Emacs側が認識できるようにする
+
+自分の環境では一瞬デバッガのボタンが表示されて Debug Adapter finished になってしまう状態になった。Warningには ~Warning (emacs): Initialize request failed: Failed to launch Disable showing Disable logging~ が表示される。理由がよくわからないため、表示させる。 ~(setq dap-print-io t)~ を評価すると、messageバッファに詳細なログを出力する。
+
+原因は、しっかりと表示されていた。
+
+#+begin_quote
+"format": "Failed to launch: Go version 1.14.15 is too old for this version of Delve (minimum supported version 1.17, suppress this error with --check-go-version=false)",
+#+end_quote
+
+ということで、goのバージョンを上げると無事デバッガが起動するようになった。
