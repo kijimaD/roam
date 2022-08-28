@@ -47,6 +47,10 @@ dockle:
 
 server:
 	cd ./public; python -m SimpleHTTPServer 8888
+
+server3:
+	cd ./public; python3 -m http.server 8000
+
 refresh:
 	git clean -xdn
 	git clean -xdf
