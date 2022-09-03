@@ -8,6 +8,39 @@ bracket-libは[[id:50ac66da-89f2-42dc-a746-d20b041d06ae][roguelike]]開発のた
 
 - リポジトリ -> [[https://github.com/amethyst/bracket-lib][amethyst/bracket-lib: The Roguelike Toolkit (RLTK), implemented for Rust.]]
 * Memo
+** terminalの初期化方法
+初期化の例が多くあり、参考になる。特にfontまわり。
+
+- https://github.com/amethyst/bracket-lib/tree/master/bracket-terminal/examples
+
+#+caption: デフォルト以外のfontの読み込み方
+#+begin_src git-permalink
+https://github.com/kd-collective/bracket-lib/blob/10f2b9d3c237125e6a456dae0f291a4b6f18a5dc/bracket-terminal/examples/unicode.rs#L20-L36
+#+end_src
+
+#+RESULTS:
+#+begin_example rust
+bracket_terminal::embedded_resource!(TILE_FONT3, "../resources/unicode_16x16.png");
+
+fn main() -> BError {
+    bracket_terminal::link_resource!(TILE_FONT3, "resources/unicode_16x16.png");
+
+    let context = BTermBuilder::new()
+        .with_dimensions(80, 50)
+        .with_tile_dimensions(16, 16)
+        .with_title("Hello Minimal Bracket World")
+        .with_font("unicode_16x16.png", 16, 16)
+        .with_simple_console(80, 50, "unicode_16x16.png")
+        .build()?;
+
+    let gs: State = State {};
+
+    main_loop(context, gs)
+}
+#+end_example
+
+- ~embedded_resource!~ と ~link_resource!~ でなぜディレクトリが微妙に違うのかよくわからない。変えると動かないので、理由はあるはず
+
 ** named colorの一覧
 色指定するときには ~RGB::named(rltk::BLACK)~ のようにするわけだが、検索してパっと出なかったのでソースコードからメモ。
 
