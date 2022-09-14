@@ -1,5 +1,6 @@
 :PROPERTIES:
 :ID:       7cacbaa3-3995-41cf-8b72-58d6e07468b1
+:header-args+: :wrap :results raw
 :END:
 #+title: Go
 * 概要
@@ -7,7 +8,7 @@ Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85
 * Memo
 ** 基本事項
 
-Goでは、最初の文字が大文字で始まる名前は、外部のパッケージから参照できるエクスポートされた名前。例えばPiはmathパッケージでエクスポートされる。
+- Goでは、最初の文字が大文字で始まる名前は、外部のパッケージから参照できるエクスポートされた名前。例えばPiはmathパッケージでエクスポートされる
 
 #+begin_src go
   package main
@@ -20,12 +21,200 @@ Goでは、最初の文字が大文字で始まる名前は、外部のパッケ
   }
 #+end_src
 
+- 変数が存在するメモリ上の位置を「アドレス」といい、そのアドレスを格納可能な変数を「ポインタ」という
+- ~int~ 型変数のアドレスを格納できるポインタの型は ~*int~ 型というように、アスタリスクをつける
+
+#+caption: ポインタ
+#+begin_src go :imports "fmt"
+  var ptr *int
+  var i int = 12345
+  ptr = &i
+
+  fmt.Println("iのアドレス:", &i)
+  fmt.Println("ptrの値(変数iのアドレス):", ptr)
+
+  fmt.Println("iの値:", i)
+  fmt.Println("ポインタ経由のiの値:", *ptr)
+
+  ,*ptr = 999
+  fmt.Println("ポインタ経由で変更したiの値:", i)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+iのアドレス: 0xc0000b6010
+ptrの値(変数iのアドレス): 0xc0000b6010
+iの値: 12345
+ポインタ経由のiの値: 12345
+ポインタ経由で変更したiの値: 999
+#+end_results
+
+#+begin_src go :imports "fmt"
+  func main() {
+          a, b := 1, 1
+
+          double(a, &b)
+          fmt.Println("値渡し:", a)
+          fmt.Println("ポインタ渡し:", b)
+  }
+
+  func double(x int, y *int) {
+          x = x * 2
+          ,*y = *y * 2
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+値渡し: 1
+ポインタ渡し: 2
+#+end_results
+
+関数リテラル。
+
+#+caption: 関数リテラル = 無名関数
+#+begin_src go :imports "fmt"
+  func main() {
+          val := 123
+
+          // 関数リテラルの記述と呼び出しを同時に行う
+          func(i int) {
+                  // 関数リテラル外の変数valにアクセス可能
+                  fmt.Println(i * val)
+          }(10)
+
+          // 関数リテラルを変数に代入
+          f := func(s string) {
+                  fmt.Println(s)
+          }
+
+          f("hoge")
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1230
+hoge
+#+end_results
+
+関数型。
+
+#+caption: 代入して呼び出す
+#+begin_src go :imports "fmt"
+  func main() {
+          // 関数型の変数宣言
+          var f func(int, int) int
+
+          // 関数リテラルの値を代入
+          f = func(a int, b int) int {
+                  return a + b
+          }
+
+          // 関数型の変数経由で関数を呼び出す
+          fmt.Println(f(1, 2))
+
+
+          // 関数型の変数に値を代入
+          f = multiply
+
+          // 関数型の変数経由で関数を呼び出す
+          fmt.Println(f(1, 2))
+  }
+
+  func multiply(x int, y int) int {
+          return x * y
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+3
+2
+#+end_results
+
+メソッドの宣言。
+
+#+caption: 型に実装する
+#+begin_src go :imports "fmt"
+  type myType int
+
+  // myType型をレシーバに持つ関数、すなわちmyType型のメソッドを宣言。レシーバは一番最初に書く
+  func (value myType) println() {
+          fmt.Println(value)
+  }
+
+  func main() {
+          // myType型の変数を宣言する
+          var z myType = 1234
+
+          // myType型のメソッドを呼び出す
+          z.println()
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1234
+#+end_results
+
+メソッドのレシーバをポインタにする。
+
+#+begin_src go :imports "fmt"
+  // int型
+  type myType int
+
+  func (value myType) setByValue(newValue myType) {
+          // ここで値を代入しても無意味。Valueはコピーされるので
+          value = newValue
+  }
+
+  func(value *myType) setByPointer(newValue myType) {
+          // 代入した値が反映される
+          ,*value = newValue
+  }
+  func main() {
+          var x myType = 0
+
+          // レシーバは値。値は変更できない
+          x.setByValue(1)
+          fmt.Println("値: 0 ->", x)
+
+          // レシーバはポインタ。値は変更できる
+          x.setByPointer(2)
+          fmt.Println("ポインタ: 0 ->", x)
+  }
+
+#+end_src
+
+#+RESULTS:
+#+begin_results
+値: 0 -> 0
+ポインタ: 0 -> 2
+#+end_results
+
+構造体型に名前をつける。
+
+#+caption: 構造体にMyDataという新しい型名を与える
+#+begin_src go
+  type MyData struct {
+        s string
+        b byte
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
 - メソッドの宣言には値レシーバ、ポインタレシーバの2つがある。混在させるべきではない
   - 変数レシーバではメソッドの操作は元の変数のコピーを操作する
   - ポインタレシーバでは、ポインタを使うので元の変数を変更できる
 - ポインタレシーバを使う2つの理由
   - メソッドがレシーバが指す先の変数を変更するため
   - メソッドの呼び出し毎に変数のコピーを避けるため
+
+匿名フィールド
 
 ** 基本コマンド
 
@@ -41,23 +230,39 @@ go run hello.go
 M-x dap-debug
 #+end_src
 
+** [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]での実行方法
+
+ob-goをインストールして ~(require "ob-go")~ する。実行方法が少し変わっていて、下のように指定する。
+
+#+caption: babel引数で指定importを指定する。本文には書かない
+#+begin_src go :imports "fmt"
+  fmt.Println("hello world")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+hello world
+#+end_results
+
+- [[https://github.com/pope/ob-go][pope/ob-go: Org-Babel support for evaluating go code.]]
+
 * Tasks
+** TODO [[https://www.amazon.co.jp/%E6%94%B9%E8%A8%822%E7%89%88-%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B-Go%E8%A8%80%E8%AA%9E-%E5%8F%A4%E5%B7%9D%E6%98%87-ebook/dp/B06WP6S2QT/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1GPYX46MK3OK&keywords=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B+go%E8%A8%80%E8%AA%9E&qid=1663028634&sprefix=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8Bgo%E8%A8%80%E8%AA%9E%2Caps%2C2056&sr=8-1][改訂2版 基礎からわかる Go言語 | 古川昇 | 工学 | Kindleストア | Amazon]]
+:LOGBOOK:
+CLOCK: [2022-09-14 Wed 10:09]--[2022-09-14 Wed 10:34] =>  0:25
+CLOCK: [2022-09-14 Wed 09:39]--[2022-09-14 Wed 10:04] =>  0:25
+CLOCK: [2022-09-14 Wed 08:00]--[2022-09-14 Wed 08:25] =>  0:25
+CLOCK: [2022-09-14 Wed 07:34]--[2022-09-14 Wed 07:59] =>  0:25
+CLOCK: [2022-09-13 Tue 11:44]--[2022-09-13 Tue 12:09] =>  0:25
+CLOCK: [2022-09-13 Tue 10:47]--[2022-09-13 Tue 11:12] =>  0:25
+CLOCK: [2022-09-13 Tue 10:10]--[2022-09-13 Tue 10:35] =>  0:25
+CLOCK: [2022-09-13 Tue 09:24]--[2022-09-13 Tue 09:49] =>  0:25
+:END:
+
+Go言語の入門本。
+
 ** TODO [[https://swet.dena.com/entry/2021/12/07/123000][「テスタビリティの高いGoのAPIサーバを開発しよう」というハンズオンを公開しました - DeNA Testing Blog]]
 GoのAPIハンズオン。
-** WIP [[https://go-tour-jp.appspot.com/list][A Tour of Go]]
-:LOGBOOK:
-CLOCK: [2022-09-11 Sun 15:02]--[2022-09-11 Sun 15:27] =>  0:25
-CLOCK: [2022-09-11 Sun 14:33]--[2022-09-11 Sun 14:58] =>  0:25
-CLOCK: [2022-09-11 Sun 10:03]--[2022-09-11 Sun 10:28] =>  0:25
-CLOCK: [2022-09-10 Sat 21:18]--[2022-09-10 Sat 21:43] =>  0:25
-CLOCK: [2022-09-10 Sat 20:50]--[2022-09-10 Sat 21:15] =>  0:25
-CLOCK: [2022-09-10 Sat 20:24]--[2022-09-10 Sat 20:49] =>  0:25
-CLOCK: [2022-09-10 Sat 18:48]--[2022-09-10 Sat 19:13] =>  0:25
-CLOCK: [2022-09-10 Sat 18:16]--[2022-09-10 Sat 18:41] =>  0:25
-CLOCK: [2022-09-10 Sat 17:51]--[2022-09-10 Sat 18:16] =>  0:25
-CLOCK: [2022-09-10 Sat 16:44]--[2022-09-10 Sat 17:09] =>  0:25
-:END:
-最初のチュートリアル。
 ** TODO [[https://www.amazon.co.jp/Go%E3%81%AA%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4908686033/ref=sr_1_3?keywords=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0&qid=1653145833&sprefix=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%2Caps%2C206&sr=8-3][Goならわかるシステムプログラミング | 渋川 よしき, ごっちん |本 | 通販 - Amazon.co.jp]]
 :LOGBOOK:
 CLOCK: [2022-09-09 Fri 12:43]--[2022-09-09 Fri 13:08] =>  0:25
@@ -114,6 +319,8 @@ web開発の入門書。
 ** Build an Orchestrator in Go
 ** The Docker Book
 * Reference
+** [[https://go.dev/ref/spec][The Go Programming Language Specification - The Go Programming Language]]
+言語の仕様書。
 * Archives
 ** DONE EmacsにLSP+DAPを設定する
 CLOSED: [2022-08-22 Mon 12:44]
@@ -157,3 +364,20 @@ CLOCK: [2022-09-09 Fri 16:51]--[2022-09-09 Fri 17:16] =>  0:25
 画像処理やWebAssemblyなど。
 
 ざっと読んだだけ。コードの中は読んでないので必要になったら確認する。
+** DONE [[https://go-tour-jp.appspot.com/list][A Tour of Go]]
+CLOSED: [2022-09-13 Tue 09:23]
+:LOGBOOK:
+CLOCK: [2022-09-13 Tue 08:41]--[2022-09-13 Tue 09:06] =>  0:25
+CLOCK: [2022-09-13 Tue 08:13]--[2022-09-13 Tue 08:38] =>  0:25
+CLOCK: [2022-09-11 Sun 15:02]--[2022-09-11 Sun 15:27] =>  0:25
+CLOCK: [2022-09-11 Sun 14:33]--[2022-09-11 Sun 14:58] =>  0:25
+CLOCK: [2022-09-11 Sun 10:03]--[2022-09-11 Sun 10:28] =>  0:25
+CLOCK: [2022-09-10 Sat 21:18]--[2022-09-10 Sat 21:43] =>  0:25
+CLOCK: [2022-09-10 Sat 20:50]--[2022-09-10 Sat 21:15] =>  0:25
+CLOCK: [2022-09-10 Sat 20:24]--[2022-09-10 Sat 20:49] =>  0:25
+CLOCK: [2022-09-10 Sat 18:48]--[2022-09-10 Sat 19:13] =>  0:25
+CLOCK: [2022-09-10 Sat 18:16]--[2022-09-10 Sat 18:41] =>  0:25
+CLOCK: [2022-09-10 Sat 17:51]--[2022-09-10 Sat 18:16] =>  0:25
+CLOCK: [2022-09-10 Sat 16:44]--[2022-09-10 Sat 17:09] =>  0:25
+:END:
+最初のチュートリアル。
