@@ -8,6 +8,26 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
+** Got permission deniedエラー
+dockerがsudo権限以外で実行できなくなるときがある。
+
+#+begin_quote
+  $ docker ps
+  Got permission denied while trying to connect to the Docker daemon socket
+#+end_quote
+
+これはログイン中のユーザがdocker権限を持っていないから。
+
+#+caption: ログイン中のユーザにdocker権限をセットする
+#+begin_src shell
+sudo gpasswd -a $(whoami) docker
+id $(whoami) # dockerが追加されたのを確認する
+#+end_src
+
+コマンドを実行したあと、ログアウトする。sudoなしでdockerコマンドを打てるようになっている。
+
+- [[https://tech.librastudio.co.jp/entry/index.php/2018/07/14/post-1924/][dockerコマンド実行時の「Got permission denied while trying to connect to the Docker daemon socket」 - Libra Studio Log]]
+
 ** [[id:2d35ac9e-554a-4142-bba7-3c614cbfe4c4][GitHub Actions]]でビルドする
 [[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]]によるコンテナビルドには、--cache-from を使って、レジストリに送信したイメージから各ステージのキャッシュを取得していく方法と、CIのキャッシュ機能を使う方法の2つがある。
 
@@ -771,7 +791,7 @@ hostを加える必要があった。
   },
 #+end_src
 * Archives
-** DONE [[https://www.forcia.com/blog/002273.html][社内のDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
+** DONE [[https://www.forcia.com/blog/002273.html][社内pのDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社]]
 CLOSED: [2022-02-11 Fri 18:27]
 非常に詳しい情報。
 ** DONE タスクを簡単に実行する方法を調べる
