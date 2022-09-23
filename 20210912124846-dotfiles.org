@@ -84,86 +84,9 @@ Emacs側で透過設定しても字が薄くなって微妙だが、ウィンド
 ** dunst
 [[https://github.com/dunst-project/dunst][dunst-project/dunst: Lightweight and customizable notification daemon]]
 通知機能が入ってないウィンドウシステムでは([[id:eb196529-bdbd-48c5-9d5b-a156fe5c2f41][EXWM]]とか)、これを組み合わせて通知する。
-* ビルド手順
-すべてクリーンな状況から、システムを構築するまでをまとめておく。
-** 基本コマンドインストール
-syncthingはディレクトリ同期ツール。
-[[id:90c6b715-9324-46ce-a354-63d09403b066][Git]]はあとで[[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]]を[[id:6b889822-21f1-4a3e-9755-e3ca52fa0bc4][GitHub]]からクローンしてくるときに使う。
-
-#+caption: aptからインストールする
-#+begin_src shell
-  sudo apt-get install syncthing git
-#+end_src
-
-ssh鍵を生成する。それから適切な権限を付与する。
-#+caption: 権限を付与する
-#+begin_src shell
-  sudo chmod 600 .ssh/id_rsa
-#+end_src
-
-#+caption: ~/.gitconfig を配置する
-#+begin_src yaml
-[user]
-	email = norimaking777@gmail.com
-	name = kijimaD
-[github]
-	user = kijimaD
-[http]
-	sslVerify = false
-#+end_src
-これでgit pullできるようになる。
-** [[id:32295609-a416-4227-9aa9-47aefc42eefc][dotfiles]] pull・実行
-#+caption: ホームディレクトリで実行する
-#+begin_src shell
-  git clone git@github.com:kijimaD/dotfiles.git
-#+end_src
-
-#+caption: makeタスク実行
-#+begin_src shell
-  make batch
-#+end_src
-
-↓をやってくれる。
-- 必要パッケージの一括ダウンロード
-- メモ用リポジトリのclone
-- stowによるdotfilesの配置
-** その他インストールの流れ
-いくつか手動でやる必要がある。
-
-- Google Chrome
-  - ~chrome://flags/#sharing-desktop-screenshots~ でベータ版機能を利用できる。
-  - org-protocolを設定する
-- DBeaver
-  - apt-get版はバージョンが古いらしく起動できなかったので、公式サイトからダウンロードする。
-- Dockerのデーモン登録
-** docker pullできないとき
-インストール確認 + デーモン登録。
-guixでインストールしてもよさそうなのだが、サービス起動する方法がわからないので、手軽なapt経由で行った。
-[[https://www.trifields.jp/how-to-install-docker-on-ubuntu-2004-4436][Ubuntu 20.04にDockerをインストールする手順 | トライフィールズ]]
-
-docker pull時にproxyエラー。↓で直った。
-- [[https://www.s-watanabe.work/2021/09/docker-compose-up-proxyconnect-tcp-dial.html?utm_source=feedburner&utm_medium=feed&utm_campaign=Feed:+blogspot/Czhqy+(%E3%81%95%E3%81%99%E3%82%89%E3%81%84%E3%81%AE%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9E%E3%83%BC%E3%81%AEIT%E6%8A%80%E8%A1%93%E3%83%96%E3%83%AD%E3%82%B0)&m=1][docker-compose up で proxyconnect tcp: dial tcp: lookup proxy.example.com: no such host]]
-
-#+caption: この2行をコメントアウトして、使わないようにする
-#+begin_src shell
-  sudo cat /etc/systemd/system/docker.service.d/http-proxy.conf
-
-  [Service]
-  # Environment="HTTP_PROXY=http://proxy.example.com:8080/"
-  # Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
-#+end_src
-
-#+caption: デーモン再起動
-#+begin_src shell
-sudo systemctl daemon-reload
-sudo systemctl restart docker
-#+end_src
-** Spotify
-サイトで方法を見てダウンロードする。
-#+begin_src shell
-  snap install spotify
-#+end_src
 * Tasks
+** TODO DBeaverインストール
+閲覧に便利なdbクライアントをインストールする。
 ** TODO strategyを設定する
 ubuntu22.04, ubuntu20.04, xubuntuを同時にテストできるようにしたい。できないにしても、動作確認には役立つ…か。少なくともデグレは防げる。
 ** TODO イメージを22.04に上げる
@@ -192,8 +115,9 @@ dotfilesの例。
 ** [[https://sachachua.com/dotemacs/][Sacha Chua's Emacs configuration]](Sacha Chua)
 Emacsで有名な人のdotfiles。設定が莫大。
 ** [[https://sqrtminusone.xyz/configs/readme/][My dotfiles]](SqrtMinusOne)
-Emacs界隈で見かける人。
-グラフ化していて良い。
+Emacs界隈でよく見かける人。グラフ化していて良い。
+** [[https://mvallim.github.io/live-custom-ubuntu-from-scratch/][How to create a custom Ubuntu live from scratch | live-custom-ubuntu-from-scratch]]
+スクラッチでブータブルイメージを作る。
 * Archives
 ** DONE dotfilesをCIテストする
 CLOSED: [2021-10-03 Sun 14:07]
@@ -262,6 +186,8 @@ CLOCK: [2022-09-11 Sun 09:37]--[2022-09-11 Sun 10:02] =>  0:25
 すべて整備された状態でクリーンインストールできるようにしたい。イメージを作るとかそういうのができるはず。system.scmではパーティションやユーザ名を入力するのだから。
 
 - [[https://github.com/daviwil/dotfiles/blob/master/Systems.org#system-installation][system-installation]]
+- [[https://qiita.com/misohagi/items/4443fcc495366c717c38][GitHub ActionsでカスタマイズしたUbuntuのISOイメージを作る - Qiita]]
+- [[https://rohhie.net/ubuntu20-04-try-to-make-a-live-cd-from-scratch-basic/][Ubuntu20.04 Live CDを作ってみる 基本編 | ろっひー]]
 
 可能なことは確かだが、全然わからない。
 ** CLOSE mozcのdotfilesを用意する
