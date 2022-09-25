@@ -19,7 +19,7 @@ RUN yum -y update && \
         readline-devel \
         zlib-devel
 
-RUN git clone git://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
+RUN git clone https://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
     /usr/local/plugins/ruby-build/install.sh
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
