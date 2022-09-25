@@ -18,6 +18,13 @@ make org2html
 make server
 ```
 
+(optional) copy files
+```shell
+docker run --detach --name release ghcr.io/kijimad/roam_release:latest && \
+docker cp release:/roam/public . && \
+sudo chown -R $USER:$USER ./public
+```
+
 ## lint
 ```shell
 npm install
