@@ -21,7 +21,7 @@ jobs:
           GIT_TAG=$(git rev-parse --short HEAD)
           echo "::set-output name=git-tag::$GIT_TAG"
 
-  build:
+  release_image:
     needs: tag
     uses: ./.github/workflows/build.yml
     with:
@@ -30,7 +30,7 @@ jobs:
     secrets:
       WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
 
-  staging:
+  staging_image:
     needs: tag
     uses: ./.github/workflows/build.yml
     with:
@@ -39,10 +39,19 @@ jobs:
     secrets:
       WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
 
+  build_image:
+    needs: tag
+    uses: ./.github/workflows/build.yml
+    with:
+      image: ghcr.io/kijimad/roam_build:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_build:latest
+      target: build
+    secrets:
+      WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
+
   publish:
     needs:
       - tag
-      - build
+      - release_image
     runs-on: ubuntu-latest
     steps:
       - name: Check out
