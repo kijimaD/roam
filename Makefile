@@ -1,16 +1,3 @@
-GIT_TAG:=$(shell git rev-parse --short HEAD)
-PULL_TAG:=master
-
-STAGING_URL_BASE:=ghcr.io/kijimad/roam_staging
-STAGING_URL_PUSH:=$(STAGING_URL_BASE):$(GIT_TAG)
-STAGING_URL_PULL:=$(STAGING_URL_BASE):$(PULL_TAG)
-
-staging:
-	docker build --target staging -t registry.heroku.com/roam-staging/web -t $(STAGING_URL_PUSH) -t $(STAGING_URL_PULL) --cache-from $(STAGING_URL_PULL) --build-arg BUILDKIT_INLINE_CACHE=1 . && \
-	docker push registry.heroku.com/roam-staging/web && \
-	docker push $(STAGING_URL_PUSH) && \
-	docker push $(STAGING_URL_PULL) && \
-	heroku container:release web
 # build tasks ================
 
 update-index:
