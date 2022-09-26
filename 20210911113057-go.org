@@ -6,6 +6,139 @@
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
+** よく使う型の定義
+- fdはファイルディスクリプタ。プログラムからファイルを操作する際、操作対象のファイルを識別・同定するために割り当てられる番号
+
+#+caption: file型
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file_unix.go#L54-L61
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type file struct {
+	pfd         poll.FD
+	name        string
+	dirinfo     *dirInfo // nil unless directory being read
+	nonblock    bool     // whether we set nonblocking mode
+	stdoutOrErr bool     // whether this is stdout or stderr
+	appendMode  bool     // whether file is opened for appending
+}
+#+end_results
+
+- ネットワークで使うConnインターフェース
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/net/net.go#L113-L168
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type Conn interface {
+	// Read reads data from the connection.
+	// Read can be made to time out and return an error after a fixed
+	// time limit; see SetDeadline and SetReadDeadline.
+	Read(b []byte) (n int, err error)
+
+	// Write writes data to the connection.
+	// Write can be made to time out and return an error after a fixed
+	// time limit; see SetDeadline and SetWriteDeadline.
+	Write(b []byte) (n int, err error)
+
+	// Close closes the connection.
+	// Any blocked Read or Write operations will be unblocked and return errors.
+	Close() error
+
+	// LocalAddr returns the local network address, if known.
+	LocalAddr() Addr
+
+	// RemoteAddr returns the remote network address, if known.
+	RemoteAddr() Addr
+
+	// SetDeadline sets the read and write deadlines associated
+	// with the connection. It is equivalent to calling both
+	// SetReadDeadline and SetWriteDeadline.
+	//
+	// A deadline is an absolute time after which I/O operations
+	// fail instead of blocking. The deadline applies to all future
+	// and pending I/O, not just the immediately following call to
+	// Read or Write. After a deadline has been exceeded, the
+	// connection can be refreshed by setting a deadline in the future.
+	//
+	// If the deadline is exceeded a call to Read or Write or to other
+	// I/O methods will return an error that wraps os.ErrDeadlineExceeded.
+	// This can be tested using errors.Is(err, os.ErrDeadlineExceeded).
+	// The error's Timeout method will return true, but note that there
+	// are other possible errors for which the Timeout method will
+	// return true even if the deadline has not been exceeded.
+	//
+	// An idle timeout can be implemented by repeatedly extending
+	// the deadline after successful Read or Write calls.
+	//
+	// A zero value for t means I/O operations will not time out.
+	SetDeadline(t time.Time) error
+
+	// SetReadDeadline sets the deadline for future Read calls
+	// and any currently-blocked Read call.
+	// A zero value for t means Read will not time out.
+	SetReadDeadline(t time.Time) error
+
+	// SetWriteDeadline sets the deadline for future Write calls
+	// and any currently-blocked Write call.
+	// Even if write times out, it may return n > 0, indicating that
+	// some of the data was successfully written.
+	// A zero value for t means Write will not time out.
+	SetWriteDeadline(t time.Time) error
+}
+#+end_results
+
+** ファイルを開く関数
+- Open(), Create() は引数が違うだけで同じ関数OpenFile()を呼び出している
+- よく使う権限の組み合わせでラップしているだけ
+
+#+caption: Open
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L311-L313
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func Open(name string) (*File, error) {
+	return OpenFile(name, O_RDONLY, 0)
+}
+#+end_results
+
+#+caption: Create
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L320-L322
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func Create(name string) (*File, error) {
+	return OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)
+}
+#+end_results
+
+#+caption: OpenFile
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L330-L339
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func OpenFile(name string, flag int, perm FileMode) (*File, error) {
+	testlog.Open(name)
+	f, err := openFileNolog(name, flag, perm)
+	if err != nil {
+		return nil, err
+	}
+	f.appendMode = flag&O_APPEND != 0
+
+	return f, nil
+}
+#+end_results
+
 ** 基本コマンド
 
 #+caption: mod.goを作成する
@@ -47,14 +180,41 @@ hello world
 - [[https://github.com/pope/ob-go][pope/ob-go: Org-Babel support for evaluating go code.]]
 
 * Tasks
+** TODO ローカルパッケージを読み込む方法
+読みたいライブラリがmoduleで、直接実行できない。実行できないと、printデバッグもできない。テストでもできるか。だが引数が面倒なのだと大変。
+
+ローカルimportの方法も一応知っておきたい。
+** TODO goclocを読む
+:LOGBOOK:
+CLOCK: [2022-09-26 Mon 19:40]--[2022-09-26 Mon 20:05] =>  0:25
+CLOCK: [2022-09-26 Mon 19:05]--[2022-09-26 Mon 19:30] =>  0:25
+CLOCK: [2022-09-26 Mon 18:32]--[2022-09-26 Mon 18:57] =>  0:25
+:END:
+goclocはリポジトリの量を調べるツール。
+
+- [[https://github.com/hhatto/gocloc][hhatto/gocloc: A little fast cloc(Count Lines Of Code)]]
+
+参考になるところのメモ。
+
+- 気軽にコマンド実行できるようにdockerイメージを用意する
+- オプションの取り回し方。構造体に入れておく
+- 結果を構造体に入れておく
+
+気になる部分。
+
+- .elと.scがどちらも大雑把にLISPに分類されている
+
 ** TODO colorを読む
 :LOGBOOK:
+CLOCK: [2022-09-26 Mon 17:51]--[2022-09-26 Mon 18:16] =>  0:25
+CLOCK: [2022-09-26 Mon 16:41]--[2022-09-26 Mon 17:06] =>  0:25
 CLOCK: [2022-09-25 Sun 16:12]--[2022-09-25 Sun 16:37] =>  0:25
 CLOCK: [2022-09-25 Sun 15:43]--[2022-09-25 Sun 16:08] =>  0:25
 :END:
-- [[https://github.com/fatih/color][fatih/color: Color package for Go (golang)]]
 
 CLIに色をつけるライブラリ。
+
+- [[https://github.com/fatih/color][fatih/color: Color package for Go (golang)]]
 
 別の色関係のライブラリが出てくる。何が違うのかわからない。
 
@@ -94,12 +254,18 @@ func (c *Color) Set() *Color {
 }
 #+end_results
 
+なんだか地味に長いし、よくわからない。
 
 ** TODO [[https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9Ereflect%E3%83%8F%E3%83%B3%E3%83%89%E3%83%96%E3%83%83%E3%82%AF-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E5%8D%83%E8%91%89-%E5%A4%A7%E4%BA%8C%E9%83%8E-ebook/dp/B08NT59MS4/ref=sr_1_16?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-16][Go言語reflectハンドブック (技術の泉シリーズ（NextPublishing）) | 千葉 大二郎 | 工学 | Kindleストア | Amazon]]
+reflectの解説。
 ** TODO [[https://www.amazon.co.jp/Go%E3%81%A8SAM%E3%81%A7%E5%AD%A6%E3%81%B6AWS-Lambda-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E6%9D%89%E7%94%B0-%E5%AF%BF%E6%86%B2-ebook/dp/B07LGNGDHF/ref=sr_1_36?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-36][GoとSAMで学ぶAWS Lambda (技術の泉シリーズ（NextPublishing）) | 杉田 寿憲 | 工学 | Kindleストア | Amazon]]
+Goを使ったサーバレスの解説。
 ** TODO [[https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E4%B8%A6%E8%A1%8C%E5%87%A6%E7%90%86-Katherine-Cox-Buday/dp/4873118468/ref=sr_1_19?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-19][Go言語による並行処理 | Katherine Cox-Buday, 山口 能迪 |本 | 通販 | Amazon]]
+平行処理の解説。
 ** TODO [[https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E5%88%86%E6%95%A3%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9-%E2%80%95%E4%BF%A1%E9%A0%BC%E6%80%A7%E3%80%81%E6%8B%A1%E5%BC%B5%E6%80%A7%E3%80%81%E4%BF%9D%E5%AE%88%E6%80%A7%E3%81%AE%E9%AB%98%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%AE%E6%A7%8B%E7%AF%89-Travis-Jeffery/dp/4873119979/ref=sr_1_5?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-5][Go言語による分散サービス ―信頼性、拡張性、保守性の高いシステムの構築 | Travis Jeffery, 柴田 芳樹 |本 | 通販 | Amazon]]
+分散サービスの解説。
 ** TODO [[https://www.amazon.co.jp/%E5%AE%9F%E7%94%A8-Go%E8%A8%80%E8%AA%9E-%E2%80%95%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA%E3%81%AE%E7%8F%BE%E5%A0%B4%E3%81%A7%E7%9F%A5%E3%81%A3%E3%81%A6%E3%81%8A%E3%81%8D%E3%81%9F%E3%81%84%E3%82%A2%E3%83%89%E3%83%90%E3%82%A4%E3%82%B9-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4873119693/ref=sr_1_3?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-3][実用 Go言語 ―システム開発の現場で知っておきたいアドバイス | 渋川 よしき, 辻 大志郎, 真野 隼記 |本 | 通販 | Amazon]]
+業務に役立つGoの解説。
 ** TODO [[https://zenn.dev/hokita/articles/66cc118b227ae3][はじめてのゲームプログラミング（Ebiten）]]
 :LOGBOOK:
 CLOCK: [2022-09-15 Thu 21:00]--[2022-09-15 Thu 21:25] =>  0:25
@@ -237,8 +403,30 @@ web開発の入門書。
 
 - TestStdErrorHander
 ** TODO [[https://zenn.dev/hsaki/books/golang-io-package][Goから学ぶI/O]]
+:LOGBOOK:
+CLOCK: [2022-09-27 Tue 00:18]--[2022-09-27 Tue 00:43] =>  0:25
+CLOCK: [2022-09-26 Mon 23:01]--[2022-09-26 Mon 23:26] =>  0:25
+CLOCK: [2022-09-26 Mon 22:35]--[2022-09-26 Mon 23:00] =>  0:25
+CLOCK: [2022-09-26 Mon 22:10]--[2022-09-26 Mon 22:35] =>  0:25
+:END:
 GoのIOの解説。
+
+#+begin_quote
+os.File型のReadメソッドは以下のような実装となっています。
+
+1. os.file型のReadメソッドを呼ぶ
+2. 1の中でos.file型のreadメソッドを呼ぶ
+3. 2の中でpoll.FD型のReadメソッドを呼ぶ
+4. 3の中でsyscall.Readメソッドを呼ぶ
+5. OSカーネルのシステムコールで読み込み処理
+#+end_quote
+
+- ネットワークもI/Oと捉えられる。コネクションからデータを読み取る・書き込むといえるから
+
 ** TODO [[https://github.com/google/go-github][google/go-github: Go library for accessing the GitHub v3 API]]
+:LOGBOOK:
+CLOCK: [2022-09-26 Mon 15:31]--[2022-09-26 Mon 15:56] =>  0:25
+:END:
 GoのGitHubアクセスのためのライブラリ。
 ** TODO [[https://www.ebiebievidence.com/posts/2020/12/golang-compiler/][Go コンパイラのコードを読んでみよう | ebiebievidence.com]]
 Goのコンパイラの解説。
