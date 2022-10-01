@@ -7,7 +7,7 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
-** sudoと環境変数
+** sudoでセットされる環境変数は異なる
 普通の実行時とsudo時で、セットされている環境変数は異なる。
 
 #+caption: これらは異なる結果になる
@@ -177,27 +177,41 @@ cmdtxt(union node *n)
 }
 #+end_results
 
-** ファイルサイズのランキング
-サイズ順に、最も大きい10ディレクトリを表示する。
+** カレントディレクトリのファイルサイズ
 
-#+caption: -mはMB
+#+caption: -s: 総容量だけ、-h 適当なファイルサイズで表示
 #+begin_src shell
-du -m ./ | sort -n | tail -10
+du -sh .
 #+end_src
 
 #+RESULTS:
 #+begin_results
-47	./node_modules/nlcst-parse-japanese
-47	./node_modules/nlcst-parse-japanese/node_modules
-47	./node_modules/textlint-rule-ja-hiragana-fukushi
-47	./node_modules/textlint-rule-ja-hiragana-fukushi/node_modules
-47	./node_modules/textlint-rule-ja-hiragana-hojodoushi
-47	./node_modules/textlint-rule-ja-hiragana-hojodoushi/node_modules
-47	./node_modules/textlint-rule-ja-hiragana-keishikimeishi/node_modules
-48	./node_modules/textlint-rule-ja-hiragana-keishikimeishi
-350	./node_modules
-391	./
+388M	.
 #+end_results
+
+** ファイルサイズのランキング
+サイズ順に、最も大きい10ディレクトリを表示する。
+
+#+caption: -s: 総容量だけ、 -k キロバイト
+#+begin_src shell
+du -sk * | sort -rn | head -10
+#+end_src
+
+#+RESULTS:
+#+begin_results
+360676	node_modules
+3696	public
+196	package-lock.json
+124	20210624232811-digger.org
+100	20210910122240-bookmarks.org
+72	20210926143813-clojure.org
+68	20210907223510-haskell.org
+64	20210508234743-emacs.org
+56	20210911113057-go.org
+56	20210901101339-rust.org
+#+end_results
+
+比較するディレクトリサイズによって単位オプションをKBやMBにする。ソートが機能しなくなるので-hオプションは使用しない。
 
 ** エラー: 公開鍵を利用できないため、以下の署名は検証できませんでした を解決する
 sudo apt-get updateしたとき、GPGエラーが出る解決法。
