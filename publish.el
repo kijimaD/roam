@@ -122,8 +122,12 @@
        "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>"
        "<link href=\"https://fonts.googleapis.com/css2?family=Ultra&display=swap\" rel=\"stylesheet\">"
 
+       ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。仕方ないので両方読み込む
+       "<link rel='stylesheet' href='../css/site.css' />"
+       "<link rel='stylesheet' href='../roam/css/code.css' />"
        "<link rel='stylesheet' href='css/site.css' />"
-       "<link rel='stylesheet' href='css/code.css' />"))
+       "<link rel='stylesheet' href='css/code.css' />"
+       ))
 
 ;; Compile
 (setq org-publish-project-alist
