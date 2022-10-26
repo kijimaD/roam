@@ -1,21 +1,31 @@
-# https://kouki.hatenadiary.com/entry/hatena-advent-calendar-2021
-
-name: git-issue-release
+name: Release
 
 on:
-  pull_request: # PRがマージされた時にIssueを更新するために使います。
-    types: [closed]
-  release: # ReleaseがPublishされた時にIssueをクローズするために使います。
-    types: [published]
+  push:
+    tags:
+      - "v[0-9]+\\.[0-9]+\\.[0-9]+"
 
 jobs:
-  action:
+  release:
     runs-on: ubuntu-latest
     steps:
-      - name: git-issue-release
-        uses: kouki-dan/git-issue-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v3
+
+      - name: Set version
+        id: version
+        run: |
+          REPOSITORY=$(echo ${{ github.repository }} | sed -e "s#.*/##")
+          VERSION=$(echo ${{ github.ref }} | sed -e "s#refs/tags/##g")
+          echo ::set-output name=version::$VERSION
+          echo ::set-output name=filename::$REPOSITORY-$VERSION
+          echo "Version $VERSION"
+      - name: release
+        uses: actions/create-release@v1
+        id: create_release
         with:
-          release-tag-pattern: ^v  # 最新のリリースを探すために使います。
-          release-label: "release"  # リリースIssueを管理するために使います。ラベルは自動で作られないので事前に作成してください。
+          draft: false
+          prerelease: false
+          tag_name: ${{ steps.version.outputs.version }}
+          release_name: Release ${{ steps.version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
