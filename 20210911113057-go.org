@@ -6,6 +6,138 @@
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
+** 埋め込み
+:LOGBOOK:
+CLOCK: [2022-11-03 Thu 18:12]--[2022-11-03 Thu 18:37] =>  0:25
+CLOCK: [2022-11-03 Thu 17:45]--[2022-11-03 Thu 18:10] =>  0:25
+:END:
+- [[https://qiita.com/momotaro98/items/4f6e2facc40a3f37c3c3][Go言語の埋め込みについて4つのポイントでまとめました - Qiita]]
+Goの埋め込みの解説。
+
+埋め込みはあくまでも借りているだけで、埋め込み元のオブジェクトのメソッドとして実行される。埋め込み先の構造体が埋め込み元のメソッドを実行しても埋め込み先のオブジェクトには影響を与えない。
+
+** [[https://christina04.hatenablog.com/entry/pointers-in-golang][ポインタを図で理解する - Carpe Diem]]
+:LOGBOOK:
+CLOCK: [2022-11-03 Thu 12:47]--[2022-11-03 Thu 13:12] =>  0:25
+CLOCK: [2022-11-03 Thu 12:14]--[2022-11-03 Thu 12:39] =>  0:25
+:END:
+図によるポインタのわかりやすい解説。
+
+#+caption: 値の比較
+#+begin_src go :imports "fmt"
+  var x = 100
+  fmt.Println("1: x address:\t", &x)
+
+  var y *int
+  fmt.Println("2: y value:\t", y)
+  fmt.Println("3: y address:\t", &y)
+  y = &x
+  fmt.Println("4: y value:\t", y)	// yの値には、xのアドレスが入っている
+  fmt.Println("5: y address:\t", &y)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: x address:	 0xc00001a0c0
+2: y value:	 <nil>
+3: y address:	 0xc000012030
+4: y value:	 0xc00001a0c0
+5: y address:	 0xc000012030
+#+end_results
+
+- 型としての ~*~
+  - ポインタ変数はメモリ上のアドレスを値として入れられる変数
+  - 変数の中身(つまり値)はメモリアドレス
+- 変数の演算子としての ~*~, ~&~
+  - ~*~ ポインタの指すメモリアドレスの実データ(value)
+  - ~&~ 変数がメモリ上で確保された際のアドレス(address)
+
+~*x~ だけど ~x~ がポインタ型変数でない場合、値にアドレスがなくて辿れず当然値も取得できないのでエラー。
+
+- メモリアドレスは変数であれば必ず存在する。なのでどの変数でも ~&~ が使える
+- valueは値(1)か、メモリアドレス(0xc00001a0c0)が入っているか、nil。値にメモリアドレスが入っている場合のみ ~*~ が使える
+
+#+caption: ポインタ変数だけどnilのとき、runtime errorになる
+#+begin_src go :imports "fmt"
+  var x *int
+  fmt.Println("x value:\t", *x)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+panic: runtime error: invalid memory address or nil pointer dereference
+[signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x480f1a]
+#+end_results
+
+ポインタ変数のvalueにメモリアドレスがないのでpanicが起きる。動かしてみないとわからないのでコンパイルエラーでなくruntimeエラー。
+
+Goはすべて値渡し(=コピー)。
+
+#+caption: valueは同じだが、addressはすべて異なる
+#+begin_src go :imports "fmt"
+  func main() {
+          var x = "alice"
+          fmt.Println("x address:\t", &x)
+          y := &x
+          fmt.Println("y value:\t", y)
+          fmt.Println("y address:\t", &y)
+
+          show(y)
+  }
+
+  func show(s *string) {
+          fmt.Println("f value:\t", s)
+          fmt.Println("f address:\t", &s)
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+x address:	 0xc000014250
+y value:	 0xc000014250
+y address:	 0xc000012030
+f value:	 0xc000014250
+f address:	 0xc000012038
+#+end_results
+
+定義された変数と、関数引数として使われた変数では、参照先アドレスは同じ(xのアドレス)。アドレスは異なる、つまりコピーされている。
+
+ポインタレシーバ。
+
+#+caption: main関数から、レシーバから呼ばれたときのアドレスと値を比較する
+#+begin_src go :imports "fmt"
+  type Person struct {
+          Name string
+          Age int
+  }
+
+  func main() {
+          x := &Person{"alice", 20}
+          fmt.Printf("x value:\t%p\n", x)
+          fmt.Printf("x address:\t%p\n", &x)
+          x.Greet("test")
+
+          fmt.Printf("new x value:\t%v\n", x)
+  }
+
+  func (p *Person) Greet(msg string) {
+          fmt.Printf("p value:\t%p\n", p)
+          fmt.Printf("p address:\t%p\n", &p)
+
+          // ポインタ変数を上書きするのではなく、参照先を上書きする
+          p.Name = "hahaha"
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+x value:	0xc000010030
+x address:	0xc000012028
+p value:	0xc000010030
+p address:	0xc000012038
+new x value:	&{hahaha 20}
+#+end_results
+
 ** レシーバーを値とポインタのどちらにするか
 メソッドのレシーバーを値にするかポインタにするかは、レシーバのフィールドに変更をしたいかによって決める。
 
@@ -22,10 +154,41 @@ Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85
           s.v = v
   })
 #+end_src
-** ポインタ型
-- ポインタ型を生成するときは ~&~ を使う。これは変換関数のようなもの
-- ポインタ型を示すときは ~*Person~ となる
+** ポインタ
+:LOGBOOK:
+CLOCK: [2022-11-03 Thu 11:49]--[2022-11-03 Thu 12:14] =>  0:25
+CLOCK: [2022-11-03 Thu 11:24]--[2022-11-03 Thu 11:49] =>  0:25
+:END:
+- ポインタ型を示すときは ~*Person~ と宣言。これによってPerson型の変数のポインタが入ることが示される
+- ポインタ型を生成するときは ~&~ を使う。これは変換関数のようなもの。 ~&変数名~ という形式。実際に変数宣言されているものに対してポインタがある。それぞれにアドレスが割り当てられるようなもの。だから、型とか関数自体はポインタにしない(意味がない)。あくまで変数をリンクさせて、変更を波及させられるのが良いところだから
+- ポインタを解決実際の値を見るときは *p
 - &p で*Person型を生成する、というような関係性
+
+#+begin_src go :imports "fmt"
+  var p *int // 変数pには、int型の変数のポインタが入るという宣言
+  i := 1
+  p = &i				// 変数iを参照するポインタ型変数p
+
+  // p 				// -> 0xc000010000
+  // *p 				// -> 1
+
+  fmt.Println(p)
+  fmt.Println(*p)
+  i = 2				// あくまで変えるのは参照先の値であって、p -> i のリンク自体を変えるわけじゃない
+  fmt.Println(p)			// メモリアドレスは変わらない
+  fmt.Println(*p)			// 参照先のアドレスが変わった
+#+end_src
+
+#+RESULTS:
+#+begin_results
+0xc00001a0c0
+1
+0xc00001a0c0
+2
+#+end_results
+
+- 「アドレスを取得(&)」という操作と「アドレスを解決(*)」という操作がある。
+
 ** TODO [[https://qiita.com/hnakamur/items/848097aad846d40ae84b][Goでファイルの存在チェック - Qiita]]
 存在チェックの方法。
 ** ファイル埋め込み
@@ -339,8 +502,20 @@ CLOSED: [2022-10-29 Sat 11:19]
 - どうしてテストが反映されないという結果になるのかわからない
 
 * Tasks
+** TODO ライフゲーム作成
+:LOGBOOK:
+CLOCK: [2022-11-04 Fri 23:03]
+CLOCK: [2022-11-03 Thu 21:13]--[2022-11-03 Thu 21:38] =>  0:25
+CLOCK: [2022-11-03 Thu 20:25]--[2022-11-03 Thu 20:50] =>  0:25
+CLOCK: [2022-11-03 Thu 20:00]--[2022-11-03 Thu 20:25] =>  0:25
+CLOCK: [2022-11-03 Thu 19:33]--[2022-11-03 Thu 19:58] =>  0:25
+CLOCK: [2022-11-03 Thu 19:07]--[2022-11-03 Thu 19:32] =>  0:25
+:END:
+
 ** TODO [[https://zenn.dev/hsaki/books/golang-context/viewer/intro][よくわかるcontextの使い方]]
 :LOGBOOK:
+CLOCK: [2022-11-04 Fri 00:47]--[2022-11-04 Fri 01:12] =>  0:25
+CLOCK: [2022-11-03 Thu 16:25]--[2022-11-03 Thu 16:50] =>  0:25
 CLOCK: [2022-10-31 Mon 18:52]--[2022-10-31 Mon 19:17] =>  0:25
 CLOCK: [2022-10-30 Sun 23:01]--[2022-10-30 Sun 23:26] =>  0:25
 CLOCK: [2022-10-30 Sun 10:22]--[2022-10-30 Sun 10:47] =>  0:25
@@ -483,6 +658,9 @@ Goドキュメント。
 ** TODO [[https://knsh14.github.io/translations/go-codereview-comments/][Go Codereview Comments]]
 GoのTips集。
 ** TODO [[https://hiwane.github.io/gospec-ja/][Go プログラミング言語仕様 | gospec-ja]]
+:LOGBOOK:
+CLOCK: [2022-11-03 Thu 17:15]--[2022-11-03 Thu 17:40] =>  0:25
+:END:
 言語仕様の日本語訳。
 ** TODO [[https://qiita.com/taigamikami/items/fc798cdd6a4eaf9a7d5e][Goのgoroutine, channelをちょっと攻略！ - Qiita]]
 ゴルーチンの解説。
