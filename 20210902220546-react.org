@@ -5,6 +5,52 @@
 * 概要
 Reactは、Web開発に使われる[[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]ライブラリ。変更があった画面の一部だけを更新することで、リロードが必要のない、高速でリッチなWebサイトを構築できる。関数型プログラミングの考え方を背景に持つ。
 * Memo
+** 引数を受け取るコンポーネントの例
+- 複数の引数の受け取り方
+- 関数型の型指定の方法
+
+あたりが詰まりポイント。
+
+#+begin_src typescript
+export const Square = ({
+  isLive,
+  click,
+}: {
+  isLive: boolean;
+  click: () => void;
+}) => {
+  return (
+    <>
+      {isLive ? (
+        <button className="square live" onClick={click}></button>
+      ) : (
+        <button className="square death" onClick={click}></button>
+      )}
+    </>
+  );
+};
+#+end_src
+** setStateのインクリメント
+引数で前の状態を取り出せる。これで取らないと値が、おかしくなることがある。
+
+#+begin_src typescript
+  const increment = () => setWidth((prevWidth) => prevWidth + 1);
+  #+end_src
+** onClickは関数型をとる
+プロパティonClickが取るのは関数型である。特に深く考えることなかったので詰まった。
+
+#+caption: 無名関数が入っている。正常
+#+begin_src typescript
+  <button className="square death" onClick={() => console.log("テスト")}></button>
+#+end_src
+
+#+caption: 間違った例。このとき、console.log("テスト")は評価されてundefinedが渡され、エラーになる
+#+begin_src typescript
+    <button className="square death" onClick={console.log("テスト")}></button>
+#+end_src
+** hooksの作り方
+hookの指針。汎用化できるようにする。
+[[https://zenn.dev/apple_yagi/articles/bc52d83ec61aee][REST APIと良い感じに通信するHookを自作する]]
 ** サーバーサイドレンダリング
 読み込み時はコンポーネントをHTMLで静的に描画。あとからコンポーネントDOMに対してイベントをフックすることで操作できるようにする(ハイドレーション)。
 これによって、高速表示ができる。
