@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2022-11-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>fmtのコードを読む</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+        displayAlign: "center",
+        displayIndent: "0em",
+
+        "HTML-CSS": { scale: 100,
+                        linebreaks: { automatic: "false" },
+                        webFont: "TeX"
+                       },
+        SVG: {scale: 100,
+              linebreaks: { automatic: "false" },
+              font: "TeX"},
+        NativeMML: {scale: 100},
+        TeX: { equationNumbers: {autoNumber: "AMS"},
+               MultLineWidth: "85%",
+               TagSide: "right",
+               TagIndent: ".8em"
+             }
+});
+</script>
+<script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML"></script>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">fmtのコードを読む</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org22a6142">fmtのコードを読む</a>
+<ul>
+<li><a href="#org4e44c05">Stateインターフェース</a></li>
+<li><a href="#orgdb3f798">pp構造体</a></li>
+<li><a href="#org7ee622f">GoStringer</a></li>
+<li><a href="#org4a5215b">printの種類</a></li>
+<li><a href="#org8a33a0d">fmtとprinter</a></li>
+<li><a href="#org075cc58">多くのfmt{型}関数</a></li>
+<li><a href="#org6c04ab8">trucateString</a></li>
+<li><a href="#orgff77e10">truncate(バイト列バージョン)</a></li>
+<li><a href="#org0583274">References</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<ul class="org-ul">
+<li>まず読む前にどういう機能なのか、どういうオプションがあるのか調べた</li>
+<li>ちょいちょい理解が合ってるかコードで実験しながらやる。こういうサクっと小さく実験していくなかで、理解が深まる。こうやったらどうなるのだろう、を思いついた</li>
+<li>読みつつ、書いてる</li>
+<li>メモを取ってやってる</li>
+</ul>
+
+<div id="outline-container-org22a6142" class="outline-2">
+<h2 id="org22a6142"><a href="#org22a6142">fmtのコードを読む</a></h2>
+<div class="outline-text-2" id="text-org22a6142">
+<p>
+printとformatがある。
+</p>
+</div>
+
+<div id="outline-container-org4e44c05" class="outline-3">
+<h3 id="org4e44c05"><a href="#org4e44c05">Stateインターフェース</a></h3>
+<div class="outline-text-3" id="text-org4e44c05">
+<div class="org-src-container">
+<pre class="src src-go">type State interface {
+	Write(b []byte) (n int, err error)
+	Width() (wid int, ok bool)
+	Precision() (prec int, ok bool)
+	Flag(c int) bool
+}
+</pre>
+</div>
+
+<p>
+pp構造体がこれを満たしている。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgdb3f798" class="outline-3">
+<h3 id="orgdb3f798"><a href="#orgdb3f798">pp構造体</a></h3>
+<div class="outline-text-3" id="text-orgdb3f798">
+<p>
+ppはプリンターの状態を持つ構造体。
+ppはfmtをフィールドに持っている。fmtは構造体で、printfで使われるフォーマッター。各種フラグやwidthを持っている。
+</p>
+
+<p>
+fmtFlagsは何だ。すべてbooleanだ。widthオプションを持ってるか、precオプション(小数精度)を持っているか。プラス、マイナス、シャープ、スペース、ゼロのフラグがあるな。これらの記号もつけられるオプションだな。%#vとか、%+vとかある。
+</p>
+
+<p>
+ppに多くのメソッドがついている。
+</p>
+
+<p>
+widthはfmtのwidthに移譲している。widthはintで、出力する文字列の長さ。
+precisionはそういうオプションがあって、小数精度ってことらしい。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7ee622f" class="outline-3">
+<h3 id="org7ee622f"><a href="#org7ee622f">GoStringer</a></h3>
+<div class="outline-text-3" id="text-org7ee622f">
+<p>
+型定義したものの出力をするためのものらしい。フォーマット%#vとかで出てくるやつ。実装してみると、%#vはGoString()で上書きされた。%fはどちらも使わない。PrintlnではString()が使用された。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-go">package main
+
+import (
+	"fmt"
+)
+
+type test struct {
+	Name string
+}
+
+func (t test) GoString() string {
+	return "this is GoString()"
+}
+
+func (t test) String() string {
+	return "this is String()"
+}
+
+func main() {
+	t := test{
+		Name: "aaa",
+	}
+
+	fmt.Printf("%#v\n", t)
+	// this is GoString()
+
+	fmt.Printf("%+f\n", t)
+	// {%!f(string=aaa)}
+
+	fmt.Printf("%#f\n", t)
+	// {%!f(string=aaa)}
+
+	fmt.Println(t)
+	// this is String()
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4a5215b" class="outline-3">
+<h3 id="org4a5215b"><a href="#org4a5215b">printの種類</a></h3>
+<div class="outline-text-3" id="text-org4a5215b">
+<ul class="org-ul">
+<li>出力先</li>
+<li>フォーマットを取るもの</li>
+</ul>
+
+<p>
+の組み合わせでいくつかある感じ。
+</p>
+
+<p>
+それらをちょっと変えて、本質的にはdoPrint()が処理してる。
+doPrint()は引数文字列をすべて処理するループをつくり、処理はprintArg()に移譲する。書き込むとは、p.buf.writeByte()することだ。
+doPrintln()はdoPrint()の改行する版で、だいたい最後にp.buf.writeByte(&rsquo;\n&rsquo;)が入るだけ。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8a33a0d" class="outline-3">
+<h3 id="org8a33a0d"><a href="#org8a33a0d">fmtとprinter</a></h3>
+<div class="outline-text-3" id="text-org8a33a0d">
+<p>
+ppのメソッドのいくつかは、同名のfmtにある関数へ移譲している。
+</p>
+
+<p>
+signed integerは符号付き整数。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org075cc58" class="outline-3">
+<h3 id="org075cc58"><a href="#org075cc58">多くのfmt{型}関数</a></h3>
+<div class="outline-text-3" id="text-org075cc58">
+<p>
+fmtInteger()は長い関数。各オプションの処理をしているように見える。基数の数で分岐したり、プレフィクスによって変えたり。rune型のverbによって条件分岐する。fmtのintegerに移譲する。基数によって引数を変えてる。
+float、complex, string&#x2026;。それぞれオプションがあるかで分岐。
+</p>
+
+<p>
+verbはどうやって渡されるか。例えば%#vの、 <code>v</code> の部分がverbで、 <code>#</code> の部分がオプションぽいな。
+</p>
+
+<p>
+それらのfmt{型}関数を読んでるのは、printArg()だ。大きなswitch文になっていて、使用するフォーマット関数を振り分ける。printArg()はdoPrint()から呼び出される。doPrint()はFpritf,Sprintf,Sprintなど見たことのある公開メソッドから呼び出される。
+</p>
+
+<p>
+つまりFprintf(),Sprintf()&#x2026; -&gt; doPrint() -&gt; printArg() -&gt; fmtInteger(), fmtString()&#x2026;という感じ。
+</p>
+</div>
+</div>
+<div id="outline-container-org6c04ab8" class="outline-3">
+<h3 id="org6c04ab8"><a href="#org6c04ab8">trucateString</a></h3>
+<div class="outline-text-3" id="text-org6c04ab8">
+<p>
+手頃そうな関数を調べてみる。左から数えた文字数で切るtruncateString()。
+例えば指定文字数が2文字だと、&ldquo;aaaa&rdquo; -&gt; &ldquo;aa&rdquo;、&ldquo;bbbbbbb&rdquo; -&gt; &ldquo;bb&rdquo;とするような、非常に単純な機能。しかし、実装は一見ぱっと見でわかりにくく、最初はスライスの記法だけでいけるように見える。これは、桁の方が文字数より多いケースに対応している。普通にスライス記法で書くと、index out of rangeエラーになるだろう。
+nとiは逆方向にインクリメントが進むので、長さが5だとすると iが0, 1, 2, 3, 4となるとき、nは4, 3, 2, 1, 0となる。nがマイナスの値に突入したとき、iはアクセスできる最大のインデックスを示している。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>単独で実行できるようにコードを書き換えている。本物のコードは桁数や桁数指定フラグを渡す</label><pre class="src src-go">func truncateString(s string, b bool) string {
+        if b {
+                n := 5
+                for i := range s {
+                        n--
+                        if n &lt; 0 {
+                                return s[:i]
+                        }
+                }
+        }
+        return s
+}
+
+func main() {
+        fmt.Println("aaa"[:2]) // aa
+        // fmt.Println("aaa"[:5]) // これはエラーになる
+        fmt.Println(truncateString("aaaiiiuuu", true)) // aaaii
+        fmt.Println(truncateString("aaa", true))       // aaa
+        fmt.Println(truncateString("", true))	   // ""
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgff77e10" class="outline-3">
+<h3 id="orgff77e10"><a href="#orgff77e10">truncate(バイト列バージョン)</a></h3>
+<div class="outline-text-3" id="text-orgff77e10">
+<p>
+バイト列バージョン。文字エンコードが絡むのでちょっと処理が増えるが基本は同じ。
+</p>
+
+<p>
+バイト列の初期化方法。シングルクォートを使うか、あるいは[]byte(&ldquo;文字列&rdquo;)で初期化するのがわかりやすい。
+utf8.RuneSelfは整数128のエイリアス。utf8エンコードの基本の数になる。8ビット=1バイト(256通り)として1文字分。128を超えると2バイトになる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-go">// rune, sizeを返す
+fmt.Println(utf8.DecodeRune([]byte("a"))) // 97 1
+fmt.Println(utf8.DecodeRune([]byte("¶"))) // 182 2
+fmt.Println(utf8.DecodeRune([]byte("あ"))) // 12354 3
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>単独で実行できるように改変</label><pre class="src src-go">func truncate(b []byte) []byte {
+        if true {
+                n := 5 // ここは小数精度設定で注入される
+                for i := 0; i &lt; len(b); {
+                        n--
+                        if n &lt; 0 {
+                                return b[:i]
+                        }
+                        wid := 1
+                        if b[i] &gt;= utf8.RuneSelf {
+                                _, wid = utf8.DecodeRune(b[i:])
+                        }
+                        // 文字のバイト数分ループを飛ばす
+                        i += wid
+                }
+        }
+        return b
+}
+
+func main() {
+        test := []byte("abcdefg")
+        fmt.Println(test, truncate(test)) // truncateされる
+        nihon := []byte("日本語日本語")
+        fmt.Println(len(nihon), len(truncate(nihon))) // 18 -&gt; 15
+        // 3バイト文字が5個にtruncateされることで、バイト数が15になる
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0583274" class="outline-3">
+<h3 id="org0583274"><a href="#org0583274">References</a></h3>
+<div class="outline-text-3" id="text-org0583274">
+<p>
+読む解くのに文字コード系やバイトに関する知識が必要だった。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://qiita.com/seihmd/items/4a878e7fa340d7963fee">Goのruneを理解するためのUnicode知識 - Qiita</a></li>
+<li><a href="https://qiita.com/catatsuy/items/bccc2c76be501e98382a">utf8としてvalidなバイト列を判定する方法をGoから見る - Qiita</a></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
