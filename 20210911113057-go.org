@@ -517,7 +517,83 @@ CLOSED: [2022-10-29 Sat 11:19]
 - どうしてテストが反映されないという結果になるのかわからない
 
 * Tasks
-** runeとは
+** TODO [[https://www.educative.io/answers/how-to-read-and-write-with-golang-bufio][How to read and write with Golang bufio]]
+bufioのわかりやすい解説。
+** TODO [[https://qiita.com/tutuz/items/e875d8ea3c31450195a7][Go言語を使ったTCPクライアントの作り方 - Qiita]]
+TCPの仕組み、作り方。
+** TODO fmtの仕組み                                              :DontKnow:
+:LOGBOOK:
+CLOCK: [2022-11-19 Sat 21:08]
+CLOCK: [2022-11-19 Sat 19:20]--[2022-11-19 Sat 19:45] =>  0:25
+CLOCK: [2022-11-19 Sat 18:34]--[2022-11-19 Sat 18:59] =>  0:25
+CLOCK: [2022-11-19 Sat 17:27]--[2022-11-19 Sat 17:52] =>  0:25
+CLOCK: [2022-11-19 Sat 16:50]--[2022-11-19 Sat 17:15] =>  0:25
+CLOCK: [2022-11-19 Sat 16:25]--[2022-11-19 Sat 16:50] =>  0:25
+CLOCK: [2022-11-19 Sat 15:47]--[2022-11-19 Sat 16:12] =>  0:25
+CLOCK: [2022-11-19 Sat 12:00]--[2022-11-19 Sat 12:25] =>  0:25
+CLOCK: [2022-11-19 Sat 11:18]--[2022-11-19 Sat 11:43] =>  0:25
+CLOCK: [2022-11-19 Sat 10:53]--[2022-11-19 Sat 11:18] =>  0:25
+CLOCK: [2022-11-19 Sat 00:33]--[2022-11-19 Sat 00:58] =>  0:25
+CLOCK: [2022-11-18 Fri 09:49]--[2022-11-18 Fri 10:14] =>  0:25
+CLOCK: [2022-11-18 Fri 09:24]--[2022-11-18 Fri 09:49] =>  0:25
+CLOCK: [2022-11-18 Fri 00:44]--[2022-11-18 Fri 01:09] =>  0:25
+CLOCK: [2022-11-18 Fri 00:19]--[2022-11-18 Fri 00:44] =>  0:25
+CLOCK: [2022-11-17 Thu 23:54]--[2022-11-18 Fri 00:19] =>  0:25
+CLOCK: [2022-11-17 Thu 00:32]--[2022-11-17 Thu 00:57] =>  0:25
+CLOCK: [2022-11-16 Wed 10:02]--[2022-11-16 Wed 10:27] =>  0:25
+CLOCK: [2022-11-16 Wed 09:34]--[2022-11-16 Wed 09:59] =>  0:25
+:END:
+
+プリンターの状態を保存している重要そうな構造体。
+
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L119-L120
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
+type pp struct {
+#+end_results
+
+#+caption: フラグを実装している箇所。歴史的理由で引数はintになっているらしい
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L188-L202
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func (p *pp) Flag(b int) bool {
+	switch b {
+	case '-':
+		return p.fmt.minus
+	case '+':
+		return p.fmt.plus || p.fmt.plusV
+	case '#':
+		return p.fmt.sharp || p.fmt.sharpV
+	case ' ':
+		return p.fmt.space
+	case '0':
+		return p.fmt.zero
+	}
+	return false
+}
+#+end_results
+
+#+caption: Printは出力先が標準出力の、Fprintのエイリアスにすぎない
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L271-L273
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func Print(a ...any) (n int, err error) {
+	return Fprint(os.Stdout, a...)
+}
+#+end_results
+
+** TODO Len()の仕組み                                            :DontKnow:
+** TODO runeとは
 #+caption: runeはint32のエイリアス。なので単なる数字
 #+begin_src go :imports fmt
 fmt.Println('a')
@@ -531,64 +607,6 @@ fmt.Println('a' - 'b')
 194
 -1
 #+end_results
-** TODO bufioを読む
-:LOGBOOK:
-CLOCK: [2022-11-13 Sun 22:46]--[2022-11-13 Sun 23:11] =>  0:25
-CLOCK: [2022-11-13 Sun 22:07]--[2022-11-13 Sun 22:32] =>  0:25
-CLOCK: [2022-11-13 Sun 21:28]--[2022-11-13 Sun 21:53] =>  0:25
-CLOCK: [2022-11-13 Sun 20:09]--[2022-11-13 Sun 20:34] =>  0:25
-CLOCK: [2022-11-13 Sun 19:35]--[2022-11-13 Sun 20:00] =>  0:25
-CLOCK: [2022-11-13 Sun 18:55]--[2022-11-13 Sun 19:20] =>  0:25
-CLOCK: [2022-11-13 Sun 17:47]--[2022-11-13 Sun 18:12] =>  0:25
-CLOCK: [2022-11-13 Sun 17:21]--[2022-11-13 Sun 17:46] =>  0:25
-CLOCK: [2022-11-13 Sun 16:54]--[2022-11-13 Sun 17:19] =>  0:25
-CLOCK: [2022-11-13 Sun 16:29]--[2022-11-13 Sun 16:54] =>  0:25
-CLOCK: [2022-11-13 Sun 12:28]--[2022-11-13 Sun 12:53] =>  0:25
-CLOCK: [2022-11-13 Sun 11:53]--[2022-11-13 Sun 12:18] =>  0:25
-CLOCK: [2022-11-13 Sun 11:21]--[2022-11-13 Sun 11:46] =>  0:25
-CLOCK: [2022-11-13 Sun 10:55]--[2022-11-13 Sun 11:20] =>  0:25
-CLOCK: [2022-11-13 Sun 10:27]--[2022-11-13 Sun 10:52] =>  0:25
-CLOCK: [2022-11-13 Sun 00:59]--[2022-11-13 Sun 01:24] =>  0:25
-CLOCK: [2022-11-12 Sat 21:52]--[2022-11-12 Sat 22:17] =>  0:25
-:END:
-
-まずバッファの概念を理解することが必要そう。解説してあった。こういうのを自分でコードから調査できるようになりたい。
-- [[https://zenn.dev/hsaki/books/golang-io-package/viewer/bufio][bufioパッケージによるbuffered I/O｜Goから学ぶI/O]]
-
-あるバイト数に達するまでbufioの内部バッファにためておく処理がある。それが普通のbufioとioの違い。
-
-#+caption: 重要そうな部分。余りバッファがあればコピーし、余りバッファがないときはコピーせず直接write
-#+begin_src git-permalink
-https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/bufio/bufio.go#L662-L685
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-func (b *Writer) Write(p []byte) (nn int, err error) {
-	for len(p) > b.Available() && b.err == nil {
-		var n int
-		if b.Buffered() == 0 {
-			// Large write, empty buffer.
-			// Write directly from p to avoid copy.
-			n, b.err = b.wr.Write(p)
-		} else {
-			n = copy(b.buf[b.n:], p)
-			b.n += n
-			b.Flush()
-		}
-		nn += n
-		p = p[n:]
-	}
-	if b.err != nil {
-		return nn, b.err
-	}
-	n := copy(b.buf[b.n:], p)
-	b.n += n
-	nn += n
-	return nn, nil
-}
-#+end_results
-
 ** TODO [[https://zenn.dev/hsaki/articles/go-convert-json-struct][Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて]]
 :LOGBOOK:
 CLOCK: [2022-11-06 Sun 17:37]--[2022-11-06 Sun 18:02] =>  0:25
@@ -677,6 +695,7 @@ Goドキュメント。
 GoのTips集。
 ** TODO [[https://hiwane.github.io/gospec-ja/][Go プログラミング言語仕様 | gospec-ja]]
 :LOGBOOK:
+CLOCK: [2022-11-19 Sat 10:18]--[2022-11-19 Sat 10:43] =>  0:25
 CLOCK: [2022-11-03 Thu 17:15]--[2022-11-03 Thu 17:40] =>  0:25
 :END:
 言語仕様の日本語訳。
@@ -2406,3 +2425,63 @@ func gofmtMain(s *sequencer) {
   - スライス等ではないが、prevフィールドで辿れるグループピング構造に見える
   - weight, ファイル処理を含む無名関数が入っている
   - エラーを出す無名関数を入れることもある
+** DONE bufioを読む
+CLOSED: [2022-11-16 Wed 09:32]
+:LOGBOOK:
+CLOCK: [2022-11-13 Sun 22:46]--[2022-11-13 Sun 23:11] =>  0:25
+CLOCK: [2022-11-13 Sun 22:07]--[2022-11-13 Sun 22:32] =>  0:25
+CLOCK: [2022-11-13 Sun 21:28]--[2022-11-13 Sun 21:53] =>  0:25
+CLOCK: [2022-11-13 Sun 20:09]--[2022-11-13 Sun 20:34] =>  0:25
+CLOCK: [2022-11-13 Sun 19:35]--[2022-11-13 Sun 20:00] =>  0:25
+CLOCK: [2022-11-13 Sun 18:55]--[2022-11-13 Sun 19:20] =>  0:25
+CLOCK: [2022-11-13 Sun 17:47]--[2022-11-13 Sun 18:12] =>  0:25
+CLOCK: [2022-11-13 Sun 17:21]--[2022-11-13 Sun 17:46] =>  0:25
+CLOCK: [2022-11-13 Sun 16:54]--[2022-11-13 Sun 17:19] =>  0:25
+CLOCK: [2022-11-13 Sun 16:29]--[2022-11-13 Sun 16:54] =>  0:25
+CLOCK: [2022-11-13 Sun 12:28]--[2022-11-13 Sun 12:53] =>  0:25
+CLOCK: [2022-11-13 Sun 11:53]--[2022-11-13 Sun 12:18] =>  0:25
+CLOCK: [2022-11-13 Sun 11:21]--[2022-11-13 Sun 11:46] =>  0:25
+CLOCK: [2022-11-13 Sun 10:55]--[2022-11-13 Sun 11:20] =>  0:25
+CLOCK: [2022-11-13 Sun 10:27]--[2022-11-13 Sun 10:52] =>  0:25
+CLOCK: [2022-11-13 Sun 00:59]--[2022-11-13 Sun 01:24] =>  0:25
+CLOCK: [2022-11-12 Sat 21:52]--[2022-11-12 Sat 22:17] =>  0:25
+:END:
+
+結局全然ピンと来てない。
+
+まずバッファの概念を理解することが必要そう。解説してあった。こういうのを自分でコードから調査できるようになりたい。
+- [[https://zenn.dev/hsaki/books/golang-io-package/viewer/bufio][bufioパッケージによるbuffered I/O｜Goから学ぶI/O]]
+
+あるバイト数に達するまでbufioの内部バッファにためておく処理がある。それが普通のbufioとioの違い。
+
+#+caption: 重要そうな部分。余りバッファがあればコピーし、余りバッファがないときはコピーせず直接write
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/bufio/bufio.go#L662-L685
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func (b *Writer) Write(p []byte) (nn int, err error) {
+	for len(p) > b.Available() && b.err == nil {
+		var n int
+		if b.Buffered() == 0 {
+			// Large write, empty buffer.
+			// Write directly from p to avoid copy.
+			n, b.err = b.wr.Write(p)
+		} else {
+			n = copy(b.buf[b.n:], p)
+			b.n += n
+			b.Flush()
+		}
+		nn += n
+		p = p[n:]
+	}
+	if b.err != nil {
+		return nn, b.err
+	}
+	n := copy(b.buf[b.n:], p)
+	b.n += n
+	nn += n
+	return nn, nil
+}
+#+end_results
