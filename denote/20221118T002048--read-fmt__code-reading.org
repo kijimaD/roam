@@ -9,6 +9,11 @@
 - メモを取ってやってる
 
 * fmtのコードを読む
+:LOGBOOK:
+CLOCK: [2022-11-20 Sun 01:02]--[2022-11-20 Sun 01:27] =>  0:25
+CLOCK: [2022-11-19 Sat 22:46]--[2022-11-19 Sat 23:11] =>  0:25
+CLOCK: [2022-11-19 Sat 22:18]--[2022-11-19 Sat 22:43] =>  0:25
+:END:
 printとformatがある。
 
 ** Stateインターフェース
@@ -94,13 +99,29 @@ signed integerは符号付き整数。
 
 ** 多くのfmt{型}関数
 fmtInteger()は長い関数。各オプションの処理をしているように見える。基数の数で分岐したり、プレフィクスによって変えたり。rune型のverbによって条件分岐する。fmtのintegerに移譲する。基数によって引数を変えてる。
-float、complex, string...。それぞれオプションがあるかで分岐。
+float、complex, string...。それぞれオプションがあるかで分岐する。実際にbufに書き込みしてるのは、このfmt{型}関数のようだ。で、最終的には、たとえばFprint()の場合は関数内でwriterに書き込んで処理が完了する。途中まではpp構造体のbufフィールドで持っておく。
+
+#+begin_src go
+  func Fprint(w io.Writer, a ...any) (n int, err error) {
+          p := newPrinter() 	// *pp型
+          p.doPrint(a)              // p.bufにprint結果をセットする
+          n, err = w.Write(p.buf)   // writerに書き込み
+          p.free()                  // ppをリセット
+          return
+  }
+#+end_src
 
 verbはどうやって渡されるか。例えば%#vの、 ~v~ の部分がverbで、 ~#~ の部分がオプションぽいな。
 
 それらのfmt{型}関数を読んでるのは、printArg()だ。大きなswitch文になっていて、使用するフォーマット関数を振り分ける。printArg()はdoPrint()から呼び出される。doPrint()はFpritf,Sprintf,Sprintなど見たことのある公開メソッドから呼び出される。
-
+** 全体の流れ
 つまりFprintf(),Sprintf()... -> doPrint() -> printArg() -> fmtInteger(), fmtString()...という感じ。
+** printArg()でverbを渡すのはformat系のみ
+printArg()で、verbを伝播して渡すのはdoPrintf()系のみ。doPrint()では、printArg(arg, 'v')と固定オプションを指定する扱いになっている。
+** doPrint()
+anyの引数に対してループ回してる。複数引数が渡されたときはそれぞれを表示するからな。
+doPrint("aa", "bb") だと ~aa bb~ みたく1文字空けて表示する。
+
 ** trucateString
 手頃そうな関数を調べてみる。左から数えた文字数で切るtruncateString()。
 例えば指定文字数が2文字だと、"aaaa" -> "aa"、"bbbbbbb" -> "bb"とするような、非常に単純な機能。しかし、実装は一見ぱっと見でわかりにくく、最初はスライスの記法だけでいけるように見える。これは、桁の方が文字数より多いケースに対応している。普通にスライス記法で書くと、index out of rangeエラーになるだろう。
