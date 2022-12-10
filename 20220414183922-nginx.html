@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2022-12-03 -->
+<!-- 2022-12-10 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nginx</title>
@@ -19,17 +19,22 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org37a1cc6">概要</a></li>
-<li><a href="#orgbd739f4">Memo</a></li>
-<li><a href="#org2af422d">Tasks</a></li>
-<li><a href="#org3785ad8">Reference</a></li>
-<li><a href="#org5841a8e">Archives</a></li>
+<li><a href="#org015d0aa">概要</a></li>
+<li><a href="#org6ed6149">Memo</a>
+<ul>
+<li><a href="#orga7d83eb">コンテナ設定</a></li>
+<li><a href="#orgba2c0be">静的ファイルの配信</a></li>
+</ul>
+</li>
+<li><a href="#orgbdf0170">Tasks</a></li>
+<li><a href="#org6642961">Reference</a></li>
+<li><a href="#org15aac8c">Archives</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org37a1cc6" class="outline-2">
-<h2 id="org37a1cc6"><a href="#org37a1cc6">概要</a></h2>
-<div class="outline-text-2" id="text-org37a1cc6">
+<div id="outline-container-org015d0aa" class="outline-2">
+<h2 id="org015d0aa"><a href="#org015d0aa">概要</a></h2>
+<div class="outline-text-2" id="text-org015d0aa">
 <p>
 Nginxは、<a href="20210926150327-oss.html#ID-bb71747d-8599-4aee-b747-13cb44c05773">OSS</a>の<a href="20220806100036-web_server.html#ID-59d0554c-f2fa-4ca1-8c7a-774c68bdb036">Web Server</a>。
 本番環境のWebサービスで、Nginx(Webサーバ) + Unicorn(アプリケーションサーバ) + <a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>(アプリケーション)のように組み合わせて用いられる。
@@ -40,22 +45,80 @@ Nginxは、<a href="20210926150327-oss.html#ID-bb71747d-8599-4aee-b747-13cb44c05
 </p>
 </div>
 </div>
-<div id="outline-container-orgbd739f4" class="outline-2">
-<h2 id="orgbd739f4"><a href="#orgbd739f4">Memo</a></h2>
+<div id="outline-container-org6ed6149" class="outline-2">
+<h2 id="org6ed6149"><a href="#org6ed6149">Memo</a></h2>
+<div class="outline-text-2" id="text-org6ed6149">
 </div>
-<div id="outline-container-org2af422d" class="outline-2">
-<h2 id="org2af422d"><a href="#org2af422d">Tasks</a></h2>
+<div id="outline-container-orga7d83eb" class="outline-3">
+<h3 id="orga7d83eb"><a href="#orga7d83eb">コンテナ設定</a></h3>
+<div class="outline-text-3" id="text-orga7d83eb">
+<p>
+nginx.confに各サイトごとの設定ファイルを読み込む記述を追加する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>Dockerfile</label><pre class="src src-shell">FROM nginx:1.22
+
+RUN rm /etc/nginx/conf.d/default.conf <span class="org-comment-delimiter"># </span><span class="org-comment">localhost&#12434;&#20351;&#12358;&#22580;&#21512;&#12399;&#31478;&#21512;&#12377;&#12427;&#12398;&#12391;&#28040;&#12377;</span>
+COPY nginx.conf /etc/nginx/ <span class="org-comment-delimiter"># </span><span class="org-comment">sites-enabled&#20197;&#19979;&#12434;&#35501;&#12415;&#36796;&#12416;&#35373;&#23450;&#12434;&#36861;&#21152;&#12375;&#12383;nginx.conf</span>
+COPY sample.conf /etc/nginx/sites-enabled/ <span class="org-comment-delimiter"># </span><span class="org-comment">&#12469;&#12452;&#12488;&#12372;&#12392;&#12398;&#35373;&#23450;</span>
+</pre>
 </div>
-<div id="outline-container-org3785ad8" class="outline-2">
-<h2 id="org3785ad8"><a href="#org3785ad8">Reference</a></h2>
-<div class="outline-text-2" id="text-org3785ad8">
+
+<pre class="example">
+include /etc/nginx/sites-enabled/*.conf;
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgba2c0be" class="outline-3">
+<h3 id="orgba2c0be"><a href="#orgba2c0be">静的ファイルの配信</a></h3>
+<div class="outline-text-3" id="text-orgba2c0be">
+<p>
+たとえばJSをビルドしたものを配信する場合、必要なこと。
+</p>
+
+<p>
+<b>パスが何であれ常にindex.htmlを読むこむ</b> ため、自前でサーバを用意する場合、サーバ側で設定が必要になる。GitHub Pagesなどホスティングサービスを利用した場合、自動で設定してくれるため気づきにくい。
+</p>
+
+<ul class="org-ul">
+<li>リンクしたリソースへのパスが絶対パスであること</li>
+<li>Webサーバがどのパスであれ、最終的にindex.htmlを読むこむこと</li>
+</ul>
+
+<p>
+これらはyarn start(内部的にexpressを使っていたりする)で準備されてる場合など、開発環境では動作が異なるためチェックする。実際にbuildしたhtmlと、yarn startで描画したhtmlを比較するとわかりやすい。
+</p>
+
+<pre class="example">
+server {
+    listen 80;
+    server_name localhost; # localhostはデフォルトの設定ファイルと競合するので予め消しておくこと
+
+    location / {
+      root /var/www/html; # 配信対象の静的ファイルが入ったディレクトリ
+      try_files $uri /index.html; # すべてのURLを/index.htmlへ
+      index index.html;
+    }
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgbdf0170" class="outline-2">
+<h2 id="orgbdf0170"><a href="#orgbdf0170">Tasks</a></h2>
+</div>
+<div id="outline-container-org6642961" class="outline-2">
+<h2 id="org6642961"><a href="#org6642961">Reference</a></h2>
+<div class="outline-text-2" id="text-org6642961">
 <ul class="org-ul">
 <li><a href="https://ja.wikipedia.org/wiki/Nginx">nginx - Wikipedia</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org5841a8e" class="outline-2">
-<h2 id="org5841a8e"><a href="#org5841a8e">Archives</a></h2>
+<div id="outline-container-org15aac8c" class="outline-2">
+<h2 id="org15aac8c"><a href="#org15aac8c">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
