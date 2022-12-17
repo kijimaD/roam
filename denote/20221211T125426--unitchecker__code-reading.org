@@ -1,0 +1,60 @@
+#+title:      unitcheckerのコードを読む
+#+date:       [2022-12-11 Sun 12:54]
+#+filetags:   :code-reading:
+#+identifier: 20221211T125426
+
+* unitcheckerのコードを読む
+:LOGBOOK:
+CLOCK: [2022-12-12 Mon 09:29]--[2022-12-12 Mon 09:54] =>  0:25
+CLOCK: [2022-12-11 Sun 23:19]--[2022-12-11 Sun 23:44] =>  0:25
+CLOCK: [2022-12-11 Sun 22:53]--[2022-12-11 Sun 23:19] =>  0:26
+CLOCK: [2022-12-11 Sun 21:58]--[2022-12-11 Sun 22:23] =>  0:25
+CLOCK: [2022-12-11 Sun 21:26]--[2022-12-11 Sun 21:51] =>  0:25
+CLOCK: [2022-12-11 Sun 21:01]--[2022-12-11 Sun 21:26] =>  0:25
+CLOCK: [2022-12-11 Sun 20:36]--[2022-12-11 Sun 21:01] =>  0:25
+CLOCK: [2022-12-11 Sun 19:00]--[2022-12-11 Sun 19:25] =>  0:25
+CLOCK: [2022-12-11 Sun 18:17]--[2022-12-11 Sun 18:42] =>  0:25
+:END:
+
+unitcheckerはgo vetを呼び出すのに使われるパッケージである。
+
+#+begin_src go
+  unitchecker.Main(
+          asmdecl.Analyzer,
+          assign.Analyzer,
+#+end_src
+
+というように、独立して存在する各Analyzerを呼び出す形式になっている。
+
+** Main()
+一般的なコマンドラインツールという感じ。引数・オプションチェックやヘルプの表示をしている。
+
+引数をパースして、最終的にRunを呼び出す。おかしかったときはos.Exitで終了する。
+** Run()
+configファイルを読み取ってanalysisを実行する。
+
+- NewFileSetを実行するのはなぜだろう
+- 書き換えもやる
+- アウトプット設定による分岐
+  - runした結果をイテレートしてツリーを作る
+    - ツリーを表示する
+  - 結果をイテレートしてプレーンテキストで表示する
+- 本処理はrun()
+  - load, parse, typecheck
+  - 渡されたファイル(.go)をパースする。これはparseパッケージのもの
+    - ASTにしてまずいところを検証するんだな、という感じはわかる
+  - importerForCompiler()ってなんだ。なんでコンパイラが出てくる
+  - importerFunc()
+  - Configのフィールドたくさんあるな。どこで初期化してるんだっけ
+  - typesは、TypeOf()とか定義してるパッケージ。Info構造体に色々入っている
+  - types.Infoを初期化して、チェックして値を入れてるのか
+  - 200行ある関数
+- [[https://engineering.mercari.com/blog/entry/2018-12-16-150000/][Goにおける静的解析のモジュール化について | メルカリエンジニアリング]]
+  - 参考になる
+  - Analyzerの出力結果は3つある
+    - factは、静的解析する中で見つけられた事実を示す
+    - Diagnosticsはソースコードの任意の位置に紐付いた情報
+    - resultはそのままユーザに返されるわけではなく、ほかのanalyzerに渡される情報
+  - analyzerの例
+    - https://github.com/kd-collective/tools/blob/3da7f1e4c2483c10122fab460ebf8d9e04095385/go/analysis/passes/findcall/findcall.go#L40
+- driver(vet) -> unitchecker -> analyzer
