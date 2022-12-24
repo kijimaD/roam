@@ -13,12 +13,40 @@ media type。ファイルの種類。
 #+end_quote
 
 [[https://wa3.i-3-i.info/word15786.html][MIMEタイプ (マイムタイプ)とは｜「分かりそう」で「分からない」でも「分かった」気になれるIT用語辞典]]
+** session, cookieとは
+- [[https://ips.nekotype.com/2441/][「Cookie」と「セッション」と「セッションCookie」の違い | 猫型iPS細胞研究所]]
+  - cookieはWEBサーバが発行し、ブラウザが保持するキーと値。ブラウザのWEBコンソールで確認できる
+  - sessionはWEBサーバで保持するキーと値
+  - IDやパスワードを毎回ブラウザから送信しない。セキュリティ的に問題だから。
+  - ログイン成功時にセッションとして値を保持し、ブラウザにはcookieを送信する。以降リクエストされるたびにサーバは保持されたセッションに含まれるIDと、送信されたcookieに含まれるIDを比較して認証状況を判断する。
+
+ログインの流れ。
+1. ブラウザ: ログイン成功
+2. サーバ: クッキーにセッションID書き込み
+3. サーバ: セッションIDを[[id:48b99bce-05ce-49af-921d-1e321e5a4f8b][Redis]]等に保存
+   - key: sessionID, value: {token, userID...}
+4. ブラウザ: リクエスト時にクッキーを送信
+5. サーバ: 送信されたクッキーに含まれるセッションIDと、[[id:48b99bce-05ce-49af-921d-1e321e5a4f8b][Redis]]に保存されたセッションIDを比較。一致していればログイン成功
+
+ログアウトの流れ。
+1. ブラウザ: ログアウト実行
+2. サーバ: [[id:48b99bce-05ce-49af-921d-1e321e5a4f8b][Redis]]からセッションID
+** JWT認証
+JWT(JSON Web Token)はトークンの1つ。
+
+- [[https://blog.cloud-acct.com/posts/u-rails-jwt-userauth/][【Rails×JWT】ログイン認証解説とJWT初期設定ファイルの作成 - 独学プログラマ]]
+  1. ブラウザ: ログインする
+  2. サーバ: ログイン情報と一致するユーザを検索。存在すればJWTを発行し、Cookieに保存する
+  3. サーバ: ブラウザにJSONを返す。有効期限とユーザオブジェクトを返す。JWTはそのものは返さない
+  4. ブラウザ: JSONを保存する。保存したユーザオブジェクトをログイン中のユーザとして扱う。保持されている有効期限を、ログイン状態を維持するかの判定に使う。
 * Tasks
 ** [[https://www.oreilly.co.jp/books/9784873118642/][O'Reilly Japan - 入門 監視]]
 システム監視の解説。
 ** [[https://zenn.dev/rita0222/articles/13953a5dfb9698][スレッドプールの作り方]]
 コードによる詳しい解説。
 * Reference
+** [[https://scrapbox.io/kawasima/%E3%82%A2%E3%83%BC%E3%82%AD%E3%83%86%E3%82%AF%E3%83%81%E3%83%A3%E5%A4%A7%E5%85%A8][アーキテクチャ大全 - kawasima]]
+WEBでありがちな部品がまとめられたページ。
 ** [[https://qiita.com/nanasess/items/350e59b29cceb2f122b3][ログ設計指針 - Qiita]]
 ログの設計指針。
 ** [[https://dev.classmethod.jp/articles/recommend-operation-for-bigoted-developers/][開発者が運用を経験すべき一つの理由 | DevelopersIO]]
