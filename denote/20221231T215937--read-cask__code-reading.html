@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-01-04 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>read cask</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">read cask</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgb597107">機能</a></li>
+<li><a href="#org0922448">cask&#x2013;exit-error</a></li>
+<li><a href="#orgdf7813d">declare</a></li>
+<li><a href="#org10ddfaf">signal</a></li>
+<li><a href="#org7ffa2c2">helpの出力</a></li>
+<li><a href="#org8ed8513">defmacroの短い例</a></li>
+<li><a href="#orgf487682">cl-flet</a></li>
+<li><a href="#org583c684">declare</a></li>
+<li><a href="#orgc9e9fb3">定義関数</a></li>
+<li><a href="#org775f676">cask&#x2013;with-file</a></li>
+<li><a href="#org32ed9bc">dolist</a></li>
+</ul>
+</div>
+</div>
+<p>
+Emacs caskの仕組みを知る。
+</p>
+<div id="outline-container-orgb597107" class="outline-2">
+<h2 id="orgb597107"><a href="#orgb597107">機能</a></h2>
+<div class="outline-text-2" id="text-orgb597107">
+<p>
+そもそもどんな機能があるか。
+</p>
+
+<p>
+<code>define-error</code> 各エラーの定義。
+</p>
+
+<p>
+<code>defstruct</code> は構造体を定義する Common Lisp の関数。使い方がわからない。
+</p>
+
+<p>
+<code>check-parens</code> カッコの対応をチェックする関数。
+</p>
+</div>
+</div>
+<div id="outline-container-org0922448" class="outline-2">
+<h2 id="org0922448"><a href="#org0922448">cask&#x2013;exit-error</a></h2>
+<div class="outline-text-2" id="text-org0922448">
+<p>
+渡されたエラーの種類によって正しいメッセージを返す。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9efa/cask.el#L237
+</pre>
+</div>
+
+<div class="results" id="org656b44b">
+<p>
+(defun cask&#x2013;exit-error (bundle err)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>read は読み進める関数</label><pre class="src src-emacs-lisp">(read (current-buffer))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdf7813d" class="outline-2">
+<h2 id="orgdf7813d"><a href="#orgdf7813d">declare</a></h2>
+<div class="outline-text-2" id="text-orgdf7813d">
+<p>
+使い方。
+</p>
+
+<p>
+(declare (indent 1))
+</p>
+</div>
+</div>
+<div id="outline-container-org10ddfaf" class="outline-2">
+<h2 id="org10ddfaf"><a href="#org10ddfaf">signal</a></h2>
+<div class="outline-text-2" id="text-org10ddfaf">
+<p>
+エラーをシグナルする関数。
+</p>
+</div>
+</div>
+<div id="outline-container-org7ffa2c2" class="outline-2">
+<h2 id="org7ffa2c2"><a href="#org7ffa2c2">helpの出力</a></h2>
+<div class="outline-text-2" id="text-org7ffa2c2">
+<p>
+そもそもinstall以外の機能を知らない。
+</p>
+
+<pre class="example">
+  USAGE: cask [COMMAND] [OPTIONS]
+
+Emacs dependency management made easy
+
+COMMANDS:
+
+ pkg-file                                Write a ‘define-package’ file.
+
+                                         The file is written to the Cask project root path with name
+                                         {project-name}-pkg.el.
+ install                                 Install all packages specified in the Cask-file.
+
+                                         The dependencies to packages are also installed.  If a package
+                                         already is installed, it will not be installed again.
+ update                                  Update package versions.
+
+                                         All packages that are specified in the Cask-file will be updated
+                                         including their dependencies.
+ upgrade                                 Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ upgrade-cask                            Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ exec [*]                                Execute ARGS with correct ‘exec-path’ and ‘load-path’.
+ version                                 Print version for the current project.
+ list                                    List this package dependencies.
+ info                                    Show info about the current package.
+ help [command]                          Display usage information or documentation for COMMAND-NAME.
+ load-path                               Print ‘load-path’ for all packages and dependencies.
+
+                                         The output is formatted as a colon path.
+ exec-path                               Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ eval &lt;form&gt;                             Eval FORM with the ‘load-path’ set according to the project.
+ path                                    Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ package-directory                       Print current package installation directory.
+ outdated                                Print list of outdated packages.
+
+                                         That is packages that have a more recent version available for
+                                         installation.
+ files                                   Print list of files specified in the files directive.
+                                         If no files directive or no files, do nothing.
+ build                                   Build all Elisp files in the files directive.
+ clean-elc                               Remove all byte compiled Elisp files in the files directive.
+ link [*]                                Manage links.
+
+                                         A link is just that, a symbolic link.  The purpose of the link
+                                         command is that you should be able to work with local
+                                         dependencies.
+
+                                         For example, let’s say you are developing an Emacs package that
+                                         depends on f.el. Consider what happens if you need to extend f.el
+                                         with some function that your package requires.
+
+                                         With the link command, you can checkout f.el locally, add it as a
+                                         link in your local package.  That means that when you require
+                                         f.el, you will require the local package instead of the one
+                                         fetched from the ELPA mirror.  Now you add the desired function
+                                         to f.el and use your library to try it out.
+
+                                         COMMAND-OR-NAME can be one of: delete, list or a link name.
+                                         ARG is sent to some of the commands.
+
+                                         Commands:
+
+                                          $ cask link list
+
+                                           List all project links.
+
+                                          $ cask link name path
+
+                                           Add local link with NAME to PATH.
+
+                                          $ cask link delete name
+
+                                           Delete local link with NAME.
+ package [target-dir]                    Build package and put in TARGET-DIR or dist if not specified.
+ emacs [*]                               Execute emacs with the appropriate environment.
+
+OPTIONS:
+
+ --proxy &lt;host&gt;                          Set Emacs proxy for HTTP and HTTPS to HOST.
+ --http-proxy &lt;host&gt;                     Set Emacs proxy for HTTP to HOST.
+ --https-proxy &lt;host&gt;                    Set Emacs proxy for HTTPS to HOST.
+ --no-proxy &lt;host&gt;                       Set Emacs no-proxy to HOST.
+ --version                               Print Cask’s version.
+ -h [command], --help [command]          Display usage information or documentation for COMMAND-NAME.
+ --debug                                 Turn on debug output.
+ --path &lt;path&gt;                           Run command in this PATH instead of in ‘default-directory’.
+ --verbose                               Be verbose and show debug output.
+ --silent                                Be silent and do not print anything.
+</pre>
+</div>
+</div>
+<div id="outline-container-org8ed8513" class="outline-2">
+<h2 id="org8ed8513"><a href="#org8ed8513">defmacroの短い例</a></h2>
+<div class="outline-text-2" id="text-org8ed8513">
+<p>
+bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">cask--shut-up-unless-debug</span> (<span class="org-type">&amp;rest</span> body)
+  <span class="org-doc">"The shut-up module is singularly designed to defeat *every*</span>
+<span class="org-doc"> attempt at making your elisp package tractable."</span>
+  (<span class="org-keyword">declare</span> (indent defun))
+  `(<span class="org-keyword">if</span> debug-on-error
+       (<span class="org-keyword">cl-flet</span> ((shut-up-current-output () (ignore)))
+         ,@body)
+     (shut-up ,@body)))
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgf487682" class="outline-2">
+<h2 id="orgf487682"><a href="#orgf487682">cl-flet</a></h2>
+<div class="outline-text-2" id="text-orgf487682">
+<p>
+ローカル定義関数を作る。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org583c684" class="outline-2">
+<h2 id="org583c684"><a href="#org583c684">declare</a></h2>
+<div class="outline-text-2" id="text-org583c684">
+<p>
+<a href="https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html">Declare Form (GNU Emacs Lisp Reference Manual)</a>
+</p>
+
+<p>
+関数やマクロにメタプロパティを付与するのに使う。陳腐化マークをつけたり、TABインデント規則をつけたりできる。たとえば通常defunでは第3引数に来るdoc stringを、ほかのマクロで定義するのに使う。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc9e9fb3" class="outline-2">
+<h2 id="orgc9e9fb3"><a href="#orgc9e9fb3">定義関数</a></h2>
+<div class="outline-text-2" id="text-orgc9e9fb3">
+<p>
+外部関数、もしくは関数定義の関数を使いたいときcompileエラーになる。
+</p>
+
+<blockquote>
+<p>
+Error: the function ‘test’ is not known to be defined.
+</p>
+</blockquote>
+
+<p>
+これを防ぐためには、 <code>(declare-function test)</code> としておくと、test関数を使ってもエラーにならない。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org775f676" class="outline-2">
+<h2 id="org775f676"><a href="#org775f676">cask&#x2013;with-file</a></h2>
+<div class="outline-text-2" id="text-org775f676">
+<p>
+引数のcaskあれば、bodyを評価する。
+</p>
+
+<dl class="org-dl">
+<dt>f-file?</dt><dd>file-regular-p  のエイリアス。regular file って何</dd>
+</dl>
+</div>
+</div>
+
+<div id="outline-container-org32ed9bc" class="outline-2">
+<h2 id="org32ed9bc"><a href="#org32ed9bc">dolist</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
