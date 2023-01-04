@@ -1,0 +1,191 @@
+:PROPERTIES:
+:header-args+: :wrap :results raw
+:END:
+#+title:      read cask
+#+date:       [2022-12-31 Sat 21:59]
+#+filetags:   :code-reading:
+#+identifier: 20221231T215937
+
+Emacs caskの仕組みを知る。
+* 機能
+:LOGBOOK:
+CLOCK: [2023-01-04 Wed 14:35]--[2023-01-04 Wed 15:00] =>  0:25
+CLOCK: [2023-01-01 Sun 16:27]--[2023-01-01 Sun 18:00] =>  1:33
+:END:
+そもそもどんな機能があるか。
+
+~define-error~ 各エラーの定義。
+
+~defstruct~ は構造体を定義する Common Lisp の関数。使い方がわからない。
+
+~check-parens~ カッコの対応をチェックする関数。
+* cask--exit-error
+渡されたエラーの種類によって正しいメッセージを返す。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9efa/cask.el#L237
+#+end_src
+
+#+RESULTS:
+#+begin_results
+  (defun cask--exit-error (bundle err)
+#+end_results
+
+#+caption: read は読み進める関数
+#+begin_src emacs-lisp
+  (read (current-buffer))
+#+end_src
+* declare
+使い方。
+
+(declare (indent 1))
+* signal
+エラーをシグナルする関数。
+* helpの出力
+そもそもinstall以外の機能を知らない。
+
+#+begin_src
+  USAGE: cask [COMMAND] [OPTIONS]
+
+Emacs dependency management made easy
+
+COMMANDS:
+
+ pkg-file                                Write a ‘define-package’ file.
+
+                                         The file is written to the Cask project root path with name
+                                         {project-name}-pkg.el.
+ install                                 Install all packages specified in the Cask-file.
+
+                                         The dependencies to packages are also installed.  If a package
+                                         already is installed, it will not be installed again.
+ update                                  Update package versions.
+
+                                         All packages that are specified in the Cask-file will be updated
+                                         including their dependencies.
+ upgrade                                 Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ upgrade-cask                            Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ exec [*]                                Execute ARGS with correct ‘exec-path’ and ‘load-path’.
+ version                                 Print version for the current project.
+ list                                    List this package dependencies.
+ info                                    Show info about the current package.
+ help [command]                          Display usage information or documentation for COMMAND-NAME.
+ load-path                               Print ‘load-path’ for all packages and dependencies.
+
+                                         The output is formatted as a colon path.
+ exec-path                               Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ eval <form>                             Eval FORM with the ‘load-path’ set according to the project.
+ path                                    Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ package-directory                       Print current package installation directory.
+ outdated                                Print list of outdated packages.
+
+                                         That is packages that have a more recent version available for
+                                         installation.
+ files                                   Print list of files specified in the files directive.
+                                         If no files directive or no files, do nothing.
+ build                                   Build all Elisp files in the files directive.
+ clean-elc                               Remove all byte compiled Elisp files in the files directive.
+ link [*]                                Manage links.
+
+                                         A link is just that, a symbolic link.  The purpose of the link
+                                         command is that you should be able to work with local
+                                         dependencies.
+
+                                         For example, let’s say you are developing an Emacs package that
+                                         depends on f.el. Consider what happens if you need to extend f.el
+                                         with some function that your package requires.
+
+                                         With the link command, you can checkout f.el locally, add it as a
+                                         link in your local package.  That means that when you require
+                                         f.el, you will require the local package instead of the one
+                                         fetched from the ELPA mirror.  Now you add the desired function
+                                         to f.el and use your library to try it out.
+
+                                         COMMAND-OR-NAME can be one of: delete, list or a link name.
+                                         ARG is sent to some of the commands.
+
+                                         Commands:
+
+                                          $ cask link list
+
+                                           List all project links.
+
+                                          $ cask link name path
+
+                                           Add local link with NAME to PATH.
+
+                                          $ cask link delete name
+
+                                           Delete local link with NAME.
+ package [target-dir]                    Build package and put in TARGET-DIR or dist if not specified.
+ emacs [*]                               Execute emacs with the appropriate environment.
+
+OPTIONS:
+
+ --proxy <host>                          Set Emacs proxy for HTTP and HTTPS to HOST.
+ --http-proxy <host>                     Set Emacs proxy for HTTP to HOST.
+ --https-proxy <host>                    Set Emacs proxy for HTTPS to HOST.
+ --no-proxy <host>                       Set Emacs no-proxy to HOST.
+ --version                               Print Cask’s version.
+ -h [command], --help [command]          Display usage information or documentation for COMMAND-NAME.
+ --debug                                 Turn on debug output.
+ --path <path>                           Run command in this PATH instead of in ‘default-directory’.
+ --verbose                               Be verbose and show debug output.
+ --silent                                Be silent and do not print anything.
+#+end_src
+* defmacroの短い例
+
+bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
+
+#+begin_src emacs-lisp
+(defmacro cask--shut-up-unless-debug (&rest body)
+  "The shut-up module is singularly designed to defeat *every*
+ attempt at making your elisp package tractable."
+  (declare (indent defun))
+  `(if debug-on-error
+       (cl-flet ((shut-up-current-output () (ignore)))
+	 ,@body)
+     (shut-up ,@body)))
+#+end_src
+
+* cl-flet
+
+ローカル定義関数を作る。
+
+* declare
+
+[[https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html][Declare Form (GNU Emacs Lisp Reference Manual)]]
+
+関数やマクロにメタプロパティを付与するのに使う。陳腐化マークをつけたり、TABインデント規則をつけたりできる。たとえば通常defunでは第3引数に来るdoc stringを、ほかのマクロで定義するのに使う。
+
+* 定義関数
+外部関数、もしくは関数定義の関数を使いたいときcompileエラーになる。
+
+#+begin_quote
+Error: the function ‘test’ is not known to be defined.
+#+end_quote
+
+これを防ぐためには、 ~(declare-function test)~ としておくと、test関数を使ってもエラーにならない。
+
+* cask--with-file
+引数のcaskあれば、bodyを評価する。
+
+- f-file? :: file-regular-p  のエイリアス。regular file って何
+
+* dolist
