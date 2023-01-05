@@ -7,7 +7,18 @@
 #+identifier: 20221231T215937
 
 Emacs caskの仕組みを知る。
-* 機能
+* memo
+:LOGBOOK:
+CLOCK: [2023-01-05 Thu 00:29]--[2023-01-05 Thu 00:54] =>  0:25
+CLOCK: [2023-01-04 Wed 23:33]--[2023-01-04 Wed 23:58] =>  0:25
+CLOCK: [2023-01-04 Wed 23:08]--[2023-01-04 Wed 23:33] =>  0:25
+CLOCK: [2023-01-04 Wed 22:40]--[2023-01-04 Wed 23:05] =>  0:25
+CLOCK: [2023-01-04 Wed 22:15]--[2023-01-04 Wed 22:40] =>  0:25
+CLOCK: [2023-01-04 Wed 21:46]--[2023-01-04 Wed 22:11] =>  0:25
+CLOCK: [2023-01-04 Wed 20:04]--[2023-01-04 Wed 20:29] =>  0:25
+CLOCK: [2023-01-04 Wed 19:14]--[2023-01-04 Wed 19:39] =>  0:25
+:END:
+** 機能
 :LOGBOOK:
 CLOCK: [2023-01-04 Wed 14:35]--[2023-01-04 Wed 15:00] =>  0:25
 CLOCK: [2023-01-01 Sun 16:27]--[2023-01-01 Sun 18:00] =>  1:33
@@ -19,29 +30,7 @@ CLOCK: [2023-01-01 Sun 16:27]--[2023-01-01 Sun 18:00] =>  1:33
 ~defstruct~ は構造体を定義する Common Lisp の関数。使い方がわからない。
 
 ~check-parens~ カッコの対応をチェックする関数。
-* cask--exit-error
-渡されたエラーの種類によって正しいメッセージを返す。
-
-#+begin_src git-permalink
-https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9efa/cask.el#L237
-#+end_src
-
-#+RESULTS:
-#+begin_results
-  (defun cask--exit-error (bundle err)
-#+end_results
-
-#+caption: read は読み進める関数
-#+begin_src emacs-lisp
-  (read (current-buffer))
-#+end_src
-* declare
-使い方。
-
-(declare (indent 1))
-* signal
-エラーをシグナルする関数。
-* helpの出力
+** helpの出力
 そもそもinstall以外の機能を知らない。
 
 #+begin_src
@@ -149,7 +138,39 @@ OPTIONS:
  --verbose                               Be verbose and show debug output.
  --silent                                Be silent and do not print anything.
 #+end_src
-* defmacroの短い例
+** コマンドライン
+cask-cli.elでコマンドラインに関するコードが書かれている。
+
+オプションとか書かれてる。
+
+** eplって何
+パッケージ関連のライブラリ。
+
+- [[https://github.com/cask/epl][cask/epl: Emacs Package Library]]
+
+** cask--exit-error
+渡されたエラーの種類によって正しいメッセージを返す。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9efa/cask.el#L237
+#+end_src
+
+#+RESULTS:
+#+begin_results
+  (defun cask--exit-error (bundle err)
+#+end_results
+
+#+caption: read は読み進める関数
+#+begin_src emacs-lisp
+  (read (current-buffer))
+#+end_src
+** declare
+使い方。
+
+(declare (indent 1))
+** signal
+エラーをシグナルする関数。
+** defmacroの短い例
 
 bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
 
@@ -164,17 +185,40 @@ bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
      (shut-up ,@body)))
 #+end_src
 
-* cl-flet
+** cl-flet
 
 ローカル定義関数を作る。
 
-* declare
+** cl-letf
+
+モックとして使える。princをinsertに置き換えて、テスト可能にする。
+
+#+begin_src git-permalink
+https://github.com/cask/cask/blob/bc168a11d7881a62657cdf19bab2e7966033ec2c/test/cask-cli-test.el#L48-L58
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(ert-deftest cask-cli-test/print-table-with-links ()
+  (cask-test/with-bundle
+      '((source localhost)
+        (depends-on "package-c" "0.0.1")
+        (depends-on "package-d" "0.0.1"))
+    (let ((package-c-path (cask-test/link bundle 'package-c "package-c-0.0.1"))
+          (package-d-path (cask-test/link bundle 'package-d "package-d-0.0.1")))
+      (cl-letf (((symbol-function 'princ) #'insert))
+        (with-temp-buffer
+          (cask-cli--print-table (cask-links bundle))
+          (should-not (zerop (length (buffer-string)))))))))
+#+end_results
+
+** declare
 
 [[https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html][Declare Form (GNU Emacs Lisp Reference Manual)]]
 
 関数やマクロにメタプロパティを付与するのに使う。陳腐化マークをつけたり、TABインデント規則をつけたりできる。たとえば通常defunでは第3引数に来るdoc stringを、ほかのマクロで定義するのに使う。
 
-* 定義関数
+** 定義関数
 外部関数、もしくは関数定義の関数を使いたいときcompileエラーになる。
 
 #+begin_quote
@@ -183,9 +227,7 @@ Error: the function ‘test’ is not known to be defined.
 
 これを防ぐためには、 ~(declare-function test)~ としておくと、test関数を使ってもエラーにならない。
 
-* cask--with-file
-引数のcaskあれば、bodyを評価する。
+** cask--with-file
+引数のcaskが存在すれば、bodyを評価する。
 
 - f-file? :: file-regular-p  のエイリアス。regular file って何
-
-* dolist
