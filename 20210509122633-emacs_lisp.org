@@ -7,6 +7,41 @@
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]で使われている[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]、Lispの方言。
 Emacs自体のコードの多くがEmacs Lispで構成されているほか、拡張するために用いる。
 * memo
+** defmacroの短い例
+macroを理解するには、それが必要な状況をイメージできるとわかりやすい。bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
+
+#+begin_src emacs-lisp
+(defmacro cask--shut-up-unless-debug (&rest body)
+  "The shut-up module is singularly designed to defeat *every*
+ attempt at making your elisp package tractable."
+  (declare (indent defun))
+  `(if debug-on-error
+       (cl-flet ((shut-up-current-output () (ignore)))
+	 ,@body)
+     (shut-up ,@body)))
+#+end_src
+** letfを関数モックとして使う
+モックとして使える。princをinsertに置き換えて、テスト可能にする例。
+
+#+caption: princをinsertに置き換えて、テスト可能にする例
+#+begin_src git-permalink
+https://github.com/cask/cask/blob/bc168a11d7881a62657cdf19bab2e7966033ec2c/test/cask-cli-test.el#L48-L58
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(ert-deftest cask-cli-test/print-table-with-links ()
+  (cask-test/with-bundle
+      '((source localhost)
+        (depends-on "package-c" "0.0.1")
+        (depends-on "package-d" "0.0.1"))
+    (let ((package-c-path (cask-test/link bundle 'package-c "package-c-0.0.1"))
+          (package-d-path (cask-test/link bundle 'package-d "package-d-0.0.1")))
+      (cl-letf (((symbol-function 'princ) #'insert))
+        (with-temp-buffer
+          (cask-cli--print-table (cask-links bundle))
+          (should-not (zerop (length (buffer-string)))))))))
+#+end_results
 ** インデントマクロ
 マクロ呼び出しをTABがどのようにインデントするべきか定義するために、declareフォームを使うことができる。
 

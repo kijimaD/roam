@@ -1,14 +1,19 @@
 :PROPERTIES:
 :header-args+: :wrap :results raw
 :END:
-#+title:      read cask
+#+title:      Emacs Caskのコードを読む
 #+date:       [2022-12-31 Sat 21:59]
 #+filetags:   :code-reading:
 #+identifier: 20221231T215937
 
-Emacs caskの仕組みを知る。
+CaskはEmacsのプロジェクト管理ツール。ファイルに依存ライブラリを列挙し、同じ環境を再現できる。Caskの仕組みを知る。
+
 * memo
 :LOGBOOK:
+CLOCK: [2023-01-05 Thu 23:49]--[2023-01-06 Fri 00:14] =>  0:25
+CLOCK: [2023-01-05 Thu 23:14]--[2023-01-05 Thu 23:39] =>  0:25
+CLOCK: [2023-01-05 Thu 22:41]--[2023-01-05 Thu 23:06] =>  0:25
+CLOCK: [2023-01-05 Thu 22:16]--[2023-01-05 Thu 22:41] =>  0:25
 CLOCK: [2023-01-05 Thu 00:29]--[2023-01-05 Thu 00:54] =>  0:25
 CLOCK: [2023-01-04 Wed 23:33]--[2023-01-04 Wed 23:58] =>  0:25
 CLOCK: [2023-01-04 Wed 23:08]--[2023-01-04 Wed 23:33] =>  0:25
@@ -138,11 +143,6 @@ OPTIONS:
  --verbose                               Be verbose and show debug output.
  --silent                                Be silent and do not print anything.
 #+end_src
-** コマンドライン
-cask-cli.elでコマンドラインに関するコードが書かれている。
-
-オプションとか書かれてる。
-
 ** eplって何
 パッケージ関連のライブラリ。
 
@@ -164,70 +164,82 @@ https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9
 #+begin_src emacs-lisp
   (read (current-buffer))
 #+end_src
-** declare
-使い方。
-
-(declare (indent 1))
 ** signal
 エラーをシグナルする関数。
-** defmacroの短い例
-
-bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
-
-#+begin_src emacs-lisp
-(defmacro cask--shut-up-unless-debug (&rest body)
-  "The shut-up module is singularly designed to defeat *every*
- attempt at making your elisp package tractable."
-  (declare (indent defun))
-  `(if debug-on-error
-       (cl-flet ((shut-up-current-output () (ignore)))
-	 ,@body)
-     (shut-up ,@body)))
-#+end_src
-
 ** cl-flet
-
 ローカル定義関数を作る。
-
-** cl-letf
-
-モックとして使える。princをinsertに置き換えて、テスト可能にする。
-
-#+begin_src git-permalink
-https://github.com/cask/cask/blob/bc168a11d7881a62657cdf19bab2e7966033ec2c/test/cask-cli-test.el#L48-L58
-#+end_src
-
-#+RESULTS:
-#+begin_results
-(ert-deftest cask-cli-test/print-table-with-links ()
-  (cask-test/with-bundle
-      '((source localhost)
-        (depends-on "package-c" "0.0.1")
-        (depends-on "package-d" "0.0.1"))
-    (let ((package-c-path (cask-test/link bundle 'package-c "package-c-0.0.1"))
-          (package-d-path (cask-test/link bundle 'package-d "package-d-0.0.1")))
-      (cl-letf (((symbol-function 'princ) #'insert))
-        (with-temp-buffer
-          (cask-cli--print-table (cask-links bundle))
-          (should-not (zerop (length (buffer-string)))))))))
-#+end_results
-
 ** declare
 
 [[https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html][Declare Form (GNU Emacs Lisp Reference Manual)]]
 
 関数やマクロにメタプロパティを付与するのに使う。陳腐化マークをつけたり、TABインデント規則をつけたりできる。たとえば通常defunでは第3引数に来るdoc stringを、ほかのマクロで定義するのに使う。
 
-** 定義関数
-外部関数、もしくは関数定義の関数を使いたいときcompileエラーになる。
-
-#+begin_quote
-Error: the function ‘test’ is not known to be defined.
-#+end_quote
-
-これを防ぐためには、 ~(declare-function test)~ としておくと、test関数を使ってもエラーにならない。
-
 ** cask--with-file
-引数のcaskが存在すれば、bodyを評価する。
+引数のcaskが存在すれば、bodyを評価するマクロ。
 
 - f-file? :: file-regular-p  のエイリアス。regular file って何
+
+** commander
+CLIの実行には、commanderというパーサーライブラリを使っているようだ。これを使ってEmacs Lispで書かれた関数をシェルから呼び出せるようにしている。サブコマンド・オプション・ヘルプ表示などをommanderでしている。
+** TODO どうやってinstallしているか
+:PROPERTIES:
+:Effort:   05:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-07 Sat 16:32]
+CLOCK: [2023-01-07 Sat 16:06]--[2023-01-07 Sat 16:31] =>  0:25
+CLOCK: [2023-01-07 Sat 15:38]--[2023-01-07 Sat 16:03] =>  0:25
+CLOCK: [2023-01-07 Sat 14:25]--[2023-01-07 Sat 14:50] =>  0:25
+CLOCK: [2023-01-07 Sat 12:33]--[2023-01-07 Sat 12:58] =>  0:25
+CLOCK: [2023-01-07 Sat 12:07]--[2023-01-07 Sat 12:32] =>  0:25
+CLOCK: [2023-01-07 Sat 11:42]--[2023-01-07 Sat 12:07] =>  0:25
+CLOCK: [2023-01-07 Sat 00:23]--[2023-01-07 Sat 00:48] =>  0:25
+:END:
+
+- cask-install
+  - cask--with-environment
+    - cl-destructuring-bind 実行結果で変数をバインドする
+      - cask--dependencies-and-missing 依存関係を集める
+      - cask--install-dependency 個別にインストールを実行
+      - missing-dependencies のときはエラーを吐く
+
+bundle構造体に対して、さまざまなアクセサがある感じか。bundleがよくわかってなくてピンときてない感じ。ほとんどの関数はbundleを引数にとる。
+
+- cask--install-dependency
+  - print関係やってる
+  - 本質的にはepl-install-file か epl-package-install を使ってインストール
+    - install-fileはファイルからインストールし、package installは名前からダウンロードか
+    - fetcherによって分岐するようだ。fetcherとは
+  - epl-refresh package descriptionを更新するs
+  - cask--checkout-and-package-dependency パッケージのパスを返す
+  - cask-dependency 系は何をやっているのだろう
+  - cask--with-package 引数がパッケージであればbodyを評価し、パッケージでなければ例外を返す
+
+** TODO cask-printの仕組み
+:PROPERTIES:
+:Effort:   02:00
+:END:
+cask-print内でgreen関数を使って出力を色付けできる。直接green関数は中でないと利用できない。これはどういう仕組みになっているのだろう。
+
+#+caption:
+#+begin_src emacs-lisp
+(cask-print "----" (green "green") "----")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+----[32mgreen[0m----
+#+end_results
+
+** TODO どこでcask structをセットしているか
+テストを見ればよさそうに見える。
+
+** TODO fetcherとは何か
+どのバージョン管理を使うかということに見える。
+
+#+caption: デフォルト値
+#+begin_src emacs-lisp
+  (:git :bzr :hg :darcs :svn :cvs)
+#+end_src
+
+** TODO recipeとは何か
