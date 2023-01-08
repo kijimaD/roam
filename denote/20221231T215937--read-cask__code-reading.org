@@ -148,7 +148,7 @@ OPTIONS:
 
 - [[https://github.com/cask/epl][cask/epl: Emacs Package Library]]
 
-** cask--exit-error
+** 例外を返すcask--exit-error
 渡されたエラーの種類によって正しいメッセージを返す。
 
 #+begin_src git-permalink
@@ -159,16 +159,16 @@ https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9
 #+begin_results
   (defun cask--exit-error (bundle err)
 #+end_results
-
-#+caption: read は読み進める関数
+** 読み進めるread
+#+caption: read は読み進める関数。1つカーソルが進む
 #+begin_src emacs-lisp
   (read (current-buffer))
 #+end_src
-** signal
-エラーをシグナルする関数。
-** cl-flet
+** エラーをシグナルする関数signal
+signalはエラーをシグナルする関数。
+** ローカル定義関数を作るcl-flet
 ローカル定義関数を作る。
-** declare
+** メタプロパティを付与するdeclare
 
 [[https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html][Declare Form (GNU Emacs Lisp Reference Manual)]]
 
@@ -179,45 +179,24 @@ https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9
 
 - f-file? :: file-regular-p  のエイリアス。regular file って何
 
-** commander
-CLIの実行には、commanderというパーサーライブラリを使っているようだ。これを使ってEmacs Lispで書かれた関数をシェルから呼び出せるようにしている。サブコマンド・オプション・ヘルプ表示などをommanderでしている。
-** TODO どうやってinstallしているか
-:PROPERTIES:
-:Effort:   05:00
-:END:
-:LOGBOOK:
-CLOCK: [2023-01-07 Sat 16:32]
-CLOCK: [2023-01-07 Sat 16:06]--[2023-01-07 Sat 16:31] =>  0:25
-CLOCK: [2023-01-07 Sat 15:38]--[2023-01-07 Sat 16:03] =>  0:25
-CLOCK: [2023-01-07 Sat 14:25]--[2023-01-07 Sat 14:50] =>  0:25
-CLOCK: [2023-01-07 Sat 12:33]--[2023-01-07 Sat 12:58] =>  0:25
-CLOCK: [2023-01-07 Sat 12:07]--[2023-01-07 Sat 12:32] =>  0:25
-CLOCK: [2023-01-07 Sat 11:42]--[2023-01-07 Sat 12:07] =>  0:25
-CLOCK: [2023-01-07 Sat 00:23]--[2023-01-07 Sat 00:48] =>  0:25
-:END:
-
-- cask-install
-  - cask--with-environment
-    - cl-destructuring-bind 実行結果で変数をバインドする
-      - cask--dependencies-and-missing 依存関係を集める
-      - cask--install-dependency 個別にインストールを実行
-      - missing-dependencies のときはエラーを吐く
-
-bundle構造体に対して、さまざまなアクセサがある感じか。bundleがよくわかってなくてピンときてない感じ。ほとんどの関数はbundleを引数にとる。
-
-- cask--install-dependency
-  - print関係やってる
-  - 本質的にはepl-install-file か epl-package-install を使ってインストール
-    - install-fileはファイルからインストールし、package installは名前からダウンロードか
-    - fetcherによって分岐するようだ。fetcherとは
-  - epl-refresh package descriptionを更新するs
-  - cask--checkout-and-package-dependency パッケージのパスを返す
-  - cask-dependency 系は何をやっているのだろう
-  - cask--with-package 引数がパッケージであればbodyを評価し、パッケージでなければ例外を返す
-
-** TODO cask-printの仕組み
+** commanderパッケージ
+CLIの実行には、commanderというパーサーライブラリを使っている。これを使ってEmacs Lispで書かれた関数をシェルから呼び出せるようにしている。サブコマンド・オプション・ヘルプ表示などをommanderでしている。
+* Tasks
+** TODO cask-printの仕組み                                            :Write:
 :PROPERTIES:
 :Effort:   02:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-08 Sun 13:20]--[2023-01-08 Sun 13:45] =>  0:25
+CLOCK: [2023-01-08 Sun 12:55]--[2023-01-08 Sun 13:20] =>  0:25
+CLOCK: [2023-01-08 Sun 12:23]--[2023-01-08 Sun 12:49] =>  0:26
+CLOCK: [2023-01-08 Sun 11:58]--[2023-01-08 Sun 12:23] =>  0:25
+CLOCK: [2023-01-08 Sun 11:12]--[2023-01-08 Sun 11:37] =>  0:25
+CLOCK: [2023-01-08 Sun 10:35]--[2023-01-08 Sun 11:00] =>  0:25
+CLOCK: [2023-01-08 Sun 10:10]--[2023-01-08 Sun 10:35] =>  0:25
+CLOCK: [2023-01-08 Sun 09:43]--[2023-01-08 Sun 10:08] =>  0:25
+CLOCK: [2023-01-07 Sat 23:25]--[2023-01-07 Sat 23:50] =>  0:25
+CLOCK: [2023-01-07 Sat 22:46]--[2023-01-07 Sat 23:11] =>  0:25
 :END:
 cask-print内でgreen関数を使って出力を色付けできる。直接green関数は中でないと利用できない。これはどういう仕組みになっているのだろう。
 
@@ -231,15 +210,150 @@ cask-print内でgreen関数を使って出力を色付けできる。直接green
 ----[32mgreen[0m----
 #+end_results
 
-** TODO どこでcask structをセットしているか
-テストを見ればよさそうに見える。
+#+begin_src git-permalink
+https://github.com/cask/cask/blob/bc168a11d7881a62657cdf19bab2e7966033ec2c/cask.el#L218-L226
+#+end_src
 
-** TODO fetcherとは何か
-どのバージョン管理を使うかということに見える。
+#+RESULTS:
+#+begin_results emacs-lisp
+(cl-defmacro cask-print (&rest body &key stderr &allow-other-keys)
+  "Print messages to `standard-output'.
+
+The BODY of this macro is automatically wrapped with
+`with-ansi' for easier colored output."
+  (delq :stderr body)
+  `(when (or (not (boundp 'cask-cli--silent))
+             (not cask-cli--silent))
+     (princ (with-ansi ,@body) ,(when stderr '(function external-debugging-output)))))
+#+end_results
+
+#+begin_src git-permalink
+#+end_src
+
+- cask-print
+  - with-ansi
+
+#+begin_src emacs-lisp
+(with-ansi "----" (green "green"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+----[32mgreen[0m
+#+end_results
+
+- with~系はだいたいマクロで、バインドされた関数をbodyで渡すフォームで使用できることを示している
+- with-ansi関数の概略
+  - 色のリスト(black white ...)を使って、関数のエイリアスを割り当てる
+    - (ansi-black) (=ansi-white=) マクロがある。それらを、with-ansi 内では(black) (white) で呼び出せるようにエイリアスを張る
+  - macroletの第1引数でマクロ名と関数の中身を定義してるっぽい
+    - だから、第2引数のbodyでは↑マクロが使える
+  - consでbodyをansi--concatの引数にしてる
+** TODO ansi--define
+どういう仕組みになっているか。
+** TODO recipeとは何か                                                :Write:
+よく見るがどういう意味か。
+
+** TODO cask installが異常に遅い理由                                  :Write:
+すでに存在していても、0.5秒くらいかかるので、300パッケージあると150秒かかる。
+
+ひとつひとつ通信しているように見える。ローカルだけだとこんなにかからないはずだ。なぜかMacだとすぐ終わっていたはずだが、わからない。
+** DONE fetcherとは何か
+CLOSED: [2023-01-07 Sat 22:46]
+どのバージョン管理システムを使ってダウンロードするかみたい。
 
 #+caption: デフォルト値
 #+begin_src emacs-lisp
-  (:git :bzr :hg :darcs :svn :cvs)
+  cask-fetchers
 #+end_src
 
-** TODO recipeとは何か
+#+RESULTS:
+#+begin_results
+(:git :bzr :hg :darcs :svn :cvs)
+#+end_results
+
+セットされてないケースもある。ない場合はローカルのファイルから処理する、などの分岐がある。
+
+** DONE どうやってinstallしているか
+CLOSED: [2023-01-07 Sat 22:33]
+:PROPERTIES:
+:Effort:   05:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-07 Sat 22:08]--[2023-01-07 Sat 22:33] =>  0:25
+CLOCK: [2023-01-07 Sat 21:43]--[2023-01-07 Sat 22:08] =>  0:25
+CLOCK: [2023-01-07 Sat 17:41]--[2023-01-07 Sat 18:06] =>  0:25
+CLOCK: [2023-01-07 Sat 16:58]--[2023-01-07 Sat 17:23] =>  0:25
+CLOCK: [2023-01-07 Sat 16:32]--[2023-01-07 Sat 16:57] =>  0:25
+CLOCK: [2023-01-07 Sat 16:06]--[2023-01-07 Sat 16:31] =>  0:25
+CLOCK: [2023-01-07 Sat 15:38]--[2023-01-07 Sat 16:03] =>  0:25
+CLOCK: [2023-01-07 Sat 14:25]--[2023-01-07 Sat 14:50] =>  0:25
+CLOCK: [2023-01-07 Sat 12:33]--[2023-01-07 Sat 12:58] =>  0:25
+CLOCK: [2023-01-07 Sat 12:07]--[2023-01-07 Sat 12:32] =>  0:25
+CLOCK: [2023-01-07 Sat 11:42]--[2023-01-07 Sat 12:07] =>  0:25
+CLOCK: [2023-01-07 Sat 00:23]--[2023-01-07 Sat 00:48] =>  0:25
+:END:
+
+- cask-install
+  - cask--with-environment バインドして、bodyを実行する
+    - cl-destructuring-bind 実行結果で変数をバインドする
+      - cask--dependencies-and-missing 依存関係を集める
+      - cask--install-dependency 個別にインストールを実行
+      - missing-dependencies のときはエラーを吐く
+
+bundle構造体に対して、さまざまなアクセサがある感じか。bundleがよくわかってなくてピンときてない感じ。ほとんどの関数はbundleを引数にとる。
+
+- cask--install-dependency
+  - print関係やってる。見覚えがある
+  - 本質的にはepl-install-file か epl-package-install を使ってインストール
+    - install-fileはファイルからインストールし、package installは名前からダウンロードか
+    - fetcherの有無で分岐する
+    - インターネットからダウンロードするか、ローカルファイルからインストールするか、ということか
+  - epl-refresh package descriptionを更新する
+  - cask--checkout-and-package-dependency パッケージのパスを返す
+  - cask-dependency 系はCaskのdepends-on関数で指定されるもの。各依存パッケージが入っている。
+  - cask--with-package 引数がパッケージであればbodyを評価し、パッケージでなければ例外を返す
+  - パッケージ名が存在するか、また必要な値を持っているかチェックして、最後にインストール
+    - 途中でおかしいところがあれば例外を出す
+    - インストールは epl-package-install を使う
+      - 内部的にpackage-install を使う
+    - ダウンロード + 評価される
+
+まとめると、depend-onの情報を元にパッケージ名を特定する。チェックして、既存のインストール関数を使うことでインストールする。fetcherを変更したりもあるので、その分岐も入っている。
+
+** DONE どこでbundle structをセットしているか
+CLOSED: [2023-01-07 Sat 21:24]
+:PROPERTIES:
+:Effort:   2:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-07 Sat 21:15]--[2023-01-07 Sat 21:24] =>  0:09
+CLOCK: [2023-01-07 Sat 19:25]--[2023-01-07 Sat 19:50] =>  0:25
+CLOCK: [2023-01-07 Sat 18:07]--[2023-01-07 Sat 18:32] =>  0:25
+:END:
+テストを見ればよさそうに見える。
+
+- cask-test/with-bundle Caskファイルの中身を渡して、生成する + body評価。bundleがバインドされてる
+  - cask-test/with-sandbox
+    - f-with-sandbox
+- (cask-setup cask-test/sandbox-path) みたいな感じでbundleが生成されている。プロジェクトディレクトリを指定してcask-setupによってパースを開始する、ということか。パース結果がbundleである
+- CLIから実行した場合も、全く同じようにcask-setupでbundleを用意する。CLIのパスが使われ、キャッシュとして変数に実行結果が保存されるというだけの違い
+
+#+caption: cask-bundleの中身にアクセスする
+#+begin_src emacs-lisp :results output
+  (cask-bundle-name (cask-setup "~/.emacs.d"))
+  (cask-bundle-version (cask-setup "~/.emacs.d"))
+  (cask-bundle-description (cask-setup "~/.emacs.d"))
+  (cask-bundle-runtime-dependencies (cask-setup "~/.emacs.d"))
+  (cask-bundle-development-dependencies (cask-setup "~/.emacs.d"))
+  (cask-bundle-path (cask-setup "~/.emacs.d"))
+  (cask-bundle-patterns (cask-setup "~/.emacs.d"))
+  (cask-bundle-sources (cask-setup "~/.emacs.d"))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+#+end_results
+
+- cask-bundleの中にcask-dependency[]がある。dependencyにnameやversionが含まれていて、名前を元にダウンロードする
+- Caskに書かれているコードはリストとして処理される。構造体に格納され、伝播する
