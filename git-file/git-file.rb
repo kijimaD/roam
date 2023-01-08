@@ -2,7 +2,7 @@
 require 'open3'
 
 BASE = './'.freeze
-REGEXP = '*org'.freeze
+EXT = 'org'.freeze
 
 Dir.chdir(BASE) do
   begin
@@ -13,7 +13,7 @@ Dir.chdir(BASE) do
 
       date = sha1_date.last.chomp.tr('-', '/')
       Open3.capture2("git checkout #{sha1}")
-      file_count = Open3.capture2("git ls-files #{REGEXP} | wc -l").first.strip
+      file_count = Open3.capture2("git ls-files | grep #{EXT} | wc -l").first.strip
       memo[date] = file_count
     end
     print ret.map{ |e| e.join(',') }.join("\n"), "\n"
