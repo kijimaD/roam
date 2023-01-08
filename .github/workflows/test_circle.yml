@@ -1,0 +1,46 @@
+# name: Test by Circle CI
+
+# on:
+#   workflow_dispatch:
+#   push:
+
+# jobs:
+#   tag:
+#     runs-on: ubuntu-latest
+#     outputs:
+#       git-tag: ${{ steps.git-tag.outputs.git-tag }}
+#     steps:
+#       - name: Check out
+#         uses: actions/checkout@v3
+
+#       - name: Get git tag(short)
+#         id: git-tag
+#         run: |
+#           GIT_TAG=$(git rev-parse --short HEAD)
+#           echo "::set-output name=git-tag::$GIT_TAG"
+
+#   build:
+#     needs: tag
+#     uses: ./.github/workflows/build.yml
+#     with:
+#       image: ghcr.io/kijimad/roam_ci:${{ needs.tag.outputs.git-tag }}
+#       target: ci
+#     secrets:
+#       WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
+
+#   test:
+#     needs:
+#       - tag
+#       - build
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Capture triggering branch name
+#         run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
+#       - name: Trigger CircleCI build workflow.
+#         uses: promiseofcake/circleci-trigger-action@v1
+#         with:
+#           user-token: ${{ secrets.CIRCLECI_USER_TOKEN_ROAM }}
+#           project-slug: kijimaD/roam
+#           branch: ${{ env.BRANCH_NAME }}
+#           payload: '{"test": true, "image": "ghcr.io/kijimad/roam_ci:${{ needs.tag.outputs.git-tag }}"}'
