@@ -136,13 +136,13 @@
       :recursive t
       :base-extension "org"
       :base-directory "./"
-      :exclude "./.packages"
+      :exclude "NEWS.org"               ;; FIXME: can't specify .packages directory...
       ;; :publishing-function #'org-html-publish-to-html
       :publishing-function org-html-publish-to-html
       :publishing-directory "./public"
 
       :html-link-home "/"
-      :html-head nil ;; cleans up anything that would have been in there.
+      :html-head nil  ;; cleans up anything that would have been in there.
       :html-head-extra ,my-blog-extra-head
       :html-head-include-default-style nil
       :html-head-include-scripts nil
@@ -153,7 +153,7 @@
       :with-toc t
 
       :sitemap-title "Sitemap"
-      :auto-sitemap t ; generate sitemap.org automagically
+      :auto-sitemap t             ;; generate sitemap.org automatically
       )))
 
 (defun generate-org-roam-db ()
