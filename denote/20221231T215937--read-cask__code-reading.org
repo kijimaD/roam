@@ -182,11 +182,15 @@ signalはエラーをシグナルする関数。
 ** commanderパッケージ
 CLIの実行には、commanderというパーサーライブラリを使っている。これを使ってEmacs Lispで書かれた関数をシェルから呼び出せるようにしている。サブコマンド・オプション・ヘルプ表示などをommanderでしている。
 * Tasks
-** TODO cask-printの仕組み                                            :Write:
+* Archives
+** DONE cask-printの仕組み                                           :Write:
+CLOSED: [2023-01-08 Sun 18:59]
 :PROPERTIES:
 :Effort:   02:00
 :END:
 :LOGBOOK:
+CLOCK: [2023-01-08 Sun 18:34]--[2023-01-08 Sun 18:59] =>  0:25
+CLOCK: [2023-01-08 Sun 16:38]--[2023-01-08 Sun 17:03] =>  0:25
 CLOCK: [2023-01-08 Sun 13:20]--[2023-01-08 Sun 13:45] =>  0:25
 CLOCK: [2023-01-08 Sun 12:55]--[2023-01-08 Sun 13:20] =>  0:25
 CLOCK: [2023-01-08 Sun 12:23]--[2023-01-08 Sun 12:49] =>  0:26
@@ -227,9 +231,6 @@ The BODY of this macro is automatically wrapped with
      (princ (with-ansi ,@body) ,(when stderr '(function external-debugging-output)))))
 #+end_results
 
-#+begin_src git-permalink
-#+end_src
-
 - cask-print
   - with-ansi
 
@@ -242,22 +243,35 @@ The BODY of this macro is automatically wrapped with
 ----[32mgreen[0m
 #+end_results
 
+#+caption: ソースコード ansi.el
+#+begin_src emacs-lisp
+(defmacro with-ansi (&rest body)
+  "Shortcut names (without ansi- prefix) can be used in this BODY."
+  (if ansi-inhibit-ansi
+      `(ansi--concat ,@body)
+    `(cl-macrolet
+         ,(mapcar
+           (lambda (alias)
+             (let ((fn (intern (format "ansi-%s" (symbol-name alias)))))
+               `(,alias (string &rest objects)
+                        ,(list 'backquote (list fn ',string ',@objects)))))
+           (append
+            (mapcar 'car ansi-colors)
+            (mapcar 'car ansi-on-colors)
+            (mapcar 'car ansi-styles)
+            (mapcar 'car ansi-csis)))
+       ,(cons 'ansi--concat body))))
+#+end_src
+
 - with~系はだいたいマクロで、バインドされた関数をbodyで渡すフォームで使用できることを示している
 - with-ansi関数の概略
   - 色のリスト(black white ...)を使って、関数のエイリアスを割り当てる
     - (ansi-black) (=ansi-white=) マクロがある。それらを、with-ansi 内では(black) (white) で呼び出せるようにエイリアスを張る
   - macroletの第1引数でマクロ名と関数の中身を定義してるっぽい
-    - だから、第2引数のbodyでは↑マクロが使える
-  - consでbodyをansi--concatの引数にしてる
-** TODO ansi--define
-どういう仕組みになっているか。
-** TODO recipeとは何か                                                :Write:
-よく見るがどういう意味か。
+    - だから、第2引数のbody部分では↑マクロが使える
+      - ~,(cons 'ansi--concat body)~ の箇所
+  - consでbodyをansi--concatの引数にしてる。body内のblackとかは、macroletで定義したマクロで解釈される
 
-** TODO cask installが異常に遅い理由                                  :Write:
-すでに存在していても、0.5秒くらいかかるので、300パッケージあると150秒かかる。
-
-ひとつひとつ通信しているように見える。ローカルだけだとこんなにかからないはずだ。なぜかMacだとすぐ終わっていたはずだが、わからない。
 ** DONE fetcherとは何か
 CLOSED: [2023-01-07 Sat 22:46]
 どのバージョン管理システムを使ってダウンロードするかみたい。
@@ -357,3 +371,104 @@ CLOCK: [2023-01-07 Sat 18:07]--[2023-01-07 Sat 18:32] =>  0:25
 
 - cask-bundleの中にcask-dependency[]がある。dependencyにnameやversionが含まれていて、名前を元にダウンロードする
 - Caskに書かれているコードはリストとして処理される。構造体に格納され、伝播する
+** DONE ansi--define
+CLOSED: [2023-01-09 Mon 00:41]
+:PROPERTIES:
+:Effort:   2:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-08 Sun 18:59]--[2023-01-08 Sun 19:24] =>  0:25
+:END:
+
+Caskというかansiパッケージの話。どういう仕組みになっているか。
+(ansi--define red) という風に色を定義している。
+
+#+caption: ansi.el
+#+begin_src emacs-lisp
+(defmacro ansi--define (effect)
+  "Define ansi function with EFFECT."
+  (let ((fn-name (intern (format "ansi-%s" (symbol-name effect)))))
+    `(defun ,fn-name (format-string &rest objects)
+       ,(format "Add '%s' ansi effect to text." effect)
+       (apply 'ansi-apply (cons ',effect (cons format-string objects))))))
+#+end_src
+
+- ansi--define(my-test) とすると、ansi-my-test関数が定義される
+  - defunの次の行はdocstring
+  - ansi-apply 内で呼び出されるansi--code関数で、色名と番号を紐づけている。だからansi--defineでの引数がgreenだとgreenでansi-applyされて対応する32が取り出され、その内容でansi-green関数が定義される
+  - 適当な名前でansi-defineしても、関数は定義される。しかし、対応するコードが存在しないため実行時エラーになる
+
+#+begin_src emacs-lisp
+(ansi-green "green")
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[32mgreen[0m
+#+end_results
+
+** DONE どうやってDSLを定義しているか
+CLOSED: [2023-01-09 Mon 00:41]
+:PROPERTIES:
+:Effort:   02:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-08 Sun 22:17]--[2023-01-08 Sun 22:42] =>  0:25
+CLOCK: [2023-01-08 Sun 21:50]--[2023-01-08 Sun 22:15] =>  0:25
+CLOCK: [2023-01-08 Sun 21:25]--[2023-01-08 Sun 21:50] =>  0:25
+CLOCK: [2023-01-08 Sun 21:00]--[2023-01-08 Sun 21:25] =>  0:25
+:END:
+
+Cask-fileではいくつかのDSLが使えるが、その仕組みはどうなっているか。
+
+驚くほどシンプルに実装できる。
+
+- cask--eval で定義している
+  - dolistで各リスト処理。それぞれのcarを見て、cl-case分岐
+  - キーワードがcaseで引っかかるようになっていて、その処理が走る
+    - たとえば引数formsが(source 1) の場合は、case条件でsource が一致してそこの処理が走る、というだけのこと
+  - DSLの引数はcl-destructuring-bindでformからバインドする
+
+これによって、処理全体中の、ファイルから構造体に読み込む部分が理解できた。
+
+- たとえばdepend-onの場合は、bundleに値を追加する。DSLを処理する段階ではグローバルな状態を保持するbundle structに集積していく
+- あとから、bundleからまとめて必要な値を取り出してインストールする、みたいな感じ
+** CLOSE recipeとは何か                                               :Write:
+CLOSED: [2023-01-09 Mon 13:47]
+:PROPERTIES:
+:Effort:   00:30
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-08 Sun 19:34]--[2023-01-08 Sun 19:59] =>  0:25
+:END:
+
+たまに見るがどういう意味なのだろう。パッケージのビルドと関係ありそうに見える。Melpaのレシピでは、パッケージ名とかURLを指定するが…ここではどういう意味なのだろう。
+
+- package-recipe.el がある
+  - package-recipeというクラスがある
+  - 組み込みでpackage-build というコマンドがある。対応する何かなのだろう
+** CLOSE cask installが遅い理由                                       :Write:
+CLOSED: [2023-01-09 Mon 13:47]
+:PROPERTIES:
+:Effort:   2:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-09 Mon 11:08]--[2023-01-09 Mon 11:33] =>  0:25
+CLOCK: [2023-01-09 Mon 10:33]--[2023-01-09 Mon 10:58] =>  0:25
+:END:
+
+わからない。
+
+すでに存在していても、0.5秒くらいかかるので、300パッケージあると150秒かかる。
+
+ひとつひとつ通信しているように見える。ローカルだけだとこんなにかからないはずだ。なぜかMacだとすぐ終わっていたはずだが、わからない。
+
+- ダウンロードは、いくつかチェックがあって最終的に走る
+- すでにダウンロードされていると判定すれば、途中で抜けるので早いはず、だがここがあまり早くない
+- その前の判定に比較的時間のかかる箇所があるように見える
+- cask--dependency-installed-p ですでにダウンロードされてるかの判定をしている
+  - 内部的に epl-package-installed-p を使っている
+  - 引数に構造体epl-packageを取る。epl-package-create 関数を使って構造体を初期化する
+  - 通信は発生してなさそう
+    - さらに内部でpackage-installed-p を使っている
+    - =package-activated-list= でチェック
