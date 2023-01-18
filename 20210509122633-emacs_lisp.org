@@ -6,7 +6,125 @@
 * 概要
 [[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]で使われている[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]、Lispの方言。
 Emacs自体のコードの多くがEmacs Lispで構成されているほか、拡張するために用いる。
-* memo
+* Memo
+** M-xで引数を割り当てる
+CLOSED: [2023-01-15 Sun 19:07]
+:LOGBOOK:
+CLOCK: [2023-01-15 Sun 18:40]--[2023-01-15 Sun 19:05] =>  0:25
+CLOCK: [2023-01-15 Sun 17:56]--[2023-01-15 Sun 18:21] =>  0:25
+:END:
+M-x =ert-run-tests-interactively= は実行できるが、 =(ert-run-tests-interactively)= は引数足りないエラーで実行できない。
+
+interactive special formが関係している。interactiveの引数はarg-descriptor。arg-descriptorは、そのコマンドがインタラクティブに呼び出されたとき引数を計算する方法を宣言する。
+
+- [[https://ayatakesi.github.io/emacs/24.5/elisp_html/Using-Interactive.html][Using Interactive (GNU Emacs Lisp Reference Manual)]]
+
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/src/callint.c#L37
+#+end_src
+
+#+RESULTS:
+#+begin_results emacs-lisp
+DEFUN ("interactive", Finteractive, Sinteractive, 0, UNEVALLED, 0,
+#+end_results
+
+- [[https://flex.phys.tohoku.ac.jp/texi/eljman/eljman_135.html][GNU Emacs Lisp Reference Manual - Completion]]
+
+interactiveに渡したリストが、関数定義の引数に割り当てられる。
+
+#+caption: M-xで実行できる
+#+begin_src emacs-lisp
+  (defun interactive-test (select)
+    (interactive '("test"))
+    (insert select))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+interactive-test
+#+end_results
+** defunを読む                                                     :DontKnow:
+defunは関数定義でよく使うマクロ。どのような仕組みになっているのだろうか。
+** プロパティはなにか
+:LOGBOOK:
+CLOCK: [2023-01-15 Sun 17:19]--[2023-01-15 Sun 17:44] =>  0:25
+:END:
+任意のオブジェクトに情報を付加し、後で取り出せる仕組み。
+
+#+begin_src emacs-lisp
+  (define-symbol-prop 'test-symbol 'test-group '(1 2 3))
+
+  (get 'test-symbol 'test-group)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+(1 2 3)
+#+end_results
+
+** 関数とはlambdaで始まるリスト
+- http://quruli.ivory.ne.jp/document/elisp_20.3/elisp_12.html
+
+#+begin_quote
+Lispでは, 関数とは, lambdaで始まるリスト, そのようなリストをコンパイルしたバイトコード関数, あるいは, 基本関数のsubrオブジェクトです
+#+end_quote
+
+関数はよくdefunで定義するが、これは単に便利関数というだけで、本質的にlambdaをつけているにすぎない。
+
+#+caption: defunの定義。(cons 'lambda ... に注目
+#+begin_src git-permalink
+https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/byte-run.el#L401-L442
+#+end_src
+
+#+RESULTS:
+#+begin_results elisp
+(defmacro defun (name arglist &rest body)
+  "Define NAME as a function.
+The definition is (lambda ARGLIST [DOCSTRING] [INTERACTIVE] BODY...).
+DECL is a declaration, optional, of the form (declare DECLS...) where
+DECLS is a list of elements of the form (PROP . VALUES).  These are
+interpreted according to `defun-declarations-alist'.
+INTERACTIVE is an optional `interactive' specification.
+The return value is undefined.
+
+\(fn NAME ARGLIST [DOCSTRING] [DECL] [INTERACTIVE] BODY...)"
+  (declare (doc-string 3) (indent 2))
+  (or name (error "Cannot define '%s' as a function" name))
+  (if (null
+       (and (listp arglist)
+            (null (delq t (mapcar #'symbolp arglist)))))
+      (error "Malformed arglist: %s" arglist))
+  (let* ((parse (byte-run--parse-body body t))
+         (docstring (nth 0 parse))
+         (declare-form (nth 1 parse))
+         (interactive-form (nth 2 parse))
+         (body (nth 3 parse))
+         (warnings (nth 4 parse))
+         (declarations
+          (and declare-form (byte-run--parse-declarations
+                             name arglist (cdr declare-form) 'defun
+                             defun-declarations-alist))))
+    (setq body (nconc warnings body))
+    (setq body (nconc (cdr declarations) body))
+    (if interactive-form
+        (setq body (cons interactive-form body)))
+    (if docstring
+        (setq body (cons docstring body)))
+    (if (null body)
+        (setq body '(nil)))
+    (let ((def (list 'defalias
+                     (list 'quote name)
+                     (list 'function
+                           (cons 'lambda
+                                 (cons arglist body))))))
+      (if declarations
+          (cons 'prog1 (cons def (car declarations)))
+        def))))
+#+end_results
+
+** interactiveモードか判定する変数
+- noninteractive 変数
+  - Non-nil means Emacs is running without interactive terminal.
 ** defmacroの短い例
 macroを理解するには、それが必要な状況をイメージできるとわかりやすい。bodyを未評価の状態で渡すのが必要なので、defmacroを使う。
 
@@ -1526,3 +1644,5 @@ nil
 #+end_results
 
 * Tasks
+** TODO [[https://qiita.com/kawabata@github/items/9a1a1e211c57a56578d8][Emacs Lispの汎変数 - Qiita]]
+汎変数の解説。
