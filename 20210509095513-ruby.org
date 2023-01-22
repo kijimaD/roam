@@ -815,9 +815,8 @@ Ohai, Dictator!!!
 42:
 #+end_results
 
-ブロックは無名関数に似ている。
+ブロックは無名関数に似ている。名前がかぶると外側にあっても上書きする。
 
-名前がかぶると外側にあっても上書きする。
 #+begin_src ruby
   x = "outside x"
   1.times { x = "modified from the outside block" }
@@ -896,8 +895,7 @@ eachを作ってみる。
 #+end_src
 
 ** IO close利用
-ブロックはファイルクローズのし忘れ防止にも使える。
-これはどうやって実装しているか。
+ブロックはファイルクローズのし忘れ防止にも使える。これはどうやって実装しているか。
 #+begin_src ruby
   File.open() do |f|
     f << "aaa"
@@ -972,8 +970,7 @@ eachを作ってみる。
   # => main
 #+end_src
 
-ブロック内のselfはブロックが定義されたところのselfになる。
-ということで、selfを変えたければブロックが定義されるコンテキストを変えなければならない。
+ブロック内のselfはブロックが定義されたところのselfになる。ということで、selfを変えたければブロックが定義されるコンテキストを変えなければならない。
 
 #+begin_src ruby
   class Router
@@ -1938,67 +1935,6 @@ FactoryBotの詳細な説明。
 使えるようにしておく。まとめる。
 ** TODO [[http://ruby-operators.herokuapp.com/rose_memoization][Ruby Operators]]
 Rubyの特殊な演算子の名前と説明。
-** TODO [[https://techracho.bpsinc.jp/hachi8833/2020_11_06/59639][Ruby: eachよりもmapなどのコレクションを積極的に使おう（社内勉強会）｜TechRacho by BPS株式会社]]
-** TODO rubocop issue(allow multiline)
-:LOGBOOK:
-CLOCK: [2021-09-16 Thu 23:04]--[2021-09-16 Thu 23:29] =>  0:25
-:END:
-https://github.com/rubocop/rubocop/issues/9365
-どうにかなりそうではある。コメントルールをマルチラインに対応させる。
-
-#+begin_src ruby
-  # これは検知される
-  foo(
-    # aaaa
-
-    22
-  )
-
-  # これはセーフ。これで間に合うように感じる。
-  foo(
-    # bbbb
-    22
-  )
-#+end_src
-
-コメントのあとは空白行を無視したいらしいが、あまり意味を感じない。実装はできるが、目的があまりよくないように思える。
-** TODO rubocop issue(yoda expression)
-:LOGBOOK:
-CLOCK: [2021-09-14 Tue 23:00]--[2021-09-14 Tue 23:25] =>  0:25
-CLOCK: [2021-09-14 Tue 00:10]--[2021-09-14 Tue 00:35] =>  0:25
-CLOCK: [2021-09-13 Mon 22:57]--[2021-09-13 Mon 23:22] =>  0:25
-CLOCK: [2021-09-13 Mon 22:26]--[2021-09-13 Mon 22:51] =>  0:25
-CLOCK: [2021-09-13 Mon 21:42]--[2021-09-13 Mon 22:07] =>  0:25
-:END:
-https://github.com/rubocop/rubocop/issues/9222
-New cop for yoda expressions.
-
-TSLintにすでにあるので、実装の参考にすればいい。
-[[https://palantir.github.io/tslint/rules/binary-expression-operand-order/][Rule: binary-expression-operand-order]]
-
-- 二項演算子(Binary Operator) :: 式を書いたときに、被演算子（変数とか値）が2つ登場する演算子
-
-#+begin_src ruby
-  def on_send(node)
-    method = node.method_name
-    lhs = node.receiver
-    rhs = node.first_argument
-
-    # a.+(b)
-    # a -> lhs
-    # + -> method
-    # b -> rhs
-  end
-#+end_src
-
-conditionの方と合体させてもよさそう。TSLintはそうしてる。共通しているところは多い。
-全く別のcopにする方針で一応書けたが、本質的にcondition operatorとやってることは同じだ。
-
-方式が違うので難しいな。
-明らかにTSLintのやり方が簡潔に書かれているように見える。rubocopの方はゴテゴテと条件が多い。単に対応オペレータを増やすだけだが、よくわからない。conditionを前提に書かれているところも難しい。
-
-ちょっとやってどうにかなるものでなさそう。追加されないのには、理由があった。
-まず既存のがごちゃついてるので、それを整理する必要がある。
 ** TODO Practical Ruby Project
 :LOGBOOK:
 CLOCK: [2022-01-20 Thu 08:20]--[2022-01-20 Thu 08:45] =>  0:25
@@ -2119,6 +2055,67 @@ CLOSED: [2022-01-30 Sun 10:50]
 ** DONE [[https://softantenna.com/blog/gem-codesearch/][gem-codesearch – rubygemsをフルテキストサーチすることができる豪快なソフト | ソフトアンテナ]]
 CLOSED: [2022-02-12 Sat 13:56]
 面白そう。
+** DONE [[https://techracho.bpsinc.jp/hachi8833/2020_11_06/59639][Ruby: eachよりもmapなどのコレクションを積極的に使おう（社内勉強会）｜TechRacho by BPS株式会社]]
+CLOSED: [2023-01-21 Sat 16:03]
+** CLOSE rubocop issue(allow multiline)
+CLOSED: [2023-01-21 Sat 16:03]
+:LOGBOOK:
+CLOCK: [2021-09-16 Thu 23:04]--[2021-09-16 Thu 23:29] =>  0:25
+:END:
+https://github.com/rubocop/rubocop/issues/9365
+どうにかなりそうではある。コメントルールをマルチラインに対応させる。
+
+#+begin_src ruby
+  # これは検知される
+  foo(
+    # aaaa
+
+    22
+  )
+
+  # これはセーフ。これで間に合うように感じる。
+  foo(
+    # bbbb
+    22
+  )
+#+end_src
+
+コメントのあとは空白行を無視したいらしいが、あまり意味を感じない。実装はできるが、目的があまりよくないように思える。
+** CLOSE rubocop issue(yoda expression)
+CLOSED: [2023-01-21 Sat 16:03]
+:LOGBOOK:
+CLOCK: [2021-09-14 Tue 23:00]--[2021-09-14 Tue 23:25] =>  0:25
+CLOCK: [2021-09-14 Tue 00:10]--[2021-09-14 Tue 00:35] =>  0:25
+CLOCK: [2021-09-13 Mon 22:57]--[2021-09-13 Mon 23:22] =>  0:25
+CLOCK: [2021-09-13 Mon 22:26]--[2021-09-13 Mon 22:51] =>  0:25
+CLOCK: [2021-09-13 Mon 21:42]--[2021-09-13 Mon 22:07] =>  0:25
+:END:
+https://github.com/rubocop/rubocop/issues/9222
+New cop for yoda expressions.
+
+TSLintにすでにあるので、実装の参考にすればいい。
+[[https://palantir.github.io/tslint/rules/binary-expression-operand-order/][Rule: binary-expression-operand-order]]
+
+- 二項演算子(Binary Operator) :: 式を書いたときに、被演算子（変数とか値）が2つ登場する演算子
+
+#+begin_src ruby
+  def on_send(node)
+    method = node.method_name
+    lhs = node.receiver
+    rhs = node.first_argument
+
+    # a.+(b)
+    # a -> lhs
+    # + -> method
+    # b -> rhs
+  end
+#+end_src
+
+conditionの方と合体させてもよさそう。TSLintはそうしてる。共通しているところは多い。全く別のcopにする方針で一応書けたが、本質的にcondition operatorとやってることは同じだ。
+
+方式が違うので難しいな。明らかにTSLintのやり方が簡潔に書かれているように見える。rubocopの方はゴテゴテと条件が多い。単に対応オペレータを増やすだけだが、よくわからない。conditionを前提に書かれているところも難しい。
+
+ちょっとやってどうにかなるものでなさそう。追加されないのには、理由があった。まず既存のがごちゃついてるので、それを整理する必要がある。
 * References
 ** [[https://rurema.clear-code.com/3.0.0/doc/glossary.html][Ruby用語集 (Ruby 3.0.0)]]
 おもしろい。
