@@ -74,7 +74,7 @@
       org-export-with-smart-quotes t
       org-export-with-sub-superscripts nil
       org-export-with-tags 'not-in-toc
-      org-export-with-toc t)
+      org-export-with-toc nil)
 
 (defun dw/site-header (info)
   (let* ((file (plist-get info :output-file)))
