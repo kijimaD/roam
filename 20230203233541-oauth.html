@@ -19,88 +19,126 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgce5e568">概要</a></li>
-<li><a href="#orgded3c40">Memo</a>
+<li><a href="#org43aa81f">概要</a></li>
+<li><a href="#org47038b0">Memo</a>
 <ul>
-<li><a href="#orge755118"><span class="todo TODO">TODO</span> OAuthを認証に使う問題点</a></li>
+<li><a href="#orgc9e990a"><span class="todo TODO">TODO</span> OAuthを認証に使う問題点</a></li>
 </ul>
 </li>
-<li><a href="#org25cc5ef">Tasks</a>
+<li><a href="#orga2391c9">Tasks</a>
 <ul>
-<li><a href="#org3486ff3"><span class="todo TODO">TODO</span> OAuthを実装してみました | SIOS Tech. Lab</a></li>
+<li><a href="#org081ea10"><span class="todo TODO">TODO</span> OAuthを実装してみました | SIOS Tech. Lab</a></li>
 </ul>
 </li>
-<li><a href="#orge9c55a8">Reference</a>
+<li><a href="#org90297d9">Reference</a>
 <ul>
-<li><a href="#orgba606c3">OAuth認証とは何か?なぜダメなのか - 2020冬 - r-weblife</a></li>
-<li><a href="#org4ce3d0e">一番分かりやすい OAuth の説明 - Qiita</a></li>
+<li><a href="#org642c171">30分でOpenID Connect完全に理解したと言えるようになる勉強会 - Speaker Deck</a></li>
+<li><a href="#orgaedc39b">OAuth認証とは何か?なぜダメなのか - 2020冬 - r-weblife</a></li>
+<li><a href="#org3303170">一番分かりやすい OAuth の説明 - Qiita</a></li>
 </ul>
 </li>
-<li><a href="#org5a85257">Archives</a></li>
+<li><a href="#org6fdbc73">Archives</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgce5e568" class="outline-2">
-<h2 id="orgce5e568"><a href="#orgce5e568">概要</a></h2>
-<div class="outline-text-2" id="text-orgce5e568">
+<div id="outline-container-org43aa81f" class="outline-2">
+<h2 id="org43aa81f"><a href="#org43aa81f">概要</a></h2>
+<div class="outline-text-2" id="text-org43aa81f">
 <p>
-OAuthは認可の仕組み。
+OAuthは認可の仕組み。クライアントがリソース所有者に代わってリソースサーバを使用することを可能にする認可フレームワーク。あるいは、アプリケーションがユーザに代わってAPIを使用することを可能にする認可フレームワーク。
+</p>
+
+<p>
+権限の情報をやりとりするためにはアクセストークンを用いる。OAuthはアクセストークンを発行するためのルールともいえる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>関連図</label><pre class="src src-mermaid">flowchart LR
+A[fa:fa-user-circle Twitterユーザー\n&lt;リソースオーナー&gt;]
+B[fa:fa-robot Twitterスケジューラー\nアプリケーション\n&lt;クライアント&gt;]
+C[fa:fa-server Twitter API\n&lt;リソースサーバ&gt;]
+D[fa:fa-key 認可サーバ\nTwitter OAuth]
+
+A -- 1.クライアントから\nツイートさせる設定 --&gt; B
+B -- 2.Twitterに対して\nツイート権限を要求 --&gt; D
+D -- 3.ツイート権限をクライアントに\n移譲することをユーザに確認 --&gt; A
+A -- 4.権限移譲に同意 --&gt; D
+D -- 5.権限が移譲された証として\nアクセストークンを発行して\nクライアントに渡す  --&gt; B
+B -- 6.クライアントはアクセストークン\nを使ってツイート送信を要求 --&gt; C
+C -- 7.アクセストークンの有効性と\n権限を確認し問題がなければツイート --&gt; B
+</pre>
+</div>
+
+
+<div id="org344291b" class="figure">
+<p><img src="images/fmchbqofge.png" alt="fmchbqofge.png">
 </p>
 </div>
 </div>
-<div id="outline-container-orgded3c40" class="outline-2">
-<h2 id="orgded3c40"><a href="#orgded3c40">Memo</a></h2>
-<div class="outline-text-2" id="text-orgded3c40">
 </div>
-<div id="outline-container-orge755118" class="outline-3">
-<h3 id="orge755118"><a href="#orge755118"><span class="todo TODO">TODO</span> OAuthを認証に使う問題点&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Write">Write</span></span></a></h3>
-<div class="outline-text-3" id="text-orge755118">
+
+<div id="outline-container-org47038b0" class="outline-2">
+<h2 id="org47038b0"><a href="#org47038b0">Memo</a></h2>
+<div class="outline-text-2" id="text-org47038b0">
+</div>
+<div id="outline-container-orgc9e990a" class="outline-3">
+<h3 id="orgc9e990a"><a href="#orgc9e990a"><span class="todo TODO">TODO</span> OAuthを認証に使う問題点&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Write">Write</span></span></a></h3>
+<div class="outline-text-3" id="text-orgc9e990a">
 <p>
 OAuthは認可についての仕様であり、認証に用いるには問題がある。
 </p>
 
 <ul class="org-ul">
+<li>悪意のあるアプリが、他人のアクセストークンを取得する → アクセストークンを差し替えて、別のユーザとしてログインできてしまう</li>
 <li>アクセストークンを入手した場合、ほかのサイトにログインできてしまう。切符を盗まれるのと同じで、誰が持っているかは問題ではないから</li>
 </ul>
 </div>
 </div>
 </div>
-<div id="outline-container-org25cc5ef" class="outline-2">
-<h2 id="org25cc5ef"><a href="#org25cc5ef">Tasks</a></h2>
-<div class="outline-text-2" id="text-org25cc5ef">
+<div id="outline-container-orga2391c9" class="outline-2">
+<h2 id="orga2391c9"><a href="#orga2391c9">Tasks</a></h2>
+<div class="outline-text-2" id="text-orga2391c9">
 </div>
-<div id="outline-container-org3486ff3" class="outline-3">
-<h3 id="org3486ff3"><a href="#org3486ff3"><span class="todo TODO">TODO</span> <a href="https://tech-lab.sios.jp/archives/8091">OAuthを実装してみました | SIOS Tech. Lab</a></a></h3>
-<div class="outline-text-3" id="text-org3486ff3">
+<div id="outline-container-org081ea10" class="outline-3">
+<h3 id="org081ea10"><a href="#org081ea10"><span class="todo TODO">TODO</span> <a href="https://tech-lab.sios.jp/archives/8091">OAuthを実装してみました | SIOS Tech. Lab</a></a></h3>
+<div class="outline-text-3" id="text-org081ea10">
 <p>
 わかりやすい解説。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orge9c55a8" class="outline-2">
-<h2 id="orge9c55a8"><a href="#orge9c55a8">Reference</a></h2>
-<div class="outline-text-2" id="text-orge9c55a8">
+<div id="outline-container-org90297d9" class="outline-2">
+<h2 id="org90297d9"><a href="#org90297d9">Reference</a></h2>
+<div class="outline-text-2" id="text-org90297d9">
 </div>
-<div id="outline-container-orgba606c3" class="outline-3">
-<h3 id="orgba606c3"><a href="#orgba606c3"><a href="https://ritou.hatenablog.com/entry/2020/12/01/000000">OAuth認証とは何か?なぜダメなのか - 2020冬 - r-weblife</a></a></h3>
-<div class="outline-text-3" id="text-orgba606c3">
+<div id="outline-container-org642c171" class="outline-3">
+<h3 id="org642c171"><a href="#org642c171"><a href="https://speakerdeck.com/d_endo/30fen-deopenid-connectwan-quan-nili-jie-sitatoyan-eruyouninarumian-qiang-hui?slide=30">30分でOpenID Connect完全に理解したと言えるようになる勉強会 - Speaker Deck</a></a></h3>
+<div class="outline-text-3" id="text-org642c171">
+<p>
+図が多くてわかりやすいスライド。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaedc39b" class="outline-3">
+<h3 id="orgaedc39b"><a href="#orgaedc39b"><a href="https://ritou.hatenablog.com/entry/2020/12/01/000000">OAuth認証とは何か?なぜダメなのか - 2020冬 - r-weblife</a></a></h3>
+<div class="outline-text-3" id="text-orgaedc39b">
 <p>
 お叱り記事。
 </p>
 </div>
 </div>
-<div id="outline-container-org4ce3d0e" class="outline-3">
-<h3 id="org4ce3d0e"><a href="#org4ce3d0e"><a href="https://qiita.com/TakahikoKawasaki/items/e37caf50776e00e733be">一番分かりやすい OAuth の説明 - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org4ce3d0e">
+<div id="outline-container-org3303170" class="outline-3">
+<h3 id="org3303170"><a href="#org3303170"><a href="https://qiita.com/TakahikoKawasaki/items/e37caf50776e00e733be">一番分かりやすい OAuth の説明 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org3303170">
 <p>
 解説。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org5a85257" class="outline-2">
-<h2 id="org5a85257"><a href="#org5a85257">Archives</a></h2>
+<div id="outline-container-org6fdbc73" class="outline-2">
+<h2 id="org6fdbc73"><a href="#org6fdbc73">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
