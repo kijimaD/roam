@@ -64,6 +64,7 @@ CMD /bin/sh
 FROM amazonlinux:2 as release
 
 COPY --from=build /roam/public /roam/public
+COPY --from=build /roam/images /roam/public/images
 
 CMD /bin/sh
 
