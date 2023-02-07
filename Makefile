@@ -68,10 +68,9 @@ server: ## webサーバを起動する(Python2)
 server3: ## webサーバを起動する(Python3)
 	cd ./public; python3 -m http.server 8000
 
-.PHONY: refresh
-refresh: ## 不要なファイルを削除する
-	git clean -xdn
-	git clean -xdf
+.PHONY: prune
+prune: ## 不要なファイルを消す
+	sh ./tasks/prune.sh
 
 .PHONY: user
 user: ## ファイルの権限をすべてユーザ権限にする
