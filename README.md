@@ -25,12 +25,6 @@ docker cp release:/roam/public . && \
 sudo chown -R $USER:$USER ./public
 ```
 
-## lint
-```shell
-npm install
-make textlint
-```
-
 ## git hooks
 settings for conventional commit
 

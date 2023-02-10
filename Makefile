@@ -50,7 +50,7 @@ lint-run: ## lintを実行する
 
 .PHONY: textlint
 textlint:
-	npx textlint *.org
+	docker run -v $(PWD):/work -w /work --rm ghcr.io/kijimad/roam_textlint textlint -c ./.textlintrc *.org
 
 .PHONY: hadolint
 hadolint:

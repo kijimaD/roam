@@ -90,7 +90,7 @@ CMD /bin/bash
 
 FROM node:17 AS textlint
 
-WORKDIR /roam
+WORKDIR /work
 
 RUN npm install -g textlint textlint-plugin-org textlint-rule-preset-ja-technical-writing
 
