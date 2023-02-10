@@ -86,6 +86,14 @@ RUN npm install
 
 CMD /bin/bash
 
+# textlint ================
+
+FROM node:17 AS textlint
+
+WORKDIR /roam
+
+RUN npm install -g textlint textlint-plugin-org textlint-rule-preset-ja-technical-writing
+
 # ci ================
 
 FROM build AS ci
