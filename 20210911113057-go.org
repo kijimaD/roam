@@ -7,6 +7,7 @@
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
 ** スタックとヒープ
+
 - メモリの読み書きを行う場所は、スタックとヒープに分かれる
   - スタックはメモリの使い方や使用量がコンパイル時に決定できる場合に用いられる
     - 関数呼び出し時に確保され、関数から抜けるときに開放される。
@@ -558,6 +559,233 @@ Go用のデバッガはemacsコマンドでインストールできず、go inst
   $ go install github.com/uudashr/gopkgs/cmd/gopkgs       # Go パッケージ
   $ go install golang.org/x/tools/cmd/goimports@master    # import の過不足を自動で補完
 #+end_src
+** printの仕組み
+CLOSED: [2023-02-11 Sat 17:25]
+:LOGBOOK:
+CLOCK: [2022-11-19 Sat 23:33]--[2022-11-19 Sat 23:58] =>  0:25
+CLOCK: [2022-11-19 Sat 21:08]--[2022-11-19 Sat 21:33] =>  0:25
+CLOCK: [2022-11-19 Sat 19:20]--[2022-11-19 Sat 19:45] =>  0:25
+CLOCK: [2022-11-19 Sat 18:34]--[2022-11-19 Sat 18:59] =>  0:25
+CLOCK: [2022-11-19 Sat 17:27]--[2022-11-19 Sat 17:52] =>  0:25
+CLOCK: [2022-11-19 Sat 16:50]--[2022-11-19 Sat 17:15] =>  0:25
+CLOCK: [2022-11-19 Sat 16:25]--[2022-11-19 Sat 16:50] =>  0:25
+CLOCK: [2022-11-19 Sat 15:47]--[2022-11-19 Sat 16:12] =>  0:25
+CLOCK: [2022-11-19 Sat 12:00]--[2022-11-19 Sat 12:25] =>  0:25
+CLOCK: [2022-11-19 Sat 11:18]--[2022-11-19 Sat 11:43] =>  0:25
+CLOCK: [2022-11-19 Sat 10:53]--[2022-11-19 Sat 11:18] =>  0:25
+CLOCK: [2022-11-19 Sat 00:33]--[2022-11-19 Sat 00:58] =>  0:25
+CLOCK: [2022-11-18 Fri 09:49]--[2022-11-18 Fri 10:14] =>  0:25
+CLOCK: [2022-11-18 Fri 09:24]--[2022-11-18 Fri 09:49] =>  0:25
+CLOCK: [2022-11-18 Fri 00:44]--[2022-11-18 Fri 01:09] =>  0:25
+CLOCK: [2022-11-18 Fri 00:19]--[2022-11-18 Fri 00:44] =>  0:25
+CLOCK: [2022-11-17 Thu 23:54]--[2022-11-18 Fri 00:19] =>  0:25
+CLOCK: [2022-11-17 Thu 00:32]--[2022-11-17 Thu 00:57] =>  0:25
+CLOCK: [2022-11-16 Wed 10:02]--[2022-11-16 Wed 10:27] =>  0:25
+CLOCK: [2022-11-16 Wed 09:34]--[2022-11-16 Wed 09:59] =>  0:25
+:END:
+
+プリンターの状態を保存している、重要そうな構造体。
+
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L119-L120
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
+type pp struct {
+#+end_results
+
+#+caption: フラグを実装している箇所。歴史的理由で引数はintになっているらしい
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L188-L202
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func (p *pp) Flag(b int) bool {
+	switch b {
+	case '-':
+		return p.fmt.minus
+	case '+':
+		return p.fmt.plus || p.fmt.plusV
+	case '#':
+		return p.fmt.sharp || p.fmt.sharpV
+	case ' ':
+		return p.fmt.space
+	case '0':
+		return p.fmt.zero
+	}
+	return false
+}
+#+end_results
+
+#+caption: Printは出力先が標準出力の、Fprintのエイリアスにすぎない
+#+begin_src git-permalink
+https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L271-L273
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func Print(a ...any) (n int, err error) {
+	return Fprint(os.Stdout, a...)
+}
+#+end_results
+
+- doPrintf
+  - printArg
+    - printValue
+
+- 実際画面に表示してるのはどこなんだろう
+  - print系の中でbufに書き込みをしているのはよく見る
+  - 関数の中に画面出力、みたいな部分は見当たらず
+  - 別に「画面に出力する」という関数があるわけじゃなくて、「標準出力にあたるファイルに書き込みをする」関数があるだけ。だから、標準出力以外への書き込みとの差は一切ない
+  - /dev/stdin は特殊ファイルという。画面への入出力などをファイルとして操作できるようにしたものだから、ファイル書き込みとなんら変わらずに操作できる
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/os/file.go#L66
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+	Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
+#+end_results
+
+- print系は、ベースになる関数がある。書き込み先とフォーマット解析の組み合わせで、いろいろ名前がついている
+- 本質的に、ファイル書き込みにすぎない
+- フォーマット解析でいろいろ処理があって、多くを占める。各型での文字列の取り出し方とか
+** Stringerとは
+CLOSED: [2023-02-11 Sat 18:15]
+:LOGBOOK:
+CLOCK: [2023-02-11 Sat 17:34]--[2023-02-11 Sat 17:59] =>  0:25
+CLOCK: [2023-02-11 Sat 17:05]--[2023-02-11 Sat 17:30] =>  0:25
+:END:
+よく見るが、何か。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/fmt/print.go#L63-L65
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type Stringer interface {
+	String() string
+}
+#+end_results
+
+#+caption: String()を実装してるのでMyStringはStringer
+#+begin_src go :imports "fmt"
+type MyString string
+
+func (s MyString) String() string {
+  return "mystring"
+}
+
+func main() {
+  s := MyString("hello")
+  fmt.Println(s) // String()の結果が使われる
+}
+#+end_src
+
+#+RESULTS:
+#+begin_results
+mystring
+#+end_results
+
+printするときには、先にStringerの判定が入る。Stringerを満たしていれば、String()を使う。満たさなければ、通常の、printに渡された文字列引数を使って表示を行う。
+
+#+caption: fmtパッケージのhandleMethodsという関数
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/fmt/print.go#L670-L675
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+			case Stringer:
+				handled = true
+				defer p.catchPanic(p.arg, verb, "String")
+				p.fmtString(v.String(), verb)
+				return
+			}
+#+end_results
+
+** runeとは
+:LOGBOOK:
+CLOCK: [2023-02-11 Sat 22:43]
+CLOCK: [2023-02-11 Sat 22:05]--[2023-02-11 Sat 22:30] =>  0:25
+CLOCK: [2023-02-11 Sat 21:28]--[2023-02-11 Sat 21:53] =>  0:25
+:END:
+
+- [[https://qiita.com/seihmd/items/4a878e7fa340d7963fee][Goのruneを理解するためのUnicode知識 - Qiita]]
+- 文字と01の並びを対応づける仕組み、それが文字コード。その1つのUnicodeは世界中のあらゆる文字列を収録されるために作られている規格
+  - aはUnicodeでu+0041と表される。16進数で0041という値と対応づけられる。この値はcode point(code position)と呼ばれ、文字コード中の位置を指し示す文字のIDといえる
+  - 符号化方式は41とか1F601といったcode pointの値をコンピュータが扱うデータ形式に置き換えるための規則。方式によってcode pointを何byte単位で扱うかが異なってくる
+  - Goでは符号化方式としてUTF-8を使用している。UTF-8では1byteから4byteの可変長データでcode pointを置換する。数字やアルファベットのような広く使われている文字は1byteになり、Unicodeに後から追加された絵文字などは4byteになる。
+  - Unicodeの符号化方式にはUTF-16やUTF-8がある
+- stringにインデックスでアクセスしたときに得られるbyte値は文字コードをUTF-8で1byteごとに区切った値
+
+#+caption: "あ"は3byteで表される
+#+begin_src go :imports fmt
+  s := "あ"
+  for i := 0; i < len(s); i++{
+    fmt.Printf("% x", s[i])
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_results
+e3 81 82
+#+end_results
+
+- ひとつの文字は複数byteで表現される可能性がある。文字を表すbyteをまとめて読まないと正しい文字として認識できなくなる
+- なので文字を数える単位としてはbyteではなくcode pointのほうが都合がいい。Goではcode pointを単位として文字を扱うための仕組み、つまりruneを用意している
+- runeの実体はint32のエイリアス。int32なのはUnicodeの4byte分のcode pointを表現するため
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L90-L92
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// rune is an alias for int32 and is equivalent to int32 in all ways. It is
+// used, by convention, to distinguish character values from integer values.
+type rune = int32
+#+end_results
+
+#+caption: runeはint32のエイリアス。なので単なる数字
+#+begin_src go :imports fmt
+  fmt.Println('あ')
+  fmt.Println('a')
+  fmt.Println(' ')
+  fmt.Println('!')
+  fmt.Println('"')
+  fmt.Println('a' * 2)
+  fmt.Println('a' - 'b')
+#+end_src
+
+#+RESULTS:
+#+begin_results
+12354
+97
+32
+33
+34
+194
+-1
+#+end_results
+
+#+caption: stringを[]runeと[]byteにキャストする。文字列が対応するcodepoint、byteに姿を変えているだけ
+#+begin_src go :imports fmt
+  s := "あいう"
+  fmt.Println([]rune(s))
+  fmt.Println([]byte(s))
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[12354 12356 12358]
+[227 129 130 227 129 132 227 129 134]
+#+end_results
 * Go言語へのコントリビュート準備
 CLOSED: [2022-10-29 Sat 11:19]
 ** DONE [[https://go.dev/doc/contribute][Contribution Guide - The Go Programming Language]]
@@ -672,10 +900,6 @@ CLOSED: [2022-10-29 Sat 11:19]
 - どうしてテストが反映されないという結果になるのかわからない
 
 * Tasks
-** TODO [[https://selfnote.work/20210516/programming/golang-design-pattern-prototype/][[Go言語]Prototypeパターンを学ぼう | セルフノート]]
-デザインパターンの紹介。
-** TODO [[https://zenn.dev/empenguin/articles/09c1b50ebeb8e7][Golang による Strategy パターン]]
-必要になったので参考にする。
 ** TODO [[https://www.manning.com/books/learn-go-with-pocket-sized-projects?utm_source=donia&utm_medium=affiliate&utm_campaign=book_latour_learn_1_5_23&utm_content=linkedin&a_aid=donia&a_bid=48b0541c][Learn Go with Pocket-Sized Projects]]
 Goのハンズオン集。
 ** TODO [[https://qiita.com/tenntenn/items/b1bb5eb4d372bd2d936f][gorenameをライブラリとして使う #golang - Qiita]]
@@ -690,97 +914,7 @@ Goで役立つパターン。
 bufioのわかりやすい解説。
 ** TODO [[https://qiita.com/tutuz/items/e875d8ea3c31450195a7][Go言語を使ったTCPクライアントの作り方 - Qiita]]
 TCPの仕組み、作り方。
-** TODO fmtの仕組み                                              :DontKnow:
-:LOGBOOK:
-CLOCK: [2022-11-19 Sat 23:33]--[2022-11-19 Sat 23:58] =>  0:25
-CLOCK: [2022-11-19 Sat 21:08]--[2022-11-19 Sat 21:33] =>  0:25
-CLOCK: [2022-11-19 Sat 19:20]--[2022-11-19 Sat 19:45] =>  0:25
-CLOCK: [2022-11-19 Sat 18:34]--[2022-11-19 Sat 18:59] =>  0:25
-CLOCK: [2022-11-19 Sat 17:27]--[2022-11-19 Sat 17:52] =>  0:25
-CLOCK: [2022-11-19 Sat 16:50]--[2022-11-19 Sat 17:15] =>  0:25
-CLOCK: [2022-11-19 Sat 16:25]--[2022-11-19 Sat 16:50] =>  0:25
-CLOCK: [2022-11-19 Sat 15:47]--[2022-11-19 Sat 16:12] =>  0:25
-CLOCK: [2022-11-19 Sat 12:00]--[2022-11-19 Sat 12:25] =>  0:25
-CLOCK: [2022-11-19 Sat 11:18]--[2022-11-19 Sat 11:43] =>  0:25
-CLOCK: [2022-11-19 Sat 10:53]--[2022-11-19 Sat 11:18] =>  0:25
-CLOCK: [2022-11-19 Sat 00:33]--[2022-11-19 Sat 00:58] =>  0:25
-CLOCK: [2022-11-18 Fri 09:49]--[2022-11-18 Fri 10:14] =>  0:25
-CLOCK: [2022-11-18 Fri 09:24]--[2022-11-18 Fri 09:49] =>  0:25
-CLOCK: [2022-11-18 Fri 00:44]--[2022-11-18 Fri 01:09] =>  0:25
-CLOCK: [2022-11-18 Fri 00:19]--[2022-11-18 Fri 00:44] =>  0:25
-CLOCK: [2022-11-17 Thu 23:54]--[2022-11-18 Fri 00:19] =>  0:25
-CLOCK: [2022-11-17 Thu 00:32]--[2022-11-17 Thu 00:57] =>  0:25
-CLOCK: [2022-11-16 Wed 10:02]--[2022-11-16 Wed 10:27] =>  0:25
-CLOCK: [2022-11-16 Wed 09:34]--[2022-11-16 Wed 09:59] =>  0:25
-:END:
-
-プリンターの状態を保存している、重要そうな構造体。
-
-#+begin_src git-permalink
-https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L119-L120
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-// pp is used to store a printer's state and is reused with sync.Pool to avoid allocations.
-type pp struct {
-#+end_results
-
-#+caption: フラグを実装している箇所。歴史的理由で引数はintになっているらしい
-#+begin_src git-permalink
-https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L188-L202
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-func (p *pp) Flag(b int) bool {
-	switch b {
-	case '-':
-		return p.fmt.minus
-	case '+':
-		return p.fmt.plus || p.fmt.plusV
-	case '#':
-		return p.fmt.sharp || p.fmt.sharpV
-	case ' ':
-		return p.fmt.space
-	case '0':
-		return p.fmt.zero
-	}
-	return false
-}
-#+end_results
-
-#+caption: Printは出力先が標準出力の、Fprintのエイリアスにすぎない
-#+begin_src git-permalink
-https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L271-L273
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-func Print(a ...any) (n int, err error) {
-	return Fprint(os.Stdout, a...)
-}
-#+end_results
-
-- doPrintf
-  - printArg
-    - printValue
-
 ** TODO Len()の仕組み                                            :DontKnow:
-** TODO runeとは
-#+caption: runeはint32のエイリアス。なので単なる数字
-#+begin_src go :imports fmt
-fmt.Println('a')
-fmt.Println('a' * 2)
-fmt.Println('a' - 'b')
-#+end_src
-
-#+RESULTS:
-#+begin_results
-97
-194
--1
-#+end_results
 ** TODO [[https://zenn.dev/hsaki/articles/go-convert-json-struct][Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて]]
 :LOGBOOK:
 CLOCK: [2022-11-06 Sun 17:37]--[2022-11-06 Sun 18:02] =>  0:25
@@ -859,115 +993,6 @@ CLOCK: [2022-10-18 Tue 12:27]--[2022-10-18 Tue 12:33] =>  0:06
 
 ** TODO [[https://compilerbook.com/][Writing A Compiler In Go | Thorsten Ball]]
 Goでインタプリタを書く本の続編。
-** DONE [[https://andmorefine.gitbook.io/learn-go-with-tests/][テスト駆動開発でGO言語を学びましょう - テスト駆動開発でGO言語を学びましょう]]
-:PROPERTIES:
-:Effort:   5:00
-:END:
-:LOGBOOK:
-CLOCK: [2023-01-21 Sat 18:27]--[2023-01-21 Sat 18:52] =>  0:25
-CLOCK: [2023-01-21 Sat 16:06]--[2023-01-21 Sat 16:31] =>  0:25
-CLOCK: [2023-01-21 Sat 15:34]--[2023-01-21 Sat 15:59] =>  0:25
-CLOCK: [2023-01-09 Mon 11:37]--[2023-01-09 Mon 12:02] =>  0:25
-CLOCK: [2022-12-26 Mon 23:26]--[2022-12-26 Mon 23:51] =>  0:25
-CLOCK: [2022-12-25 Sun 21:57]--[2022-12-25 Sun 22:22] =>  0:25
-CLOCK: [2022-12-25 Sun 21:28]--[2022-12-25 Sun 21:53] =>  0:25
-CLOCK: [2022-12-25 Sun 20:49]--[2022-12-25 Sun 21:14] =>  0:25
-CLOCK: [2022-12-25 Sun 20:23]--[2022-12-25 Sun 20:48] =>  0:25
-CLOCK: [2022-12-25 Sun 19:58]--[2022-12-25 Sun 20:23] =>  0:25
-CLOCK: [2022-12-25 Sun 18:19]--[2022-12-25 Sun 18:44] =>  0:25
-CLOCK: [2022-12-25 Sun 17:50]--[2022-12-25 Sun 18:15] =>  0:25
-CLOCK: [2022-12-25 Sun 17:22]--[2022-12-25 Sun 17:47] =>  0:25
-CLOCK: [2022-12-25 Sun 16:57]--[2022-12-25 Sun 17:22] =>  0:25
-CLOCK: [2022-12-20 Tue 22:49]--[2022-12-20 Tue 23:14] =>  0:25
-CLOCK: [2022-12-20 Tue 22:24]--[2022-12-20 Tue 22:49] =>  0:25
-CLOCK: [2022-12-20 Tue 21:59]--[2022-12-20 Tue 22:24] =>  0:25
-CLOCK: [2022-12-20 Tue 21:34]--[2022-12-20 Tue 21:59] =>  0:25
-CLOCK: [2022-12-11 Sun 17:36]--[2022-12-11 Sun 18:01] =>  0:25
-CLOCK: [2022-12-11 Sun 17:00]--[2022-12-11 Sun 17:25] =>  0:25
-CLOCK: [2022-12-11 Sun 12:38]--[2022-12-11 Sun 13:03] =>  0:25
-CLOCK: [2022-12-11 Sun 12:04]--[2022-12-11 Sun 12:29] =>  0:25
-CLOCK: [2022-12-11 Sun 09:47]--[2022-12-11 Sun 10:12] =>  0:25
-CLOCK: [2022-12-10 Sat 22:41]--[2022-12-10 Sat 23:06] =>  0:25
-CLOCK: [2022-12-10 Sat 22:16]--[2022-12-10 Sat 22:41] =>  0:25
-CLOCK: [2022-12-10 Sat 21:51]--[2022-12-10 Sat 22:16] =>  0:25
-CLOCK: [2022-12-10 Sat 21:23]--[2022-12-10 Sat 21:48] =>  0:25
-CLOCK: [2022-12-10 Sat 19:40]--[2022-12-10 Sat 20:05] =>  0:25
-CLOCK: [2022-12-10 Sat 19:06]--[2022-12-10 Sat 19:31] =>  0:25
-CLOCK: [2022-12-10 Sat 18:41]--[2022-12-10 Sat 19:06] =>  0:25
-CLOCK: [2022-12-10 Sat 17:50]--[2022-12-10 Sat 18:15] =>  0:25
-CLOCK: [2022-12-10 Sat 17:21]--[2022-12-10 Sat 17:46] =>  0:25
-CLOCK: [2022-12-10 Sat 16:40]--[2022-12-10 Sat 17:05] =>  0:25
-CLOCK: [2022-11-30 Wed 10:07]--[2022-11-30 Wed 10:32] =>  0:25
-CLOCK: [2022-11-30 Wed 09:32]--[2022-11-30 Wed 09:57] =>  0:25
-CLOCK: [2022-11-30 Wed 00:22]--[2022-11-30 Wed 00:47] =>  0:25
-CLOCK: [2022-11-29 Tue 23:56]--[2022-11-30 Wed 00:21] =>  0:25
-CLOCK: [2022-11-29 Tue 23:20]--[2022-11-29 Tue 23:45] =>  0:25
-CLOCK: [2022-11-29 Tue 10:06]--[2022-11-29 Tue 10:31] =>  0:25
-CLOCK: [2022-11-29 Tue 09:41]--[2022-11-29 Tue 10:06] =>  0:25
-CLOCK: [2022-11-27 Sun 23:21]--[2022-11-27 Sun 23:46] =>  0:25
-CLOCK: [2022-11-27 Sun 21:54]--[2022-11-27 Sun 22:19] =>  0:25
-CLOCK: [2022-11-27 Sun 21:21]--[2022-11-27 Sun 21:46] =>  0:25
-CLOCK: [2022-11-27 Sun 20:56]--[2022-11-27 Sun 21:21] =>  0:25
-CLOCK: [2022-11-27 Sun 20:14]--[2022-11-27 Sun 20:39] =>  0:25
-CLOCK: [2022-11-27 Sun 19:37]--[2022-11-27 Sun 20:02] =>  0:25
-CLOCK: [2022-11-27 Sun 19:12]--[2022-11-27 Sun 19:37] =>  0:25
-CLOCK: [2022-11-27 Sun 13:16]--[2022-11-27 Sun 13:41] =>  0:25
-CLOCK: [2022-11-27 Sun 12:50]--[2022-11-27 Sun 13:15] =>  0:25
-CLOCK: [2022-11-27 Sun 11:58]--[2022-11-27 Sun 12:23] =>  0:25
-CLOCK: [2022-11-27 Sun 11:24]--[2022-11-27 Sun 11:49] =>  0:25
-CLOCK: [2022-11-27 Sun 10:59]--[2022-11-27 Sun 11:24] =>  0:25
-CLOCK: [2022-11-27 Sun 10:34]--[2022-11-27 Sun 10:59] =>  0:25
-CLOCK: [2022-11-26 Sat 23:55]--[2022-11-27 Sun 00:20] =>  0:25
-CLOCK: [2022-11-24 Thu 09:19]--[2022-11-24 Thu 09:45] =>  0:26
-CLOCK: [2022-11-24 Thu 00:40]--[2022-11-24 Thu 01:05] =>  0:25
-CLOCK: [2022-11-23 Wed 22:46]--[2022-11-23 Wed 23:11] =>  0:25
-CLOCK: [2022-11-23 Wed 22:11]--[2022-11-23 Wed 22:36] =>  0:25
-CLOCK: [2022-11-23 Wed 21:42]--[2022-11-23 Wed 22:07] =>  0:25
-CLOCK: [2022-11-23 Wed 21:16]--[2022-11-23 Wed 21:41] =>  0:25
-CLOCK: [2022-11-23 Wed 20:35]--[2022-11-23 Wed 21:00] =>  0:25
-CLOCK: [2022-11-22 Tue 09:29]--[2022-11-22 Tue 09:54] =>  0:25
-CLOCK: [2022-11-22 Tue 09:00]--[2022-11-22 Tue 09:25] =>  0:25
-CLOCK: [2022-11-22 Tue 08:09]--[2022-11-22 Tue 08:34] =>  0:25
-CLOCK: [2022-11-22 Tue 01:15]--[2022-11-22 Tue 01:27] =>  0:12
-CLOCK: [2022-11-22 Tue 00:47]--[2022-11-22 Tue 01:12] =>  0:25
-CLOCK: [2022-11-21 Mon 09:25]--[2022-11-21 Mon 09:50] =>  0:25
-CLOCK: [2022-11-21 Mon 00:35]--[2022-11-21 Mon 01:00] =>  0:25
-CLOCK: [2022-11-20 Sun 22:45]--[2022-11-20 Sun 23:10] =>  0:25
-CLOCK: [2022-11-20 Sun 22:20]--[2022-11-20 Sun 22:45] =>  0:25
-CLOCK: [2022-11-20 Sun 21:36]--[2022-11-20 Sun 22:01] =>  0:25
-CLOCK: [2022-11-20 Sun 21:00]--[2022-11-20 Sun 21:25] =>  0:25
-CLOCK: [2022-11-20 Sun 20:13]--[2022-11-20 Sun 20:39] =>  0:26
-CLOCK: [2022-11-20 Sun 19:47]--[2022-11-20 Sun 20:12] =>  0:25
-CLOCK: [2022-11-20 Sun 17:59]--[2022-11-20 Sun 18:24] =>  0:25
-:END:
-テスト駆動開発によるGo入門。動かしてわかりやすいだけでなく、後の学習に役に立ちそうな言葉も多い。
-
-- 標準ライブラリを使ってみるときにテストで動作チェックしてみると、勉強になる
-
-#+begin_quote
-Go標準ライブラリは本当に良いです。時間をかけて勉強してください。
-このようにio.Writerインターフェースにある程度慣れていることで、テストでbytes.Bufferを Writerとして使うことができ、標準ライブラリの他のWriterを使ってコマンドラインアプリやウェブサーバで関数を使うことができます。
-標準ライブラリに慣れるほど、これらの汎用インターフェイスが表示され、独自のコードで再利用して、ソフトウェアをさまざまなコンテキストで再利用可能にすることができます。
-#+end_quote
-
-#+begin_quote
-システムの実行にとって実装が本当に重要でない限り、テストが有用な動作をチェックするようにしてください。
-#+end_quote
-
-#+begin_quote
-- リファクタリングの定義では、コードは変更されますが、動作は同じです。理論的にリファクタリングを行うことに決めた場合は、テストを変更せずにコミットを実行できるはずです。だからテストを書くときは自問してください
-
-  - 必要な動作や実装の詳細をテストしていますか？
-  - このコードをリファクタリングする場合、テストに多くの変更を加える必要がありますか？
-- テストが3つ以上のモックで動作している場合、それは危険信号であるように感じます（デザインを再検討する時間）
-#+end_quote
-
-#+begin_quote
-TDDアプローチの詳細
-- ささいな例に直面した場合は、問題を「薄いスライス」に分解してください。ウサギの穴に入り込み、「ビッグバン」アプローチをとらないように、できるだけ早く_testsで動作するソフトウェアを使用できるようにしてください。
-- 動作するソフトウェアを入手したら、必要なソフトウェアにたどり着くまで小さなステップで繰り返すのが簡単です。
-#+end_quote
-
 ** TODO [[https://astaxie.gitbooks.io/build-web-application-with-golang/content/ja/?q=][Introduction · Build web application with Golang]]
 Go Web プログラミング。
 ** TODO [[http://go.shibu.jp/][プログラミング言語 Go ドキュメント — プログラミング言語 Go ドキュメント v0.1 documentation]]
@@ -1202,14 +1227,6 @@ CLOCK: [2022-08-22 Mon 08:10]--[2022-08-22 Mon 08:35] =>  0:25
 Dockerコードの概略。
 ** TODO [[https://tatsu-zine.com/books/starting-grpc][スターティングgRPC【委託】 - 達人出版会]]
 サーバ側Go, クライアント側Rubyと異なる言語を用いてサンプルアプリケーションを実装する。
-** TODO [[https://gihyo.jp/dp/ebook/2021/978-4-297-12520-2][エキスパートたちのGo言語 一流のコードから応用力を学ぶ | Gihyo Digital Publishing … 技術評論社の電子書籍]]
-:LOGBOOK:
-CLOCK: [2023-02-11 Sat 10:16]--[2023-02-11 Sat 10:41] =>  0:25
-CLOCK: [2023-02-10 Fri 21:40]--[2023-02-10 Fri 22:05] =>  0:25
-CLOCK: [2023-02-10 Fri 21:15]--[2023-02-10 Fri 21:40] =>  0:25
-CLOCK: [2023-02-10 Fri 20:19]--[2023-02-10 Fri 20:44] =>  0:25
-:END:
-ノウハウ集。
 ** TODO [[https://gihyo.jp/dp/ebook/2019/978-4-297-10728-4][改訂2版 みんなのGo言語 | Gihyo Digital Publishing … 技術評論社の電子書籍]]
 :LOGBOOK:
 CLOCK: [2023-02-09 Thu 21:50]--[2023-02-09 Thu 22:15] =>  0:25
@@ -2752,3 +2769,138 @@ func (b *Writer) Write(p []byte) (nn int, err error) {
 	return nn, nil
 }
 #+end_results
+** DONE [[https://gihyo.jp/dp/ebook/2021/978-4-297-12520-2][エキスパートたちのGo言語 一流のコードから応用力を学ぶ | Gihyo Digital Publishing … 技術評論社の電子書籍]]
+CLOSED: [2023-02-11 Sat 16:35]
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-02-11 Sat 15:58]--[2023-02-11 Sat 16:23] =>  0:25
+CLOCK: [2023-02-11 Sat 14:37]--[2023-02-11 Sat 15:02] =>  0:25
+CLOCK: [2023-02-11 Sat 10:44]--[2023-02-11 Sat 11:09] =>  0:25
+CLOCK: [2023-02-11 Sat 10:16]--[2023-02-11 Sat 10:41] =>  0:25
+CLOCK: [2023-02-10 Fri 21:40]--[2023-02-10 Fri 22:05] =>  0:25
+CLOCK: [2023-02-10 Fri 21:15]--[2023-02-10 Fri 21:40] =>  0:25
+CLOCK: [2023-02-10 Fri 20:19]--[2023-02-10 Fri 20:44] =>  0:25
+:END:
+ノウハウ集。通読するものというよりは、好きな箇所をつまみ食いする本。
+** DONE [[https://zenn.dev/empenguin/articles/09c1b50ebeb8e7][Golang による Strategy パターン]]
+CLOSED: [2023-02-11 Sat 20:59]
+:LOGBOOK:
+CLOCK: [2023-02-11 Sat 20:53]--[2023-02-11 Sat 20:59] =>  0:06
+:END:
+必要になったので参考にする。
+** DONE [[https://selfnote.work/20210516/programming/golang-design-pattern-prototype/][[Go言語]Prototypeパターンを学ぼう | セルフノート]]
+CLOSED: [2023-02-11 Sat 20:59]
+:LOGBOOK:
+CLOCK: [2023-02-11 Sat 20:18]--[2023-02-11 Sat 20:43] =>  0:25
+:END:
+デザインパターンの紹介。
+** DONE [[https://andmorefine.gitbook.io/learn-go-with-tests/][テスト駆動開発でGO言語を学びましょう - テスト駆動開発でGO言語を学びましょう]]
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-01-21 Sat 18:27]--[2023-01-21 Sat 18:52] =>  0:25
+CLOCK: [2023-01-21 Sat 16:06]--[2023-01-21 Sat 16:31] =>  0:25
+CLOCK: [2023-01-21 Sat 15:34]--[2023-01-21 Sat 15:59] =>  0:25
+CLOCK: [2023-01-09 Mon 11:37]--[2023-01-09 Mon 12:02] =>  0:25
+CLOCK: [2022-12-26 Mon 23:26]--[2022-12-26 Mon 23:51] =>  0:25
+CLOCK: [2022-12-25 Sun 21:57]--[2022-12-25 Sun 22:22] =>  0:25
+CLOCK: [2022-12-25 Sun 21:28]--[2022-12-25 Sun 21:53] =>  0:25
+CLOCK: [2022-12-25 Sun 20:49]--[2022-12-25 Sun 21:14] =>  0:25
+CLOCK: [2022-12-25 Sun 20:23]--[2022-12-25 Sun 20:48] =>  0:25
+CLOCK: [2022-12-25 Sun 19:58]--[2022-12-25 Sun 20:23] =>  0:25
+CLOCK: [2022-12-25 Sun 18:19]--[2022-12-25 Sun 18:44] =>  0:25
+CLOCK: [2022-12-25 Sun 17:50]--[2022-12-25 Sun 18:15] =>  0:25
+CLOCK: [2022-12-25 Sun 17:22]--[2022-12-25 Sun 17:47] =>  0:25
+CLOCK: [2022-12-25 Sun 16:57]--[2022-12-25 Sun 17:22] =>  0:25
+CLOCK: [2022-12-20 Tue 22:49]--[2022-12-20 Tue 23:14] =>  0:25
+CLOCK: [2022-12-20 Tue 22:24]--[2022-12-20 Tue 22:49] =>  0:25
+CLOCK: [2022-12-20 Tue 21:59]--[2022-12-20 Tue 22:24] =>  0:25
+CLOCK: [2022-12-20 Tue 21:34]--[2022-12-20 Tue 21:59] =>  0:25
+CLOCK: [2022-12-11 Sun 17:36]--[2022-12-11 Sun 18:01] =>  0:25
+CLOCK: [2022-12-11 Sun 17:00]--[2022-12-11 Sun 17:25] =>  0:25
+CLOCK: [2022-12-11 Sun 12:38]--[2022-12-11 Sun 13:03] =>  0:25
+CLOCK: [2022-12-11 Sun 12:04]--[2022-12-11 Sun 12:29] =>  0:25
+CLOCK: [2022-12-11 Sun 09:47]--[2022-12-11 Sun 10:12] =>  0:25
+CLOCK: [2022-12-10 Sat 22:41]--[2022-12-10 Sat 23:06] =>  0:25
+CLOCK: [2022-12-10 Sat 22:16]--[2022-12-10 Sat 22:41] =>  0:25
+CLOCK: [2022-12-10 Sat 21:51]--[2022-12-10 Sat 22:16] =>  0:25
+CLOCK: [2022-12-10 Sat 21:23]--[2022-12-10 Sat 21:48] =>  0:25
+CLOCK: [2022-12-10 Sat 19:40]--[2022-12-10 Sat 20:05] =>  0:25
+CLOCK: [2022-12-10 Sat 19:06]--[2022-12-10 Sat 19:31] =>  0:25
+CLOCK: [2022-12-10 Sat 18:41]--[2022-12-10 Sat 19:06] =>  0:25
+CLOCK: [2022-12-10 Sat 17:50]--[2022-12-10 Sat 18:15] =>  0:25
+CLOCK: [2022-12-10 Sat 17:21]--[2022-12-10 Sat 17:46] =>  0:25
+CLOCK: [2022-12-10 Sat 16:40]--[2022-12-10 Sat 17:05] =>  0:25
+CLOCK: [2022-11-30 Wed 10:07]--[2022-11-30 Wed 10:32] =>  0:25
+CLOCK: [2022-11-30 Wed 09:32]--[2022-11-30 Wed 09:57] =>  0:25
+CLOCK: [2022-11-30 Wed 00:22]--[2022-11-30 Wed 00:47] =>  0:25
+CLOCK: [2022-11-29 Tue 23:56]--[2022-11-30 Wed 00:21] =>  0:25
+CLOCK: [2022-11-29 Tue 23:20]--[2022-11-29 Tue 23:45] =>  0:25
+CLOCK: [2022-11-29 Tue 10:06]--[2022-11-29 Tue 10:31] =>  0:25
+CLOCK: [2022-11-29 Tue 09:41]--[2022-11-29 Tue 10:06] =>  0:25
+CLOCK: [2022-11-27 Sun 23:21]--[2022-11-27 Sun 23:46] =>  0:25
+CLOCK: [2022-11-27 Sun 21:54]--[2022-11-27 Sun 22:19] =>  0:25
+CLOCK: [2022-11-27 Sun 21:21]--[2022-11-27 Sun 21:46] =>  0:25
+CLOCK: [2022-11-27 Sun 20:56]--[2022-11-27 Sun 21:21] =>  0:25
+CLOCK: [2022-11-27 Sun 20:14]--[2022-11-27 Sun 20:39] =>  0:25
+CLOCK: [2022-11-27 Sun 19:37]--[2022-11-27 Sun 20:02] =>  0:25
+CLOCK: [2022-11-27 Sun 19:12]--[2022-11-27 Sun 19:37] =>  0:25
+CLOCK: [2022-11-27 Sun 13:16]--[2022-11-27 Sun 13:41] =>  0:25
+CLOCK: [2022-11-27 Sun 12:50]--[2022-11-27 Sun 13:15] =>  0:25
+CLOCK: [2022-11-27 Sun 11:58]--[2022-11-27 Sun 12:23] =>  0:25
+CLOCK: [2022-11-27 Sun 11:24]--[2022-11-27 Sun 11:49] =>  0:25
+CLOCK: [2022-11-27 Sun 10:59]--[2022-11-27 Sun 11:24] =>  0:25
+CLOCK: [2022-11-27 Sun 10:34]--[2022-11-27 Sun 10:59] =>  0:25
+CLOCK: [2022-11-26 Sat 23:55]--[2022-11-27 Sun 00:20] =>  0:25
+CLOCK: [2022-11-24 Thu 09:19]--[2022-11-24 Thu 09:45] =>  0:26
+CLOCK: [2022-11-24 Thu 00:40]--[2022-11-24 Thu 01:05] =>  0:25
+CLOCK: [2022-11-23 Wed 22:46]--[2022-11-23 Wed 23:11] =>  0:25
+CLOCK: [2022-11-23 Wed 22:11]--[2022-11-23 Wed 22:36] =>  0:25
+CLOCK: [2022-11-23 Wed 21:42]--[2022-11-23 Wed 22:07] =>  0:25
+CLOCK: [2022-11-23 Wed 21:16]--[2022-11-23 Wed 21:41] =>  0:25
+CLOCK: [2022-11-23 Wed 20:35]--[2022-11-23 Wed 21:00] =>  0:25
+CLOCK: [2022-11-22 Tue 09:29]--[2022-11-22 Tue 09:54] =>  0:25
+CLOCK: [2022-11-22 Tue 09:00]--[2022-11-22 Tue 09:25] =>  0:25
+CLOCK: [2022-11-22 Tue 08:09]--[2022-11-22 Tue 08:34] =>  0:25
+CLOCK: [2022-11-22 Tue 01:15]--[2022-11-22 Tue 01:27] =>  0:12
+CLOCK: [2022-11-22 Tue 00:47]--[2022-11-22 Tue 01:12] =>  0:25
+CLOCK: [2022-11-21 Mon 09:25]--[2022-11-21 Mon 09:50] =>  0:25
+CLOCK: [2022-11-21 Mon 00:35]--[2022-11-21 Mon 01:00] =>  0:25
+CLOCK: [2022-11-20 Sun 22:45]--[2022-11-20 Sun 23:10] =>  0:25
+CLOCK: [2022-11-20 Sun 22:20]--[2022-11-20 Sun 22:45] =>  0:25
+CLOCK: [2022-11-20 Sun 21:36]--[2022-11-20 Sun 22:01] =>  0:25
+CLOCK: [2022-11-20 Sun 21:00]--[2022-11-20 Sun 21:25] =>  0:25
+CLOCK: [2022-11-20 Sun 20:13]--[2022-11-20 Sun 20:39] =>  0:26
+CLOCK: [2022-11-20 Sun 19:47]--[2022-11-20 Sun 20:12] =>  0:25
+CLOCK: [2022-11-20 Sun 17:59]--[2022-11-20 Sun 18:24] =>  0:25
+:END:
+テスト駆動開発によるGo入門。動かしてわかりやすいだけでなく、後の学習に役に立ちそうな言葉も多い。
+
+- 標準ライブラリを使ってみるときにテストで動作チェックしてみると、勉強になる
+
+#+begin_quote
+Go標準ライブラリは本当に良いです。時間をかけて勉強してください。
+このようにio.Writerインターフェースにある程度慣れていることで、テストでbytes.Bufferを Writerとして使うことができ、標準ライブラリの他のWriterを使ってコマンドラインアプリやウェブサーバで関数を使うことができます。
+標準ライブラリに慣れるほど、これらの汎用インターフェイスが表示され、独自のコードで再利用して、ソフトウェアをさまざまなコンテキストで再利用可能にすることができます。
+#+end_quote
+
+#+begin_quote
+システムの実行にとって実装が本当に重要でない限り、テストが有用な動作をチェックするようにしてください。
+#+end_quote
+
+#+begin_quote
+- リファクタリングの定義では、コードは変更されますが、動作は同じです。理論的にリファクタリングを行うことに決めた場合は、テストを変更せずにコミットを実行できるはずです。だからテストを書くときは自問してください
+
+  - 必要な動作や実装の詳細をテストしていますか？
+  - このコードをリファクタリングする場合、テストに多くの変更を加える必要がありますか？
+- テストが3つ以上のモックで動作している場合、それは危険信号であるように感じます（デザインを再検討する時間）
+#+end_quote
+
+#+begin_quote
+TDDアプローチの詳細
+- ささいな例に直面した場合は、問題を「薄いスライス」に分解してください。ウサギの穴に入り込み、「ビッグバン」アプローチをとらないように、できるだけ早く_testsで動作するソフトウェアを使用できるようにしてください。
+- 動作するソフトウェアを入手したら、必要なソフトウェアにたどり着くまで小さなステップで繰り返すのが簡単です。
+#+end_quote
