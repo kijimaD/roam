@@ -914,8 +914,57 @@ Goで役立つパターン。
 bufioのわかりやすい解説。
 ** TODO [[https://qiita.com/tutuz/items/e875d8ea3c31450195a7][Go言語を使ったTCPクライアントの作り方 - Qiita]]
 TCPの仕組み、作り方。
+** TODO new()とmake()の違い                                        :DontKnow:
+どちらも大まかには初期化するものだが、微妙に異なる。
+
+- newはゼロ値で確保された値へのポインタを得る関数
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L212
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func new(Type) *Type
+#+end_results
+
+- makeはマップ、スライス、チャンネル（map[type]type, []type, chan）の確保と初期化を行い型そのものを得る関数
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L207
+#+end_src
+
+#+RESULTS:
+#+begin_resultsg go
+func make(t Type, size ...IntegerType) Type
+#+end_results
+
 ** TODO Len()の仕組み                                            :DontKnow:
-スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。
+:LOGBOOK:
+CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
+:END:
+スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。組み込みだから、ほかの関数とは異なりそう。
+
+#+begin_src git-permalink
+  https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L161-L173
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// The len built-in function returns the length of v, according to its type:
+//
+//	Array: the number of elements in v.
+//	Pointer to array: the number of elements in *v (even if v is nil).
+//	Slice, or map: the number of elements in v; if v is nil, len(v) is zero.
+//	String: the number of bytes in v.
+//	Channel: the number of elements queued (unread) in the channel buffer;
+//	         if v is nil, len(v) is zero.
+//
+// For some arguments, such as a string literal or a simple array expression, the
+// result can be a constant. See the Go language specification's "Length and
+// capacity" section for details.
+func len(v Type) int
+#+end_results
 
 ** TODO [[https://zenn.dev/hsaki/articles/go-convert-json-struct][Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて]]
 :LOGBOOK:
