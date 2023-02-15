@@ -641,6 +641,7 @@ func Print(a ...any) (n int, err error) {
   - 関数の中に画面出力、みたいな部分は見当たらず
   - 別に「画面に出力する」という関数があるわけじゃなくて、「標準出力にあたるファイルに書き込みをする」関数があるだけ。だから、標準出力以外への書き込みとの差は一切ない
   - /dev/stdin は特殊ファイルという。画面への入出力などをファイルとして操作できるようにしたものだから、ファイル書き込みとなんら変わらずに操作できる
+  - Stdoutは1と定義されている。なので、fd1つまり/dev/stdout/1を作成する
 
 #+begin_src git-permalink
 https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/os/file.go#L66
@@ -649,6 +650,15 @@ https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136ba
 #+RESULTS:
 #+begin_results go
 	Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
+#+end_results
+
+#+begin_src git-permalink
+  https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/cmd/vendor/golang.org/x/sys/unix/syscall_unix.go#L20
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	Stdout = 1
 #+end_results
 
 - print系は、ベースになる関数がある。書き込み先とフォーマット解析の組み合わせで、いろいろ名前がついている
@@ -900,6 +910,38 @@ CLOSED: [2022-10-29 Sat 11:19]
 - どうしてテストが反映されないという結果になるのかわからない
 
 * Tasks
+** TODO [[https://zenn.dev/hsaki/books/golang-concurrency/viewer/intro][はじめに｜Goでの並行処理を徹底解剖！]]
+:LOGBOOK:
+CLOCK: [2023-02-15 Wed 21:48]--[2023-02-15 Wed 22:13] =>  0:25
+CLOCK: [2023-02-14 Tue 23:43]--[2023-02-15 Wed 00:08] =>  0:25
+CLOCK: [2023-02-14 Tue 23:18]--[2023-02-14 Tue 23:43] =>  0:25
+CLOCK: [2023-02-14 Tue 22:53]--[2023-02-14 Tue 23:18] =>  0:25
+CLOCK: [2023-02-14 Tue 22:26]--[2023-02-14 Tue 22:51] =>  0:25
+CLOCK: [2023-02-14 Tue 00:25]--[2023-02-14 Tue 00:50] =>  0:25
+:END:
+並行処理の解説本。
+
+並行処理と並列処理は全く異なる。
+
+- 並行処理(Concurrency)
+  - ある時点の範囲において、複数のタスクを扱うこと
+  - どういう風にふたつを終わらせるかは自由
+  - 複数の処理を独立に実行できる *構成* のこと
+  - 「並行処理できる設備がある」
+  - 一度に多くのことを扱うこと
+  - 問題解決の手段としてのプログラミングパターン
+  - 平行性はコードの性質
+- 並列処理(Parallelism)
+  - ある時点の点において、複数のタスクを扱うこと
+  - 1点において、タスクAとBを同時に実行する
+  - 複数の処理を同時に *実行* すること
+  - 「並列処理で生産しています」
+  - 一度に多くのことを行うこと
+  - 並行処理を可能にするハードウェアの特性のこと
+  - 並列性は動作しているプログラムの性質
+
+チャネルは送受信、実行同期のための機構。
+
 ** TODO [[https://www.manning.com/books/learn-go-with-pocket-sized-projects?utm_source=donia&utm_medium=affiliate&utm_campaign=book_latour_learn_1_5_23&utm_content=linkedin&a_aid=donia&a_bid=48b0541c][Learn Go with Pocket-Sized Projects]]
 Goのハンズオン集。
 ** TODO [[https://qiita.com/tenntenn/items/b1bb5eb4d372bd2d936f][gorenameをライブラリとして使う #golang - Qiita]]
