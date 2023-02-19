@@ -1,0 +1,297 @@
+:PROPERTIES:
+:header-args+: :wrap :results raw
+:END:
+#+title:      docker build のログ出力を読む
+#+date:       [2023-02-18 Sat 11:16]
+#+filetags:   :code:
+#+identifier: 20230218T111643
+
+#+begin_src
+[python 2/4]RUN pip3 install
+[build  2/13] COPY . .
+#+end_src
+
+みたいな表示はどうやっているのかを調べる。
+
+* memo
+** ログ表示
+よく見るログ文から、どこで実行してるかを調べる。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/builder/builder-next/exporter/export.go#L152
+#+end_src
+
+#+RESULTS:
+#+begin_results
+		layersDone := oneOffProgress(ctx, "exporting layers")
+#+end_results
+
+vendorにもある。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/exporter/containerimage/writer.go#L327
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	layersDone := progress.OneOff(ctx, "exporting layers")
+#+end_results
+
+どっちも変更して、docker本体をビルドして動かしてみたが、反映されない。読んで調べる。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/builder/builder-next/exporter/writer.go#L219-L234
+#+end_src
+
+oneOffProgressを調べる。
+
+#+RESULTS:
+#+begin_results go
+func oneOffProgress(ctx context.Context, id string) func(err error) error {
+	pw, _, _ := progress.NewFromContext(ctx)
+	now := time.Now()
+	st := progress.Status{
+		Started: &now,
+	}
+	_ = pw.Write(id, st)
+	return func(err error) error {
+		// TODO: set error on status
+		now := time.Now()
+		st.Completed = &now
+		_ = pw.Write(id, st)
+		_ = pw.Close()
+		return err
+	}
+}
+#+end_results
+
+progress.NewFromContext(ctx)を調べる。
+
+#+begin_src git-permalink
+  https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L47-L52
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// NewFromContext creates a new Writer based on a Writer previously stored
+// in the Context and returns a new Context with the new Writer stored.  It is
+// the callers responsibility to Close the returned Writer to avoid resource leaks.
+func NewFromContext(ctx context.Context, opts ...WriterOption) (Writer, bool, context.Context) {
+	return FromContext(ctx, opts...)(ctx)
+}
+#+end_results
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L13-L15
+#+end_src
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L26-L45
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// FromContext returns a WriterFactory to generate new progress writers based
+// on a Writer previously stored in the Context.
+func FromContext(ctx context.Context, opts ...WriterOption) WriterFactory {
+	v := ctx.Value(contextKey)
+	return func(ctx context.Context) (Writer, bool, context.Context) {
+		pw, ok := v.(*progressWriter)
+		if !ok {
+			if pw, ok := v.(*MultiWriter); ok {
+				return pw, true, ctx
+			}
+			return &noOpWriter{}, false, ctx
+		}
+		pw = newWriter(pw)
+		for _, o := range opts {
+			o(pw)
+		}
+		ctx = context.WithValue(ctx, contextKey, pw)
+		return pw, true, ctx
+	}
+}
+#+end_results
+
+#+begin_src git-permalink
+#+end_src
+
+- contextを使っていそう
+  - FromContext
+    - contextから、key "buildkit/util/progress" を読み出す
+    - progressWriterであることを型チェック
+    - newWriterを実行
+    - 生成したwriterを返す関数を返す
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L221-L225
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type progressWriter struct {
+	done   bool
+	reader *progressReader
+	meta   map[string]interface{}
+}
+#+end_results
+
+- 実行結果を表示させているのをprogressという。まあわかる
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L208-L219
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func newWriter(pw *progressWriter) *progressWriter {
+	meta := make(map[string]interface{})
+	for k, v := range pw.meta {
+		meta[k] = v
+	}
+	pw = &progressWriter{
+		reader: pw.reader,
+		meta:   meta,
+	}
+	pw.reader.append(pw)
+	return pw
+}
+#+end_results
+
+- progressWriterを取ってprogressWriterを返す
+  - ログの情報を付け加えてるのだろう
+- metaはstring keyのmap。引数のprogressWriterから値をセットして、metaを複製
+- 前のmetaの値を引き継いだ構造体progressWriterを作成
+- pw.readerに作ったwriterをappend
+  - appendはmutex lockがされていて、同時編集されないようになっている
+- どうしてreaderにappendするのか
+  - このappendは、追加された関数
+  - readerの中に、writersがあって、そこに追加する
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L109-L115
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type progressReader struct {
+	ctx     context.Context
+	cond    *sync.Cond
+	mu      sync.Mutex
+	writers map[*progressWriter]struct{}
+	dirty   map[string]*Progress
+}
+#+end_results
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L176-L186
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func (pr *progressReader) append(pw *progressWriter) {
+	pr.mu.Lock()
+	defer pr.mu.Unlock()
+
+	select {
+	case <-pr.ctx.Done():
+		return
+	default:
+		pr.writers[pw] = struct{}{}
+	}
+}
+#+end_results
+
+- appendは、progressReaderの中のwritersに追加するという関数
+
+** contextの使い方
+- [[https://deeeet.com/writing/2017/02/23/go-context-value/][Golangのcontext.Valueの使い方 | Taichi Nakashima]]
+
+#+caption: 値をセット
+#+begin_src go
+  WithValue(parent Context, key, val interface{}) Context
+#+end_src
+
+#+caption: 値を取り出す
+#+begin_src go
+  Value(key interface{}) interface{}
+#+end_src
+
+- WithValueで値をセットし、Valueで値を取り出す
+
+** progressWriter
+
+- ProgressWriterというのがあるな。関係ありそう
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/types/backend/build.go#L25-L31
+#+end_src
+
+#+RESULTS:
+#+begin_results
+type ProgressWriter struct {
+	Output             io.Writer
+	StdoutFormatter    io.Writer
+	StderrFormatter    io.Writer
+	AuxFormatter       *streamformatter.AuxFormatter
+	ProgressReaderFunc func(io.ReadCloser) io.ReadCloser
+}
+#+end_results
+
+** builder
+
+- stdoutとoutputが別になってる
+  - これは、コードを書いてる途中で直面したことだ。stdoutだと一時的にためておいてあとで整形して出す、ということができないために、一時的な保存として別のbufferを使った。このコードでもそうなのかは知らない
+
+#+begin_src git-permalink
+  https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/builder/dockerfile/builder.go#L112-L130
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type Builder struct {
+	options *types.ImageBuildOptions
+
+	Stdout io.Writer
+	Stderr io.Writer
+	Aux    *streamformatter.AuxFormatter
+	Output io.Writer
+
+	docker    builder.Backend
+	clientCtx context.Context
+
+	idMapping        idtools.IdentityMapping
+	disableCommit    bool
+	imageSources     *imageSources
+	pathCache        pathCache
+	containerManager *containerManager
+	imageProber      ImageProber
+	platform         *specs.Platform
+}
+#+end_results
+
+** openAPI定義
+
+docker engineのAPI定義を発見した。
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/swagger.yaml#L1
+#+end_src
+
+** 処理はどこにあるか
+- [[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はエンジンと、クライアントに分かれている。Docker EngineとDocker CLI
+- CLIはただのラッパーにすぎない。本質的な処理はエンジンのほうがやっている、はず
+
+** APIサーバ
+
+- APIサーバはgorillaであることがわかる。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/server/server.go#L16
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	"github.com/gorilla/mux"
+#+end_results
+
+いっぽうで[[id:6f5d40a9-b75e-4f97-9489-aeca80f7d336][GRPC]]を使っていそうな箇所もある。
