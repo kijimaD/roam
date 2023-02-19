@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-02-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>docker build のログ出力を読む</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">docker build のログ出力を読む</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orged46aa9">memo</a>
+<ul>
+<li><a href="#orgd5a1a42">ログ表示</a></li>
+<li><a href="#org8ea8d97">contextの使い方</a></li>
+<li><a href="#orge817065">progressWriter</a></li>
+<li><a href="#org6660849">builder</a></li>
+<li><a href="#orge4fb600">openAPI定義</a></li>
+<li><a href="#org135d806">処理はどこにあるか</a></li>
+<li><a href="#org42ba14e">APIサーバ</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<pre class="example">
+[python 2/4]RUN pip3 install
+[build  2/13] COPY . .
+</pre>
+
+<p>
+みたいな表示はどうやっているのかを調べる。
+</p>
+
+<div id="outline-container-orged46aa9" class="outline-2">
+<h2 id="orged46aa9"><a href="#orged46aa9">memo</a></h2>
+<div class="outline-text-2" id="text-orged46aa9">
+</div>
+<div id="outline-container-orgd5a1a42" class="outline-3">
+<h3 id="orgd5a1a42"><a href="#orgd5a1a42">ログ表示</a></h3>
+<div class="outline-text-3" id="text-orgd5a1a42">
+<p>
+よく見るログ文から、どこで実行してるかを調べる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/builder/builder-next/exporter/export.go#L152
+</pre>
+</div>
+
+<div class="results" id="orga846267">
+<p>
+layersDone := oneOffProgress(ctx, &ldquo;exporting layers&rdquo;)
+</p>
+
+</div>
+
+<p>
+vendorにもある。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/exporter/containerimage/writer.go#L327
+</pre>
+</div>
+
+<div class="results" id="org3dc3a00">
+<p>
+layersDone := progress.OneOff(ctx, &ldquo;exporting layers&rdquo;)
+</p>
+
+</div>
+
+<p>
+どっちも変更して、docker本体をビルドして動かしてみたが、反映されない。読んで調べる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/builder/builder-next/exporter/writer.go#L219-L234
+</pre>
+</div>
+
+<p>
+oneOffProgressを調べる。
+</p>
+
+<div class="results" id="org09dbd2f">
+<p>
+func oneOffProgress(ctx context.Context, id string) func(err error) error {
+	pw, _, _ := progress.NewFromContext(ctx)
+	now := time.Now()
+	st := progress.Status{
+		Started: &amp;now,
+	}
+	_ = pw.Write(id, st)
+	return func(err error) error {
+		// TODO: set error on status
+		now := time.Now()
+		st.Completed = &amp;now
+		_ = pw.Write(id, st)
+		_ = pw.Close()
+		return err
+	}
+}
+</p>
+
+</div>
+
+<p>
+progress.NewFromContext(ctx)を調べる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L47-L52
+</pre>
+</div>
+
+<div class="results" id="org39eb5de">
+<p>
+<i>/ NewFromContext creates a new Writer based on a Writer previously stored
+/</i> in the Context and returns a new Context with the new Writer stored.  It is
+// the callers responsibility to Close the returned Writer to avoid resource leaks.
+func NewFromContext(ctx context.Context, opts &#x2026;WriterOption) (Writer, bool, context.Context) {
+	return FromContext(ctx, opts&#x2026;)(ctx)
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L13-L15
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L26-L45
+</pre>
+</div>
+
+<div class="results" id="org0d9fac7">
+<p>
+<i>/ FromContext returns a WriterFactory to generate new progress writers based
+/</i> on a Writer previously stored in the Context.
+func FromContext(ctx context.Context, opts &#x2026;WriterOption) WriterFactory {
+	v := ctx.Value(contextKey)
+	return func(ctx context.Context) (Writer, bool, context.Context) {
+		pw, ok := v.(*progressWriter)
+		if !ok {
+			if pw, ok := v.(*MultiWriter); ok {
+				return pw, true, ctx
+			}
+			return &amp;noOpWriter{}, false, ctx
+		}
+		pw = newWriter(pw)
+		for _, o := range opts {
+			o(pw)
+		}
+		ctx = context.WithValue(ctx, contextKey, pw)
+		return pw, true, ctx
+	}
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>contextを使っていそう
+<ul class="org-ul">
+<li>FromContext
+<ul class="org-ul">
+<li>contextから、key &ldquo;buildkit/util/progress&rdquo; を読み出す</li>
+<li>progressWriterであることを型チェック</li>
+<li>newWriterを実行</li>
+<li>生成したwriterを返す関数を返す</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L221-L225
+</pre>
+</div>
+
+<div class="results" id="org998ad21">
+<p>
+type progressWriter struct {
+	done   bool
+	reader *progressReader
+	meta   map[string]interface{}
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>実行結果を表示させているのをprogressという。まあわかる</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L208-L219
+</pre>
+</div>
+
+<div class="results" id="org64feac2">
+<p>
+func newWriter(pw *progressWriter) *progressWriter {
+	meta := make(map[string]interface{})
+	for k, v := range pw.meta {
+		meta[k] = v
+	}
+	pw = &amp;progressWriter{
+		reader: pw.reader,
+		meta:   meta,
+	}
+	pw.reader.append(pw)
+	return pw
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>progressWriterを取ってprogressWriterを返す
+<ul class="org-ul">
+<li>ログの情報を付け加えてるのだろう</li>
+</ul></li>
+<li>metaはstring keyのmap。引数のprogressWriterから値をセットして、metaを複製</li>
+<li>前のmetaの値を引き継いだ構造体progressWriterを作成</li>
+<li>pw.readerに作ったwriterをappend
+<ul class="org-ul">
+<li>appendはmutex lockがされていて、同時編集されないようになっている</li>
+</ul></li>
+<li>どうしてreaderにappendするのか
+<ul class="org-ul">
+<li>このappendは、追加された関数</li>
+<li>readerの中に、writersがあって、そこに追加する</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L109-L115
+</pre>
+</div>
+
+<div class="results" id="org7efc2e8">
+<p>
+type progressReader struct {
+	ctx     context.Context
+	cond    *sync.Cond
+	mu      sync.Mutex
+	writers map[*progressWriter]struct{}
+	dirty   map[string]*Progress
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L176-L186
+</pre>
+</div>
+
+<div class="results" id="orgc7fe755">
+<p>
+func (pr *progressReader) append(pw *progressWriter) {
+	pr.mu.Lock()
+	defer pr.mu.Unlock()
+</p>
+
+<p>
+	select {
+	case &lt;-pr.ctx.Done():
+		return
+	default:
+		pr.writers[pw] = struct{}{}
+	}
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>appendは、progressReaderの中のwritersに追加するという関数</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org8ea8d97" class="outline-3">
+<h3 id="org8ea8d97"><a href="#org8ea8d97">contextの使い方</a></h3>
+<div class="outline-text-3" id="text-org8ea8d97">
+<ul class="org-ul">
+<li><a href="https://deeeet.com/writing/2017/02/23/go-context-value/">Golangのcontext.Valueの使い方 | Taichi Nakashima</a></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>値をセット</label><pre class="src src-go">WithValue(parent Context, key, val interface{}) Context
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>値を取り出す</label><pre class="src src-go">Value(key interface{}) interface{}
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>WithValueで値をセットし、Valueで値を取り出す</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orge817065" class="outline-3">
+<h3 id="orge817065"><a href="#orge817065">progressWriter</a></h3>
+<div class="outline-text-3" id="text-orge817065">
+<ul class="org-ul">
+<li>ProgressWriterというのがあるな。関係ありそう</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/types/backend/build.go#L25-L31
+</pre>
+</div>
+
+<div class="results" id="orgf9e7d85">
+<p>
+type ProgressWriter struct {
+	Output             io.Writer
+	StdoutFormatter    io.Writer
+	StderrFormatter    io.Writer
+	AuxFormatter       *streamformatter.AuxFormatter
+	ProgressReaderFunc func(io.ReadCloser) io.ReadCloser
+}
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org6660849" class="outline-3">
+<h3 id="org6660849"><a href="#org6660849">builder</a></h3>
+<div class="outline-text-3" id="text-org6660849">
+<ul class="org-ul">
+<li>stdoutとoutputが別になってる
+<ul class="org-ul">
+<li>これは、コードを書いてる途中で直面したことだ。stdoutだと一時的にためておいてあとで整形して出す、ということができないために、一時的な保存として別のbufferを使った。このコードでもそうなのかは知らない</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/builder/dockerfile/builder.go#L112-L130
+</pre>
+</div>
+
+<div class="results" id="org2c0d368">
+<p>
+type Builder struct {
+	options *types.ImageBuildOptions
+</p>
+
+<p>
+Stdout io.Writer
+Stderr io.Writer
+Aux    *streamformatter.AuxFormatter
+Output io.Writer
+</p>
+
+<p>
+docker    builder.Backend
+clientCtx context.Context
+</p>
+
+<p>
+	idMapping        idtools.IdentityMapping
+	disableCommit    bool
+	imageSources     *imageSources
+	pathCache        pathCache
+	containerManager *containerManager
+	imageProber      ImageProber
+	platform         *specs.Platform
+}
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge4fb600" class="outline-3">
+<h3 id="orge4fb600"><a href="#orge4fb600">openAPI定義</a></h3>
+<div class="outline-text-3" id="text-orge4fb600">
+<p>
+docker engineのAPI定義を発見した。
+</p>
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/swagger.yaml#L1
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org135d806" class="outline-3">
+<h3 id="org135d806"><a href="#org135d806">処理はどこにあるか</a></h3>
+<div class="outline-text-3" id="text-org135d806">
+<ul class="org-ul">
+<li><a href="../20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>はエンジンと、クライアントに分かれている。Docker EngineとDocker CLI</li>
+<li>CLIはただのラッパーにすぎない。本質的な処理はエンジンのほうがやっている、はず</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org42ba14e" class="outline-3">
+<h3 id="org42ba14e"><a href="#org42ba14e">APIサーバ</a></h3>
+<div class="outline-text-3" id="text-org42ba14e">
+<ul class="org-ul">
+<li>APIサーバはgorillaであることがわかる。</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/api/server/server.go#L16
+</pre>
+</div>
+
+<div class="results" id="org9a35dad">
+<p>
+&ldquo;github.com/gorilla/mux&rdquo;
+</p>
+
+</div>
+
+<p>
+いっぽうで<a href="../20230218110301-grpc.html#ID-6f5d40a9-b75e-4f97-9489-aeca80f7d336">GRPC</a>を使っていそうな箇所もある。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
