@@ -75,9 +75,9 @@ COPY --from=build /roam/public /roam/public
 
 CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
-# node ================
+# textlint ================
 
-FROM node:17 AS node
+FROM node:17 AS textlint
 
 WORKDIR /roam
 
@@ -85,14 +85,6 @@ COPY package.json package-lock.json ./
 RUN npm install
 
 CMD /bin/bash
-
-# textlint ================
-
-FROM node:17 AS textlint
-
-WORKDIR /work
-
-RUN npm install -g textlint textlint-plugin-org textlint-rule-preset-ja-technical-writing
 
 # ci ================
 
