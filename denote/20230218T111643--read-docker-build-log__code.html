@@ -19,15 +19,17 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org6e119db">memo</a>
+<li><a href="#org8113456">memo</a>
 <ul>
-<li><a href="#org0faaa02">ログ表示</a></li>
-<li><a href="#orgf49026a">contextの使い方</a></li>
-<li><a href="#orgee06d3c">progressWriter</a></li>
-<li><a href="#orgba08821">builder</a></li>
-<li><a href="#orgdef8775">openAPI定義</a></li>
-<li><a href="#org73785ca">処理はどこにあるか</a></li>
-<li><a href="#orgb11d4a5">APIサーバ</a></li>
+<li><a href="#orgbd8ccef">図</a></li>
+<li><a href="#org9bb971d">ログ送信</a></li>
+<li><a href="#orgb6f5dc3">送信したログをどこで表示してるか</a></li>
+<li><a href="#org217ceb6">contextの使い方</a></li>
+<li><a href="#org3fd1717">progressWriter</a></li>
+<li><a href="#orgccdd837">builder</a></li>
+<li><a href="#org106eb42">openAPI定義</a></li>
+<li><a href="#org2aadda7">処理はどこにあるか</a></li>
+<li><a href="#orgca75813">APIサーバ</a></li>
 </ul>
 </li>
 </ul>
@@ -42,13 +44,62 @@
 みたいな表示はどうやっているのかを調べる。
 </p>
 
-<div id="outline-container-org6e119db" class="outline-2">
-<h2 id="org6e119db"><a href="#org6e119db">memo</a></h2>
-<div class="outline-text-2" id="text-org6e119db">
+<p>
+ミニマムに実装しようとしたが、あまりよくわからなかった&#x2026;。contextの知識が足りなそう。
+</p>
+
+<div id="outline-container-org8113456" class="outline-2">
+<h2 id="org8113456"><a href="#org8113456">memo</a></h2>
+<div class="outline-text-2" id="text-org8113456">
 </div>
-<div id="outline-container-org0faaa02" class="outline-3">
-<h3 id="org0faaa02"><a href="#org0faaa02">ログ表示</a></h3>
-<div class="outline-text-3" id="text-org0faaa02">
+
+<div id="outline-container-orgbd8ccef" class="outline-3">
+<h3 id="orgbd8ccef"><a href="#orgbd8ccef">図</a></h3>
+<div class="outline-text-3" id="text-orgbd8ccef">
+<div class="org-src-container">
+<pre class="src src-mermaid">classDiagram
+class oneOffProgress {
+  (ctx context.Context, id string) func(err error) error
+  ログ文字列送信
+}
+class NewFromContext {
+  (ctx context.Context, opts ...WriterOption) (Writer, bool, context.Context)
+  FromContext関数にctxを渡して実行
+}
+class FromContext {
+  (ctx context.Context, opts ...WriterOption) WriterFactory
+  writerを返す関数生成
+}
+class newWriter {
+  (pw *progressWriter) *progressWriter
+  writerを上書き
+}
+class append {
+  (pr *progressReader) append(pw *progressWriter)
+  追加
+}
+
+oneOffProgress "1" --&gt; "1" NewFromContext
+NewFromContext "1" --&gt; "1" FromContext
+FromContext    "1" --&gt; "1" newWriter
+newWriter      "1" --&gt; "1" append
+</pre>
+</div>
+
+<div class="results" id="orgfed53f0">
+
+<div id="orgcd67803" class="figure">
+<p><img src="../images/20230219200923-GI4NyKiVWY.png" alt="20230219200923-GI4NyKiVWY.png">
+</p>
+</div>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9bb971d" class="outline-3">
+<h3 id="org9bb971d"><a href="#org9bb971d">ログ送信</a></h3>
+<div class="outline-text-3" id="text-org9bb971d">
 <p>
 よく見るログ文から、どこで実行してるかを調べる。
 </p>
@@ -58,7 +109,7 @@
 </pre>
 </div>
 
-<div class="results" id="orgc0f1e01">
+<div class="results" id="org0c33879">
 <p>
 layersDone := oneOffProgress(ctx, &ldquo;exporting layers&rdquo;)
 </p>
@@ -74,7 +125,7 @@ vendorにもある。
 </pre>
 </div>
 
-<div class="results" id="org10dd04d">
+<div class="results" id="orgcb833e9">
 <p>
 layersDone := progress.OneOff(ctx, &ldquo;exporting layers&rdquo;)
 </p>
@@ -94,7 +145,7 @@ layersDone := progress.OneOff(ctx, &ldquo;exporting layers&rdquo;)
 oneOffProgressを調べる。
 </p>
 
-<div class="results" id="org5f9f7d4">
+<div class="results" id="org96bd81e">
 <p>
 func oneOffProgress(ctx context.Context, id string) func(err error) error {
 	pw, _, _ := progress.NewFromContext(ctx)
@@ -125,7 +176,7 @@ progress.NewFromContext(ctx)を調べる。
 </pre>
 </div>
 
-<div class="results" id="org29c7f79">
+<div class="results" id="orgfcab3af">
 <p>
 <i>/ NewFromContext creates a new Writer based on a Writer previously stored
 /</i> in the Context and returns a new Context with the new Writer stored.  It is
@@ -147,7 +198,7 @@ func NewFromContext(ctx context.Context, opts &#x2026;WriterOption) (Writer, boo
 </pre>
 </div>
 
-<div class="results" id="org120e78a">
+<div class="results" id="org0b3beda">
 <p>
 <i>/ FromContext returns a WriterFactory to generate new progress writers based
 /</i> on a Writer previously stored in the Context.
@@ -183,10 +234,13 @@ func FromContext(ctx context.Context, opts &#x2026;WriterOption) WriterFactory {
 <ul class="org-ul">
 <li>FromContext
 <ul class="org-ul">
+<li>古いcontextに、新しいcontextを書き込んで返す</li>
 <li>contextから、key &ldquo;buildkit/util/progress&rdquo; を読み出す</li>
 <li>progressWriterであることを型チェック</li>
 <li>newWriterを実行</li>
 <li>生成したwriterを返す関数を返す</li>
+<li>↑をctxを渡して評価することで、writerが取り出せる</li>
+<li>取り出したwriterに、id, statusを書き込む</li>
 </ul></li>
 </ul></li>
 </ul>
@@ -196,7 +250,7 @@ func FromContext(ctx context.Context, opts &#x2026;WriterOption) WriterFactory {
 </pre>
 </div>
 
-<div class="results" id="orgec3d4be">
+<div class="results" id="org4438365">
 <p>
 type progressWriter struct {
 	done   bool
@@ -216,7 +270,7 @@ type progressWriter struct {
 </pre>
 </div>
 
-<div class="results" id="orgf0ded39">
+<div class="results" id="orgd61c638">
 <p>
 func newWriter(pw *progressWriter) *progressWriter {
 	meta := make(map[string]interface{})
@@ -257,7 +311,7 @@ func newWriter(pw *progressWriter) *progressWriter {
 </pre>
 </div>
 
-<div class="results" id="org1e3b744">
+<div class="results" id="org898686c">
 <p>
 type progressReader struct {
 	ctx     context.Context
@@ -275,7 +329,7 @@ type progressReader struct {
 </pre>
 </div>
 
-<div class="results" id="org388bac9">
+<div class="results" id="org802ca01">
 <p>
 func (pr *progressReader) append(pw *progressWriter) {
 	pr.mu.Lock()
@@ -296,13 +350,40 @@ func (pr *progressReader) append(pw *progressWriter) {
 
 <ul class="org-ul">
 <li>appendは、progressReaderの中のwritersに追加するという関数</li>
+<li>試してみたが、いまいち使い方がわからない
+<ul class="org-ul">
+<li>単独実行で試せない</li>
+<li>初期化はどうするんだ</li>
+<li>reader
+<ul class="org-ul">
+<li>writers
+<ul class="org-ul">
+<li>writer
+<ul class="org-ul">
+<li>reader</li>
+</ul></li>
+<li>writer
+<ul class="org-ul">
+<li>reader</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>そもそもcontextは、goルーチンに渡すことで、異なるgoルーチンと値をシェアできるようになる、というもの</li>
 </ul>
 </div>
 </div>
-
-<div id="outline-container-orgf49026a" class="outline-3">
-<h3 id="orgf49026a"><a href="#orgf49026a">contextの使い方</a></h3>
-<div class="outline-text-3" id="text-orgf49026a">
+<div id="outline-container-orgb6f5dc3" class="outline-3">
+<h3 id="orgb6f5dc3"><a href="#orgb6f5dc3">送信したログをどこで表示してるか</a></h3>
+<div class="outline-text-3" id="text-orgb6f5dc3">
+<p>
+ログの送信とprintは分離されている。どこでprintしているのだろうか。
+</p>
+</div>
+</div>
+<div id="outline-container-org217ceb6" class="outline-3">
+<h3 id="org217ceb6"><a href="#org217ceb6">contextの使い方</a></h3>
+<div class="outline-text-3" id="text-org217ceb6">
 <ul class="org-ul">
 <li><a href="https://deeeet.com/writing/2017/02/23/go-context-value/">Golangのcontext.Valueの使い方 | Taichi Nakashima</a></li>
 </ul>
@@ -323,9 +404,9 @@ func (pr *progressReader) append(pw *progressWriter) {
 </div>
 </div>
 
-<div id="outline-container-orgee06d3c" class="outline-3">
-<h3 id="orgee06d3c"><a href="#orgee06d3c">progressWriter</a></h3>
-<div class="outline-text-3" id="text-orgee06d3c">
+<div id="outline-container-org3fd1717" class="outline-3">
+<h3 id="org3fd1717"><a href="#org3fd1717">progressWriter</a></h3>
+<div class="outline-text-3" id="text-org3fd1717">
 <ul class="org-ul">
 <li>ProgressWriterというのがあるな。関係ありそう</li>
 </ul>
@@ -335,7 +416,7 @@ func (pr *progressReader) append(pw *progressWriter) {
 </pre>
 </div>
 
-<div class="results" id="org23af105">
+<div class="results" id="org26f9b7a">
 <p>
 type ProgressWriter struct {
 	Output             io.Writer
@@ -350,10 +431,11 @@ type ProgressWriter struct {
 </div>
 </div>
 
-<div id="outline-container-orgba08821" class="outline-3">
-<h3 id="orgba08821"><a href="#orgba08821">builder</a></h3>
-<div class="outline-text-3" id="text-orgba08821">
+<div id="outline-container-orgccdd837" class="outline-3">
+<h3 id="orgccdd837"><a href="#orgccdd837">builder</a></h3>
+<div class="outline-text-3" id="text-orgccdd837">
 <ul class="org-ul">
+<li>気づいた</li>
 <li>stdoutとoutputが別になってる
 <ul class="org-ul">
 <li>これは、コードを書いてる途中で直面したことだ。stdoutだと一時的にためておいてあとで整形して出す、ということができないために、一時的な保存として別のbufferを使った。このコードでもそうなのかは知らない</li>
@@ -365,7 +447,7 @@ type ProgressWriter struct {
 </pre>
 </div>
 
-<div class="results" id="orgb6818be">
+<div class="results" id="orgc404879">
 <p>
 type Builder struct {
 	options *types.ImageBuildOptions
@@ -398,9 +480,9 @@ clientCtx context.Context
 </div>
 </div>
 
-<div id="outline-container-orgdef8775" class="outline-3">
-<h3 id="orgdef8775"><a href="#orgdef8775">openAPI定義</a></h3>
-<div class="outline-text-3" id="text-orgdef8775">
+<div id="outline-container-org106eb42" class="outline-3">
+<h3 id="org106eb42"><a href="#org106eb42">openAPI定義</a></h3>
+<div class="outline-text-3" id="text-org106eb42">
 <p>
 docker engineのAPI定義を発見した。
 </p>
@@ -411,9 +493,9 @@ docker engineのAPI定義を発見した。
 </div>
 </div>
 
-<div id="outline-container-org73785ca" class="outline-3">
-<h3 id="org73785ca"><a href="#org73785ca">処理はどこにあるか</a></h3>
-<div class="outline-text-3" id="text-org73785ca">
+<div id="outline-container-org2aadda7" class="outline-3">
+<h3 id="org2aadda7"><a href="#org2aadda7">処理はどこにあるか</a></h3>
+<div class="outline-text-3" id="text-org2aadda7">
 <ul class="org-ul">
 <li><a href="../20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>はエンジンと、クライアントに分かれている。Docker EngineとDocker CLI</li>
 <li>CLIはただのラッパーにすぎない。本質的な処理はエンジンのほうがやっている、はず</li>
@@ -421,9 +503,9 @@ docker engineのAPI定義を発見した。
 </div>
 </div>
 
-<div id="outline-container-orgb11d4a5" class="outline-3">
-<h3 id="orgb11d4a5"><a href="#orgb11d4a5">APIサーバ</a></h3>
-<div class="outline-text-3" id="text-orgb11d4a5">
+<div id="outline-container-orgca75813" class="outline-3">
+<h3 id="orgca75813"><a href="#orgca75813">APIサーバ</a></h3>
+<div class="outline-text-3" id="text-orgca75813">
 <ul class="org-ul">
 <li>APIサーバはgorillaであることがわかる。</li>
 </ul>
@@ -433,7 +515,7 @@ docker engineのAPI定義を発見した。
 </pre>
 </div>
 
-<div class="results" id="orgd4789b6">
+<div class="results" id="org8b2e081">
 <p>
 &ldquo;github.com/gorilla/mux&rdquo;
 </p>
