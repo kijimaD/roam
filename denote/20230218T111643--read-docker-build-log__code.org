@@ -13,8 +13,74 @@
 
 みたいな表示はどうやっているのかを調べる。
 
+ミニマムに実装しようとしたが、あまりよくわからなかった...。contextの知識が足りなそう。
+
 * memo
-** ログ表示
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-02-19 Sun 20:05]--[2023-02-19 Sun 20:30] =>  0:25
+CLOCK: [2023-02-19 Sun 19:19]--[2023-02-19 Sun 19:44] =>  0:25
+CLOCK: [2023-02-19 Sun 18:00]--[2023-02-19 Sun 18:25] =>  0:25
+CLOCK: [2023-02-19 Sun 17:27]--[2023-02-19 Sun 17:52] =>  0:25
+CLOCK: [2023-02-19 Sun 16:58]--[2023-02-19 Sun 17:24] =>  0:26
+CLOCK: [2023-02-19 Sun 16:33]--[2023-02-19 Sun 16:58] =>  0:25
+CLOCK: [2023-02-19 Sun 16:08]--[2023-02-19 Sun 16:33] =>  0:25
+CLOCK: [2023-02-19 Sun 15:43]--[2023-02-19 Sun 16:08] =>  0:25
+CLOCK: [2023-02-19 Sun 15:17]--[2023-02-19 Sun 15:42] =>  0:25
+CLOCK: [2023-02-19 Sun 11:55]--[2023-02-19 Sun 12:20] =>  0:25
+CLOCK: [2023-02-19 Sun 11:22]--[2023-02-19 Sun 11:47] =>  0:25
+CLOCK: [2023-02-19 Sun 10:55]--[2023-02-19 Sun 11:20] =>  0:25
+CLOCK: [2023-02-19 Sun 10:30]--[2023-02-19 Sun 10:55] =>  0:25
+CLOCK: [2023-02-19 Sun 00:44]--[2023-02-19 Sun 01:09] =>  0:25
+CLOCK: [2023-02-18 Sat 23:36]--[2023-02-19 Sun 00:01] =>  0:25
+CLOCK: [2023-02-18 Sat 23:11]--[2023-02-18 Sat 23:36] =>  0:25
+CLOCK: [2023-02-18 Sat 21:23]--[2023-02-18 Sat 21:48] =>  0:25
+CLOCK: [2023-02-18 Sat 20:46]--[2023-02-18 Sat 21:11] =>  0:25
+CLOCK: [2023-02-18 Sat 14:10]--[2023-02-18 Sat 14:35] =>  0:25
+CLOCK: [2023-02-18 Sat 12:42]--[2023-02-18 Sat 13:07] =>  0:25
+CLOCK: [2023-02-18 Sat 11:42]--[2023-02-18 Sat 12:07] =>  0:25
+CLOCK: [2023-02-18 Sat 11:15]--[2023-02-18 Sat 11:40] =>  0:25
+:END:
+
+** 図
+
+#+begin_src mermaid :file ../images/20230219200923-GI4NyKiVWY.png
+  classDiagram
+  class oneOffProgress {
+    (ctx context.Context, id string) func(err error) error
+    ログ文字列送信
+  }
+  class NewFromContext {
+    (ctx context.Context, opts ...WriterOption) (Writer, bool, context.Context)
+    FromContext関数にctxを渡して実行
+  }
+  class FromContext {
+    (ctx context.Context, opts ...WriterOption) WriterFactory
+    writerを返す関数生成
+  }
+  class newWriter {
+    (pw *progressWriter) *progressWriter
+    writerを上書き
+  }
+  class append {
+    (pr *progressReader) append(pw *progressWriter)
+    追加
+  }
+
+  oneOffProgress "1" --> "1" NewFromContext
+  NewFromContext "1" --> "1" FromContext
+  FromContext    "1" --> "1" newWriter
+  newWriter      "1" --> "1" append
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[[file:../images/20230219200923-GI4NyKiVWY.png]]
+#+end_results
+
+** ログ送信
 よく見るログ文から、どこで実行してるかを調べる。
 
 #+begin_src git-permalink
@@ -118,10 +184,13 @@ func FromContext(ctx context.Context, opts ...WriterOption) WriterFactory {
 
 - contextを使っていそう
   - FromContext
+    - 古いcontextに、新しいcontextを書き込んで返す
     - contextから、key "buildkit/util/progress" を読み出す
     - progressWriterであることを型チェック
     - newWriterを実行
     - 生成したwriterを返す関数を返す
+    - ↑をctxを渡して評価することで、writerが取り出せる
+    - 取り出したwriterに、id, statusを書き込む
 
 #+begin_src git-permalink
 https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/vendor/github.com/moby/buildkit/util/progress/progress.go#L221-L225
@@ -203,7 +272,18 @@ func (pr *progressReader) append(pw *progressWriter) {
 #+end_results
 
 - appendは、progressReaderの中のwritersに追加するという関数
-
+- 試してみたが、いまいち使い方がわからない
+  - 単独実行で試せない
+  - 初期化はどうするんだ
+  - reader
+    - writers
+      - writer
+        - reader
+      - writer
+        - reader
+- そもそもcontextは、goルーチンに渡すことで、異なるgoルーチンと値をシェアできるようになる、というもの
+** 送信したログをどこで表示してるか
+ログの送信とprintは分離されている。どこでprintしているのだろうか。
 ** contextの使い方
 - [[https://deeeet.com/writing/2017/02/23/go-context-value/][Golangのcontext.Valueの使い方 | Taichi Nakashima]]
 
@@ -240,6 +320,7 @@ type ProgressWriter struct {
 
 ** builder
 
+- 気づいた
 - stdoutとoutputが別になってる
   - これは、コードを書いてる途中で直面したことだ。stdoutだと一時的にためておいてあとで整形して出す、ということができないために、一時的な保存として別のbufferを使った。このコードでもそうなのかは知らない
 
