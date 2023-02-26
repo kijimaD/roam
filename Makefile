@@ -52,6 +52,10 @@ lint-run: ## lintを実行する
 textlint:
 	docker run -v $(PWD):/work -w /work --rm ghcr.io/kijimad/roam_textlint npx textlint -c ./.textlintrc *.org denote/*.org
 
+.PHONY: fix
+fix:
+	docker run -v $(PWD):/work -w /work --rm ghcr.io/kijimad/roam_textlint npx textlint --fix -c ./.textlintrc *.org denote/*.org
+
 .PHONY: hadolint
 hadolint:
 	docker run --rm -i hadolint/hadolint < Dockerfile
