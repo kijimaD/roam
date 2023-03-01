@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-03-01 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linter</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Linter</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgafcf7a6">概要</a></li>
+<li><a href="#org7891555">仕組み</a></li>
+<li><a href="#org745d991">Tasks</a>
+<ul>
+<li><a href="#orgb1eb670"><span class="todo TODO">TODO</span> 配信方法を考える</a></li>
+<li><a href="#orgaa9d658"><span class="done DONE">DONE</span> 1つオリジナルで実装してみる</a></li>
+</ul>
+</li>
+<li><a href="#org17dd701">Reference</a>
+<ul>
+<li><a href="#orga5c0f33">dustinspecker/awesome-eslint: A list of awesome ESLint plugins, configs, etc.</a></li>
+</ul>
+</li>
+<li><a href="#orgdb90fdb">Archives</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgafcf7a6" class="outline-2">
+<h2 id="orgafcf7a6"><a href="#orgafcf7a6">概要</a></h2>
+<div class="outline-text-2" id="text-orgafcf7a6">
+<p>
+Linterとは、静的にプログラムを解析するツール。プログラムにおける解析ツールの総称。実行はできるがエラーにつながる書き方をチェックしてくれたり、チームでの書き方を揃えるのに使う。
+</p>
+
+<p>
+一般的にはプログラム言語が対象だが、自然言語に対するlint(<a href="20210511013549-textlint.html#ID-d3394774-aba5-4167-bd18-f194eb2bd9ed">TextLint</a>)も存在する。プログラム言語それぞれでツールが存在する。
+</p>
+
+<dl class="org-dl">
+<dt>ESLint</dt><dd><a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>, <a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>におけるLint</dd>
+<dt>Rubocop</dt><dd><a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>におけるLint。</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org7891555" class="outline-2">
+<h2 id="org7891555"><a href="#org7891555">仕組み</a></h2>
+<div class="outline-text-2" id="text-org7891555">
+<ul class="org-ul">
+<li><a href="https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168">14. 静的解析とコード生成 - Google Slides</a>のメモ</li>
+</ul>
+
+<p>
+静的開発ツール開発の流れ。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-mermaid">flowchart LR
+
+開始 --&gt;|Goファイル| 字句解析
+字句解析 --&gt;|トークン| 構文解析
+構文解析 --&gt;|抽象構文木| 型チェック
+構文解析 --&gt;|抽象構文木| 自作部分
+型チェック --&gt;|型情報| 自作部分
+</pre>
+</div>
+
+
+<div id="orgd764d36" class="figure">
+<p><img src="images/20230226004543-H6jQpJeEsi.png" alt="20230226004543-H6jQpJeEsi.png">
+</p>
+</div>
+
+<p>
+<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>における静的解析のフェーズ。
+</p>
+
+<ol class="org-ol">
+<li>構文解析</li>
+<li>型チェック</li>
+<li><code>静的単一代入形式</code></li>
+<li>ポインタ解析</li>
+</ol>
+
+<p>
+言語仕様を読む。
+</p>
+<ul class="org-ul">
+<li>抽象構文木を扱うためにGoの構文に詳しくなる
+<ul class="org-ul">
+<li><a href="https://go.dev/ref/spec">言語仕様書</a></li>
+<li>EBNFを読む</li>
+<li>構文を深く理解すれば抽象構文木を自由に扱える
+<ul class="org-ul">
+<li>どういうノードで構成されているか</li>
+<li>どういう情報がどういうノードから取得できるか</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org745d991" class="outline-2">
+<h2 id="org745d991"><a href="#org745d991">Tasks</a></h2>
+<div class="outline-text-2" id="text-org745d991">
+</div>
+<div id="outline-container-orgb1eb670" class="outline-3">
+<h3 id="orgb1eb670"><a href="#orgb1eb670"><span class="todo TODO">TODO</span> 配信方法を考える</a></h3>
+<div class="outline-text-3" id="text-orgb1eb670">
+<p>
+オリジナルで作ったけど、それらをひとまとめにして簡単に利用できるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaa9d658" class="outline-3">
+<h3 id="orgaa9d658"><a href="#orgaa9d658"><span class="done DONE">DONE</span> 1つオリジナルで実装してみる</a></h3>
+<div class="outline-text-3" id="text-orgaa9d658">
+<p>
+無意味なコメントを検知してみる。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org17dd701" class="outline-2">
+<h2 id="org17dd701"><a href="#org17dd701">Reference</a></h2>
+<div class="outline-text-2" id="text-org17dd701">
+</div>
+<div id="outline-container-orga5c0f33" class="outline-3">
+<h3 id="orga5c0f33"><a href="#orga5c0f33"><a href="https://github.com/dustinspecker/awesome-eslint">dustinspecker/awesome-eslint: A list of awesome ESLint plugins, configs, etc.</a></a></h3>
+<div class="outline-text-3" id="text-orga5c0f33">
+<p>
+eslintのplugin集。
+種類が多い。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdb90fdb" class="outline-2">
+<h2 id="orgdb90fdb"><a href="#orgdb90fdb">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
