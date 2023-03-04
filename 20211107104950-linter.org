@@ -9,8 +9,18 @@ Linterとは、静的にプログラムを解析するツール。プログラ�
 
 - ESLint :: [[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]], [[id:ad1527ee-63b3-4a9b-a553-10899f57c234][TypeScript]]におけるLint
 - Rubocop :: [[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]におけるLint。
-* 仕組み
-- [[https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168][14. 静的解析とコード生成 - Google Slides]]のメモ
+* Memo
+** TODO [[https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168][14. 静的解析とコード生成 - Google Slides]]
+:LOGBOOK:
+CLOCK: [2023-03-04 Sat 15:26]--[2023-03-04 Sat 15:51] =>  0:25
+CLOCK: [2023-03-04 Sat 14:52]--[2023-03-04 Sat 15:17] =>  0:25
+CLOCK: [2023-03-04 Sat 14:27]--[2023-03-04 Sat 14:52] =>  0:25
+CLOCK: [2023-03-04 Sat 11:55]--[2023-03-04 Sat 12:20] =>  0:25
+CLOCK: [2023-03-04 Sat 11:28]--[2023-03-04 Sat 11:53] =>  0:25
+CLOCK: [2023-03-03 Fri 23:11]--[2023-03-03 Fri 23:36] =>  0:25
+:END:
+
+メモ。
 
 静的開発ツール開発の流れ。
 
@@ -35,18 +45,87 @@ Linterとは、静的にプログラムを解析するツール。プログラ�
 4. ポインタ解析
 
 言語仕様を読む。
+
 - 抽象構文木を扱うためにGoの構文に詳しくなる
   - [[https://go.dev/ref/spec][言語仕様書]]
   - EBNFを読む
   - 構文を深く理解すれば抽象構文木を自由に扱える
     - どういうノードで構成されているか
     - どういう情報がどういうノードから取得できるか
+
+使い方。
+
+- Preorderはインターフェース型でフィルタできない
+- ast.Walkは探索アルゴリズムを切り替えるときに使う
+  - visitorインターフェースがアルゴリズム部分
+- ノードの置換はApply
+- スコープを取得できる
+
+** やること
+
+静的解析で何ができる、の勘所がないのでいくつか作ってみる。ベースがあれば、何かやっているときにひらめくだろう。[[https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168][14. 静的解析とコード生成 - Google Slides]]を参考にしている。
+
+- プライベートだけどタグがついてるフィールドを探す
+- [X] 引数をカウント
+- どこからも呼ばれてないパッケージ関数を見つける
+- どこからも呼ばれてない識別子を見つける
+- int型の式を見つける
+- 名前の短いパッケージ変数を探す
+- コンテキストを構造体に保持しているのを探す
+- サブテストでt.Parallel()を呼び出しているのに親テストで呼び出していないケースを探す
+- knifeを使ってコード生成する
+- 構造体のフィールドのgetter, setterを作る
+  - タグがつけられているものだけ
+- GOSSAFUNCを指定してSSA形式を確認する
+- godump ASTとSSAのダンプを行うCLIツール
+- 使われていない引数を探す
+- 自由変数の値を変更しているコードを見つける
+- 関数が呼び出されているか
+
 * Tasks
 ** TODO 配信方法を考える
 :LOGBOOK:
 CLOCK: [2023-03-01 Wed 00:41]--[2023-03-01 Wed 01:06] =>  0:25
 :END:
-オリジナルで作ったけど、それらをひとまとめにして簡単に利用できるようにする。
+
+オリジナルで作ったけど、それらをひとまとめにして簡単に利用できるようにする。まとめたやつをビルドしてコンテナに入れればいい。
+** TODO どこからも呼ばれてない識別子を見つける
+:LOGBOOK:
+CLOCK: [2023-03-04 Sat 19:14]--[2023-03-04 Sat 19:39] =>  0:25
+:END:
+
+どうやってやるのだろう。
+
+* Reference
+** [[https://github.com/dustinspecker/awesome-eslint][dustinspecker/awesome-eslint: A list of awesome ESLint plugins, configs, etc.]]
+eslintのplugin集。
+種類が多い。
+* Archives
+** DONE オリジナルで作ったやつを複数走らせる方法がわからない
+CLOSED: [2023-03-01 Wed 23:21]
+:PROPERTIES:
+:Effort:   1:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-01 Wed 22:39]--[2023-03-01 Wed 23:04] =>  0:25
+CLOCK: [2023-03-01 Wed 21:31]--[2023-03-01 Wed 21:56] =>  0:25
+:END:
+
+#+caption: だめな書き方
+#+begin_src go
+  unitchecker.Main(trashcomment.Analyzer)
+  unitchecker.Main(gophersample.Analyzer)
+#+end_src
+
+↑だと先に定義した1つ(つまりtrashcomment)しか実行できない。
+
+unitcheckerは引数に複数のAnalyzerを取って実行できる。
+
+#+caption: 正しい
+#+begin_src go
+  unitchecker.Main(trashcomment.Analyzer, gophersample.Analyzer)
+#+end_src
+
 ** DONE 1つオリジナルで実装してみる
 CLOSED: [2023-03-01 Wed 00:34]
 :LOGBOOK:
@@ -57,8 +136,22 @@ CLOCK: [2023-02-28 Tue 21:50]--[2023-02-28 Tue 22:15] =>  0:25
 :END:
 
 無意味なコメントを検知してみる。
-* Reference
-** [[https://github.com/dustinspecker/awesome-eslint][dustinspecker/awesome-eslint: A list of awesome ESLint plugins, configs, etc.]]
-eslintのplugin集。
-種類が多い。
-* Archives
+** DONE 引数をカウントする
+CLOSED: [2023-03-04 Sat 19:07]
+:PROPERTIES:
+:Effort:   2:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-03-04 Sat 18:22]--[2023-03-04 Sat 18:47] =>  0:25
+CLOCK: [2023-03-04 Sat 17:37]--[2023-03-04 Sat 18:02] =>  0:25
+CLOCK: [2023-03-03 Fri 00:18]--[2023-03-03 Fri 00:43] =>  0:25
+CLOCK: [2023-03-02 Thu 23:21]--[2023-03-02 Thu 23:46] =>  0:25
+CLOCK: [2023-03-02 Thu 22:53]--[2023-03-02 Thu 23:18] =>  0:25
+CLOCK: [2023-03-02 Thu 21:55]--[2023-03-02 Thu 22:20] =>  0:25
+CLOCK: [2023-03-02 Thu 00:37]--[2023-03-02 Thu 01:02] =>  0:25
+CLOCK: [2023-03-02 Thu 00:11]--[2023-03-02 Thu 00:36] =>  0:25
+CLOCK: [2023-03-01 Wed 23:24]--[2023-03-01 Wed 23:49] =>  0:25
+CLOCK: [2023-03-01 Wed 21:58]--[2023-03-01 Wed 22:23] =>  0:25
+:END:
+
+引数が超えると警告する。
