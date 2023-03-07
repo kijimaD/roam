@@ -635,7 +635,21 @@ network, container, image, volumesはCli経由でDocker daemonの機能を呼び
 - File System
   - 親からマウントされたFile Systemに関するデータのコピーを取得し、親と同じデータ構造へのポインタを取得して変更できるようにする
   - cat ~/proc/mounts~
+** コンテナからホストにコピーする
+docker-compose cp が使える。dockerコマンドと違って、コンテナIDを指定する必要がない。
+
+コンテナ → ホストでも、ホスト → コンテナでも、入れ替えて使える。当然、コンテナは前もって起動しておく必要がある。
+
+#+caption: docker compose cp [service]:[コピー元path] [コピー先path]
+#+begin_src shell
+docker compose cp doc:/usr/share/nginx/html ./
+#+end_src
 * Tasks
+** TODO [[https://tatsu-zine.com/books/linux-container-book][Linux Container Book【委託】 - 達人出版会]]
+:LOGBOOK:
+CLOCK: [2023-03-07 Tue 00:29]--[2023-03-07 Tue 00:54] =>  0:25
+:END:
+コンテナの解説。
 ** TODO docker ignoreの仕組み                                      :DontKnow:
 どうやってignoreしているのだろうか。
 
@@ -658,30 +672,62 @@ https://github.com/kd-collective/buildkit/blob/37d54ebc592a54db8764911eb320d02d2
 #+begin_src git-permalink
 https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/builder/dockerfile/copy.go#L1
 #+end_src
-** コンテナからホストにコピーする
-docker-compose cp が使える。dockerコマンドと違って、コンテナIDを指定する必要がない。
-
-コンテナ → ホストでも、ホスト → コンテナでも、入れ替えて使える。当然、コンテナは前もって起動しておく必要がある。
-
-#+caption: docker compose cp [service]:[コピー元path] [コピー先path]
-#+begin_src shell
-docker compose cp doc:/usr/share/nginx/html ./
-#+end_src
 ** TODO [[https://www.youtube.com/watch?v=HPuvDm8IC-4][Golang UK Conf. 2016 - Liz Rice - What is a container, really? Let's write one in Go from scratch - YouTube]]
 コンテナランタイムを使わずに[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]でコンテナを作ることで、コンテナとは何かを学ぶ。
 ** TODO [[https://gihyo.jp/book/2020/978-4-297-11837-2][イラストでわかる DockerとKubernetes：書籍案内｜技術評論社]]
 仕組みの説明。
 ** TODO [[https://dev.classmethod.jp/articles/container-journey/][「コンテナジャーニー」〜明日から速攻始めるAWSでのコンテナ導入運用〜 #cmdevio2018 | DevelopersIO]]
 現実的な導入ステップ。
-** Rails開発 Docker環境化[7/9]
+* Archives
+** DONE タスクを簡単に実行する方法を調べる
+CLOSED: [2022-08-07 Sun 17:58]
+[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
+
+ありがちなbundle-installなどはdocker-composeにワンショットのコマンドを書くことで、定形コマンドを実行することが少なくなった。自動で動かしたいやつはこれでOK。コマンドはdockerだから特殊ということはなく、ローカルと同じようにやれば良い。
+** DONE Dockerドキュメントのタイポ修正
+CLOSED: [2022-09-19 Mon 19:10]
+:LOGBOOK:
+CLOCK: [2022-09-19 Mon 17:32]--[2022-09-19 Mon 17:57] =>  0:25
+:END:
+
+- https://github.com/zembutsu/docs.docker.jp/pull/402
+
+** DONE 誤字を修正する
+CLOSED: [2023-02-18 Sat 13:01]
+[[https://docs.docker.jp/glossary.html][用語集 — Docker-docs-ja 20.10 ドキュメント]] PRを送る。
+
+- なお、オリジナルのドキュメントは群は
+- ビルド（build）とは、 を使って Docker イメージを構築する工程です。
+- イメージ構築に必要なディレクトリに置いてあるファイル群です
+- ために、 コピーオンライト 技術と を使います
+- ベストな解決作です。
+- ENTRYPOINT` に /bin/sh ま
+- ユニオン・ファイル・システムで結語するために 技術を使い
+** DONE ゴミファイルができないようにする
+CLOSED: [2023-02-18 Sat 23:40]
+
+とりあえず、👇でよい。
+
+#+begin_src shell
+  sudo chown -R $USER:$USER .
+#+end_src
+
+キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
+
+- できないようにする
+- 自動削除するようにする
+** DONE Rails開発 Docker環境化[9/9]
+CLOSED: [2023-03-07 Tue 00:29]
 :LOGBOOK:
 CLOCK: [2021-12-14 Tue 22:49]--[2021-12-15 Wed 00:40] =>  1:51
 :END:
 仕事をLinuxで行えるようにする。基本的なところはカバーしたが、一部できないものがある状態。
 
-*** TODO rails c内で日本語が含まれると失敗する
+*** CLOSE rails c内で日本語が含まれると失敗する
+CLOSED: [2023-03-07 Tue 00:29]
 何かおかしくなる。
-*** TODO CapybaraでJavascriptをオンにしたときsystem specが失敗する
+*** CLOSE CapybaraでJavascriptをオンにしたときsystem specが失敗する
+CLOSED: [2023-03-07 Tue 00:29]
 js: trueのときだけ。
 *** DONE migration時にschemaに変な差分が出る
 CLOSED: [2022-08-07 Sun 17:59]
@@ -866,44 +912,6 @@ hostを加える必要があった。
     host: '0.0.0.0',
   },
 #+end_src
-* Archives
-** DONE タスクを簡単に実行する方法を調べる
-CLOSED: [2022-08-07 Sun 17:58]
-[[id:1ad8c3d5-97ba-4905-be11-e6f2626127ad][Emacs]]拡張あるいは、Makefile的なのにまとめる。
-
-ありがちなbundle-installなどはdocker-composeにワンショットのコマンドを書くことで、定形コマンドを実行することが少なくなった。自動で動かしたいやつはこれでOK。コマンドはdockerだから特殊ということはなく、ローカルと同じようにやれば良い。
-** DONE Dockerドキュメントのタイポ修正
-CLOSED: [2022-09-19 Mon 19:10]
-:LOGBOOK:
-CLOCK: [2022-09-19 Mon 17:32]--[2022-09-19 Mon 17:57] =>  0:25
-:END:
-
-- https://github.com/zembutsu/docs.docker.jp/pull/402
-
-** DONE 誤字を修正する
-CLOSED: [2023-02-18 Sat 13:01]
-[[https://docs.docker.jp/glossary.html][用語集 — Docker-docs-ja 20.10 ドキュメント]] PRを送る。
-
-- なお、オリジナルのドキュメントは群は
-- ビルド（build）とは、 を使って Docker イメージを構築する工程です。
-- イメージ構築に必要なディレクトリに置いてあるファイル群です
-- ために、 コピーオンライト 技術と を使います
-- ベストな解決作です。
-- ENTRYPOINT` に /bin/sh ま
-- ユニオン・ファイル・システムで結語するために 技術を使い
-** DONE ゴミファイルができないようにする
-CLOSED: [2023-02-18 Sat 23:40]
-
-とりあえず、👇でよい。
-
-#+begin_src shell
-  sudo chown -R $USER:$USER .
-#+end_src
-
-キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
-
-- できないようにする
-- 自動削除するようにする
 * References
 ** [[https://github.com/Haxxnet/Compose-Examples][Haxxnet/Compose-Examples: Various Docker Compose examples of selfhosted FOSS and proprietary projects.]]
 docker-compose集。
