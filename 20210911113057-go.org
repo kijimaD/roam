@@ -3,6 +3,7 @@
 :header-args+: :wrap :results raw
 :END:
 #+title: Go
+
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
@@ -820,6 +821,9 @@ type rune = int32
 [227 129 130 227 129 132 227 129 134]
 #+end_results
 * Tasks
+** TODO interfaceを満たす構造体の調べ方
+
+どうするんだっけ。
 ** TODO [[https://github.com/golang/example][golang/example: Go example projects]]
 例で学ぶ解説。
 ** TODO [[https://zenn.dev/spiegel/articles/20201010-ni-is-not-nil][nil == nil でないとき（または Go プログラマは息をするように依存を注入する）]]
@@ -3092,3 +3096,56 @@ CLOCK: [2023-03-05 Sun 15:24]--[2023-03-05 Sun 15:49] =>  0:25
 | 変数(types.Var)             |            |          | ✔          | ✔        |
 | パッケージ名(types.PkgName) |            | ✔        |            |          |
 | ラベル(Label)               |            |          |            | ✔        |
+** DONE [[https://qiita.com/tenntenn/items/e15cc0c54b3bbfddb04e][Goの比較可能性（comparable） - Qiita]]
+CLOSED: [2023-03-12 Sun 23:26]
+:LOGBOOK:
+CLOCK: [2023-03-12 Sun 23:09]--[2023-03-12 Sun 23:26] =>  0:17
+:END:
+
+比較可能な型の説明。
+
+- 比較可能
+  - 真偽値
+  - 整数値
+  - 浮動小数点値
+  - 複素数値
+  - 文字列
+  - ポインタ
+  - チャネル
+  - インタフェース
+    - 動的型と動的値の2つから構成される
+    - 動的型が ~%T~ verbで表示できる
+  - 構造体(条件あり)
+  - 配列(条件あり)
+    - 構成するフィールドや要素に比較できない型がある場合は比較できない
+- 比較可能の場合、 ~==~ 演算子、 ~!=~ 演算子で比較できる。
+- 順序付け可能な場合はさらに ~<~ , ~<=~ , ~>~ , ~>=~ が使用できる
+
+#+caption: falseになる。動的型はint型で同じだが、動的値が同じなため
+#+begin_src go :imports "fmt"
+var x, y any = 100, 200
+fmt.Println(x == y)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+false
+#+end_results
+
+#+caption: falseになる。動的型が違うので
+#+begin_src go :imports "fmt"
+var x, y any = int(100), int32(100)
+fmt.Println(x == y)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+false
+#+end_results
+
+まとめ。
+
+- 動的型が違う場合は必ずfalse
+- 動的型が同じでどちらかの動的型が比較不可能な場合はパニック
+- 動的型が同じでcomparableでかつ動的値が同じ場合はtrue
+- 動的型が同じでcomparableでかつ動的値が違う場合はfalse
