@@ -8,7 +8,7 @@
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
 ** golanglint-ci のgci warningが出たとき
-原因はよくわからない。
+原因はよくわからない。ツールをインストールしてフォーマットをかける。
 
 - [[https://stackoverflow.com/questions/75174808/meaning-of-file-is-not-gci-ed-with-skip-generated-s-standard-default-gci][main.go:24: File is not `gci`-ed with --skip-generated -s standard,default (gci)]]
 
@@ -821,6 +821,8 @@ type rune = int32
 [227 129 130 227 129 132 227 129 134]
 #+end_results
 * Tasks
+** TODO [[https://zenn.dev/senk/articles/33c9dc7ea25dab][[Go] 言語仕様書の「型と値の特性」を理解する]]
+値。
 ** TODO interfaceを満たす構造体の調べ方
 
 どうするんだっけ。
@@ -1375,7 +1377,80 @@ GoSpecは言語仕様書であり、全ての記述には意味があるはず�
 これは本当にそうで、読んだ内容を元に「こういうコードはこの記述を元に確かにこういう挙動をする」という例が作れるかどうかで理解の深さが段違いだという実感があります。
 #+end_quote
 ** TODO [[https://go.dev/ref/spec][The Go Programming Language Specification - The Go Programming Language]]
+:LOGBOOK:
+CLOCK: [2023-03-14 Tue 00:36]--[2023-03-14 Tue 01:01] =>  0:25
+CLOCK: [2023-03-13 Mon 23:12]--[2023-03-13 Mon 23:37] =>  0:25
+CLOCK: [2023-03-13 Mon 22:34]--[2023-03-13 Mon 22:59] =>  0:25
+CLOCK: [2023-03-13 Mon 21:58]--[2023-03-13 Mon 22:23] =>  0:25
+CLOCK: [2023-03-13 Mon 21:17]--[2023-03-13 Mon 21:42] =>  0:25
+:END:
 言語の仕様書。
+
+- リテラルってなんだ
+  - [[https://ja.wikipedia.org/wiki/%E3%83%AA%E3%83%86%E3%83%A9%E3%83%AB][リテラル - Wikipedia]]
+  - ソースコード内に値を直接表記したもの
+    - ~int x = 7;~ だと7
+    - ~double pi = 3.14;~ だと3.14
+    - ~string s = "hello";~ だと"hello"
+  - トークンとは違うのかな。トークンは値でなく識別子や予約語も含む
+  - [[https://e-words.jp/w/%E3%83%AA%E3%83%86%E3%83%A9%E3%83%AB.html][リテラル（直値）とは - 意味をわかりやすく - IT用語辞典 e-Words]]
+  - リテラルとは、コンピュータプログラムのソースコードなどの中に、特定のデータ型の値を直に記載したもの。また、そのように値をコードに書き入れるために定められている書式。
+- セレクタってなんだ
+- 構造体型と定義型ってなんだ
+- 型リテラルってなんだ
+  - [[https://zenn.dev/syumai/articles/77bc12aca9b654][Goの型同一性を理解する]]
+  - 他の型を利用して構成される型
+  - ~var a [5]int~ における[5]int
+  - ~type B int~ (Bは型名)
+  - ~var b []B~ における[]B
+  - リテラル中に他の型が使われない、func()や、struct{}といった型リテラルも存在する
+  - 型リテラルを使って示される型は、型定義が行われていないためdefined typeではない
+  - 型リテラルの種類
+    - 要素型を持つ
+      - 配列型
+      - スライス型
+      - マップ型
+      - チャンネル型
+    - キー型を持つ
+      - マップ型
+    - フィールド型を持つ
+      - 構造体型
+    - ベースの型を持つ
+      - ポインタ型
+    - 仮引数型、結果型を持つ
+      - 関数型
+  - 型リテラルによって示される型同士が同一かどうかを判定するには、型リテラルの構造が同一かつ、型リテラル中に現れる型が同一であることを確認する必要がある
+  - 型リテラルごとに、同一性の条件がある
+  - インターフェース型は任意の型を使って構成されるわけではない。インターフェース型はメソッドを持ち、それぞれのメソッドは関数型を持つ
+- underlying type(基底型)ってなんだ
+  - すべての型はunderlying typeを持つ
+  - 事前に定義された型や、型リテラルによって示される型のunderlying typeはその型自身
+    - ~int~ -> 基底型: int
+    - ~string~ -> 基底型: string
+    - ~[]int~ -> 基底型: []int
+    - ~struct{}~ -> 基底型: struct{}
+  - それ以外の型のunderlying typeは型宣言の対象によって決まる
+  - 2つの型宣言
+    - ~type A string~ -> 型宣言
+      - ~type A string~ -> Aの基底型: string
+      - ~type B A~ -> Bの基底型: string
+      - ~type C []int~ -> Cの基底型: []int
+    - ~type B = int~ -> エイリアス宣言
+      - ~type A string~ -> defined type
+      - ~type B = A~ -> Bの基底型: string
+      - ~type C = []int~ -> Cの基底型: []int
+  - 2つの型のいずれもdefined typeでない場合、それぞれの型のunderlying typeの型リテラルが構造的に等しい場合に同一となる
+    - defined typeでない型とは、型リテラルと型エイリアス
+    - 型リテラルのunderlying typeはその型リテラル自身
+    - 型同一性においてunderlying typeの考慮が必要なのは型エイリアスのみ
+      - ~type NamedMap = map[string][]int~
+        - NamedMapの基底型はmap[string][]int
+        - m1とm2はunderlying typeの型リテラルの構造が同一なので同一
+        - ~var m1 map[string][]int~
+        - ~var m2 NamedMap~
+- 参考になる用語 [[https://zenn.dev/senk/articles/91fa080844bb12][[Go] 言語仕様書に出てくる型関連の用語まとめ]]
+- [[https://zenn.dev/nobishii/articles/defined_types][Go言語のdefined typeとは何か]]
+
 * Go言語へのコントリビュート準備
 CLOSED: [2022-10-29 Sat 11:19]
 ** DONE [[https://go.dev/doc/contribute][Contribution Guide - The Go Programming Language]]
@@ -3149,3 +3224,18 @@ false
 - 動的型が同じでどちらかの動的型が比較不可能な場合はパニック
 - 動的型が同じでcomparableでかつ動的値が同じ場合はtrue
 - 動的型が同じでcomparableでかつ動的値が違う場合はfalse
+** DONE ネストしたときのoavの挙動を確認する
+CLOSED: [2023-03-15 Wed 21:08]
+:LOGBOOK:
+CLOCK: [2023-03-14 Tue 22:51]--[2023-03-14 Tue 23:16] =>  0:25
+CLOCK: [2023-03-14 Tue 22:26]--[2023-03-14 Tue 22:51] =>  0:25
+CLOCK: [2023-03-14 Tue 22:01]--[2023-03-14 Tue 22:26] =>  0:25
+:END:
+
+- [[https://github.com/kijimaD/oav][kijimaD/oav]]
+
+検知してない疑惑。問題なかった。
+
+- type: objectをつけてない項目があった
+- その項目はarrayだけを子に持っていた。そのため、自身のtypeもarrayになっていた
+- おそらく、子の項目で自身のtypeが決定する。ほとんどは複合型で、objectに自動で決定して問題ないが、今回のように問題があるケースがある
