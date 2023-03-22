@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-03-22 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>make emulator</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Ultra&display=swap" rel="stylesheet"><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">make emulator</h1>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#org6130f4b">ゲームボーイエミュレータを作る</a></li>
+<li><a href="#org71e4521">動かしてわかる CPUの作り方10講 | Gihyo Digital Publishing</a></li>
+<li><a href="#org9f844a0">Reference</a>
+<ul>
+<li><a href="#org266542f">ｷﾞｺ猫でもわかるファミコンプログラミング</a></li>
+<li><a href="#org04b93a0">Foreword - Pan Docs</a></li>
+<li><a href="#org1dee423">GameBoy CPU Manual</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org6130f4b" class="outline-2">
+<h2 id="org6130f4b"><a href="#org6130f4b">ゲームボーイエミュレータを作る</a></h2>
+<div class="outline-text-2" id="text-org6130f4b">
+<ul class="org-ul">
+<li><a href="https://github.com/bokuweb/gopher-boy">bokuweb/gopher-boy: A Game Boy emulator written in Go</a>の最初のコミットをたどる。</li>
+<li>pkgconfigの問題で実行できず
+<ul class="org-ul">
+<li>ググった方法で実行できた</li>
+<li>機能ごとにさまざまなミニマルROMがある</li>
+<li>各ROMの画像回帰テストで動作チェックしているよう。うまい</li>
+<li>go run cmd/go-boy/main.go roms/helloworld/hello.gb</li>
+</ul></li>
+<li>比較的コードが少なく、ファイルが分かれているので読みやすそう</li>
+<li>命令には引数(オペランド)が存在することがある
+<ul class="org-ul">
+<li>引数を指定する方法は13種類ある。アドレッシングモードという</li>
+<li>プログラムに埋め込んだ定数を引数にするモードやメモリアドレスを渡してそのアドレスに格納されている値を引数にするモードがある</li>
+</ul></li>
+<li>memory mapped IO
+<ul class="org-ul">
+<li>IOレジスタがCPUのメモリ空間上にマップされている。該当するアドレスを読み書きすることで、CPUはコントローラの入力を読み取ったり、PPUに出力する画像の情報を送ったり、APUから出力する音の波形を設定したりできる</li>
+<li>アドレスに対応するモジュールにアクセス</li>
+<li>CPUからはメモリアクセスに見える</li>
+<li>このアドレスを読み書きすれば各モジュールを使える、くらいの感じ</li>
+</ul></li>
+<li>カセットのMemory Bank Controller
+<ul class="org-ul">
+<li>カセットにはメモリが積まれていて、メモリの拡張として用いる</li>
+<li>セーブデータとか保存している領域っぽい</li>
+<li>確かにカセットごとに保存されてたよな</li>
+<li>コントローラには種類がある</li>
+<li>RAMのサイズはカセットによって異なる</li>
+<li>コントローラは複数のbankで構成されていて、スイッチできる</li>
+<li>コントローラにはモードがある
+<ul class="org-ul">
+<li>RAM優先/ROM優先</li>
+</ul></li>
+</ul></li>
+<li>ビット演算を復習しないといけないな。こういうとき使うんだ
+<ul class="org-ul">
+<li>命令を眺める。意味はわかるが、どうしてそうなのかはよくわからない</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org71e4521" class="outline-2">
+<h2 id="org71e4521"><a href="#org71e4521"><a href="https://gihyo.jp/dp/ebook/2019/978-4-297-10822-9">動かしてわかる CPUの作り方10講 | Gihyo Digital Publishing</a></a></h2>
+<div class="outline-text-2" id="text-org71e4521">
+<p>
+CPUの知識が足りないので読む。
+</p>
+
+<ul class="org-ul">
+<li>この本で設計するシンプルなRISC型CPUの仕様
+<ul class="org-ul">
+<li>すべての命令は固定長で15bit</li>
+<li>機械語を格納するインストラクション・レジスタやメインメモリのプログラムにおけるデータ長も、命令と同じ長さになる</li>
+<li>2バイト(16bit)のデータ表現
+<ul class="org-ul">
+<li>CPUが扱うデータは2バイト(16bit)</li>
+<li>汎用レジスタやメインメモリのデータ領域のデータ長も16bitになる</li>
+<li>算術論理演算を行うALUも16bitが基本サイズ</li>
+</ul></li>
+<li>8個の汎用レジスタ
+<ul class="org-ul">
+<li>命令長が15bitの制約の中で、命令の種類を表すオペレーションと、最大2つのオペランドを指定する必要がある</li>
+<li>オペレーションを表す命令コードに4bit、汎用レジスタを指定するオペランドに3bitを割り当てることにする</li>
+<li>なので命令の数は16個、汎用レジスタの数は8個になる</li>
+</ul></li>
+<li>プログラム領域とデータ領域を分離するハーバードアーキテクチャ
+<ul class="org-ul">
+<li>メインメモリとレジスタ間のデータ転送は、
+<ul class="org-ul">
+<li>A. プログラム領域とインストラクション・レジスタ間</li>
+<li>B. データ領域と汎用レジスタ間</li>
+</ul></li>
+<li>プログラム領域におけるデータ長が15bit、データ領域におけるデータ長は16bitとなり、1bitのずれがある。そのため独立したデータバスとして扱うハーバードアーキテクチャを採用する</li>
+<li>メモリマップドI/O
+<ul class="org-ul">
+<li>回路構成をシンプルにするため、メインメモリのデータ領域に独立したアドレスを与えてI/Oを配置するメモリマップドI/Oを採用する</li>
+</ul></li>
+</ul></li>
+<li>シンプルさに徹している。命令長を増やせば命令数を増やしたり、オペランド等に割り当てるビット数に余裕が生まれ、汎用レジスタの数やメモリサイズを大きくできるがやらない</li>
+</ul></li>
+<li>mov
+<ul class="org-ul">
+<li>汎用レジスタのデータを移動(コピー)する</li>
+<li>[命令コード][第1オペランド&#x2026;to][第2オペランド&#x2026;from]</li>
+<li>toの汎用レジスタの内容を、fromの汎用レジスタにコピーする</li>
+</ul></li>
+<li>add
+<ul class="org-ul">
+<li>汎用レジスタのデータを加算</li>
+<li>[命令コード][第1オペランド&#x2026;target][第2オペランド&#x2026;from]</li>
+<li>target + fromして、計算結果をtargetの汎用レジスタに上書きする</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org9f844a0" class="outline-2">
+<h2 id="org9f844a0"><a href="#org9f844a0">Reference</a></h2>
+<div class="outline-text-2" id="text-org9f844a0">
+</div>
+<div id="outline-container-org266542f" class="outline-3">
+<h3 id="org266542f"><a href="#org266542f"><a href="http://gikofami.fc2web.com/">ｷﾞｺ猫でもわかるファミコンプログラミング</a></a></h3>
+<div class="outline-text-3" id="text-org266542f">
+<p>
+定番のエミュレータ解説サイト。一般的な仕組みはこっちで学んでおくのがよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org04b93a0" class="outline-3">
+<h3 id="org04b93a0"><a href="#org04b93a0"><a href="https://gbdev.io/pandocs/About.html">Foreword - Pan Docs</a></a></h3>
+<div class="outline-text-3" id="text-org04b93a0">
+<p>
+ゲームボーイの仕様。
+</p>
+</div>
+</div>
+<div id="outline-container-org1dee423" class="outline-3">
+<h3 id="org1dee423"><a href="#org1dee423"><a href="http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf">GameBoy CPU Manual</a></a></h3>
+<div class="outline-text-3" id="text-org1dee423">
+<p>
+ゲームボーイのCPUマニュアル。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
