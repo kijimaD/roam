@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2023-04-15 -->
+<!-- 2023-04-17 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kubernetes</title>
@@ -19,53 +19,53 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgd69ebb4">概要</a></li>
-<li><a href="#org09f3300">Memo</a>
+<li><a href="#org1771a8b">概要</a></li>
+<li><a href="#orga46ce87">Memo</a>
 <ul>
-<li><a href="#org9993b66">命令的な記述から宣言的な記述に移行する</a></li>
-<li><a href="#org8b26f5c">差分チェック</a></li>
-<li><a href="#org06145e3">minikubeでlocalhost8080エラーが出たときの対応</a></li>
-<li><a href="#org3b350eb">kubectlでcontextを確認する</a></li>
-<li><a href="#orga0335bb">基本コマンド類</a></li>
-<li><a href="#org6024f82">minikubeで試す</a></li>
+<li><a href="#org05514a1">命令的な記述から宣言的な記述に移行する</a></li>
+<li><a href="#orgc5bbde6">差分チェック</a></li>
+<li><a href="#org40136ff">minikubeでlocalhost8080エラーが出たときの対応</a></li>
+<li><a href="#orgc8eed69">kubectlでcontextを確認する</a></li>
+<li><a href="#orgdfde883">基本コマンド類</a></li>
+<li><a href="#org20ef9dc">minikubeで試す</a></li>
 </ul>
 </li>
-<li><a href="#orgd1b4f41">Tasks</a>
+<li><a href="#org4e6db6c">Tasks</a>
 <ul>
-<li><a href="#org9beb776"><span class="todo TODO">TODO</span> Kubernetes完全ガイド 第2版 (Top Gear) | 青山 真也 |本 | 通販 | Amazon</a></li>
-<li><a href="#orgdb4770c"><span class="todo TODO">TODO</span> 古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom</a></li>
+<li><a href="#org94271d3"><span class="todo TODO">TODO</span> Kubernetes完全ガイド 第2版 (Top Gear) | 青山 真也 |本 | 通販 | Amazon</a></li>
+<li><a href="#orgb424c4f"><span class="todo TODO">TODO</span> 古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom</a></li>
 </ul>
 </li>
-<li><a href="#org65be014">Reference</a>
+<li><a href="#orgaf81ca0">Reference</a>
 <ul>
-<li><a href="#orged0d723">kelseyhightower/kubernetes-the-hard-way: Bootstrap Kubernetes the hard way on Google Cloud Platform. No scripts.</a></li>
-<li><a href="#orgaad4dd1">Kubernetesドキュメント | Kubernetes</a></li>
-<li><a href="#org55eed3a">Kubernetes - Wikipedia</a></li>
+<li><a href="#orga138b6e">kelseyhightower/kubernetes-the-hard-way: Bootstrap Kubernetes the hard way on Google Cloud Platform. No scripts.</a></li>
+<li><a href="#orge427668">Kubernetesドキュメント | Kubernetes</a></li>
+<li><a href="#org715a0e9">Kubernetes - Wikipedia</a></li>
 </ul>
 </li>
-<li><a href="#orge39be84">Archives</a>
+<li><a href="#org4a392ec">Archives</a>
 <ul>
-<li><a href="#org96efdb2"><span class="done DONE">DONE</span> O&rsquo;Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps</a></li>
+<li><a href="#orgfabe836"><span class="done DONE">DONE</span> O&rsquo;Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgd69ebb4" class="outline-2">
-<h2 id="orgd69ebb4"><a href="#orgd69ebb4">概要</a></h2>
-<div class="outline-text-2" id="text-orgd69ebb4">
+<div id="outline-container-org1771a8b" class="outline-2">
+<h2 id="org1771a8b"><a href="#org1771a8b">概要</a></h2>
+<div class="outline-text-2" id="text-org1771a8b">
 <p>
 Kubernetesは複数の<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>コンテナを連携させるためのシステム。
 </p>
 </div>
 </div>
-<div id="outline-container-org09f3300" class="outline-2">
-<h2 id="org09f3300"><a href="#org09f3300">Memo</a></h2>
-<div class="outline-text-2" id="text-org09f3300">
+<div id="outline-container-orga46ce87" class="outline-2">
+<h2 id="orga46ce87"><a href="#orga46ce87">Memo</a></h2>
+<div class="outline-text-2" id="text-orga46ce87">
 </div>
-<div id="outline-container-org9993b66" class="outline-3">
-<h3 id="org9993b66"><a href="#org9993b66">命令的な記述から宣言的な記述に移行する</a></h3>
-<div class="outline-text-3" id="text-org9993b66">
+<div id="outline-container-org05514a1" class="outline-3">
+<h3 id="org05514a1"><a href="#org05514a1">命令的な記述から宣言的な記述に移行する</a></h3>
+<div class="outline-text-3" id="text-org05514a1">
 <div class="org-src-container">
 <label class="org-src-name"><span class="listing-number">Listing 1: </span>エクスポートできる</label><pre class="src src-shell">kubectl run newdemo --image=cloudnatived/demo:hello --port=8888--labels <span class="org-variable-name">app</span>=newdemo <span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12398;&#12424;&#12358;&#12394;&#35373;&#23450;&#12364;&#12354;&#12427;&#12392;&#12377;&#12427;</span>
 kubectl get deployments newdemo -o yaml --export &gt;deployment.yaml
@@ -76,9 +76,9 @@ kubectl get deployments newdemo -o yaml --export &gt;deployment.yaml
 </p>
 </div>
 </div>
-<div id="outline-container-org8b26f5c" class="outline-3">
-<h3 id="org8b26f5c"><a href="#org8b26f5c">差分チェック</a></h3>
-<div class="outline-text-3" id="text-org8b26f5c">
+<div id="outline-container-orgc5bbde6" class="outline-3">
+<h3 id="orgc5bbde6"><a href="#orgc5bbde6">差分チェック</a></h3>
+<div class="outline-text-3" id="text-orgc5bbde6">
 <div class="org-src-container">
 <pre class="src src-shell">kubectl diff -f deployment.yaml
 </pre>
@@ -90,9 +90,9 @@ kubectl get deployments newdemo -o yaml --export &gt;deployment.yaml
 </pre>
 </div>
 </div>
-<div id="outline-container-org06145e3" class="outline-3">
-<h3 id="org06145e3"><a href="#org06145e3">minikubeでlocalhost8080エラーが出たときの対応</a></h3>
-<div class="outline-text-3" id="text-org06145e3">
+<div id="outline-container-org40136ff" class="outline-3">
+<h3 id="org40136ff"><a href="#org40136ff">minikubeでlocalhost8080エラーが出たときの対応</a></h3>
+<div class="outline-text-3" id="text-org40136ff">
 <p>
 kubectl runを実行すると実行できないときがある。
 </p>
@@ -134,9 +134,9 @@ pod/demo created
 </div>
 </div>
 
-<div id="outline-container-org3b350eb" class="outline-3">
-<h3 id="org3b350eb"><a href="#org3b350eb">kubectlでcontextを確認する</a></h3>
-<div class="outline-text-3" id="text-org3b350eb">
+<div id="outline-container-orgc8eed69" class="outline-3">
+<h3 id="orgc8eed69"><a href="#orgc8eed69">kubectlでcontextを確認する</a></h3>
+<div class="outline-text-3" id="text-orgc8eed69">
 <p>
 kubectlが、どのコンテキストにいるか確認できる。
 </p>
@@ -145,7 +145,7 @@ kubectlが、どのコンテキストにいるか確認できる。
 </pre>
 </div>
 
-<div class="results" id="orgfe80043">
+<div class="results" id="org1dcc051">
 <p>
 minikube
 </p>
@@ -157,15 +157,15 @@ minikube
 </p>
 </div>
 </div>
-<div id="outline-container-orga0335bb" class="outline-3">
-<h3 id="orga0335bb"><a href="#orga0335bb">基本コマンド類</a></h3>
-<div class="outline-text-3" id="text-orga0335bb">
+<div id="outline-container-orgdfde883" class="outline-3">
+<h3 id="orgdfde883"><a href="#orgdfde883">基本コマンド類</a></h3>
+<div class="outline-text-3" id="text-orgdfde883">
 <div class="org-src-container">
 <label class="org-src-name"><span class="listing-number">Listing 5: </span>起動しているIPアドレスを調べる</label><pre class="src src-shell">minikube ip
 </pre>
 </div>
 
-<div class="results" id="org2b45d06">
+<div class="results" id="org60f7412">
 <p>
 172.17.0.2
 </p>
@@ -197,7 +197,7 @@ minikube
 </pre>
 </div>
 
-<div class="results" id="org80e5ab1">
+<div class="results" id="org5800b49">
 <p>
 Name:                     webapp
 Namespace:                default
@@ -225,9 +225,9 @@ Events:                   &lt;none&gt;
 </p>
 </div>
 </div>
-<div id="outline-container-org6024f82" class="outline-3">
-<h3 id="org6024f82"><a href="#org6024f82">minikubeで試す</a></h3>
-<div class="outline-text-3" id="text-org6024f82">
+<div id="outline-container-org20ef9dc" class="outline-3">
+<h3 id="org20ef9dc"><a href="#org20ef9dc">minikubeで試す</a></h3>
+<div class="outline-text-3" id="text-org20ef9dc">
 <p>
 Kubernetesをローカルで動かすことは難しいので、代替手段が必要。
 minikubeによってローカルで試したり、開発に使うことができる。
@@ -268,54 +268,54 @@ AWS上で動かすためにはまた別のインストールが必要。
 </div>
 </div>
 </div>
-<div id="outline-container-orgd1b4f41" class="outline-2">
-<h2 id="orgd1b4f41"><a href="#orgd1b4f41">Tasks</a></h2>
-<div class="outline-text-2" id="text-orgd1b4f41">
+<div id="outline-container-org4e6db6c" class="outline-2">
+<h2 id="org4e6db6c"><a href="#org4e6db6c">Tasks</a></h2>
+<div class="outline-text-2" id="text-org4e6db6c">
 </div>
-<div id="outline-container-org9beb776" class="outline-3">
-<h3 id="org9beb776"><a href="#org9beb776"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Kubernetes%E5%AE%8C%E5%85%A8%E3%82%AC%E3%82%A4%E3%83%89-%E7%AC%AC2%E7%89%88-Top-Gear-%E9%9D%92%E5%B1%B1/dp/4295009792">Kubernetes完全ガイド 第2版 (Top Gear) | 青山 真也 |本 | 通販 | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org9beb776">
+<div id="outline-container-org94271d3" class="outline-3">
+<h3 id="org94271d3"><a href="#org94271d3"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Kubernetes%E5%AE%8C%E5%85%A8%E3%82%AC%E3%82%A4%E3%83%89-%E7%AC%AC2%E7%89%88-Top-Gear-%E9%9D%92%E5%B1%B1/dp/4295009792">Kubernetes完全ガイド 第2版 (Top Gear) | 青山 真也 |本 | 通販 | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org94271d3">
 <p>
 本。
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgdb4770c" class="outline-3">
-<h3 id="orgdb4770c"><a href="#orgdb4770c"><span class="todo TODO">TODO</span> <a href="https://tech.drecom.co.jp/migrate-rails-app-to-container/">古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom</a></a></h3>
+<div id="outline-container-orgb424c4f" class="outline-3">
+<h3 id="orgb424c4f"><a href="#orgb424c4f"><span class="todo TODO">TODO</span> <a href="https://tech.drecom.co.jp/migrate-rails-app-to-container/">古き良きRailsアプリケーションをコンテナ化してKubernetes上で動かす - Tech Inside Drecom</a></a></h3>
 </div>
 </div>
-<div id="outline-container-org65be014" class="outline-2">
-<h2 id="org65be014"><a href="#org65be014">Reference</a></h2>
-<div class="outline-text-2" id="text-org65be014">
+<div id="outline-container-orgaf81ca0" class="outline-2">
+<h2 id="orgaf81ca0"><a href="#orgaf81ca0">Reference</a></h2>
+<div class="outline-text-2" id="text-orgaf81ca0">
 </div>
-<div id="outline-container-orged0d723" class="outline-3">
-<h3 id="orged0d723"><a href="#orged0d723"><a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">kelseyhightower/kubernetes-the-hard-way: Bootstrap Kubernetes the hard way on Google Cloud Platform. No scripts.</a></a></h3>
-<div class="outline-text-3" id="text-orged0d723">
+<div id="outline-container-orga138b6e" class="outline-3">
+<h3 id="orga138b6e"><a href="#orga138b6e"><a href="https://github.com/kelseyhightower/kubernetes-the-hard-way">kelseyhightower/kubernetes-the-hard-way: Bootstrap Kubernetes the hard way on Google Cloud Platform. No scripts.</a></a></h3>
+<div class="outline-text-3" id="text-orga138b6e">
 <p>
 kubernetesの仕組みから学ぶ。
 </p>
 </div>
 </div>
-<div id="outline-container-orgaad4dd1" class="outline-3">
-<h3 id="orgaad4dd1"><a href="#orgaad4dd1"><a href="https://kubernetes.io/ja/docs/home/">Kubernetesドキュメント | Kubernetes</a></a></h3>
-<div class="outline-text-3" id="text-orgaad4dd1">
+<div id="outline-container-orge427668" class="outline-3">
+<h3 id="orge427668"><a href="#orge427668"><a href="https://kubernetes.io/ja/docs/home/">Kubernetesドキュメント | Kubernetes</a></a></h3>
+<div class="outline-text-3" id="text-orge427668">
 <p>
 公式ドキュメント。
 </p>
 </div>
 </div>
-<div id="outline-container-org55eed3a" class="outline-3">
-<h3 id="org55eed3a"><a href="#org55eed3a"><a href="https://ja.wikipedia.org/wiki/Kubernetes">Kubernetes - Wikipedia</a></a></h3>
+<div id="outline-container-org715a0e9" class="outline-3">
+<h3 id="org715a0e9"><a href="#org715a0e9"><a href="https://ja.wikipedia.org/wiki/Kubernetes">Kubernetes - Wikipedia</a></a></h3>
 </div>
 </div>
-<div id="outline-container-orge39be84" class="outline-2">
-<h2 id="orge39be84"><a href="#orge39be84">Archives</a></h2>
-<div class="outline-text-2" id="text-orge39be84">
+<div id="outline-container-org4a392ec" class="outline-2">
+<h2 id="org4a392ec"><a href="#org4a392ec">Archives</a></h2>
+<div class="outline-text-2" id="text-org4a392ec">
 </div>
-<div id="outline-container-org96efdb2" class="outline-3">
-<h3 id="org96efdb2"><a href="#org96efdb2"><span class="done DONE">DONE</span> <a href="https://www.oreilly.co.jp/books/9784873119014/">O&rsquo;Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps</a></a></h3>
-<div class="outline-text-3" id="text-org96efdb2">
+<div id="outline-container-orgfabe836" class="outline-3">
+<h3 id="orgfabe836"><a href="#orgfabe836"><span class="done DONE">DONE</span> <a href="https://www.oreilly.co.jp/books/9784873119014/">O&rsquo;Reilly Japan - Kubernetesで実践するクラウドネイティブDevOps</a></a></h3>
+<div class="outline-text-3" id="text-orgfabe836">
 <div class="org-src-container">
 <label class="org-src-name"><span class="listing-number">Listing 12: </span>説明に使うデモアプリをcloneする</label><pre class="src src-shell">git clone git://github.com/cloudnativedevops/demo.git
 </pre>
