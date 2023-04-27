@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2023-04-24 -->
+<!-- 2023-04-27 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gemat</title>
@@ -19,49 +19,49 @@
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#org0d375af">概要</a></li>
-<li><a href="#org76a35be">Goals</a>
+<li><a href="#org8face9c">概要</a></li>
+<li><a href="#org0145dd8">Goals</a>
 <ul>
-<li><a href="#orgc602b70">Non Goals</a></li>
+<li><a href="#org1b11a49">Non Goals</a></li>
 </ul>
 </li>
-<li><a href="#orgaae9a8b">Background</a></li>
-<li><a href="#org61d81da">Detailed Design</a>
+<li><a href="#org2259cdc">Background</a></li>
+<li><a href="#org82853d1">Detailed Design</a>
 <ul>
-<li><a href="#orgc95b783">標準的な使用例</a></li>
-<li><a href="#org72d99af">オプション</a></li>
-<li><a href="#org7e00ce1">CLI</a></li>
-<li><a href="#org5d1afe4">Bundler DSL</a></li>
-<li><a href="#org550847b">Fetcher</a></li>
-<li><a href="#org39092a1">Gem</a></li>
-<li><a href="#org8ec71df">Column DSL</a></li>
-<li><a href="#orga2d3060">Formatter</a></li>
-<li><a href="#org4e8fea0">Output</a></li>
+<li><a href="#orgf0bf76d">標準的な使用例</a></li>
+<li><a href="#org8a10765">オプション</a></li>
+<li><a href="#org35d2330">CLI</a></li>
+<li><a href="#orgcac92c2">Bundler DSL</a></li>
+<li><a href="#orgd2976f3">Fetcher</a></li>
+<li><a href="#org47258d5">Gem</a></li>
+<li><a href="#orgcf935dc">Column DSL</a></li>
+<li><a href="#orgae46268">Formatter</a></li>
+<li><a href="#org4fc011b">Output</a></li>
 </ul>
 </li>
-<li><a href="#org8c52374">技術</a></li>
-<li><a href="#orgb6c9f44">Memo</a></li>
-<li><a href="#orgebde6d7">Tasks</a>
+<li><a href="#org57ded66">技術</a></li>
+<li><a href="#orga09f055">Memo</a></li>
+<li><a href="#org27bfdf5">Tasks</a>
 <ul>
-<li><a href="#orgd5a3a99">fetchできなかったgemをあとで標準出力に出す</a></li>
-<li><a href="#orgb319e1d">GitHub API</a></li>
-<li><a href="#orgab38688">たまにURLがおかしいものがある</a></li>
-<li><a href="#org35c96b5">GitHub以外の対応</a></li>
-<li><a href="#org7d2773a">ラベルをつける</a></li>
+<li><a href="#org892c745">fetchできなかったgemをあとで標準出力に出す</a></li>
+<li><a href="#orgf02a2bd">GitHub API</a></li>
+<li><a href="#org4837390">たまにURLがおかしいものがある</a></li>
+<li><a href="#orge7af98d">GitHub以外の対応</a></li>
+<li><a href="#org2072421">ラベルをつける</a></li>
 </ul>
 </li>
-<li><a href="#org58590d8">Reference</a></li>
-<li><a href="#orgc987453">Archives</a>
+<li><a href="#org1a64454">Reference</a></li>
+<li><a href="#orgcd431b1">Archives</a>
 <ul>
-<li><a href="#orge1a9821"><span class="done DONE">DONE</span> Fetcher, Gem分割</a></li>
+<li><a href="#org5802684"><span class="done DONE">DONE</span> Fetcher, Gem分割</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org0d375af" class="outline-2">
-<h2 id="org0d375af"><a href="#org0d375af">概要</a></h2>
-<div class="outline-text-2" id="text-org0d375af">
+<div id="outline-container-org8face9c" class="outline-2">
+<h2 id="org8face9c"><a href="#org8face9c">概要</a></h2>
+<div class="outline-text-2" id="text-org8face9c">
 <p>
 gematは<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>プロジェクトにおけるGemfileをエクスポートするCLIツールである。
 </p>
@@ -71,9 +71,9 @@ gematは<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e54
 </dl>
 </div>
 </div>
-<div id="outline-container-org76a35be" class="outline-2">
-<h2 id="org76a35be"><a href="#org76a35be">Goals</a></h2>
-<div class="outline-text-2" id="text-org76a35be">
+<div id="outline-container-org0145dd8" class="outline-2">
+<h2 id="org0145dd8"><a href="#org0145dd8">Goals</a></h2>
+<div class="outline-text-2" id="text-org0145dd8">
 <p>
 Gemfileを見やすい形で、有益な情報をエクスポートできるようにすること。
 プロジェクトで使われているgemを、学びやすくすること。
@@ -84,30 +84,30 @@ Bundlerで取ってくる以外の情報源も使えるようにする。
 たとえばGitHubの元リポジトリへのリンクがあると便利である。
 </p>
 </div>
-<div id="outline-container-orgc602b70" class="outline-3">
-<h3 id="orgc602b70"><a href="#orgc602b70">Non Goals</a></h3>
-<div class="outline-text-3" id="text-orgc602b70">
+<div id="outline-container-org1b11a49" class="outline-3">
+<h3 id="org1b11a49"><a href="#org1b11a49">Non Goals</a></h3>
+<div class="outline-text-3" id="text-org1b11a49">
 <p>
 情報表示以上のことは行わない。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orgaae9a8b" class="outline-2">
-<h2 id="orgaae9a8b"><a href="#orgaae9a8b">Background</a></h2>
-<div class="outline-text-2" id="text-orgaae9a8b">
+<div id="outline-container-org2259cdc" class="outline-2">
+<h2 id="org2259cdc"><a href="#org2259cdc">Background</a></h2>
+<div class="outline-text-2" id="text-org2259cdc">
 <p>
 使っているgemのソースコードを把握したいとき、逐一検索してリポジトリを見つけるのが不便である。
 </p>
 </div>
 </div>
-<div id="outline-container-org61d81da" class="outline-2">
-<h2 id="org61d81da"><a href="#org61d81da">Detailed Design</a></h2>
-<div class="outline-text-2" id="text-org61d81da">
+<div id="outline-container-org82853d1" class="outline-2">
+<h2 id="org82853d1"><a href="#org82853d1">Detailed Design</a></h2>
+<div class="outline-text-2" id="text-org82853d1">
 </div>
-<div id="outline-container-orgc95b783" class="outline-3">
-<h3 id="orgc95b783"><a href="#orgc95b783">標準的な使用例</a></h3>
-<div class="outline-text-3" id="text-orgc95b783">
+<div id="outline-container-orgf0bf76d" class="outline-3">
+<h3 id="orgf0bf76d"><a href="#orgf0bf76d">標準的な使用例</a></h3>
+<div class="outline-text-3" id="text-orgf0bf76d">
 <div class="org-src-container">
 <pre class="src src-shell">gemat md
 </pre>
@@ -232,9 +232,9 @@ Bundlerで取ってくる以外の情報源も使えるようにする。
 </div>
 </div>
 </div>
-<div id="outline-container-org72d99af" class="outline-3">
-<h3 id="org72d99af"><a href="#org72d99af">オプション</a></h3>
-<div class="outline-text-3" id="text-org72d99af">
+<div id="outline-container-org8a10765" class="outline-3">
+<h3 id="org8a10765"><a href="#org8a10765">オプション</a></h3>
+<div class="outline-text-3" id="text-org8a10765">
 <div class="org-src-container">
 <pre class="src src-shell">gemat csv -i <span class="org-string">"other_Gemfile"</span> -o <span class="org-string">"output.csv"</span>-f <span class="org-string">"index,name,repo,star,latest_version,current_version"</span>
 </pre>
@@ -248,60 +248,60 @@ Bundlerで取ってくる以外の情報源も使えるようにする。
 </ul>
 </div>
 </div>
-<div id="outline-container-org7e00ce1" class="outline-3">
-<h3 id="org7e00ce1"><a href="#org7e00ce1">CLI</a></h3>
-<div class="outline-text-3" id="text-org7e00ce1">
+<div id="outline-container-org35d2330" class="outline-3">
+<h3 id="org35d2330"><a href="#org35d2330">CLI</a></h3>
+<div class="outline-text-3" id="text-org35d2330">
 <p>
 Thorを用いる。
 </p>
 </div>
 </div>
-<div id="outline-container-org5d1afe4" class="outline-3">
-<h3 id="org5d1afe4"><a href="#org5d1afe4">Bundler DSL</a></h3>
-<div class="outline-text-3" id="text-org5d1afe4">
+<div id="outline-container-orgcac92c2" class="outline-3">
+<h3 id="orgcac92c2"><a href="#orgcac92c2">Bundler DSL</a></h3>
+<div class="outline-text-3" id="text-orgcac92c2">
 <p>
 Gemfileの解析には、bundlerがDSLを実行した結果集めた情報を使う。
 自分でGemfile読み込みを書かなくてすむ。自分で書くと仕様に追従しないといけないので現実的でない。
 </p>
 </div>
 </div>
-<div id="outline-container-org550847b" class="outline-3">
-<h3 id="org550847b"><a href="#org550847b">Fetcher</a></h3>
-<div class="outline-text-3" id="text-org550847b">
+<div id="outline-container-orgd2976f3" class="outline-3">
+<h3 id="orgd2976f3"><a href="#orgd2976f3">Fetcher</a></h3>
+<div class="outline-text-3" id="text-orgd2976f3">
 <p>
 gemfileから読み取った名前を元に、rubygemsにアクセスして情報を取る。
 jsonが返ってくる。
 </p>
 </div>
 </div>
-<div id="outline-container-org39092a1" class="outline-3">
-<h3 id="org39092a1"><a href="#org39092a1">Gem</a></h3>
-<div class="outline-text-3" id="text-org39092a1">
+<div id="outline-container-org47258d5" class="outline-3">
+<h3 id="org47258d5"><a href="#org47258d5">Gem</a></h3>
+<div class="outline-text-3" id="text-org47258d5">
 <p>
 jsonで取った情報を加工して、オブジェクトに格納する。
 1gemで1オブジェクト。
 </p>
 </div>
 </div>
-<div id="outline-container-org8ec71df" class="outline-3">
-<h3 id="org8ec71df"><a href="#org8ec71df">Column DSL</a></h3>
-<div class="outline-text-3" id="text-org8ec71df">
+<div id="outline-container-orgcf935dc" class="outline-3">
+<h3 id="orgcf935dc"><a href="#orgcf935dc">Column DSL</a></h3>
+<div class="outline-text-3" id="text-orgcf935dc">
 <p>
 カラム指定を解析して、フォーマットするときに利用する。
 </p>
 </div>
 </div>
-<div id="outline-container-orga2d3060" class="outline-3">
-<h3 id="orga2d3060"><a href="#orga2d3060">Formatter</a></h3>
-<div class="outline-text-3" id="text-orga2d3060">
+<div id="outline-container-orgae46268" class="outline-3">
+<h3 id="orgae46268"><a href="#orgae46268">Formatter</a></h3>
+<div class="outline-text-3" id="text-orgae46268">
 <p>
 各形式でフォーマットして文字列にする。
 </p>
 </div>
 </div>
-<div id="outline-container-org4e8fea0" class="outline-3">
-<h3 id="org4e8fea0"><a href="#org4e8fea0">Output</a></h3>
-<div class="outline-text-3" id="text-org4e8fea0">
+<div id="outline-container-org4fc011b" class="outline-3">
+<h3 id="org4fc011b"><a href="#org4fc011b">Output</a></h3>
+<div class="outline-text-3" id="text-org4fc011b">
 <p>
 Formatterが出力した文字列を指定方法で出力する。
 </p>
@@ -318,28 +318,28 @@ progress barは常に標準出力。
 </div>
 </div>
 </div>
-<div id="outline-container-org8c52374" class="outline-2">
-<h2 id="org8c52374"><a href="#org8c52374">技術</a></h2>
-<div class="outline-text-2" id="text-org8c52374">
+<div id="outline-container-org57ded66" class="outline-2">
+<h2 id="org57ded66"><a href="#org57ded66">技術</a></h2>
+<div class="outline-text-2" id="text-org57ded66">
 <ul class="org-ul">
 <li><a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a></li>
 <li><a href="20210831223434-rspec.html#ID-afccf86d-70b8-44c0-86a8-cdac25f7dfd3">RSpec</a></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb6c9f44" class="outline-2">
-<h2 id="orgb6c9f44"><a href="#orgb6c9f44">Memo</a></h2>
+<div id="outline-container-orga09f055" class="outline-2">
+<h2 id="orga09f055"><a href="#orga09f055">Memo</a></h2>
 </div>
-<div id="outline-container-orgebde6d7" class="outline-2">
-<h2 id="orgebde6d7"><a href="#orgebde6d7">Tasks</a></h2>
-<div class="outline-text-2" id="text-orgebde6d7">
+<div id="outline-container-org27bfdf5" class="outline-2">
+<h2 id="org27bfdf5"><a href="#org27bfdf5">Tasks</a></h2>
+<div class="outline-text-2" id="text-org27bfdf5">
 </div>
-<div id="outline-container-orgd5a3a99" class="outline-3">
-<h3 id="orgd5a3a99"><a href="#orgd5a3a99">fetchできなかったgemをあとで標準出力に出す</a></h3>
+<div id="outline-container-org892c745" class="outline-3">
+<h3 id="org892c745"><a href="#org892c745">fetchできなかったgemをあとで標準出力に出す</a></h3>
 </div>
-<div id="outline-container-orgb319e1d" class="outline-3">
-<h3 id="orgb319e1d"><a href="#orgb319e1d"><a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a> API</a></h3>
-<div class="outline-text-3" id="text-orgb319e1d">
+<div id="outline-container-orgf02a2bd" class="outline-3">
+<h3 id="orgf02a2bd"><a href="#orgf02a2bd"><a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a> API</a></h3>
+<div class="outline-text-3" id="text-orgf02a2bd">
 <p>
 rubygemsにはあまり役に立つ情報がない。
 <a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>へ取りにいけば、面白いのがある可能性。
@@ -347,42 +347,42 @@ rubygemsにはあまり役に立つ情報がない。
 </p>
 </div>
 </div>
-<div id="outline-container-orgab38688" class="outline-3">
-<h3 id="orgab38688"><a href="#orgab38688">たまにURLがおかしいものがある</a></h3>
+<div id="outline-container-org4837390" class="outline-3">
+<h3 id="org4837390"><a href="#org4837390">たまにURLがおかしいものがある</a></h3>
 </div>
-<div id="outline-container-org35c96b5" class="outline-3">
-<h3 id="org35c96b5"><a href="#org35c96b5">GitHub以外の対応</a></h3>
-<div class="outline-text-3" id="text-org35c96b5">
+<div id="outline-container-orge7af98d" class="outline-3">
+<h3 id="orge7af98d"><a href="#orge7af98d">GitHub以外の対応</a></h3>
+<div class="outline-text-3" id="text-orge7af98d">
 <p>
 今のところGitLabには対応してない。
 根本的に、リポジトリを判別するロジックが雑なのでどうにかしたい。
 </p>
 </div>
 </div>
-<div id="outline-container-org7d2773a" class="outline-3">
-<h3 id="org7d2773a"><a href="#org7d2773a">ラベルをつける</a></h3>
-<div class="outline-text-3" id="text-org7d2773a">
+<div id="outline-container-org2072421" class="outline-3">
+<h3 id="org2072421"><a href="#org2072421">ラベルをつける</a></h3>
+<div class="outline-text-3" id="text-org2072421">
 <p>
 columnを指定できるのはいいのだが、表示は内部で使ってる文字列そのままなのでどうにかしたい。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org58590d8" class="outline-2">
-<h2 id="org58590d8"><a href="#org58590d8">Reference</a></h2>
-<div class="outline-text-2" id="text-org58590d8">
+<div id="outline-container-org1a64454" class="outline-2">
+<h2 id="org1a64454"><a href="#org1a64454">Reference</a></h2>
+<div class="outline-text-2" id="text-org1a64454">
 <dl class="org-dl">
 <dt>GitHub repository</dt><dd><a href="https://github.com/kijimaD/gemat/">https://github.com/kijimaD/gemat/</a></dd>
 </dl>
 </div>
 </div>
-<div id="outline-container-orgc987453" class="outline-2">
-<h2 id="orgc987453"><a href="#orgc987453">Archives</a></h2>
-<div class="outline-text-2" id="text-orgc987453">
+<div id="outline-container-orgcd431b1" class="outline-2">
+<h2 id="orgcd431b1"><a href="#orgcd431b1">Archives</a></h2>
+<div class="outline-text-2" id="text-orgcd431b1">
 </div>
-<div id="outline-container-orge1a9821" class="outline-3">
-<h3 id="orge1a9821"><a href="#orge1a9821"><span class="done DONE">DONE</span> Fetcher, Gem分割</a></h3>
-<div class="outline-text-3" id="text-orge1a9821">
+<div id="outline-container-org5802684" class="outline-3">
+<h3 id="org5802684"><a href="#org5802684"><span class="done DONE">DONE</span> Fetcher, Gem分割</a></h3>
+<div class="outline-text-3" id="text-org5802684">
 </div>
 </div>
 </div>
