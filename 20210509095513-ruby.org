@@ -1935,6 +1935,69 @@ CLOCK: [2022-05-05 Thu 19:32]--[2022-05-05 Thu 19:57] =>  0:25
   - コンパイルして、C言語と機械語になる
 - RubyVM::InstructionSequence で、Rubyでコードをどうコンパイルするかを確認できる
 
+#+caption: YARVバイトコードを出力する
+#+begin_src ruby
+  code = "a = 1+2; a"
+  RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_results
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,10)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 putobject                              2
+0003 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>[CcCr]
+0005 setlocal_WC_0                          a@0
+0007 getlocal_WC_0                          a@0
+0009 leave
+#+end_results
+
+計算に必要な1と2をpushしたあと、足し算を実行している。
+
+#+begin_src ruby
+  code = "a = 'hello' + 'world'; a"
+  RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_results
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,24)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putstring                              "hello"                   (   1)[Li]
+0002 putstring                              "world"
+0004 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>[CcCr]
+0006 setlocal_WC_0                          a@0
+0008 getlocal_WC_0                          a@0
+0010 leave
+#+end_results
+
+文字列でも同様。
+
+#+begin_src ruby
+  code = "a=[1, 2, 3]; a[0]=100;"
+  RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_results
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,22)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 duparray                               [1, 2, 3]                 (   1)[Li]
+0002 setlocal_WC_0                          a@0
+0004 putnil
+0005 getlocal_WC_0                          a@0
+0007 putobject_INT2FIX_0_
+0008 putobject                              100
+0010 setn                                   3
+0012 opt_aset                               <calldata!mid:[]=, argc:2, ARGS_SIMPLE>[CcCr]
+0014 pop
+0015 leave
+#+end_results
+
 ** TODO Refactoring: Rubyエディション
 :LOGBOOK:
 CLOCK: [2022-05-05 Thu 16:28]--[2022-05-05 Thu 16:53] =>  0:25
