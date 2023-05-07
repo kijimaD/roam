@@ -118,9 +118,7 @@
 (setq my-blog-extra-head
       (concat
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' />"
-       "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">"
-       "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>"
-       "<link href=\"https://fonts.googleapis.com/css2?family=Ultra&display=swap\" rel=\"stylesheet\">"
+       "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'>"
 
        ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。仕方ないので両方読み込む
        "<link rel='stylesheet' href='../css/site.css' />"
@@ -150,7 +148,7 @@
       :html-link-up ""
       :html-link-home ""
       :with-timestamps nil
-      :with-toc t
+      :with-toc nil
 
       :sitemap-title "Sitemap"
       :auto-sitemap t             ;; generate sitemap.org automatically
