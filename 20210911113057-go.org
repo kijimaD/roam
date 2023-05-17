@@ -7,6 +7,78 @@
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
+** ゴルーチンはそれが作られたアドレス空間と同じ空間で実行する
+Go言語による並行処理から。
+
+ゴルーチンの中でクロージャーを実行すると、クロージャーはこれらの変数のコピーに対して操作するのか、それとも元の変数の参照に対してか。
+
+#+caption: ゴルーチンの中でクロージャーを実行する
+#+begin_src go :results output :imports '("fmt" "sync")
+  var wg sync.WaitGroup
+  salutation := "hello"
+  wg.Add(1)
+  go func() {
+          defer wg.Done()
+          salutation = "welcome"
+  }()
+  wg.Wait()
+  fmt.Println(salutation)
+#+end_src
+
+#+RESULTS:
+#+begin_results
+welcome
+#+end_results
+
+ゴルーチンはそれが作られたアドレス空間と同じ空間で実行する、ということ。
+
+#+caption: 同じ結果になる
+#+begin_src go :results output :imports '("fmt" "sync")
+  var wg sync.WaitGroup
+  for _, salutation := range []string{"hello", "greetings", "good day"} {
+          wg.Add(1)
+          go func() {
+                  defer wg.Done()
+                  fmt.Println(salutation)
+          }()
+  }
+  wg.Wait()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+good day
+good day
+good day
+#+end_results
+
+- ゴルーチンが開始する前にループが終了してしまう
+- salutation変数はスコープ外になる
+- Goランタイムは変数salutationの参照がまだ保持されているのを知っていて、ゴルーチンがそのメモリにアクセスし続けられるようにメモリをヒープに移す
+- 文字列スライスの最後の"good day"への参照を保持したままヒープに移される
+
+ループを想定したようにただしく書くには、salutationのコピーをクロージャーに渡して、ゴルーチンが実行されるようになるまでにループの各繰り返しから渡されたデータを操作できるようにする。
+
+#+caption: 文字列の構造体のコピーが行われる
+#+begin_src go :results output :imports '("fmt" "sync")
+  var wg sync.WaitGroup
+  for _, salutation := range []string{"hello", "greetings", "good day"} {
+          wg.Add(1)
+          go func(salutation string) {
+                  defer wg.Done()
+                  fmt.Println(salutation)
+          }(salutation)
+  }
+  wg.Wait()
+#+end_src
+
+#+RESULTS:
+#+begin_results
+good day
+hello
+greetings
+#+end_results
+
 ** golanglint-ci のgci warningが出たとき
 原因はよくわからない。ツールをインストールしてフォーマットをかける。
 
@@ -1289,6 +1361,8 @@ CLOCK: [2023-01-21 Sat 17:11]--[2023-01-21 Sat 17:36] =>  0:25
 Goを使ったサーバレスの解説。
 ** WIP [[https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E4%B8%A6%E8%A1%8C%E5%87%A6%E7%90%86-Katherine-Cox-Buday/dp/4873118468/ref=sr_1_19?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-19][Go言語による並行処理 | Katherine Cox-Buday, 山口 能迪 |本 | 通販 | Amazon]]
 :LOGBOOK:
+CLOCK: [2023-05-17 Wed 00:00]--[2023-05-17 Wed 00:25] =>  0:25
+CLOCK: [2023-05-16 Tue 23:16]--[2023-05-16 Tue 23:41] =>  0:25
 CLOCK: [2023-05-10 Wed 21:16]--[2023-05-10 Wed 21:41] =>  0:25
 :END:
 平行処理の解説。
@@ -1303,13 +1377,17 @@ CLOCK: [2023-05-10 Wed 21:16]--[2023-05-10 Wed 21:41] =>  0:25
   - 循環待ち
     - ある並行プロセス(P1)は、他の連なっている並行プロセス(P2)を待たなければならない。そしてP2はP1を待っている
 
-- たいていの言語はCSPのメッセージパッシング形式よりもメモリを共有し同期する方を好んでいる。共有メモリのモデルは正しく使うことが難しくなる
+- たいていの言語はCSPのメッセージパッシング形式よりもメモリを共有し同期するほうを好んでいる。共有メモリのモデルは正確に使うことが難しくなる
 - GoでははじめからCSPを導入している
 - syncパッケージは伝統的なメモリアクセス同期で並行処理を達成する。問題解決する平行処理の書き方を高水準(Goルーチン、チャネル)、低水準(sync)で選択できる
 - プログラムを書く際にはある瞬間にただ1つのゴルーチンがある特定のデータの責任を持つように心がける。メモリを共有することで通信してはいけない。かわりに通信することでメモリを共有する
 - Goのモットー「通信によってメモリを共有し、メモリの共有によって通信してはいけない」
 - 何かしら結果を生成するコードがあり、その結果を別のコードに共有したい場合、これはデータの所有権を移動していることになる。ガベージコレクションをサポートしていない言語でのメモリの所有権と同じ考え方。データには所有権があり、平行プログラムを安全にする方法の1つとして、1度に1つの並行処理のコンテキストのみがデータの所有権を持つようにする。チャネルを使うと、この意図をチャネルの形で表現することで並行プログラムを安全にする構想を伝えることができる
   - 大きな利点は、バッファ付きチャネルを生成して、コストが低いインメモリのキューを実装し生産者(Producer)と消費者(Consumer)を切り離すことができる
+- OSスレッドを使う言語では平行処理を抽象化する方法として便利なほかのパターンや実装方法がある。たとえばスレッドプール。こうした抽象化はたいていOSスレッドの補強や強化をする目的で作られていて、Goで使うことはあまりない
+- 問題空間をゴルーチンに当てはめられるようにして、ワークフロー内の並行処理部分をうまく表現し、どんどんゴルーチンを起動する
+- ゴルーチン :: 他のコードに対して並行に実行している関数のこと(必ずしも並列ではない)
+- ゴルーチンはコルーチンとして知られる高水準の抽象化
 
 ** TODO [[https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E5%88%86%E6%95%A3%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9-%E2%80%95%E4%BF%A1%E9%A0%BC%E6%80%A7%E3%80%81%E6%8B%A1%E5%BC%B5%E6%80%A7%E3%80%81%E4%BF%9D%E5%AE%88%E6%80%A7%E3%81%AE%E9%AB%98%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%AE%E6%A7%8B%E7%AF%89-Travis-Jeffery/dp/4873119979/ref=sr_1_5?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&crid=1HEEXC8ONO3XN&keywords=go+%E8%A8%80%E8%AA%9E&qid=1663726078&sprefix=go+%E3%81%92n%2Caps%2C202&sr=8-5][Go言語による分散サービス ―信頼性、拡張性、保守性の高いシステムの構築 | Travis Jeffery, 柴田 芳樹 |本 | 通販 | Amazon]]
 分散サービスの解説。
@@ -1520,6 +1598,13 @@ GoSpecは言語仕様書であり、全ての記述には意味があるはず�
 
 これは本当にそうで、読んだ内容を元に「こういうコードはこの記述を元に確かにこういう挙動をする」という例が作れるかどうかで理解の深さが段違いだという実感があります。
 #+end_quote
+** TODO jvm実装の続き
+invoke_virtualのメソッド呼び出しで詰まっていた。
+
+https://github.com/rodbate/jvm-on-go/blob/eb536d93317d0ef24ae9e2f298fd08b8ad4e49f8/pkg/rtda/method_ref.go#L27-L42
+
+このへんが参考になるか。関数オブジェクトをハッシュに入れておいて、検索して呼び出せばいい。
+
 * Go言語へのコントリビュート準備
 CLOSED: [2022-10-29 Sat 11:19]
 ** DONE [[https://go.dev/doc/contribute][Contribution Guide - The Go Programming Language]]
