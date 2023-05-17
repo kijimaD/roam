@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2023-05-11 -->
+<!-- 2023-05-17 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Go</title>
@@ -16,21 +16,113 @@
 <div id="content">
 <h1 class="title">Go</h1>
 
-<div id="outline-container-org7eff8a8" class="outline-2">
-<h2 id="org7eff8a8"><a href="#org7eff8a8">概要</a></h2>
-<div class="outline-text-2" id="text-org7eff8a8">
+<div id="outline-container-org243b865" class="outline-2">
+<h2 id="org243b865"><a href="#org243b865">概要</a></h2>
+<div class="outline-text-2" id="text-org243b865">
 <p>
 Go言語はGoogleによって開発された<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>。<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 </p>
 </div>
 </div>
-<div id="outline-container-org2841cf0" class="outline-2">
-<h2 id="org2841cf0"><a href="#org2841cf0">Memo</a></h2>
-<div class="outline-text-2" id="text-org2841cf0">
+<div id="outline-container-org4f7e670" class="outline-2">
+<h2 id="org4f7e670"><a href="#org4f7e670">Memo</a></h2>
+<div class="outline-text-2" id="text-org4f7e670">
 </div>
-<div id="outline-container-orga4213a1" class="outline-3">
-<h3 id="orga4213a1"><a href="#orga4213a1">golanglint-ci のgci warningが出たとき</a></h3>
-<div class="outline-text-3" id="text-orga4213a1">
+<div id="outline-container-org3814f4a" class="outline-3">
+<h3 id="org3814f4a"><a href="#org3814f4a">ゴルーチンはそれが作られたアドレス空間と同じ空間で実行する</a></h3>
+<div class="outline-text-3" id="text-org3814f4a">
+<p>
+Go言語による並行処理から。
+</p>
+
+<p>
+ゴルーチンの中でクロージャーを実行すると、クロージャーはこれらの変数のコピーに対して操作するのか、それとも元の変数の参照に対してか。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>ゴルーチンの中でクロージャーを実行する</label><pre class="src src-go">var wg sync.WaitGroup
+salutation := "hello"
+wg.Add(1)
+go func() {
+        defer wg.Done()
+        salutation = "welcome"
+}()
+wg.Wait()
+fmt.Println(salutation)
+</pre>
+</div>
+
+<div class="results" id="org6fdc487">
+<p>
+welcome
+</p>
+
+</div>
+
+<p>
+ゴルーチンはそれが作られたアドレス空間と同じ空間で実行する、ということ。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>同じ結果になる</label><pre class="src src-go">var wg sync.WaitGroup
+for _, salutation := range []string{"hello", "greetings", "good day"} {
+        wg.Add(1)
+        go func() {
+                defer wg.Done()
+                fmt.Println(salutation)
+        }()
+}
+wg.Wait()
+</pre>
+</div>
+
+<div class="results" id="orgd7b0c2d">
+<p>
+good day
+good day
+good day
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>ゴルーチンが開始する前にループが終了してしまう</li>
+<li>salutation変数はスコープ外になる</li>
+<li>Goランタイムは変数salutationの参照がまだ保持されているのを知っていて、ゴルーチンがそのメモリにアクセスし続けられるようにメモリをヒープに移す</li>
+<li>文字列スライスの最後の&ldquo;good day&rdquo;への参照を保持したままヒープに移される</li>
+</ul>
+
+<p>
+ループを想定したようにただしく書くには、salutationのコピーをクロージャーに渡して、ゴルーチンが実行されるようになるまでにループの各繰り返しから渡されたデータを操作できるようにする。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>文字列の構造体のコピーが行われる</label><pre class="src src-go">var wg sync.WaitGroup
+for _, salutation := range []string{"hello", "greetings", "good day"} {
+        wg.Add(1)
+        go func(salutation string) {
+                defer wg.Done()
+                fmt.Println(salutation)
+        }(salutation)
+}
+wg.Wait()
+</pre>
+</div>
+
+<div class="results" id="org92a24c0">
+<p>
+good day
+hello
+greetings
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orge444130" class="outline-3">
+<h3 id="orge444130"><a href="#orge444130">golanglint-ci のgci warningが出たとき</a></h3>
+<div class="outline-text-3" id="text-orge444130">
 <p>
 原因はよくわからない。ツールをインストールしてフォーマットをかける。
 </p>
@@ -52,30 +144,30 @@ gci write --skip-generated -s standard,default .
 </div>
 </div>
 </div>
-<div id="outline-container-org9e9f148" class="outline-3">
-<h3 id="org9e9f148"><a href="#org9e9f148">カバレッジ計測方法</a></h3>
-<div class="outline-text-3" id="text-org9e9f148">
+<div id="outline-container-orgdbb0e9b" class="outline-3">
+<h3 id="orgdbb0e9b"><a href="#orgdbb0e9b">カバレッジ計測方法</a></h3>
+<div class="outline-text-3" id="text-orgdbb0e9b">
 <p>
 カバレッジフラグをオンにしているとコンパイル時、各ブロックにカウンタが挿入されて実行されている。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf2065fa" class="outline-3">
-<h3 id="orgf2065fa"><a href="#orgf2065fa">一部のテストを実行する</a></h3>
-<div class="outline-text-3" id="text-orgf2065fa">
+<div id="outline-container-org668526e" class="outline-3">
+<h3 id="org668526e"><a href="#org668526e">一部のテストを実行する</a></h3>
+<div class="outline-text-3" id="text-org668526e">
 <p>
 ファイル指定でテストを実行しようとすると、ほかのパッケージを読み込んでくれないため走らせられないことがある。多くの場合、ほかのファイルへの読み込みがあるので、現実的ではない。なので、読み込むファイルは全体にして、走らせる関数を指定して一部だけ実行する。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>Buildinfoとつくテストだけを実行する</label><pre class="src src-go">go test ./... -run Buildinfo
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>Buildinfoとつくテストだけを実行する</label><pre class="src src-go">go test ./... -run Buildinfo
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-orga2e7939" class="outline-3">
-<h3 id="orga2e7939"><a href="#orga2e7939">スタックとヒープ</a></h3>
-<div class="outline-text-3" id="text-orga2e7939">
+<div id="outline-container-orga61a7dc" class="outline-3">
+<h3 id="orga61a7dc"><a href="#orga61a7dc">スタックとヒープ</a></h3>
+<div class="outline-text-3" id="text-orga61a7dc">
 <ul class="org-ul">
 <li>メモリの読み書きを行う場所は、スタックとヒープに分かれる
 <ul class="org-ul">
@@ -98,9 +190,9 @@ gci write --skip-generated -s standard,default .
 </div>
 </div>
 
-<div id="outline-container-org3f2f11d" class="outline-3">
-<h3 id="org3f2f11d"><a href="#org3f2f11d">一時ファイルを作る</a></h3>
-<div class="outline-text-3" id="text-org3f2f11d">
+<div id="outline-container-org2006ce9" class="outline-3">
+<h3 id="org2006ce9"><a href="#org2006ce9">一時ファイルを作る</a></h3>
+<div class="outline-text-3" id="text-org2006ce9">
 <ul class="org-ul">
 <li>os.CreateTemp が便利</li>
 <li>os.MkdirTemp → ディレクトリ</li>
@@ -109,15 +201,15 @@ gci write --skip-generated -s standard,default .
 </div>
 </div>
 
-<div id="outline-container-org75636b2" class="outline-3">
-<h3 id="org75636b2"><a href="#org75636b2">大文字かを確認する</a></h3>
-<div class="outline-text-3" id="text-org75636b2">
+<div id="outline-container-orgfeafa66" class="outline-3">
+<h3 id="orgfeafa66"><a href="#orgfeafa66">大文字かを確認する</a></h3>
+<div class="outline-text-3" id="text-orgfeafa66">
 <div class="org-src-container">
 <pre class="src src-go">fmt.Print(unicode.IsUpper('a'))
 </pre>
 </div>
 
-<div class="results" id="org8cc89a9">
+<div class="results" id="org59e176e">
 <p>
 false
 </p>
@@ -129,7 +221,7 @@ false
 </pre>
 </div>
 
-<div class="results" id="org7d20833">
+<div class="results" id="org1e823ac">
 <p>
 true
 </p>
@@ -138,9 +230,9 @@ true
 </div>
 </div>
 
-<div id="outline-container-org04bdcdc" class="outline-3">
-<h3 id="org04bdcdc"><a href="#org04bdcdc">goimportsが必要なパッケージを消してしまうときに確認すること</a></h3>
-<div class="outline-text-3" id="text-org04bdcdc">
+<div id="outline-container-org5ac85f9" class="outline-3">
+<h3 id="org5ac85f9"><a href="#org5ac85f9">goimportsが必要なパッケージを消してしまうときに確認すること</a></h3>
+<div class="outline-text-3" id="text-org5ac85f9">
 <p>
 goimportsは面倒なimportを自動で書いてくれる便利なパッケージ。必要なパッケージを自動で消してしまうのでハマった。チェックリストを残す。
 </p>
@@ -152,17 +244,17 @@ goimportsは面倒なimportを自動で書いてくれる便利なパッケー�
 </div>
 </div>
 
-<div id="outline-container-org1b3e883" class="outline-3">
-<h3 id="org1b3e883"><a href="#org1b3e883">copyは固定長のsliceに対してしかできない</a></h3>
-<div class="outline-text-3" id="text-org1b3e883">
+<div id="outline-container-org268d588" class="outline-3">
+<h3 id="org268d588"><a href="#org268d588">copyは固定長のsliceに対してしかできない</a></h3>
+<div class="outline-text-3" id="text-org268d588">
 <p>
 copyはその名の通りsliceをコピーするメソッド。固定長でないとコピーされない。
 </p>
 </div>
 </div>
-<div id="outline-container-org1e3cc08" class="outline-3">
-<h3 id="org1e3cc08"><a href="#org1e3cc08">カバレッジを計測する</a></h3>
-<div class="outline-text-3" id="text-org1e3cc08">
+<div id="outline-container-org9b63ed3" class="outline-3">
+<h3 id="org9b63ed3"><a href="#org9b63ed3">カバレッジを計測する</a></h3>
+<div class="outline-text-3" id="text-org9b63ed3">
 <div class="org-src-container">
 <pre class="src src-shell">$ go test -coverprofile=cover.out .
 $ go tool cover -html=cover.out -o cover.html
@@ -174,7 +266,7 @@ Golang/goのリポジトリ全体を計測する。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>Go自体をビルドしてから、テストを実行する</label><pre class="src src-shell"><span class="org-builtin">cd</span> ./src
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>Go自体をビルドしてから、テストを実行する</label><pre class="src src-shell"><span class="org-builtin">cd</span> ./src
 ./all.bash
 ../bin/go test -cover ./... -coverprofile=cover.out
 ../bin/go tool cover -html=cover.out -o cover.html
@@ -182,9 +274,9 @@ Golang/goのリポジトリ全体を計測する。
 </div>
 </div>
 </div>
-<div id="outline-container-org63a8332" class="outline-3">
-<h3 id="org63a8332"><a href="#org63a8332">対象のインターフェースを満たしている関数の一覧を見る</a></h3>
-<div class="outline-text-3" id="text-org63a8332">
+<div id="outline-container-org09612b8" class="outline-3">
+<h3 id="org09612b8"><a href="#org09612b8">対象のインターフェースを満たしている関数の一覧を見る</a></h3>
+<div class="outline-text-3" id="text-org09612b8">
 <div class="org-src-container">
 <pre class="src src-shell">godoc -http <span class="org-string">":8000"</span> -analysis type
 <span class="org-comment-delimiter"># </span><span class="org-comment">http://localhost:6060/pkg/io/</span>
@@ -193,11 +285,11 @@ Golang/goのリポジトリ全体を計測する。
 </div>
 </div>
 
-<div id="outline-container-orgc3349ae" class="outline-3">
-<h3 id="orgc3349ae"><a href="#orgc3349ae">失敗する可能性のあるときはerrorを返す</a></h3>
-<div class="outline-text-3" id="text-orgc3349ae">
+<div id="outline-container-orgb6a257c" class="outline-3">
+<h3 id="orgb6a257c"><a href="#orgb6a257c">失敗する可能性のあるときはerrorを返す</a></h3>
+<div class="outline-text-3" id="text-orgb6a257c">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>errorを返す関数の例</label><pre class="src src-go">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>errorを返す関数の例</label><pre class="src src-go">
 func (w *Wallet) Withdraw(amount Bitcoin) error {
 	if amount &gt; w.balance {
 		return ErrInsufficientFunds
@@ -219,15 +311,15 @@ error時の処理は呼び出し元で定義し、errorを返す可能性のあ�
 </div>
 </div>
 
-<div id="outline-container-org35075d9" class="outline-3">
-<h3 id="org35075d9"><a href="#org35075d9">named return value</a></h3>
-<div class="outline-text-3" id="text-org35075d9">
+<div id="outline-container-orge2c9e01" class="outline-3">
+<h3 id="orge2c9e01"><a href="#orge2c9e01">named return value</a></h3>
+<div class="outline-text-3" id="text-orge2c9e01">
 <p>
 返り値に名前をつける機能。最初に初期化され、returnするとそれ時点の名前のついた変数が返される。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span>value1, value2は自動で初期化される。returnするとその時点でバインドされた変数が返される</label><pre class="src src-go">func test() (value1, value2 int) {
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>value1, value2は自動で初期化される。returnするとその時点でバインドされた変数が返される</label><pre class="src src-go">func test() (value1, value2 int) {
         value1 = 1
         value2 = 2
         return
@@ -241,9 +333,9 @@ error時の処理は呼び出し元で定義し、errorを返す可能性のあ�
 </div>
 </div>
 
-<div id="outline-container-org02ead7b" class="outline-3">
-<h3 id="org02ead7b"><a href="#org02ead7b">コールグラフを活用して関数呼び出しの全体像を把握する</a></h3>
-<div class="outline-text-3" id="text-org02ead7b">
+<div id="outline-container-org4d652fd" class="outline-3">
+<h3 id="org4d652fd"><a href="#org4d652fd">コールグラフを活用して関数呼び出しの全体像を把握する</a></h3>
+<div class="outline-text-3" id="text-org4d652fd">
 <p>
 どの関数がどこから呼び出されているかの図を生成する。
 </p>
@@ -270,9 +362,9 @@ go-callvis -group pkg,type -focus fmt ./ <span class="org-comment-delimiter"># <
 </div>
 </div>
 
-<div id="outline-container-orgaed4b84" class="outline-3">
-<h3 id="orgaed4b84"><a href="#orgaed4b84">go getしたときの証明書エラー</a></h3>
-<div class="outline-text-3" id="text-orgaed4b84">
+<div id="outline-container-org3c13f9a" class="outline-3">
+<h3 id="org3c13f9a"><a href="#org3c13f9a">go getしたときの証明書エラー</a></h3>
+<div class="outline-text-3" id="text-org3c13f9a">
 <p>
 go get したとき <code>x509: certificate signed by unknown authority</code> エラーになる。
 </p>
@@ -290,9 +382,9 @@ $ update-ca-certificates
 </div>
 </div>
 
-<div id="outline-container-org790b098" class="outline-3">
-<h3 id="org790b098"><a href="#org790b098">リクエストデータを構造体にバインドする</a></h3>
-<div class="outline-text-3" id="text-org790b098">
+<div id="outline-container-org564f307" class="outline-3">
+<h3 id="org564f307"><a href="#org564f307">リクエストデータを構造体にバインドする</a></h3>
+<div class="outline-text-3" id="text-org564f307">
 <p>
 リクエストを使うときに通常使われる方法。値の検証と後で利用しやすくするため、定義した構造体に入れる。
 </p>
@@ -302,9 +394,9 @@ $ update-ca-certificates
 </ul>
 </div>
 </div>
-<div id="outline-container-orgf442798" class="outline-3">
-<h3 id="orgf442798"><a href="#orgf442798">構造体の埋め込みの使い方</a></h3>
-<div class="outline-text-3" id="text-orgf442798">
+<div id="outline-container-org75c7ea0" class="outline-3">
+<h3 id="org75c7ea0"><a href="#org75c7ea0">構造体の埋め込みの使い方</a></h3>
+<div class="outline-text-3" id="text-org75c7ea0">
 <ul class="org-ul">
 <li><a href="https://qiita.com/momotaro98/items/4f6e2facc40a3f37c3c3">Go言語の埋め込みについて4つのポイントでまとめました - Qiita</a></li>
 </ul>
@@ -318,15 +410,15 @@ Goの埋め込みの解説。
 </div>
 </div>
 
-<div id="outline-container-orgef0c421" class="outline-3">
-<h3 id="orgef0c421"><a href="#orgef0c421"><a href="https://christina04.hatenablog.com/entry/pointers-in-golang">ポインタを図で理解する - Carpe Diem</a></a></h3>
-<div class="outline-text-3" id="text-orgef0c421">
+<div id="outline-container-org9f19aaf" class="outline-3">
+<h3 id="org9f19aaf"><a href="#org9f19aaf"><a href="https://christina04.hatenablog.com/entry/pointers-in-golang">ポインタを図で理解する - Carpe Diem</a></a></h3>
+<div class="outline-text-3" id="text-org9f19aaf">
 <p>
 図によるポインタのわかりやすい解説。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>値の比較</label><pre class="src src-go">var x = 100
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>値の比較</label><pre class="src src-go">var x = 100
 fmt.Println("1: x address:\t", &amp;x)
 
 var y *int
@@ -338,7 +430,7 @@ fmt.Println("5: y address:\t", &amp;y)
 </pre>
 </div>
 
-<div class="results" id="orga404a54">
+<div class="results" id="org07a260b">
 <p>
 1: x address:	 0xc00001a0c0
 2: y value:	 &lt;nil&gt;
@@ -372,12 +464,12 @@ fmt.Println("5: y address:\t", &amp;y)
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>ポインタ変数だけどnilのとき、runtime errorになる</label><pre class="src src-go">var x *int
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>ポインタ変数だけどnilのとき、runtime errorになる</label><pre class="src src-go">var x *int
 fmt.Println("x value:\t", *x)
 </pre>
 </div>
 
-<div class="results" id="org4cd3ba4">
+<div class="results" id="orgc40a8b4">
 <p>
 panic: runtime error: invalid memory address or nil pointer dereference
 [signal SIGSEGV: segmentation violation code=0x1 addr=0x0 pc=0x480f1a]
@@ -394,7 +486,7 @@ Goはすべて値渡し(=コピー)。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>valueは同じだが、addressはすべて異なる</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>valueは同じだが、addressはすべて異なる</label><pre class="src src-go">func main() {
         var x = "alice"
         fmt.Println("x address:\t", &amp;x)
         y := &amp;x
@@ -411,7 +503,7 @@ func show(s *string) {
 </pre>
 </div>
 
-<div class="results" id="org082f4c8">
+<div class="results" id="org73dee92">
 <p>
 x address:	 0xc000014250
 y value:	 0xc000014250
@@ -431,7 +523,7 @@ f address:	 0xc000012038
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>main関数から、レシーバから呼ばれたときのアドレスと値を比較する</label><pre class="src src-go">type Person struct {
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>main関数から、レシーバから呼ばれたときのアドレスと値を比較する</label><pre class="src src-go">type Person struct {
         Name string
         Age int
 }
@@ -455,7 +547,7 @@ func (p *Person) Greet(msg string) {
 </pre>
 </div>
 
-<div class="results" id="org309962b">
+<div class="results" id="org9bafea4">
 <p>
 x value:	0xc000010030
 x address:	0xc000012028
@@ -468,31 +560,31 @@ new x value:	&amp;{hahaha 20}
 </div>
 </div>
 
-<div id="outline-container-org37e60e7" class="outline-3">
-<h3 id="org37e60e7"><a href="#org37e60e7">レシーバーを値とポインタのどちらにするか</a></h3>
-<div class="outline-text-3" id="text-org37e60e7">
+<div id="outline-container-org2d2de36" class="outline-3">
+<h3 id="org2d2de36"><a href="#org2d2de36">レシーバーを値とポインタのどちらにするか</a></h3>
+<div class="outline-text-3" id="text-org2d2de36">
 <p>
 メソッドのレシーバーを値にするかポインタにするかは、レシーバのフィールドに変更をしたいかによって決める。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>インスタンスのフィールドは変更されない(エラーにもならないので注意)</label><pre class="src src-go">func (s Struct) SetValue(v int {
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>インスタンスのフィールドは変更されない(エラーにもならないので注意)</label><pre class="src src-go">func (s Struct) SetValue(v int {
         s.v = v
 })
 </pre>
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>値を変更できる</label><pre class="src src-go">func (s *Struct) SetValue(v int {
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>値を変更できる</label><pre class="src src-go">func (s *Struct) SetValue(v int {
         s.v = v
 })
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org752fd82" class="outline-3">
-<h3 id="org752fd82"><a href="#org752fd82">ポインタの操作</a></h3>
-<div class="outline-text-3" id="text-org752fd82">
+<div id="outline-container-orgada81d0" class="outline-3">
+<h3 id="orgada81d0"><a href="#orgada81d0">ポインタの操作</a></h3>
+<div class="outline-text-3" id="text-orgada81d0">
 <ul class="org-ul">
 <li>ポインタ型を示すときは <code>*Person</code> と宣言。これによってPerson型の変数のポインタが入ることが示される</li>
 <li>ポインタ型を生成するときは <code>&amp;</code> を使う。これは変換関数のようなもの。 <code>&amp;変数名</code> という形式。実際に変数宣言されているものに対してポインタがある。それぞれにアドレスが割り当てられるようなもの。だから、型とか関数自体はポインタにしない(意味がない)。あくまで変数をリンクさせて、変更を波及させられるのが良いところだから</li>
@@ -516,7 +608,7 @@ fmt.Println(*p)			// 参照先のアドレスが変わった
 </pre>
 </div>
 
-<div class="results" id="org151a52e">
+<div class="results" id="org09e5ef5">
 <p>
 0xc00001a0c0
 1
@@ -532,19 +624,19 @@ fmt.Println(*p)			// 参照先のアドレスが変わった
 </div>
 </div>
 
-<div id="outline-container-orgad035cd" class="outline-3">
-<h3 id="orgad035cd"><a href="#orgad035cd"><span class="todo TODO">TODO</span> <a href="https://qiita.com/hnakamur/items/848097aad846d40ae84b">Goでファイルの存在チェック - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgad035cd">
+<div id="outline-container-orgc4494ad" class="outline-3">
+<h3 id="orgc4494ad"><a href="#orgc4494ad"><span class="todo TODO">TODO</span> <a href="https://qiita.com/hnakamur/items/848097aad846d40ae84b">Goでファイルの存在チェック - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgc4494ad">
 <p>
 存在チェックの方法。
 </p>
 </div>
 </div>
-<div id="outline-container-org8491ba6" class="outline-3">
-<h3 id="org8491ba6"><a href="#org8491ba6">ファイル埋め込み</a></h3>
-<div class="outline-text-3" id="text-org8491ba6">
+<div id="outline-container-orgfebb7da" class="outline-3">
+<h3 id="orgfebb7da"><a href="#orgfebb7da">ファイル埋め込み</a></h3>
+<div class="outline-text-3" id="text-orgfebb7da">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 11: </span>sample.jsonを型sampleBytesに格納する</label><pre class="src src-go">//go:embed sample.json
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>sample.jsonを型sampleBytesに格納する</label><pre class="src src-go">//go:embed sample.json
 var sampleBytes []byte
 </pre>
 </div>
@@ -558,7 +650,7 @@ var sampleBytes []byte
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 12: </span>embed.FS型のファイルシステムとして変数に埋め込む。あとから各々ファイルを取り出す</label><pre class="src src-go">//go:embed README.md version.txt
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>embed.FS型のファイルシステムとして変数に埋め込む。あとから各々ファイルを取り出す</label><pre class="src src-go">//go:embed README.md version.txt
 var static embed.FS
 
 r, err := static.Readfile("README.md")
@@ -574,27 +666,27 @@ r, err := static.Readfile("README.md")
 </ul>
 </div>
 </div>
-<div id="outline-container-org82525bf" class="outline-3">
-<h3 id="org82525bf"><a href="#org82525bf">変数名のかぶりに注意する</a></h3>
-<div class="outline-text-3" id="text-org82525bf">
+<div id="outline-container-org47a6177" class="outline-3">
+<h3 id="org47a6177"><a href="#org47a6177">変数名のかぶりに注意する</a></h3>
+<div class="outline-text-3" id="text-org47a6177">
 <p>
 型名と同じ変数名を宣言すると、よりローカルな変数名が優先されるため、その型が使えなくなる。それだけでなく、型指定で~は型ではありませんエラーが謎に出るため、ハマる可能性が高い。Lintで防げるだろうか。
 </p>
 </div>
 </div>
-<div id="outline-container-orge56a085" class="outline-3">
-<h3 id="orge56a085"><a href="#orge56a085">よく使う型の定義</a></h3>
-<div class="outline-text-3" id="text-orge56a085">
+<div id="outline-container-org0ba832b" class="outline-3">
+<h3 id="org0ba832b"><a href="#org0ba832b">よく使う型の定義</a></h3>
+<div class="outline-text-3" id="text-org0ba832b">
 <ul class="org-ul">
 <li>fdはファイルディスクリプタ。プログラムからファイルを操作する際、操作対象のファイルを識別・同定するために割り当てられる番号</li>
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 13: </span>file型</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file_unix.go#L54-L61
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>file型</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file_unix.go#L54-L61
 </pre>
 </div>
 
-<div class="results" id="org01686f8">
+<div class="results" id="orga0f36bd">
 <p>
 type file struct {
 	pfd         poll.FD
@@ -617,7 +709,7 @@ type file struct {
 </pre>
 </div>
 
-<div class="results" id="org5c534aa">
+<div class="results" id="org183361e">
 <p>
 type Conn interface {
 	<i>/ Read reads data from the connection.
@@ -695,20 +787,20 @@ SetReadDeadline(t time.Time) error
 </div>
 </div>
 
-<div id="outline-container-orgf52cd3e" class="outline-3">
-<h3 id="orgf52cd3e"><a href="#orgf52cd3e">ファイルを開く関数</a></h3>
-<div class="outline-text-3" id="text-orgf52cd3e">
+<div id="outline-container-org8128bcf" class="outline-3">
+<h3 id="org8128bcf"><a href="#org8128bcf">ファイルを開く関数</a></h3>
+<div class="outline-text-3" id="text-org8128bcf">
 <ul class="org-ul">
 <li>Open(), Create() は引数が違うだけで同じ関数OpenFile()を呼び出している</li>
 <li>よく使う権限の組み合わせでラップしているだけ</li>
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 14: </span>Open</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L311-L313
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>Open</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L311-L313
 </pre>
 </div>
 
-<div class="results" id="org72341c8">
+<div class="results" id="orge666071">
 <p>
 func Open(name string) (*File, error) {
 	return OpenFile(name, O_RDONLY, 0)
@@ -718,11 +810,11 @@ func Open(name string) (*File, error) {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 15: </span>Create</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L320-L322
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>Create</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L320-L322
 </pre>
 </div>
 
-<div class="results" id="org5c368c3">
+<div class="results" id="org7a0aadd">
 <p>
 func Create(name string) (*File, error) {
 	return OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)
@@ -732,11 +824,11 @@ func Create(name string) (*File, error) {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 16: </span>OpenFile</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L330-L339
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>OpenFile</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/a813be86df74bf2a9c5b272c0b0934d196ac665d/src/os/file.go#L330-L339
 </pre>
 </div>
 
-<div class="results" id="org5fd20a4">
+<div class="results" id="orgc63c606">
 <p>
 func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 	testlog.Open(name)
@@ -756,21 +848,21 @@ func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 </div>
 </div>
 
-<div id="outline-container-orgc0d81ee" class="outline-3">
-<h3 id="orgc0d81ee"><a href="#orgc0d81ee">基本コマンド</a></h3>
-<div class="outline-text-3" id="text-orgc0d81ee">
+<div id="outline-container-org773eb42" class="outline-3">
+<h3 id="org773eb42"><a href="#org773eb42">基本コマンド</a></h3>
+<div class="outline-text-3" id="text-org773eb42">
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 17: </span>mod.goを作成する</label><pre class="src src-shell">go mod init example
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>mod.goを作成する</label><pre class="src src-shell">go mod init example
 </pre>
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 18: </span>依存パッケージをインストールする。mod.goに記載される</label><pre class="src src-shell">go install
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>依存パッケージをインストールする。mod.goに記載される</label><pre class="src src-shell">go install
 </pre>
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 19: </span>ビルド+実行</label><pre class="src src-shell">go run hello.go
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>ビルド+実行</label><pre class="src src-shell">go run hello.go
 </pre>
 </div>
 
@@ -779,25 +871,25 @@ func OpenFile(name string, flag int, perm FileMode) (*File, error) {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 20: </span>デバッグ実行</label><pre class="src src-emacs-lisp">M-x dap-debug
+<label class="org-src-name"><span class="listing-number">Listing 23: </span>デバッグ実行</label><pre class="src src-emacs-lisp">M-x dap-debug
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orgc889e56" class="outline-3">
-<h3 id="orgc889e56"><a href="#orgc889e56"><a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>での実行方法</a></h3>
-<div class="outline-text-3" id="text-orgc889e56">
+<div id="outline-container-org5c96eb6" class="outline-3">
+<h3 id="org5c96eb6"><a href="#org5c96eb6"><a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>での実行方法</a></h3>
+<div class="outline-text-3" id="text-org5c96eb6">
 <p>
 ob-goをインストールして <code>(require "ob-go")</code> する。実行方法が少し変わっていて、下のように指定する。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 21: </span>babel引数で指定importを指定する。本文には書かない</label><pre class="src src-go">fmt.Println("hello world")
+<label class="org-src-name"><span class="listing-number">Listing 24: </span>babel引数で指定importを指定する。本文には書かない</label><pre class="src src-go">fmt.Println("hello world")
 </pre>
 </div>
 
-<div class="results" id="org696831d">
+<div class="results" id="org90032de">
 <p>
 hello world
 </p>
@@ -810,9 +902,9 @@ hello world
 </div>
 </div>
 
-<div id="outline-container-orgfa364af" class="outline-3">
-<h3 id="orgfa364af"><a href="#orgfa364af"><a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>に<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>+DAPを設定する</a></h3>
-<div class="outline-text-3" id="text-orgfa364af">
+<div id="outline-container-org1c3efd3" class="outline-3">
+<h3 id="org1c3efd3"><a href="#org1c3efd3"><a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>に<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>+DAPを設定する</a></h3>
+<div class="outline-text-3" id="text-org1c3efd3">
 <p>
 DAP(Debug Adapter Protocol)はデバッガー補助。エディタ関係なくIDEのようにエディタ上でブレークポイントをセットできるプロトコル。<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>のデバッガーバージョンな概念。
 </p>
@@ -834,7 +926,7 @@ Go用のデバッガはemacsコマンドでインストールできず、go inst
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 22: </span>インストールする</label><pre class="src src-shell">$ go install golang.org/x/tools/gopls@master            <span class="org-comment-delimiter"># </span><span class="org-comment">Language Server</span>
+<label class="org-src-name"><span class="listing-number">Listing 25: </span>インストールする</label><pre class="src src-shell">$ go install golang.org/x/tools/gopls@master            <span class="org-comment-delimiter"># </span><span class="org-comment">Language Server</span>
 $ go install github.com/go-delve/delve/cmd/dlv@master   <span class="org-comment-delimiter"># </span><span class="org-comment">debugger</span>
 </pre>
 </div>
@@ -858,15 +950,15 @@ $ go install github.com/go-delve/delve/cmd/dlv@master   <span class="org-comment
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 23: </span>その他便利ライブラリ</label><pre class="src src-shell">$ go install github.com/uudashr/gopkgs/cmd/gopkgs       <span class="org-comment-delimiter"># </span><span class="org-comment">Go &#12497;&#12483;&#12465;&#12540;&#12472;</span>
+<label class="org-src-name"><span class="listing-number">Listing 26: </span>その他便利ライブラリ</label><pre class="src src-shell">$ go install github.com/uudashr/gopkgs/cmd/gopkgs       <span class="org-comment-delimiter"># </span><span class="org-comment">Go &#12497;&#12483;&#12465;&#12540;&#12472;</span>
 $ go install golang.org/x/tools/cmd/goimports@master    <span class="org-comment-delimiter"># </span><span class="org-comment">import &#12398;&#36942;&#19981;&#36275;&#12434;&#33258;&#21205;&#12391;&#35036;&#23436;</span>
 </pre>
 </div>
 </div>
 </div>
-<div id="outline-container-org119e5dd" class="outline-3">
-<h3 id="org119e5dd"><a href="#org119e5dd">printの仕組み</a></h3>
-<div class="outline-text-3" id="text-org119e5dd">
+<div id="outline-container-org943d424" class="outline-3">
+<h3 id="org943d424"><a href="#org943d424">printの仕組み</a></h3>
+<div class="outline-text-3" id="text-org943d424">
 <p>
 プリンターの状態を保存している、重要そうな構造体。
 </p>
@@ -876,7 +968,7 @@ $ go install golang.org/x/tools/cmd/goimports@master    <span class="org-comment
 </pre>
 </div>
 
-<div class="results" id="orgfd92845">
+<div class="results" id="org80d23e1">
 <p>
 // pp is used to store a printer&rsquo;s state and is reused with sync.Pool to avoid allocations.
 type pp struct {
@@ -885,11 +977,11 @@ type pp struct {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 24: </span>フラグを実装している箇所。歴史的理由で引数はintになっているらしい</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L188-L202
+<label class="org-src-name"><span class="listing-number">Listing 27: </span>フラグを実装している箇所。歴史的理由で引数はintになっているらしい</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L188-L202
 </pre>
 </div>
 
-<div class="results" id="orgf97183e">
+<div class="results" id="orgd430b0e">
 <p>
 func (p *pp) Flag(b int) bool {
 	switch b {
@@ -911,11 +1003,11 @@ func (p *pp) Flag(b int) bool {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 25: </span>Printは出力先が標準出力の、Fprintのエイリアスにすぎない</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L271-L273
+<label class="org-src-name"><span class="listing-number">Listing 28: </span>Printは出力先が標準出力の、Fprintのエイリアスにすぎない</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/fmt/print.go#L271-L273
 </pre>
 </div>
 
-<div class="results" id="org73b97d9">
+<div class="results" id="orgc5ec8e8">
 <p>
 func Print(a &#x2026;any) (n int, err error) {
 	return Fprint(os.Stdout, a&#x2026;)
@@ -948,7 +1040,7 @@ func Print(a &#x2026;any) (n int, err error) {
 </pre>
 </div>
 
-<div class="results" id="org1f9db1a">
+<div class="results" id="org6363afe">
 <p>
 Stdout = NewFile(uintptr(syscall.Stdout), &ldquo;/dev/stdout&rdquo;)
 </p>
@@ -960,7 +1052,7 @@ Stdout = NewFile(uintptr(syscall.Stdout), &ldquo;/dev/stdout&rdquo;)
 </pre>
 </div>
 
-<div class="results" id="org57bda83">
+<div class="results" id="org9b95bf3">
 <p>
 Stdout = 1
 </p>
@@ -974,9 +1066,9 @@ Stdout = 1
 </ul>
 </div>
 </div>
-<div id="outline-container-orgcca2105" class="outline-3">
-<h3 id="orgcca2105"><a href="#orgcca2105">Stringerとは</a></h3>
-<div class="outline-text-3" id="text-orgcca2105">
+<div id="outline-container-org7052bfb" class="outline-3">
+<h3 id="org7052bfb"><a href="#org7052bfb">Stringerとは</a></h3>
+<div class="outline-text-3" id="text-org7052bfb">
 <p>
 よく見るが、何か。
 </p>
@@ -986,7 +1078,7 @@ Stdout = 1
 </pre>
 </div>
 
-<div class="results" id="org8c0a9a7">
+<div class="results" id="org1ef0713">
 <p>
 type Stringer interface {
 	String() string
@@ -996,7 +1088,7 @@ type Stringer interface {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 26: </span>String()を実装してるのでMyStringはStringer</label><pre class="src src-go">type MyString string
+<label class="org-src-name"><span class="listing-number">Listing 29: </span>String()を実装してるのでMyStringはStringer</label><pre class="src src-go">type MyString string
 
 func (s MyString) String() string {
   return "mystring"
@@ -1009,7 +1101,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="org162c334">
+<div class="results" id="orgff221bc">
 <p>
 mystring
 </p>
@@ -1021,11 +1113,11 @@ printするときには、先にStringerの判定が入る。Stringerを満た�
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 27: </span>fmtパッケージのhandleMethodsという関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/fmt/print.go#L670-L675
+<label class="org-src-name"><span class="listing-number">Listing 30: </span>fmtパッケージのhandleMethodsという関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/fmt/print.go#L670-L675
 </pre>
 </div>
 
-<div class="results" id="org3b1c3e9">
+<div class="results" id="orgb120c11">
 <p>
 case Stringer:
 	handled = true
@@ -1039,9 +1131,9 @@ case Stringer:
 </div>
 </div>
 
-<div id="outline-container-org5f8174e" class="outline-3">
-<h3 id="org5f8174e"><a href="#org5f8174e">runeとは</a></h3>
-<div class="outline-text-3" id="text-org5f8174e">
+<div id="outline-container-org0e4db60" class="outline-3">
+<h3 id="org0e4db60"><a href="#org0e4db60">runeとは</a></h3>
+<div class="outline-text-3" id="text-org0e4db60">
 <ul class="org-ul">
 <li><a href="https://qiita.com/seihmd/items/4a878e7fa340d7963fee">Goのruneを理解するためのUnicode知識 - Qiita</a></li>
 <li>文字と01の並びを対応づける仕組み、それが文字コード。その1つのUnicodeは世界中のあらゆる文字列を収録されるために作られている規格
@@ -1055,14 +1147,14 @@ case Stringer:
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 28: </span>&ldquo;あ&rdquo;は3byteで表される</label><pre class="src src-go">s := "あ"
+<label class="org-src-name"><span class="listing-number">Listing 31: </span>&ldquo;あ&rdquo;は3byteで表される</label><pre class="src src-go">s := "あ"
 for i := 0; i &lt; len(s); i++{
   fmt.Printf("% x", s[i])
 }
 </pre>
 </div>
 
-<div class="results" id="org3e156de">
+<div class="results" id="orgcf51b88">
 <p>
 e3 81 82
 </p>
@@ -1080,7 +1172,7 @@ e3 81 82
 </pre>
 </div>
 
-<div class="results" id="orgb453538">
+<div class="results" id="org3f5abf6">
 <p>
 <i>/ rune is an alias for int32 and is equivalent to int32 in all ways. It is
 /</i> used, by convention, to distinguish character values from integer values.
@@ -1090,7 +1182,7 @@ type rune = int32
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 29: </span>runeはint32のエイリアス。なので単なる数字</label><pre class="src src-go">fmt.Println('あ')
+<label class="org-src-name"><span class="listing-number">Listing 32: </span>runeはint32のエイリアス。なので単なる数字</label><pre class="src src-go">fmt.Println('あ')
 fmt.Println('a')
 fmt.Println(' ')
 fmt.Println('!')
@@ -1100,7 +1192,7 @@ fmt.Println('a' - 'b')
 </pre>
 </div>
 
-<div class="results" id="orgb7e21ae">
+<div class="results" id="orge6feab9">
 <p>
 12354
 97
@@ -1114,13 +1206,13 @@ fmt.Println('a' - 'b')
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 30: </span>stringを[]runeと[]byteにキャストする。文字列が対応するcodepoint、byteに姿を変えているだけ</label><pre class="src src-go">s := "あいう"
+<label class="org-src-name"><span class="listing-number">Listing 33: </span>stringを[]runeと[]byteにキャストする。文字列が対応するcodepoint、byteに姿を変えているだけ</label><pre class="src src-go">s := "あいう"
 fmt.Println([]rune(s))
 fmt.Println([]byte(s))
 </pre>
 </div>
 
-<div class="results" id="org57b8bdb">
+<div class="results" id="org1e01f61">
 <p>
 [12354 12356 12358]
 [227 129 130 227 129 132 227 129 134]
@@ -1129,9 +1221,9 @@ fmt.Println([]byte(s))
 </div>
 </div>
 </div>
-<div id="outline-container-orgcb2502c" class="outline-3">
-<h3 id="orgcb2502c"><a href="#orgcb2502c"><span class="done DONE">DONE</span> <a href="https://go.dev/ref/spec">The Go Programming Language Specification - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-orgcb2502c">
+<div id="outline-container-org6535757" class="outline-3">
+<h3 id="org6535757"><a href="#org6535757"><span class="done DONE">DONE</span> <a href="https://go.dev/ref/spec">The Go Programming Language Specification - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-org6535757">
 <p>
 言語の仕様書。
 </p>
@@ -1290,136 +1382,136 @@ fmt.Println([]byte(s))
 </div>
 </div>
 
-<div id="outline-container-org58baeee" class="outline-2">
-<h2 id="org58baeee"><a href="#org58baeee">Tasks</a></h2>
-<div class="outline-text-2" id="text-org58baeee">
+<div id="outline-container-org1573ebb" class="outline-2">
+<h2 id="org1573ebb"><a href="#org1573ebb">Tasks</a></h2>
+<div class="outline-text-2" id="text-org1573ebb">
 </div>
-<div id="outline-container-orgecbd534" class="outline-3">
-<h3 id="orgecbd534"><a href="#orgecbd534"><span class="todo TODO">TODO</span> <a href="https://qiita.com/Akatsuki_py/items/8041fba499d54d59e0dd">&ldquo;go build&rdquo;した時に何が起きているのか？ - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgecbd534">
+<div id="outline-container-orgc27071b" class="outline-3">
+<h3 id="orgc27071b"><a href="#orgc27071b"><span class="todo TODO">TODO</span> <a href="https://qiita.com/Akatsuki_py/items/8041fba499d54d59e0dd">&ldquo;go build&rdquo;した時に何が起きているのか？ - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgc27071b">
 <p>
 コンパイル時になにが起きているか、ログから調べる。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb77e964" class="outline-3">
-<h3 id="orgb77e964"><a href="#orgb77e964"><span class="todo TODO">TODO</span> <a href="https://deeeet.com/writing/2016/05/08/gogc-2016/">GolangのGCを追う | Taichi Nakashima</a></a></h3>
-<div class="outline-text-3" id="text-orgb77e964">
+<div id="outline-container-org434f689" class="outline-3">
+<h3 id="org434f689"><a href="#org434f689"><span class="todo TODO">TODO</span> <a href="https://deeeet.com/writing/2016/05/08/gogc-2016/">GolangのGCを追う | Taichi Nakashima</a></a></h3>
+<div class="outline-text-3" id="text-org434f689">
 <p>
 GCの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgbb646fb" class="outline-3">
-<h3 id="orgbb646fb"><a href="#orgbb646fb"><span class="todo TODO">TODO</span> <a href="https://www.altoros.com/blog/golang-internals-part-5-the-runtime-bootstrap-process/">Golang Internals, Part 5: the Runtime Bootstrap Process | Altoros</a></a></h3>
-<div class="outline-text-3" id="text-orgbb646fb">
+<div id="outline-container-orgb3f75bd" class="outline-3">
+<h3 id="orgb3f75bd"><a href="#orgb3f75bd"><span class="todo TODO">TODO</span> <a href="https://www.altoros.com/blog/golang-internals-part-5-the-runtime-bootstrap-process/">Golang Internals, Part 5: the Runtime Bootstrap Process | Altoros</a></a></h3>
+<div class="outline-text-3" id="text-orgb3f75bd">
 <p>
 Goのランタイムの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org4fefbfb" class="outline-3">
-<h3 id="org4fefbfb"><a href="#org4fefbfb"><span class="todo TODO">TODO</span> <a href="https://speakerdeck.com/rhysd/go-detukurufan-yong-yan-yu-chu-li-xi-shi-zhuang-zhan-lue">Go でつくる汎用言語処理系 実装戦略 - Speaker Deck</a></a></h3>
-<div class="outline-text-3" id="text-org4fefbfb">
+<div id="outline-container-org63624d6" class="outline-3">
+<h3 id="org63624d6"><a href="#org63624d6"><span class="todo TODO">TODO</span> <a href="https://speakerdeck.com/rhysd/go-detukurufan-yong-yan-yu-chu-li-xi-shi-zhuang-zhan-lue">Go でつくる汎用言語処理系 実装戦略 - Speaker Deck</a></a></h3>
+<div class="outline-text-3" id="text-org63624d6">
 <p>
 言語処理系の作り方。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf00c343" class="outline-3">
-<h3 id="orgf00c343"><a href="#orgf00c343"><span class="todo TODO">TODO</span> <a href="https://go.dev/src/cmd/compile/README">Introduction to the Go compiler - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-orgf00c343">
+<div id="outline-container-org6c7f4a4" class="outline-3">
+<h3 id="org6c7f4a4"><a href="#org6c7f4a4"><span class="todo TODO">TODO</span> <a href="https://go.dev/src/cmd/compile/README">Introduction to the Go compiler - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-org6c7f4a4">
 <p>
 Goコンパイルの流れ。
 </p>
 </div>
 </div>
-<div id="outline-container-org8a6e445" class="outline-3">
-<h3 id="org8a6e445"><a href="#org8a6e445"><span class="todo TODO">TODO</span> <a href="https://maku77.github.io/p/29dgjnq/">ベンチマークを行う (testing.B) - まくまく Golang ノート</a></a></h3>
-<div class="outline-text-3" id="text-org8a6e445">
+<div id="outline-container-orge1d195f" class="outline-3">
+<h3 id="orge1d195f"><a href="#orge1d195f"><span class="todo TODO">TODO</span> <a href="https://maku77.github.io/p/29dgjnq/">ベンチマークを行う (testing.B) - まくまく Golang ノート</a></a></h3>
+<div class="outline-text-3" id="text-orge1d195f">
 <p>
 ベンチマークする方法。
 </p>
 </div>
 </div>
-<div id="outline-container-org1024521" class="outline-3">
-<h3 id="org1024521"><a href="#org1024521"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/spiegel/books/error-handling-in-golang/viewer/evaluations">エラー評価のいろいろ｜Go のエラーハンドリング</a></a></h3>
-<div class="outline-text-3" id="text-org1024521">
+<div id="outline-container-orge0e4b62" class="outline-3">
+<h3 id="orge0e4b62"><a href="#orge0e4b62"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/spiegel/books/error-handling-in-golang/viewer/evaluations">エラー評価のいろいろ｜Go のエラーハンドリング</a></a></h3>
+<div class="outline-text-3" id="text-orge0e4b62">
 <p>
 エラーハンドリングの本。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb002fbb" class="outline-3">
-<h3 id="orgb002fbb"><a href="#orgb002fbb"><span class="todo TODO">TODO</span> <a href="https://qiita.com/hkurokawa/items/a4d402d3182dff387674">Go の定数の話 - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgb002fbb">
+<div id="outline-container-org1464ed8" class="outline-3">
+<h3 id="org1464ed8"><a href="#org1464ed8"><span class="todo TODO">TODO</span> <a href="https://qiita.com/hkurokawa/items/a4d402d3182dff387674">Go の定数の話 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org1464ed8">
 <p>
 じつは複雑な定数。
 </p>
 </div>
 </div>
-<div id="outline-container-org4cfceb1" class="outline-3">
-<h3 id="org4cfceb1"><a href="#org4cfceb1"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/senk/articles/33c9dc7ea25dab">[Go] 言語仕様書の「型と値の特性」を理解する</a></a></h3>
-<div class="outline-text-3" id="text-org4cfceb1">
+<div id="outline-container-org8df6db2" class="outline-3">
+<h3 id="org8df6db2"><a href="#org8df6db2"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/senk/articles/33c9dc7ea25dab">[Go] 言語仕様書の「型と値の特性」を理解する</a></a></h3>
+<div class="outline-text-3" id="text-org8df6db2">
 <p>
 値。
 </p>
 </div>
 </div>
-<div id="outline-container-org3dc5a0c" class="outline-3">
-<h3 id="org3dc5a0c"><a href="#org3dc5a0c"><span class="todo TODO">TODO</span> interfaceを満たす構造体の調べ方</a></h3>
-<div class="outline-text-3" id="text-org3dc5a0c">
+<div id="outline-container-orgc221613" class="outline-3">
+<h3 id="orgc221613"><a href="#orgc221613"><span class="todo TODO">TODO</span> interfaceを満たす構造体の調べ方</a></h3>
+<div class="outline-text-3" id="text-orgc221613">
 <p>
 どうするんだっけ。
 </p>
 </div>
 </div>
-<div id="outline-container-org3c353e1" class="outline-3">
-<h3 id="org3c353e1"><a href="#org3c353e1"><span class="todo TODO">TODO</span> <a href="https://github.com/golang/example">golang/example: Go example projects</a></a></h3>
-<div class="outline-text-3" id="text-org3c353e1">
+<div id="outline-container-orgd47333a" class="outline-3">
+<h3 id="orgd47333a"><a href="#orgd47333a"><span class="todo TODO">TODO</span> <a href="https://github.com/golang/example">golang/example: Go example projects</a></a></h3>
+<div class="outline-text-3" id="text-orgd47333a">
 <p>
 例で学ぶ解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org74328dd" class="outline-3">
-<h3 id="org74328dd"><a href="#org74328dd"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/spiegel/articles/20201010-ni-is-not-nil">nil == nil でないとき（または Go プログラマは息をするように依存を注入する）</a></a></h3>
-<div class="outline-text-3" id="text-org74328dd">
+<div id="outline-container-org33416f8" class="outline-3">
+<h3 id="org33416f8"><a href="#org33416f8"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/spiegel/articles/20201010-ni-is-not-nil">nil == nil でないとき（または Go プログラマは息をするように依存を注入する）</a></a></h3>
+<div class="outline-text-3" id="text-org33416f8">
 <p>
 直感に反する挙動からわかる、内部の仕組みの話。
 </p>
 </div>
 </div>
-<div id="outline-container-orgda8f1b2" class="outline-3">
-<h3 id="orgda8f1b2"><a href="#orgda8f1b2"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/book/2023/978-4-297-13419-8">Go言語プログラミングエッセンス：書籍案内｜技術評論社</a></a></h3>
-<div class="outline-text-3" id="text-orgda8f1b2">
+<div id="outline-container-org4de0b1d" class="outline-3">
+<h3 id="org4de0b1d"><a href="#org4de0b1d"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/book/2023/978-4-297-13419-8">Go言語プログラミングエッセンス：書籍案内｜技術評論社</a></a></h3>
+<div class="outline-text-3" id="text-org4de0b1d">
 <p>
 来月発売される本。
 </p>
 </div>
 </div>
-<div id="outline-container-org1112b6d" class="outline-3">
-<h3 id="org1112b6d"><a href="#org1112b6d"><span class="todo TODO">TODO</span> ecspressoが本質的に何をしているか調べる&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div id="outline-container-orgb44e828" class="outline-3">
+<h3 id="orgb44e828"><a href="#orgb44e828"><span class="todo TODO">TODO</span> ecspressoが本質的に何をしているか調べる&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
 </div>
-<div id="outline-container-orgb6a2e03" class="outline-3">
-<h3 id="orgb6a2e03"><a href="#orgb6a2e03"><span class="todo TODO">TODO</span> <a href="https://d-tsuji.github.io/effective_go/documents/effective_go_ja.html">Effective Go — Effective Go ドキュメント</a></a></h3>
-<div class="outline-text-3" id="text-orgb6a2e03">
+<div id="outline-container-orgf3043ee" class="outline-3">
+<h3 id="orgf3043ee"><a href="#orgf3043ee"><span class="todo TODO">TODO</span> <a href="https://d-tsuji.github.io/effective_go/documents/effective_go_ja.html">Effective Go — Effective Go ドキュメント</a></a></h3>
+<div class="outline-text-3" id="text-orgf3043ee">
 <p>
 日本語訳。
 </p>
 </div>
 </div>
-<div id="outline-container-orga334b69" class="outline-3">
-<h3 id="orga334b69"><a href="#orga334b69"><span class="todo TODO">TODO</span> <a href="https://runebook.dev/ja/docs/go/-index-">Go 1.19 日本語</a></a></h3>
-<div class="outline-text-3" id="text-orga334b69">
+<div id="outline-container-org47b98bb" class="outline-3">
+<h3 id="org47b98bb"><a href="#org47b98bb"><span class="todo TODO">TODO</span> <a href="https://runebook.dev/ja/docs/go/-index-">Go 1.19 日本語</a></a></h3>
+<div class="outline-text-3" id="text-org47b98bb">
 <p>
 日本語訳された公式ドキュメント。
 </p>
 </div>
 </div>
-<div id="outline-container-org112854c" class="outline-3">
-<h3 id="org112854c"><a href="#org112854c"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-concurrency/viewer/intro">はじめに｜Goでの並行処理を徹底解剖！</a></a></h3>
-<div class="outline-text-3" id="text-org112854c">
+<div id="outline-container-orgc581b50" class="outline-3">
+<h3 id="orgc581b50"><a href="#orgc581b50"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-concurrency/viewer/intro">はじめに｜Goでの並行処理を徹底解剖！</a></a></h3>
+<div class="outline-text-3" id="text-orgc581b50">
 <p>
 並行処理の解説本。
 </p>
@@ -1457,65 +1549,65 @@ Goコンパイルの流れ。
 </div>
 </div>
 
-<div id="outline-container-org70b5523" class="outline-3">
-<h3 id="org70b5523"><a href="#org70b5523"><span class="todo TODO">TODO</span> <a href="https://www.manning.com/books/learn-go-with-pocket-sized-projects?utm_source=donia&amp;utm_medium=affiliate&amp;utm_campaign=book_latour_learn_1_5_23&amp;utm_content=linkedin&amp;a_aid=donia&amp;a_bid=48b0541c">Learn Go with Pocket-Sized Projects</a></a></h3>
-<div class="outline-text-3" id="text-org70b5523">
+<div id="outline-container-orgd182786" class="outline-3">
+<h3 id="orgd182786"><a href="#orgd182786"><span class="todo TODO">TODO</span> <a href="https://www.manning.com/books/learn-go-with-pocket-sized-projects?utm_source=donia&amp;utm_medium=affiliate&amp;utm_campaign=book_latour_learn_1_5_23&amp;utm_content=linkedin&amp;a_aid=donia&amp;a_bid=48b0541c">Learn Go with Pocket-Sized Projects</a></a></h3>
+<div class="outline-text-3" id="text-orgd182786">
 <p>
 Goのハンズオン集。
 </p>
 </div>
 </div>
-<div id="outline-container-org156f2e3" class="outline-3">
-<h3 id="org156f2e3"><a href="#org156f2e3"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tenntenn/items/b1bb5eb4d372bd2d936f">gorenameをライブラリとして使う #golang - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org156f2e3">
+<div id="outline-container-orgf382f1b" class="outline-3">
+<h3 id="orgf382f1b"><a href="#orgf382f1b"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tenntenn/items/b1bb5eb4d372bd2d936f">gorenameをライブラリとして使う #golang - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgf382f1b">
 <p>
 IdをIDに変換する例。
 </p>
 </div>
 </div>
-<div id="outline-container-org1a7ed2c" class="outline-3">
-<h3 id="org1a7ed2c"><a href="#org1a7ed2c"><span class="todo TODO">TODO</span> <a href="https://qiita.com/lighttiger2505/items/8c1c2222d8ceb04b43fd">Go標準のflagパッケージと比べてみようサードパーティflagライブラリ - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org1a7ed2c">
+<div id="outline-container-org7535ef4" class="outline-3">
+<h3 id="org7535ef4"><a href="#org7535ef4"><span class="todo TODO">TODO</span> <a href="https://qiita.com/lighttiger2505/items/8c1c2222d8ceb04b43fd">Go標準のflagパッケージと比べてみようサードパーティflagライブラリ - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org7535ef4">
 <p>
 読む。
 </p>
 </div>
 </div>
-<div id="outline-container-orgc1e0d1e" class="outline-3">
-<h3 id="orgc1e0d1e"><a href="#orgc1e0d1e"><span class="todo TODO">TODO</span> <a href="http://go.shibu.jp/effective_go.html">Effective Go — プログラミング言語 Go ドキュメント v0.1 documentation</a></a></h3>
-<div class="outline-text-3" id="text-orgc1e0d1e">
+<div id="outline-container-org7c52014" class="outline-3">
+<h3 id="org7c52014"><a href="#org7c52014"><span class="todo TODO">TODO</span> <a href="http://go.shibu.jp/effective_go.html">Effective Go — プログラミング言語 Go ドキュメント v0.1 documentation</a></a></h3>
+<div class="outline-text-3" id="text-org7c52014">
 <p>
 Goらしく書くためのtips。
 </p>
 </div>
 </div>
-<div id="outline-container-orgc7417c8" class="outline-3">
-<h3 id="orgc7417c8"><a href="#orgc7417c8"><span class="todo TODO">TODO</span> <a href="https://qiita.com/mnuma/items/109458d90ce9dbdde426">Go Patternsで学ぶGo - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgc7417c8">
+<div id="outline-container-org123392f" class="outline-3">
+<h3 id="org123392f"><a href="#org123392f"><span class="todo TODO">TODO</span> <a href="https://qiita.com/mnuma/items/109458d90ce9dbdde426">Go Patternsで学ぶGo - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org123392f">
 <p>
 Goで役立つパターン。
 </p>
 </div>
 </div>
-<div id="outline-container-org78be64e" class="outline-3">
-<h3 id="org78be64e"><a href="#org78be64e"><span class="todo TODO">TODO</span> <a href="https://www.educative.io/answers/how-to-read-and-write-with-golang-bufio">How to read and write with Golang bufio</a></a></h3>
-<div class="outline-text-3" id="text-org78be64e">
+<div id="outline-container-orgc52d4d2" class="outline-3">
+<h3 id="orgc52d4d2"><a href="#orgc52d4d2"><span class="todo TODO">TODO</span> <a href="https://www.educative.io/answers/how-to-read-and-write-with-golang-bufio">How to read and write with Golang bufio</a></a></h3>
+<div class="outline-text-3" id="text-orgc52d4d2">
 <p>
 bufioのわかりやすい解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf5c7437" class="outline-3">
-<h3 id="orgf5c7437"><a href="#orgf5c7437"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tutuz/items/e875d8ea3c31450195a7">Go言語を使ったTCPクライアントの作り方 - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgf5c7437">
+<div id="outline-container-orgb356d79" class="outline-3">
+<h3 id="orgb356d79"><a href="#orgb356d79"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tutuz/items/e875d8ea3c31450195a7">Go言語を使ったTCPクライアントの作り方 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgb356d79">
 <p>
 TCPの仕組み、作り方。
 </p>
 </div>
 </div>
-<div id="outline-container-org5514af1" class="outline-3">
-<h3 id="org5514af1"><a href="#org5514af1"><span class="todo TODO">TODO</span> new()とmake()の違い&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
-<div class="outline-text-3" id="text-org5514af1">
+<div id="outline-container-orgb91a578" class="outline-3">
+<h3 id="orgb91a578"><a href="#orgb91a578"><span class="todo TODO">TODO</span> new()とmake()の違い&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-orgb91a578">
 <p>
 どちらも大まかには初期化するものだが、微妙に異なる。
 </p>
@@ -1529,7 +1621,7 @@ TCPの仕組み、作り方。
 </pre>
 </div>
 
-<div class="results" id="org17d0edb">
+<div class="results" id="org95c78c7">
 <p>
 func new(Type) *Type
 </p>
@@ -1553,9 +1645,9 @@ func make(t Type, size &#x2026;IntegerType) Type
 </div>
 </div>
 
-<div id="outline-container-orgb7822c3" class="outline-3">
-<h3 id="orgb7822c3"><a href="#orgb7822c3"><span class="todo TODO">TODO</span> Len()の仕組み&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
-<div class="outline-text-3" id="text-orgb7822c3">
+<div id="outline-container-orged251db" class="outline-3">
+<h3 id="orged251db"><a href="#orged251db"><span class="todo TODO">TODO</span> Len()の仕組み&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-orged251db">
 <p>
 スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。組み込みだから、ほかの関数とは異なりそう。
 </p>
@@ -1565,7 +1657,7 @@ func make(t Type, size &#x2026;IntegerType) Type
 </pre>
 </div>
 
-<div class="results" id="orgba6e16f">
+<div class="results" id="org1492967">
 <p>
 <i>/ The len built-in function returns the length of v, according to its type:
 /</i>
@@ -1586,41 +1678,41 @@ func len(v Type) int
 </div>
 </div>
 
-<div id="outline-container-orgf768bb8" class="outline-3">
-<h3 id="orgf768bb8"><a href="#orgf768bb8"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/articles/go-convert-json-struct">Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて</a></a></h3>
-<div class="outline-text-3" id="text-orgf768bb8">
+<div id="outline-container-org8bd08f8" class="outline-3">
+<h3 id="org8bd08f8"><a href="#org8bd08f8"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/articles/go-convert-json-struct">Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて</a></a></h3>
+<div class="outline-text-3" id="text-org8bd08f8">
 <p>
 エンコードの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org3387551" class="outline-3">
-<h3 id="org3387551"><a href="#org3387551"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-httpserver-internal">Deep Dive into The Go&rsquo;s Web Server</a></a></h3>
-<div class="outline-text-3" id="text-org3387551">
+<div id="outline-container-orge066f7a" class="outline-3">
+<h3 id="orge066f7a"><a href="#orge066f7a"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-httpserver-internal">Deep Dive into The Go&rsquo;s Web Server</a></a></h3>
+<div class="outline-text-3" id="text-orge066f7a">
 <p>
 Goのサーバーの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgfbbd106" class="outline-3">
-<h3 id="orgfbbd106"><a href="#orgfbbd106"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-context/viewer/intro">よくわかるcontextの使い方</a></a></h3>
-<div class="outline-text-3" id="text-orgfbbd106">
+<div id="outline-container-org557bcfa" class="outline-3">
+<h3 id="org557bcfa"><a href="#org557bcfa"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/books/golang-context/viewer/intro">よくわかるcontextの使い方</a></a></h3>
+<div class="outline-text-3" id="text-org557bcfa">
 <p>
 contextの詳しい解説。この人すごいなあ。
 </p>
 </div>
 </div>
-<div id="outline-container-org839bde0" class="outline-3">
-<h3 id="org839bde0"><a href="#org839bde0"><span class="todo TODO">TODO</span> 誤字修正</a></h3>
-<div class="outline-text-3" id="text-org839bde0">
+<div id="outline-container-org65a8375" class="outline-3">
+<h3 id="org65a8375"><a href="#org65a8375"><span class="todo TODO">TODO</span> 誤字修正</a></h3>
+<div class="outline-text-3" id="text-org65a8375">
 <ul class="org-ul">
 <li>driectory</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgc01e56b" class="outline-3">
-<h3 id="orgc01e56b"><a href="#orgc01e56b"><span class="todo TODO">TODO</span> orgパーサを書く</a></h3>
-<div class="outline-text-3" id="text-orgc01e56b">
+<div id="outline-container-org6b70a78" class="outline-3">
+<h3 id="org6b70a78"><a href="#org6b70a78"><span class="todo TODO">TODO</span> orgパーサを書く</a></h3>
+<div class="outline-text-3" id="text-org6b70a78">
 <p>
 パーサの理解を深めるためにやる。
 </p>
@@ -1644,65 +1736,65 @@ contextの詳しい解説。この人すごいなあ。
 </div>
 </div>
 
-<div id="outline-container-org1c31865" class="outline-3">
-<h3 id="org1c31865"><a href="#org1c31865"><span class="todo TODO">TODO</span> <a href="https://compilerbook.com/">Writing A Compiler In Go | Thorsten Ball</a></a></h3>
-<div class="outline-text-3" id="text-org1c31865">
+<div id="outline-container-org21793d9" class="outline-3">
+<h3 id="org21793d9"><a href="#org21793d9"><span class="todo TODO">TODO</span> <a href="https://compilerbook.com/">Writing A Compiler In Go | Thorsten Ball</a></a></h3>
+<div class="outline-text-3" id="text-org21793d9">
 <p>
 Goでインタプリタを書く本の続編。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb85eb8c" class="outline-3">
-<h3 id="orgb85eb8c"><a href="#orgb85eb8c"><span class="todo TODO">TODO</span> <a href="https://astaxie.gitbooks.io/build-web-application-with-golang/content/ja/?q=">Introduction · Build web application with Golang</a></a></h3>
-<div class="outline-text-3" id="text-orgb85eb8c">
+<div id="outline-container-orga24e765" class="outline-3">
+<h3 id="orga24e765"><a href="#orga24e765"><span class="todo TODO">TODO</span> <a href="https://astaxie.gitbooks.io/build-web-application-with-golang/content/ja/?q=">Introduction · Build web application with Golang</a></a></h3>
+<div class="outline-text-3" id="text-orga24e765">
 <p>
 Go Web プログラミング。
 </p>
 </div>
 </div>
-<div id="outline-container-org3a4c267" class="outline-3">
-<h3 id="org3a4c267"><a href="#org3a4c267"><span class="todo TODO">TODO</span> <a href="http://go.shibu.jp/">プログラミング言語 Go ドキュメント — プログラミング言語 Go ドキュメント v0.1 documentation</a></a></h3>
-<div class="outline-text-3" id="text-org3a4c267">
+<div id="outline-container-orge0fec6e" class="outline-3">
+<h3 id="orge0fec6e"><a href="#orge0fec6e"><span class="todo TODO">TODO</span> <a href="http://go.shibu.jp/">プログラミング言語 Go ドキュメント — プログラミング言語 Go ドキュメント v0.1 documentation</a></a></h3>
+<div class="outline-text-3" id="text-orge0fec6e">
 <p>
 Goドキュメント。
 </p>
 </div>
 </div>
-<div id="outline-container-orgcfd0e6f" class="outline-3">
-<h3 id="orgcfd0e6f"><a href="#orgcfd0e6f"><span class="todo TODO">TODO</span> <a href="https://knsh14.github.io/translations/go-codereview-comments/">Go Codereview Comments</a></a></h3>
-<div class="outline-text-3" id="text-orgcfd0e6f">
+<div id="outline-container-orgbec362f" class="outline-3">
+<h3 id="orgbec362f"><a href="#orgbec362f"><span class="todo TODO">TODO</span> <a href="https://knsh14.github.io/translations/go-codereview-comments/">Go Codereview Comments</a></a></h3>
+<div class="outline-text-3" id="text-orgbec362f">
 <p>
 GoのTips集。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf931493" class="outline-3">
-<h3 id="orgf931493"><a href="#orgf931493"><span class="todo TODO">TODO</span> <a href="https://hiwane.github.io/gospec-ja/">Go プログラミング言語仕様 | gospec-ja</a></a></h3>
-<div class="outline-text-3" id="text-orgf931493">
+<div id="outline-container-org3a0e6f6" class="outline-3">
+<h3 id="org3a0e6f6"><a href="#org3a0e6f6"><span class="todo TODO">TODO</span> <a href="https://hiwane.github.io/gospec-ja/">Go プログラミング言語仕様 | gospec-ja</a></a></h3>
+<div class="outline-text-3" id="text-org3a0e6f6">
 <p>
 言語仕様の日本語訳。
 </p>
 </div>
 </div>
-<div id="outline-container-org73cc2bd" class="outline-3">
-<h3 id="org73cc2bd"><a href="#org73cc2bd"><span class="todo TODO">TODO</span> <a href="https://qiita.com/taigamikami/items/fc798cdd6a4eaf9a7d5e">Goのgoroutine, channelをちょっと攻略！ - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org73cc2bd">
+<div id="outline-container-orgb0fe028" class="outline-3">
+<h3 id="orgb0fe028"><a href="#orgb0fe028"><span class="todo TODO">TODO</span> <a href="https://qiita.com/taigamikami/items/fc798cdd6a4eaf9a7d5e">Goのgoroutine, channelをちょっと攻略！ - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgb0fe028">
 <p>
 ゴルーチンの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org59989ea" class="outline-3">
-<h3 id="org59989ea"><a href="#org59989ea"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tenntenn/items/45c568d43e950292bc31">Goを学びたての人が誤解しがちなtypeと構造体について #golang - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org59989ea">
+<div id="outline-container-orgd006fa8" class="outline-3">
+<h3 id="orgd006fa8"><a href="#orgd006fa8"><span class="todo TODO">TODO</span> <a href="https://qiita.com/tenntenn/items/45c568d43e950292bc31">Goを学びたての人が誤解しがちなtypeと構造体について #golang - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgd006fa8">
 <p>
 typeとstructの違いの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgaee19df" class="outline-3">
-<h3 id="orgaee19df"><a href="#orgaee19df"><span class="todo TODO">TODO</span> actをworkflow化する</a></h3>
-<div class="outline-text-3" id="text-orgaee19df">
+<div id="outline-container-org9e7e349" class="outline-3">
+<h3 id="org9e7e349"><a href="#org9e7e349"><span class="todo TODO">TODO</span> actをworkflow化する</a></h3>
+<div class="outline-text-3" id="text-org9e7e349">
 <p>
 <a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>ですぐに実行できるようにする。
 </p>
@@ -1717,25 +1809,25 @@ typeとstructの違いの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgeffa44f" class="outline-3">
-<h3 id="orgeffa44f"><a href="#orgeffa44f"><span class="todo TODO">TODO</span> actをバージョン対応する</a></h3>
-<div class="outline-text-3" id="text-orgeffa44f">
+<div id="outline-container-org5b0ee9e" class="outline-3">
+<h3 id="org5b0ee9e"><a href="#org5b0ee9e"><span class="todo TODO">TODO</span> actをバージョン対応する</a></h3>
+<div class="outline-text-3" id="text-org5b0ee9e">
 <p>
 mainを使ってるので、バージョンを固定して安全に使えるようにする。
 </p>
 </div>
 </div>
-<div id="outline-container-org6592cd6" class="outline-3">
-<h3 id="org6592cd6"><a href="#org6592cd6"><span class="todo TODO">TODO</span> maruをバージョン対応する</a></h3>
-<div class="outline-text-3" id="text-org6592cd6">
+<div id="outline-container-org91a9ba1" class="outline-3">
+<h3 id="org91a9ba1"><a href="#org91a9ba1"><span class="todo TODO">TODO</span> maruをバージョン対応する</a></h3>
+<div class="outline-text-3" id="text-org91a9ba1">
 <p>
 READMEのタグをmainにしてるので、バージョン番号にする。タグを切り替えると画像も変わるようにして、安全にする。安心して使えるようにする。
 </p>
 </div>
 </div>
-<div id="outline-container-org406faee" class="outline-3">
-<h3 id="org406faee"><a href="#org406faee"><span class="todo TODO">TODO</span> ローカルパッケージをimportする方法</a></h3>
-<div class="outline-text-3" id="text-org406faee">
+<div id="outline-container-orgfd37136" class="outline-3">
+<h3 id="orgfd37136"><a href="#orgfd37136"><span class="todo TODO">TODO</span> ローカルパッケージをimportする方法</a></h3>
+<div class="outline-text-3" id="text-orgfd37136">
 <p>
 読みたいライブラリがmoduleで、直接実行できない。実行できないと、printデバッグもできない。テストでもできるか。だが引数が面倒なのだと大変。
 </p>
@@ -1745,9 +1837,9 @@ READMEのタグをmainにしてるので、バージョン番号にする。タ�
 </p>
 </div>
 </div>
-<div id="outline-container-orgedc1d2a" class="outline-3">
-<h3 id="orgedc1d2a"><a href="#orgedc1d2a"><span class="todo TODO">TODO</span> octocovを読む</a></h3>
-<div class="outline-text-3" id="text-orgedc1d2a">
+<div id="outline-container-orgfb35f01" class="outline-3">
+<h3 id="orgfb35f01"><a href="#orgfb35f01"><span class="todo TODO">TODO</span> octocovを読む</a></h3>
+<div class="outline-text-3" id="text-orgfb35f01">
 <ul class="org-ul">
 <li><a href="https://github.com/k1LoW/octocov">k1LoW/octocov</a></li>
 </ul>
@@ -1758,9 +1850,9 @@ READMEのタグをmainにしてるので、バージョン番号にする。タ�
 </div>
 </div>
 
-<div id="outline-container-org6f9c748" class="outline-3">
-<h3 id="org6f9c748"><a href="#org6f9c748"><span class="todo TODO">TODO</span> goclocを読む</a></h3>
-<div class="outline-text-3" id="text-org6f9c748">
+<div id="outline-container-org3d0ca2a" class="outline-3">
+<h3 id="org3d0ca2a"><a href="#org3d0ca2a"><span class="todo TODO">TODO</span> goclocを読む</a></h3>
+<div class="outline-text-3" id="text-org3d0ca2a">
 <p>
 goclocはリポジトリのコード量を調べるツール。
 </p>
@@ -1790,9 +1882,9 @@ goclocはリポジトリのコード量を調べるツール。
 </div>
 </div>
 
-<div id="outline-container-org022076a" class="outline-3">
-<h3 id="org022076a"><a href="#org022076a"><span class="todo TODO">TODO</span> colorを読む</a></h3>
-<div class="outline-text-3" id="text-org022076a">
+<div id="outline-container-orga1eeac3" class="outline-3">
+<h3 id="orga1eeac3"><a href="#orga1eeac3"><span class="todo TODO">TODO</span> colorを読む</a></h3>
+<div class="outline-text-3" id="text-orga1eeac3">
 <p>
 CLIに色をつけるライブラリ。
 </p>
@@ -1810,11 +1902,11 @@ CLIに色をつけるライブラリ。
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 31: </span>関数Set。メソッドSetを呼び出す</label><pre class="src src-git-permalink">https://github.com/kd-collective/color/blob/dbae876e45b9c53e464d101d63f4758c9f0bd8e8/color.go#L131-L137
+<label class="org-src-name"><span class="listing-number">Listing 34: </span>関数Set。メソッドSetを呼び出す</label><pre class="src src-git-permalink">https://github.com/kd-collective/color/blob/dbae876e45b9c53e464d101d63f4758c9f0bd8e8/color.go#L131-L137
 </pre>
 </div>
 
-<div class="results" id="org408c92b">
+<div class="results" id="org2a5eb14">
 <p>
 <i>/ Set sets the given parameters immediately. It will change the color of
 /</i> output with the given SGR parameters until color.Unset() is called.
@@ -1828,11 +1920,11 @@ func Set(p &#x2026;Attribute) *Color {
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 32: </span>メソッドSet。Printfで、色指定された文字を表示している</label><pre class="src src-git-permalink">https://github.com/kd-collective/color/blob/dbae876e45b9c53e464d101d63f4758c9f0bd8e8/color.go#L149-L157
+<label class="org-src-name"><span class="listing-number">Listing 35: </span>メソッドSet。Printfで、色指定された文字を表示している</label><pre class="src src-git-permalink">https://github.com/kd-collective/color/blob/dbae876e45b9c53e464d101d63f4758c9f0bd8e8/color.go#L149-L157
 </pre>
 </div>
 
-<div class="results" id="org1712ce6">
+<div class="results" id="org950090b">
 <p>
 // Set sets the SGR sequence.
 func (c *Color) Set() *Color {
@@ -1855,41 +1947,78 @@ func (c *Color) Set() *Color {
 </div>
 </div>
 
-<div id="outline-container-orgd4bd41f" class="outline-3">
-<h3 id="orgd4bd41f"><a href="#orgd4bd41f"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9Ereflect%E3%83%8F%E3%83%B3%E3%83%89%E3%83%96%E3%83%83%E3%82%AF-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E5%8D%83%E8%91%89-%E5%A4%A7%E4%BA%8C%E9%83%8E-ebook/dp/B08NT59MS4/ref=sr_1_16?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-16">Go言語reflectハンドブック (技術の泉シリーズ（NextPublishing）) | 千葉 大二郎 | 工学 | Kindleストア | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-orgd4bd41f">
+<div id="outline-container-org001022d" class="outline-3">
+<h3 id="org001022d"><a href="#org001022d"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9Ereflect%E3%83%8F%E3%83%B3%E3%83%89%E3%83%96%E3%83%83%E3%82%AF-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E5%8D%83%E8%91%89-%E5%A4%A7%E4%BA%8C%E9%83%8E-ebook/dp/B08NT59MS4/ref=sr_1_16?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-16">Go言語reflectハンドブック (技術の泉シリーズ（NextPublishing）) | 千葉 大二郎 | 工学 | Kindleストア | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org001022d">
 <p>
 reflectの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org7571077" class="outline-3">
-<h3 id="org7571077"><a href="#org7571077"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E3%81%A8SAM%E3%81%A7%E5%AD%A6%E3%81%B6AWS-Lambda-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E6%9D%89%E7%94%B0-%E5%AF%BF%E6%86%B2-ebook/dp/B07LGNGDHF/ref=sr_1_36?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-36">GoとSAMで学ぶAWS Lambda (技術の泉シリーズ（NextPublishing）) | 杉田 寿憲 | 工学 | Kindleストア | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org7571077">
+<div id="outline-container-org27e2860" class="outline-3">
+<h3 id="org27e2860"><a href="#org27e2860"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E3%81%A8SAM%E3%81%A7%E5%AD%A6%E3%81%B6AWS-Lambda-%E6%8A%80%E8%A1%93%E3%81%AE%E6%B3%89%E3%82%B7%E3%83%AA%E3%83%BC%E3%82%BA%EF%BC%88NextPublishing%EF%BC%89-%E6%9D%89%E7%94%B0-%E5%AF%BF%E6%86%B2-ebook/dp/B07LGNGDHF/ref=sr_1_36?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-36">GoとSAMで学ぶAWS Lambda (技術の泉シリーズ（NextPublishing）) | 杉田 寿憲 | 工学 | Kindleストア | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org27e2860">
 <p>
 Goを使ったサーバレスの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org71e6b0d" class="outline-3">
-<h3 id="org71e6b0d"><a href="#org71e6b0d"><span class="todo WIP">WIP</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E4%B8%A6%E8%A1%8C%E5%87%A6%E7%90%86-Katherine-Cox-Buday/dp/4873118468/ref=sr_1_19?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-19">Go言語による並行処理 | Katherine Cox-Buday, 山口 能迪 |本 | 通販 | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org71e6b0d">
+<div id="outline-container-org09c0f85" class="outline-3">
+<h3 id="org09c0f85"><a href="#org09c0f85"><span class="todo WIP">WIP</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E4%B8%A6%E8%A1%8C%E5%87%A6%E7%90%86-Katherine-Cox-Buday/dp/4873118468/ref=sr_1_19?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-19">Go言語による並行処理 | Katherine Cox-Buday, 山口 能迪 |本 | 通販 | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org09c0f85">
 <p>
 平行処理の解説。
 </p>
+
+<dl class="org-dl">
+<dt>Coffman条件</dt><dd>デッドロックが発生するために存在しなければならない条件
+<ul class="org-ul">
+<li>相互排他
+<ul class="org-ul">
+<li>ある並行プロセスがリソースに対して排他的な権利をどの時点においても保持している</li>
+</ul></li>
+<li>条件待ち
+<ul class="org-ul">
+<li>ある並行プロセスはリソースの保持と追加のリソース待ちを同時に行わなければならない</li>
+</ul></li>
+<li>横取り不可
+<ul class="org-ul">
+<li>ある並行プロセスによって保持されているリソースは、そのプロセスによってのみ解放される</li>
+</ul></li>
+<li>循環待ち
+<ul class="org-ul">
+<li>ある並行プロセス(P1)は、他の連なっている並行プロセス(P2)を待たなければならない。そしてP2はP1を待っている</li>
+</ul></li>
+</ul></dd>
+
+<dt>(no term)</dt><dd>たいていの言語はCSPのメッセージパッシング形式よりもメモリを共有し同期するほうを好んでいる。共有メモリのモデルは正確に使うことが難しくなる</dd>
+<dt>(no term)</dt><dd>GoでははじめからCSPを導入している</dd>
+<dt>(no term)</dt><dd>syncパッケージは伝統的なメモリアクセス同期で並行処理を達成する。問題解決する平行処理の書き方を高水準(Goルーチン、チャネル)、低水準(sync)で選択できる</dd>
+<dt>(no term)</dt><dd>プログラムを書く際にはある瞬間にただ1つのゴルーチンがある特定のデータの責任を持つように心がける。メモリを共有することで通信してはいけない。かわりに通信することでメモリを共有する</dd>
+<dt>(no term)</dt><dd>Goのモットー「通信によってメモリを共有し、メモリの共有によって通信してはいけない」</dd>
+<dt>(no term)</dt><dd>何かしら結果を生成するコードがあり、その結果を別のコードに共有したい場合、これはデータの所有権を移動していることになる。ガベージコレクションをサポートしていない言語でのメモリの所有権と同じ考え方。データには所有権があり、平行プログラムを安全にする方法の1つとして、1度に1つの並行処理のコンテキストのみがデータの所有権を持つようにする。チャネルを使うと、この意図をチャネルの形で表現することで並行プログラムを安全にする構想を伝えることができる
+<ul class="org-ul">
+<li>大きな利点は、バッファ付きチャネルを生成して、コストが低いインメモリのキューを実装し生産者(Producer)と消費者(Consumer)を切り離すことができる</li>
+</ul></dd>
+<dt>(no term)</dt><dd>OSスレッドを使う言語では平行処理を抽象化する方法として便利なほかのパターンや実装方法がある。たとえばスレッドプール。こうした抽象化はたいていOSスレッドの補強や強化をする目的で作られていて、Goで使うことはあまりない</dd>
+<dt>(no term)</dt><dd>問題空間をゴルーチンに当てはめられるようにして、ワークフロー内の並行処理部分をうまく表現し、どんどんゴルーチンを起動する</dd>
+<dt>ゴルーチン</dt><dd>他のコードに対して並行に実行している関数のこと(必ずしも並列ではない)</dd>
+<dt>(no term)</dt><dd>ゴルーチンはコルーチンとして知られる高水準の抽象化</dd>
+</dl>
 </div>
 </div>
-<div id="outline-container-org66de3f9" class="outline-3">
-<h3 id="org66de3f9"><a href="#org66de3f9"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E5%88%86%E6%95%A3%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9-%E2%80%95%E4%BF%A1%E9%A0%BC%E6%80%A7%E3%80%81%E6%8B%A1%E5%BC%B5%E6%80%A7%E3%80%81%E4%BF%9D%E5%AE%88%E6%80%A7%E3%81%AE%E9%AB%98%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%AE%E6%A7%8B%E7%AF%89-Travis-Jeffery/dp/4873119979/ref=sr_1_5?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-5">Go言語による分散サービス ―信頼性、拡張性、保守性の高いシステムの構築 | Travis Jeffery, 柴田 芳樹 |本 | 通販 | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org66de3f9">
+
+<div id="outline-container-orgf78f7df" class="outline-3">
+<h3 id="orgf78f7df"><a href="#orgf78f7df"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/Go%E8%A8%80%E8%AA%9E%E3%81%AB%E3%82%88%E3%82%8B%E5%88%86%E6%95%A3%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9-%E2%80%95%E4%BF%A1%E9%A0%BC%E6%80%A7%E3%80%81%E6%8B%A1%E5%BC%B5%E6%80%A7%E3%80%81%E4%BF%9D%E5%AE%88%E6%80%A7%E3%81%AE%E9%AB%98%E3%81%84%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%81%AE%E6%A7%8B%E7%AF%89-Travis-Jeffery/dp/4873119979/ref=sr_1_5?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-5">Go言語による分散サービス ―信頼性、拡張性、保守性の高いシステムの構築 | Travis Jeffery, 柴田 芳樹 |本 | 通販 | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-orgf78f7df">
 <p>
 分散サービスの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orga9fbae6" class="outline-3">
-<h3 id="orga9fbae6"><a href="#orga9fbae6"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/%E5%AE%9F%E7%94%A8-Go%E8%A8%80%E8%AA%9E-%E2%80%95%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA%E3%81%AE%E7%8F%BE%E5%A0%B4%E3%81%A7%E7%9F%A5%E3%81%A3%E3%81%A6%E3%81%8A%E3%81%8D%E3%81%9F%E3%81%84%E3%82%A2%E3%83%89%E3%83%90%E3%82%A4%E3%82%B9-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4873119693/ref=sr_1_3?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-3">実用 Go言語 ―システム開発の現場で知っておきたいアドバイス | 渋川 よしき, 辻 大志郎, 真野 隼記 |本 | 通販 | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-orga9fbae6">
+<div id="outline-container-org9ffc1e7" class="outline-3">
+<h3 id="org9ffc1e7"><a href="#org9ffc1e7"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/%E5%AE%9F%E7%94%A8-Go%E8%A8%80%E8%AA%9E-%E2%80%95%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E9%96%8B%E7%99%BA%E3%81%AE%E7%8F%BE%E5%A0%B4%E3%81%A7%E7%9F%A5%E3%81%A3%E3%81%A6%E3%81%8A%E3%81%8D%E3%81%9F%E3%81%84%E3%82%A2%E3%83%89%E3%83%90%E3%82%A4%E3%82%B9-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4873119693/ref=sr_1_3?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1HEEXC8ONO3XN&amp;keywords=go+%E8%A8%80%E8%AA%9E&amp;qid=1663726078&amp;sprefix=go+%E3%81%92n%2Caps%2C202&amp;sr=8-3">実用 Go言語 ―システム開発の現場で知っておきたいアドバイス | 渋川 よしき, 辻 大志郎, 真野 隼記 |本 | 通販 | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org9ffc1e7">
 <ul class="org-ul">
 <li>45, 94, 102, 199, 232</li>
 </ul>
@@ -1924,89 +2053,89 @@ Javaの世界では、親のコントロールクラスを継承して必要な�
 </div>
 </div>
 
-<div id="outline-container-org734361c" class="outline-3">
-<h3 id="org734361c"><a href="#org734361c"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hokita/articles/66cc118b227ae3">はじめてのゲームプログラミング（Ebiten）</a></a></h3>
-<div class="outline-text-3" id="text-org734361c">
+<div id="outline-container-orgb10ae4a" class="outline-3">
+<h3 id="orgb10ae4a"><a href="#orgb10ae4a"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hokita/articles/66cc118b227ae3">はじめてのゲームプログラミング（Ebiten）</a></a></h3>
+<div class="outline-text-3" id="text-orgb10ae4a">
 <p>
 簡単なゲームのチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-org36ef719" class="outline-3">
-<h3 id="org36ef719"><a href="#org36ef719"><span class="todo TODO">TODO</span> <a href="https://golangprojectstructure.com/creating-cool-games-with-ebiten-in-go/">Creating Cool Games With Ebiten | Golang Project Structure</a></a></h3>
-<div class="outline-text-3" id="text-org36ef719">
+<div id="outline-container-orga7ec940" class="outline-3">
+<h3 id="orga7ec940"><a href="#orga7ec940"><span class="todo TODO">TODO</span> <a href="https://golangprojectstructure.com/creating-cool-games-with-ebiten-in-go/">Creating Cool Games With Ebiten | Golang Project Structure</a></a></h3>
+<div class="outline-text-3" id="text-orga7ec940">
 <p>
 ゲームのチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-org2e943bb" class="outline-3">
-<h3 id="org2e943bb"><a href="#org2e943bb"><span class="todo TODO">TODO</span> <a href="https://www.fatoldyeti.com/categories/roguelike-tutorial/">Roguelike Tutorial | Fat Old Yeti</a></a></h3>
-<div class="outline-text-3" id="text-org2e943bb">
+<div id="outline-container-orge64ba8b" class="outline-3">
+<h3 id="orge64ba8b"><a href="#orge64ba8b"><span class="todo TODO">TODO</span> <a href="https://www.fatoldyeti.com/categories/roguelike-tutorial/">Roguelike Tutorial | Fat Old Yeti</a></a></h3>
+<div class="outline-text-3" id="text-orge64ba8b">
 <p>
 Ebitenでローグライクを作るチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-orgced8460" class="outline-3">
-<h3 id="orgced8460"><a href="#orgced8460"><span class="todo TODO">TODO</span> <a href="https://medium.com/@chrisandrews_76960/2d-game-development-in-golang-part-1-5e2c11a513ed">2D Game Development in Golang — Part 1 | by Chris Andrews | Medium</a></a></h3>
-<div class="outline-text-3" id="text-orgced8460">
+<div id="outline-container-orgc369825" class="outline-3">
+<h3 id="orgc369825"><a href="#orgc369825"><span class="todo TODO">TODO</span> <a href="https://medium.com/@chrisandrews_76960/2d-game-development-in-golang-part-1-5e2c11a513ed">2D Game Development in Golang — Part 1 | by Chris Andrews | Medium</a></a></h3>
+<div class="outline-text-3" id="text-orgc369825">
 <p>
 Ebitenの小さなチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-org2e353d2" class="outline-3">
-<h3 id="org2e353d2"><a href="#org2e353d2"><span class="todo TODO">TODO</span> <a href="https://qiita.com/bokuweb/items/1575337bef44ae82f4d3">ファミコンエミュレータの創り方 - Hello, World!編 - - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org2e353d2">
+<div id="outline-container-org9025ead" class="outline-3">
+<h3 id="org9025ead"><a href="#org9025ead"><span class="todo TODO">TODO</span> <a href="https://qiita.com/bokuweb/items/1575337bef44ae82f4d3">ファミコンエミュレータの創り方 - Hello, World!編 - - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org9025ead">
 <p>
 エミュレータの作り方の概要。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf5585ad" class="outline-3">
-<h3 id="orgf5585ad"><a href="#orgf5585ad"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/akatsuki/articles/ec95ab95f0e89ea8c38f">ゲームボーイのエミュレータをGoで作った話</a></a></h3>
-<div class="outline-text-3" id="text-orgf5585ad">
+<div id="outline-container-org81fe03c" class="outline-3">
+<h3 id="org81fe03c"><a href="#org81fe03c"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/akatsuki/articles/ec95ab95f0e89ea8c38f">ゲームボーイのエミュレータをGoで作った話</a></a></h3>
+<div class="outline-text-3" id="text-org81fe03c">
 <p>
 作り方の解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb18ee0c" class="outline-3">
-<h3 id="orgb18ee0c"><a href="#orgb18ee0c"><span class="todo TODO">TODO</span> <a href="https://swet.dena.com/entry/2021/12/07/123000">「テスタビリティの高いGoのAPIサーバを開発しよう」というハンズオンを公開しました - DeNA Testing Blog</a></a></h3>
-<div class="outline-text-3" id="text-orgb18ee0c">
+<div id="outline-container-orgf77230e" class="outline-3">
+<h3 id="orgf77230e"><a href="#orgf77230e"><span class="todo TODO">TODO</span> <a href="https://swet.dena.com/entry/2021/12/07/123000">「テスタビリティの高いGoのAPIサーバを開発しよう」というハンズオンを公開しました - DeNA Testing Blog</a></a></h3>
+<div class="outline-text-3" id="text-orgf77230e">
 <p>
 GoのAPIハンズオン。
 </p>
 </div>
 </div>
-<div id="outline-container-org343768c" class="outline-3">
-<h3 id="org343768c"><a href="#org343768c"><span class="todo TODO">TODO</span> <a href="https://wxdublin.gitbooks.io/docker-code-walk/content/client.html">Client | Docker Code Walk</a></a></h3>
-<div class="outline-text-3" id="text-org343768c">
+<div id="outline-container-orgad02500" class="outline-3">
+<h3 id="orgad02500"><a href="#orgad02500"><span class="todo TODO">TODO</span> <a href="https://wxdublin.gitbooks.io/docker-code-walk/content/client.html">Client | Docker Code Walk</a></a></h3>
+<div class="outline-text-3" id="text-orgad02500">
 <p>
 Dockerコードの概略。
 </p>
 </div>
 </div>
-<div id="outline-container-org4e4844e" class="outline-3">
-<h3 id="org4e4844e"><a href="#org4e4844e"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/starting-grpc">スターティングgRPC【委託】 - 達人出版会</a></a></h3>
-<div class="outline-text-3" id="text-org4e4844e">
+<div id="outline-container-org4a2b376" class="outline-3">
+<h3 id="org4a2b376"><a href="#org4a2b376"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/starting-grpc">スターティングgRPC【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-org4a2b376">
 <p>
 サーバ側Go, クライアント側Rubyと異なる言語を用いてサンプルアプリケーションを実装する。
 </p>
 </div>
 </div>
-<div id="outline-container-org70f30d1" class="outline-3">
-<h3 id="org70f30d1"><a href="#org70f30d1"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/dp/ebook/2019/978-4-297-10728-4">改訂2版 みんなのGo言語 | Gihyo Digital Publishing … 技術評論社の電子書籍</a></a></h3>
-<div class="outline-text-3" id="text-org70f30d1">
+<div id="outline-container-orgbc2e902" class="outline-3">
+<h3 id="orgbc2e902"><a href="#orgbc2e902"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/dp/ebook/2019/978-4-297-10728-4">改訂2版 みんなのGo言語 | Gihyo Digital Publishing … 技術評論社の電子書籍</a></a></h3>
+<div class="outline-text-3" id="text-orgbc2e902">
 <p>
 わかりやすいという入門書。
 </p>
 </div>
 </div>
-<div id="outline-container-org265fd94" class="outline-3">
-<h3 id="org265fd94"><a href="#org265fd94"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/go-web-programming">Goプログラミング実践入門 標準ライブラリでゼロからWebアプリを作る【委託】 - 達人出版会</a></a></h3>
-<div class="outline-text-3" id="text-org265fd94">
+<div id="outline-container-org567cbae" class="outline-3">
+<h3 id="org567cbae"><a href="#org567cbae"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/go-web-programming">Goプログラミング実践入門 標準ライブラリでゼロからWebアプリを作る【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-org567cbae">
 <ul class="org-ul">
 <li>27, 68, 73, 93, 148</li>
 </ul>
@@ -2016,9 +2145,9 @@ Dockerコードの概略。
 </p>
 </div>
 
-<div id="outline-container-org99d7b9a" class="outline-4">
-<h4 id="org99d7b9a"><a href="#org99d7b9a">フレームワークの弊害</a></h4>
-<div class="outline-text-4" id="text-org99d7b9a">
+<div id="outline-container-org79f6459" class="outline-4">
+<h4 id="org79f6459"><a href="#org79f6459">フレームワークの弊害</a></h4>
+<div class="outline-text-4" id="text-org79f6459">
 <ul class="org-ul">
 <li>フレームワークを使えばすぐ構築できる。が、フレームワーク独自の約束事やパターンに従わないといけないことも多い。それがベストプラクティスであると仮定しているが、ベストプラクティスは理解していないとカーゴカルト・プログラミングに陥りどんなときでも無条件で適用してしまう</li>
 <li>フレームワークを構築する基盤となっている概念を理解することが重要。正しい理解があれば、ある約束事やパターンが存在する理由がわかるようになる</li>
@@ -2030,36 +2159,36 @@ Dockerコードの概略。
 </div>
 </div>
 
-<div id="outline-container-org5fc8f03" class="outline-3">
-<h3 id="org5fc8f03"><a href="#org5fc8f03"><span class="todo TODO">TODO</span> Go Design Patterns</a></h3>
+<div id="outline-container-org0c17120" class="outline-3">
+<h3 id="org0c17120"><a href="#org0c17120"><span class="todo TODO">TODO</span> Go Design Patterns</a></h3>
 </div>
-<div id="outline-container-org0934cc3" class="outline-3">
-<h3 id="org0934cc3"><a href="#org0934cc3"><span class="todo TODO">TODO</span> Cloud Native Go</a></h3>
+<div id="outline-container-org51aa714" class="outline-3">
+<h3 id="org51aa714"><a href="#org51aa714"><span class="todo TODO">TODO</span> Cloud Native Go</a></h3>
 </div>
-<div id="outline-container-org438bc13" class="outline-3">
-<h3 id="org438bc13"><a href="#org438bc13"><span class="todo TODO">TODO</span> Go and Go-Moku The Oriental Board Games</a></h3>
+<div id="outline-container-org062ce44" class="outline-3">
+<h3 id="org062ce44"><a href="#org062ce44"><span class="todo TODO">TODO</span> Go and Go-Moku The Oriental Board Games</a></h3>
 </div>
-<div id="outline-container-orge850bc0" class="outline-3">
-<h3 id="orge850bc0"><a href="#orge850bc0"><span class="todo TODO">TODO</span> Mastering Go Create Golang production applications using network libraries, concurrency, and advanced Go data structures</a></h3>
+<div id="outline-container-orgf9f56a3" class="outline-3">
+<h3 id="orgf9f56a3"><a href="#orgf9f56a3"><span class="todo TODO">TODO</span> Mastering Go Create Golang production applications using network libraries, concurrency, and advanced Go data structures</a></h3>
 </div>
-<div id="outline-container-orgd04512f" class="outline-3">
-<h3 id="orgd04512f"><a href="#orgd04512f"><span class="todo TODO">TODO</span> RESTful Go APIs Design und Implementierung leichtgewichtiger Hypermedia Services</a></h3>
+<div id="outline-container-org4a543f9" class="outline-3">
+<h3 id="org4a543f9"><a href="#org4a543f9"><span class="todo TODO">TODO</span> RESTful Go APIs Design und Implementierung leichtgewichtiger Hypermedia Services</a></h3>
 </div>
-<div id="outline-container-orgde3d773" class="outline-3">
-<h3 id="orgde3d773"><a href="#orgde3d773"><span class="todo TODO">TODO</span> Hands-On System Programming with Go</a></h3>
+<div id="outline-container-orgd25c01a" class="outline-3">
+<h3 id="orgd25c01a"><a href="#orgd25c01a"><span class="todo TODO">TODO</span> Hands-On System Programming with Go</a></h3>
 </div>
-<div id="outline-container-org70480f2" class="outline-3">
-<h3 id="org70480f2"><a href="#org70480f2"><span class="todo TODO">TODO</span> Powerful Command-Line Applications in Go</a></h3>
+<div id="outline-container-orgec92767" class="outline-3">
+<h3 id="orgec92767"><a href="#orgec92767"><span class="todo TODO">TODO</span> Powerful Command-Line Applications in Go</a></h3>
 </div>
-<div id="outline-container-orgf64ae2e" class="outline-3">
-<h3 id="orgf64ae2e"><a href="#orgf64ae2e"><span class="todo TODO">TODO</span> Build an Orchestrator in Go</a></h3>
+<div id="outline-container-orgbac180e" class="outline-3">
+<h3 id="orgbac180e"><a href="#orgbac180e"><span class="todo TODO">TODO</span> Build an Orchestrator in Go</a></h3>
 </div>
-<div id="outline-container-orgbf5d072" class="outline-3">
-<h3 id="orgbf5d072"><a href="#orgbf5d072"><span class="todo TODO">TODO</span> The Docker Book</a></h3>
+<div id="outline-container-orgaa8e2d7" class="outline-3">
+<h3 id="orgaa8e2d7"><a href="#orgaa8e2d7"><span class="todo TODO">TODO</span> The Docker Book</a></h3>
 </div>
-<div id="outline-container-orgff224d9" class="outline-3">
-<h3 id="orgff224d9"><a href="#orgff224d9"><span class="todo TODO">TODO</span> <a href="https://github.com/google/go-github">google/go-github: Go library for accessing the GitHub v3 API</a></a></h3>
-<div class="outline-text-3" id="text-orgff224d9">
+<div id="outline-container-orgd42ab50" class="outline-3">
+<h3 id="orgd42ab50"><a href="#orgd42ab50"><span class="todo TODO">TODO</span> <a href="https://github.com/google/go-github">google/go-github: Go library for accessing the GitHub v3 API</a></a></h3>
+<div class="outline-text-3" id="text-orgd42ab50">
 <p>
 GoのGitHubアクセスのためのライブラリ。
 </p>
@@ -2072,25 +2201,25 @@ GoのGitHubアクセスのためのライブラリ。
 </ul>
 </div>
 </div>
-<div id="outline-container-org6d6b618" class="outline-3">
-<h3 id="org6d6b618"><a href="#org6d6b618"><span class="todo TODO">TODO</span> <a href="https://www.ebiebievidence.com/posts/2020/12/golang-compiler/">Go コンパイラのコードを読んでみよう | ebiebievidence.com</a></a></h3>
-<div class="outline-text-3" id="text-org6d6b618">
+<div id="outline-container-org9bfb255" class="outline-3">
+<h3 id="org9bfb255"><a href="#org9bfb255"><span class="todo TODO">TODO</span> <a href="https://www.ebiebievidence.com/posts/2020/12/golang-compiler/">Go コンパイラのコードを読んでみよう | ebiebievidence.com</a></a></h3>
+<div class="outline-text-3" id="text-org9bfb255">
 <p>
 Goのコンパイラの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org36d437b" class="outline-3">
-<h3 id="org36d437b"><a href="#org36d437b"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/ytakaya/articles/ff6321bad0cbea">Goを学ぶときに参照した学習リソースまとめ</a></a></h3>
-<div class="outline-text-3" id="text-org36d437b">
+<div id="outline-container-org6dc8ec2" class="outline-3">
+<h3 id="org6dc8ec2"><a href="#org6dc8ec2"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/ytakaya/articles/ff6321bad0cbea">Goを学ぶときに参照した学習リソースまとめ</a></a></h3>
+<div class="outline-text-3" id="text-org6dc8ec2">
 <p>
 面白くためになる題材の紹介。
 </p>
 </div>
 </div>
-<div id="outline-container-org2a0e52b" class="outline-3">
-<h3 id="org2a0e52b"><a href="#org2a0e52b"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/articles/gospecdictionary#%E3%81%9D%E3%81%AE%E8%A8%98%E8%BF%B0%E3%81%8C%E3%81%82%E3%82%8B%E3%81%93%E3%81%A8%E3%81%A7%E4%BD%95%E3%81%8C%E5%AC%89%E3%81%97%E3%81%84%E3%81%AE%E3%81%8B%EF%BC%9F%E3%81%A8%E3%81%84%E3%81%86%E3%81%93%E3%81%A8%E3%82%92%E6%84%8F%E8%AD%98%E3%81%99%E3%82%8B">Goの言語仕様書精読のススメ &amp; 英語彙集</a></a></h3>
-<div class="outline-text-3" id="text-org2a0e52b">
+<div id="outline-container-orgf723eee" class="outline-3">
+<h3 id="orgf723eee"><a href="#orgf723eee"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/hsaki/articles/gospecdictionary#%E3%81%9D%E3%81%AE%E8%A8%98%E8%BF%B0%E3%81%8C%E3%81%82%E3%82%8B%E3%81%93%E3%81%A8%E3%81%A7%E4%BD%95%E3%81%8C%E5%AC%89%E3%81%97%E3%81%84%E3%81%AE%E3%81%8B%EF%BC%9F%E3%81%A8%E3%81%84%E3%81%86%E3%81%93%E3%81%A8%E3%82%92%E6%84%8F%E8%AD%98%E3%81%99%E3%82%8B">Goの言語仕様書精読のススメ &amp; 英語彙集</a></a></h3>
+<div class="outline-text-3" id="text-orgf723eee">
 <p>
 読み方。より深い理解のやりかた。
 </p>
@@ -2132,30 +2261,47 @@ GoSpecは言語仕様書であり、全ての記述には意味があるはず�
 </blockquote>
 </div>
 </div>
+<div id="outline-container-orgba4309d" class="outline-3">
+<h3 id="orgba4309d"><a href="#orgba4309d"><span class="todo TODO">TODO</span> jvm実装の続き</a></h3>
+<div class="outline-text-3" id="text-orgba4309d">
+<p>
+invoke_virtualのメソッド呼び出しで詰まっていた。
+</p>
+
+<p>
+<a href="https://github.com/rodbate/jvm-on-go/blob/eb536d93317d0ef24ae9e2f298fd08b8ad4e49f8/pkg/rtda/method_ref.go#L27-L42">https://github.com/rodbate/jvm-on-go/blob/eb536d93317d0ef24ae9e2f298fd08b8ad4e49f8/pkg/rtda/method_ref.go#L27-L42</a>
+</p>
+
+<p>
+このへんが参考になるか。関数オブジェクトをハッシュに入れておいて、検索して呼び出せばいい。
+</p>
 </div>
-<div id="outline-container-org4f7f364" class="outline-2">
-<h2 id="org4f7f364"><a href="#org4f7f364">Go言語へのコントリビュート準備</a></h2>
-<div class="outline-text-2" id="text-org4f7f364">
 </div>
-<div id="outline-container-org3256663" class="outline-3">
-<h3 id="org3256663"><a href="#org3256663"><span class="done DONE">DONE</span> <a href="https://go.dev/doc/contribute">Contribution Guide - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-org3256663">
+</div>
+
+<div id="outline-container-org7ed559d" class="outline-2">
+<h2 id="org7ed559d"><a href="#org7ed559d">Go言語へのコントリビュート準備</a></h2>
+<div class="outline-text-2" id="text-org7ed559d">
+</div>
+<div id="outline-container-org33df7af" class="outline-3">
+<h3 id="org33df7af"><a href="#org33df7af"><span class="done DONE">DONE</span> <a href="https://go.dev/doc/contribute">Contribution Guide - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-org33df7af">
 <p>
 Goのコントリビューションガイド。
 </p>
 </div>
 </div>
-<div id="outline-container-org3cfead1" class="outline-3">
-<h3 id="org3cfead1"><a href="#org3cfead1"><span class="done DONE">DONE</span> <a href="https://www.youtube.com/watch?v=DjZMKKfNVMc">justforfunc #17: contributing to the Go project - YouTube</a></a></h3>
-<div class="outline-text-3" id="text-org3cfead1">
+<div id="outline-container-org54eb6ad" class="outline-3">
+<h3 id="org54eb6ad"><a href="#org54eb6ad"><span class="done DONE">DONE</span> <a href="https://www.youtube.com/watch?v=DjZMKKfNVMc">justforfunc #17: contributing to the Go project - YouTube</a></a></h3>
+<div class="outline-text-3" id="text-org54eb6ad">
 <p>
 Goにコントリビュートするチュートリアル。開発環境構築、Googleの規約へのサイン、変更、レビューまでの流れを全てカバーしている。わかりやすい。
 </p>
 </div>
 </div>
-<div id="outline-container-orgc40a51e" class="outline-3">
-<h3 id="orgc40a51e"><a href="#orgc40a51e"><span class="done DONE">DONE</span> リポジトリを見てどういう開発の種類があるか把握する</a></h3>
-<div class="outline-text-3" id="text-orgc40a51e">
+<div id="outline-container-orgd47ef0d" class="outline-3">
+<h3 id="orgd47ef0d"><a href="#orgd47ef0d"><span class="done DONE">DONE</span> リポジトリを見てどういう開発の種類があるか把握する</a></h3>
+<div class="outline-text-3" id="text-orgd47ef0d">
 <ul class="org-ul">
 <li>388fbf287c</li>
 </ul>
@@ -2218,9 +2364,9 @@ issueを見てみる。これらがうまく解ければ楽なのだが。種類
 </ul>
 </div>
 </div>
-<div id="outline-container-org7cc5383" class="outline-3">
-<h3 id="org7cc5383"><a href="#org7cc5383"><span class="done DONE">DONE</span> コンパイルする</a></h3>
-<div class="outline-text-3" id="text-org7cc5383">
+<div id="outline-container-orga125779" class="outline-3">
+<h3 id="orga125779"><a href="#orga125779"><span class="done DONE">DONE</span> コンパイルする</a></h3>
+<div class="outline-text-3" id="text-orga125779">
 <p>
 開発を開始するには、まずGo自体をコンパイルする必要がある。そうでないと、テストも実行できない。
 </p>
@@ -2230,16 +2376,16 @@ src/all.bash にシェルスクリプトがあり、それでコンパイルで�
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 33: </span>コンパイルを実行する</label><pre class="src src-shell">$ cd src <span class="org-comment-delimiter"># </span><span class="org-comment">&#12459;&#12524;&#12531;&#12488;&#12487;&#12451;&#12524;&#12463;&#12488;&#12522;&#12364;src&#19979;&#12391;&#12354;&#12427;&#24517;&#35201;&#12364;&#12354;&#12427;</span>
+<label class="org-src-name"><span class="listing-number">Listing 36: </span>コンパイルを実行する</label><pre class="src src-shell">$ cd src <span class="org-comment-delimiter"># </span><span class="org-comment">&#12459;&#12524;&#12531;&#12488;&#12487;&#12451;&#12524;&#12463;&#12488;&#12522;&#12364;src&#19979;&#12391;&#12354;&#12427;&#24517;&#35201;&#12364;&#12354;&#12427;</span>
 $ ./all.bash
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-orga4055b5" class="outline-3">
-<h3 id="orga4055b5"><a href="#orga4055b5"><span class="done DONE">DONE</span> テストを実行する</a></h3>
-<div class="outline-text-3" id="text-orga4055b5">
+<div id="outline-container-orge12057b" class="outline-3">
+<h3 id="orge12057b"><a href="#orge12057b"><span class="done DONE">DONE</span> テストを実行する</a></h3>
+<div class="outline-text-3" id="text-orge12057b">
 <p>
 手元でコンパイルしてgo処理系を最新にしてない場合、↓のような状態になる。
 </p>
@@ -2259,9 +2405,9 @@ package std/math/big
 </div>
 </div>
 
-<div id="outline-container-org21835be" class="outline-3">
-<h3 id="org21835be"><a href="#org21835be"><span class="done DONE">DONE</span> テストがソースコードを反映してない</a></h3>
-<div class="outline-text-3" id="text-org21835be">
+<div id="outline-container-orgd25d242" class="outline-3">
+<h3 id="orgd25d242"><a href="#orgd25d242"><span class="done DONE">DONE</span> テストがソースコードを反映してない</a></h3>
+<div class="outline-text-3" id="text-orgd25d242">
 <p>
 いじってテストを走らせたりビルドしても反映しない。通常であれば構文レベルになるものも無視される。別のソースコードを見ているぽい。本体コードについてはワーキングディレクトリではなく、マシンにインストールしてあるgoを使っている気がするな。テストが反映しないのはよくわからない。
 </p>
@@ -2273,29 +2419,29 @@ package std/math/big
 </div>
 </div>
 </div>
-<div id="outline-container-org044285b" class="outline-2">
-<h2 id="org044285b"><a href="#org044285b">Reference</a></h2>
-<div class="outline-text-2" id="text-org044285b">
+<div id="outline-container-orgf430839" class="outline-2">
+<h2 id="orgf430839"><a href="#orgf430839">Reference</a></h2>
+<div class="outline-text-2" id="text-orgf430839">
 </div>
-<div id="outline-container-org90c9316" class="outline-3">
-<h3 id="org90c9316"><a href="#org90c9316"><a href="https://go.dev/talks/2015/simplicity-is-complicated.slide#1">Simplicity is Complicated</a></a></h3>
-<div class="outline-text-3" id="text-org90c9316">
+<div id="outline-container-org9ce2ae8" class="outline-3">
+<h3 id="org9ce2ae8"><a href="#org9ce2ae8"><a href="https://go.dev/talks/2015/simplicity-is-complicated.slide#1">Simplicity is Complicated</a></a></h3>
+<div class="outline-text-3" id="text-org9ce2ae8">
 <p>
 ロブ・パイクによるGoのスライド。
 </p>
 </div>
 </div>
-<div id="outline-container-org86a2a2c" class="outline-3">
-<h3 id="org86a2a2c"><a href="#org86a2a2c"><a href="https://speakerdeck.com/retervision/go-runtime-scheduler">Go Runtime Scheduler - Speaker Deck</a></a></h3>
-<div class="outline-text-3" id="text-org86a2a2c">
+<div id="outline-container-org9e2285b" class="outline-3">
+<h3 id="org9e2285b"><a href="#org9e2285b"><a href="https://speakerdeck.com/retervision/go-runtime-scheduler">Go Runtime Scheduler - Speaker Deck</a></a></h3>
+<div class="outline-text-3" id="text-org9e2285b">
 <p>
 Goのスケジューラを実装する。
 </p>
 </div>
 </div>
-<div id="outline-container-org281ef03" class="outline-3">
-<h3 id="org281ef03"><a href="#org281ef03"><a href="https://zenn.dev/tmk616/articles/383fc3fbb0ec4b">【Go】go getは不要？go installとは？</a></a></h3>
-<div class="outline-text-3" id="text-org281ef03">
+<div id="outline-container-orgde7025e" class="outline-3">
+<h3 id="orgde7025e"><a href="#orgde7025e"><a href="https://zenn.dev/tmk616/articles/383fc3fbb0ec4b">【Go】go getは不要？go installとは？</a></a></h3>
+<div class="outline-text-3" id="text-orgde7025e">
 <p>
 わかりやすい説明。
 </p>
@@ -2307,17 +2453,17 @@ Goのスケジューラを実装する。
 </div>
 </div>
 
-<div id="outline-container-orge1e62e7" class="outline-3">
-<h3 id="orge1e62e7"><a href="#orge1e62e7"><a href="https://qiita.com/sueken/items/30b6da9259e94c1ede71">golangのio.Readerは使い回しできない - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orge1e62e7">
+<div id="outline-container-org25a4514" class="outline-3">
+<h3 id="org25a4514"><a href="#org25a4514"><a href="https://qiita.com/sueken/items/30b6da9259e94c1ede71">golangのio.Readerは使い回しできない - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org25a4514">
 <p>
 知らなかったな。
 </p>
 </div>
 </div>
-<div id="outline-container-orgd787bc4" class="outline-3">
-<h3 id="orgd787bc4"><a href="#orgd787bc4"><a href="https://engineering.mercari.com/blog/entry/2018-08-08-080000/">Go Fridayこぼれ話：非公開（unexported）な機能を使ったテスト #golang | メルカリエンジニアリング</a></a></h3>
-<div class="outline-text-3" id="text-orgd787bc4">
+<div id="outline-container-org857a899" class="outline-3">
+<h3 id="org857a899"><a href="#org857a899"><a href="https://engineering.mercari.com/blog/entry/2018-08-08-080000/">Go Fridayこぼれ話：非公開（unexported）な機能を使ったテスト #golang | メルカリエンジニアリング</a></a></h3>
+<div class="outline-text-3" id="text-org857a899">
 <ul class="org-ul">
 <li>プロダクトコードとテストは別パッケージしたほうがいい
 <ul class="org-ul">
@@ -2327,97 +2473,97 @@ Goのスケジューラを実装する。
 </ul>
 </div>
 </div>
-<div id="outline-container-org4af301a" class="outline-3">
-<h3 id="org4af301a"><a href="#org4af301a"><a href="https://go.dev/blog/survey2022-q2-results">Go Developer Survey 2022 Q2 Results - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-org4af301a">
+<div id="outline-container-orgdd2488d" class="outline-3">
+<h3 id="orgdd2488d"><a href="#orgdd2488d"><a href="https://go.dev/blog/survey2022-q2-results">Go Developer Survey 2022 Q2 Results - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-orgdd2488d">
 <p>
 サーベイ結果。
 </p>
 </div>
 </div>
-<div id="outline-container-org8ca7105" class="outline-3">
-<h3 id="org8ca7105"><a href="#org8ca7105"><a href="https://go.googlesource.com/proposal/+/master/design">design - proposal - Git at Google</a></a></h3>
-<div class="outline-text-3" id="text-org8ca7105">
+<div id="outline-container-org5918bf0" class="outline-3">
+<h3 id="org5918bf0"><a href="#org5918bf0"><a href="https://go.googlesource.com/proposal/+/master/design">design - proposal - Git at Google</a></a></h3>
+<div class="outline-text-3" id="text-org5918bf0">
 <p>
 proposal一覧。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf574c01" class="outline-3">
-<h3 id="orgf574c01"><a href="#orgf574c01"><a href="https://github.com/golang/proposal#proposal-review">golang/proposal: Go Project Design Documents</a></a></h3>
-<div class="outline-text-3" id="text-orgf574c01">
+<div id="outline-container-org39b5d88" class="outline-3">
+<h3 id="org39b5d88"><a href="#org39b5d88"><a href="https://github.com/golang/proposal#proposal-review">golang/proposal: Go Project Design Documents</a></a></h3>
+<div class="outline-text-3" id="text-org39b5d88">
 <p>
 Go言語のproposal。
 </p>
 </div>
 </div>
-<div id="outline-container-org5c82d59" class="outline-3">
-<h3 id="org5c82d59"><a href="#org5c82d59"><a href="https://zenn.dev/tenntenn/books/d168faebb1a739/viewer/22e4d4">はじめに｜逆引き Goによる静的解析</a></a></h3>
-<div class="outline-text-3" id="text-org5c82d59">
+<div id="outline-container-org1914f6c" class="outline-3">
+<h3 id="org1914f6c"><a href="#org1914f6c"><a href="https://zenn.dev/tenntenn/books/d168faebb1a739/viewer/22e4d4">はじめに｜逆引き Goによる静的解析</a></a></h3>
+<div class="outline-text-3" id="text-org1914f6c">
 <p>
 Goで静的解析をする入門本。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf7a54fb" class="outline-3">
-<h3 id="orgf7a54fb"><a href="#orgf7a54fb"><a href="https://yuroyoro.github.io/goast-viewer/">yuroyoro.github.io/goast-viewer/</a></a></h3>
-<div class="outline-text-3" id="text-orgf7a54fb">
+<div id="outline-container-orgc348003" class="outline-3">
+<h3 id="orgc348003"><a href="#orgc348003"><a href="https://yuroyoro.github.io/goast-viewer/">yuroyoro.github.io/goast-viewer/</a></a></h3>
+<div class="outline-text-3" id="text-orgc348003">
 <p>
 GoのASTビューワー。
 </p>
 </div>
 </div>
-<div id="outline-container-org467f1ca" class="outline-3">
-<h3 id="org467f1ca"><a href="#org467f1ca"><a href="https://divan.dev/posts/visual_programming_go/">Rethinking Visual Programming with Go · divan&rsquo;s blog</a></a></h3>
-<div class="outline-text-3" id="text-org467f1ca">
+<div id="outline-container-orge5b5987" class="outline-3">
+<h3 id="orge5b5987"><a href="#orge5b5987"><a href="https://divan.dev/posts/visual_programming_go/">Rethinking Visual Programming with Go · divan&rsquo;s blog</a></a></h3>
+<div class="outline-text-3" id="text-orge5b5987">
 <p>
 ソースコードの呼び出し関係をグラフィカルに表示する。
 </p>
 </div>
 </div>
-<div id="outline-container-org814ad5c" class="outline-3">
-<h3 id="org814ad5c"><a href="#org814ad5c"><a href="https://www.onlinetool.io/xmltogo/">XML to Go</a></a></h3>
-<div class="outline-text-3" id="text-org814ad5c">
+<div id="outline-container-orgcaa3092" class="outline-3">
+<h3 id="orgcaa3092"><a href="#orgcaa3092"><a href="https://www.onlinetool.io/xmltogo/">XML to Go</a></a></h3>
+<div class="outline-text-3" id="text-orgcaa3092">
 <p>
 XMLからGoの構造体に変換するツール。
 </p>
 </div>
 </div>
-<div id="outline-container-org3a8bb2b" class="outline-3">
-<h3 id="org3a8bb2b"><a href="#org3a8bb2b"><a href="https://www.campoy.cat/">Francesc Campoy Flores</a></a></h3>
-<div class="outline-text-3" id="text-org3a8bb2b">
+<div id="outline-container-org92da694" class="outline-3">
+<h3 id="org92da694"><a href="#org92da694"><a href="https://www.campoy.cat/">Francesc Campoy Flores</a></a></h3>
+<div class="outline-text-3" id="text-org92da694">
 <p>
 Goプログラマー、Youtuber。チャンネルは更新止まってるぽい。
 </p>
 </div>
 </div>
-<div id="outline-container-orge6b31b6" class="outline-3">
-<h3 id="orge6b31b6"><a href="#orge6b31b6"><a href="https://go.dev/blog/">The Go Blog - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-orge6b31b6">
+<div id="outline-container-orgc71fe54" class="outline-3">
+<h3 id="orgc71fe54"><a href="#orgc71fe54"><a href="https://go.dev/blog/">The Go Blog - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-orgc71fe54">
 <p>
 Goの公式ブログ。
 </p>
 </div>
 </div>
-<div id="outline-container-org5a84f75" class="outline-3">
-<h3 id="org5a84f75"><a href="#org5a84f75"><a href="https://go.dev/doc/">Documentation - The Go Programming Language</a></a></h3>
-<div class="outline-text-3" id="text-org5a84f75">
+<div id="outline-container-org5a1157a" class="outline-3">
+<h3 id="org5a1157a"><a href="#org5a1157a"><a href="https://go.dev/doc/">Documentation - The Go Programming Language</a></a></h3>
+<div class="outline-text-3" id="text-org5a1157a">
 <p>
 公式ドキュメント。
 </p>
 </div>
 </div>
-<div id="outline-container-orgecbef33" class="outline-3">
-<h3 id="orgecbef33"><a href="#orgecbef33"><a href="https://github.com/golang/go/issues/54968">debug/buildinfo: timeout in Read · Issue #54968 · golang/go</a></a></h3>
-<div class="outline-text-3" id="text-orgecbef33">
+<div id="outline-container-org1d18b1d" class="outline-3">
+<h3 id="org1d18b1d"><a href="#org1d18b1d"><a href="https://github.com/golang/go/issues/54968">debug/buildinfo: timeout in Read · Issue #54968 · golang/go</a></a></h3>
+<div class="outline-text-3" id="text-org1d18b1d">
 <p>
 参考になるissue。バグ報告のうまいやり方。playgroundを使う。タイムアウトになるバグの原因。
 </p>
 </div>
 </div>
-<div id="outline-container-org1931a41" class="outline-3">
-<h3 id="org1931a41"><a href="#org1931a41"><a href="https://unknownplace.org/archives/golang-editing-with-emacs/">EmacsでのGo言語編集環境 - unknownplace.org</a></a></h3>
-<div class="outline-text-3" id="text-org1931a41">
+<div id="outline-container-orgd933ad9" class="outline-3">
+<h3 id="orgd933ad9"><a href="#orgd933ad9"><a href="https://unknownplace.org/archives/golang-editing-with-emacs/">EmacsでのGo言語編集環境 - unknownplace.org</a></a></h3>
+<div class="outline-text-3" id="text-orgd933ad9">
 <p>
 <a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>のgo-modeでのフォーマット、定義ジャンプ、便利なさまざまな機能。
 </p>
@@ -2427,33 +2573,33 @@ Goの公式ブログ。
 </ul>
 </div>
 </div>
-<div id="outline-container-org4aed686" class="outline-3">
-<h3 id="org4aed686"><a href="#org4aed686"><a href="https://zenn.dev/hsaki/books/golang-concurrency/viewer/goelement">ゴールーチンとチャネル｜Goでの並行処理を徹底解剖！</a></a></h3>
-<div class="outline-text-3" id="text-org4aed686">
+<div id="outline-container-orgffe5919" class="outline-3">
+<h3 id="orgffe5919"><a href="#orgffe5919"><a href="https://zenn.dev/hsaki/books/golang-concurrency/viewer/goelement">ゴールーチンとチャネル｜Goでの並行処理を徹底解剖！</a></a></h3>
+<div class="outline-text-3" id="text-orgffe5919">
 <p>
 Goルーチンの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-org44169a8" class="outline-3">
-<h3 id="org44169a8"><a href="#org44169a8"><a href="https://qiita.com/Yaruki00/items/7edc04720a24e71abfa2">Goでflagを使ってコマンドライン引数を扱う - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org44169a8">
+<div id="outline-container-orgc77d77e" class="outline-3">
+<h3 id="orgc77d77e"><a href="#orgc77d77e"><a href="https://qiita.com/Yaruki00/items/7edc04720a24e71abfa2">Goでflagを使ってコマンドライン引数を扱う - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgc77d77e">
 <p>
 手軽に使える。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb0b9b84" class="outline-3">
-<h3 id="orgb0b9b84"><a href="#orgb0b9b84"><a href="https://ebiten.org/">Ebitengine - A dead simple 2D game library for Go</a></a></h3>
-<div class="outline-text-3" id="text-orgb0b9b84">
+<div id="outline-container-orgfb5f5f0" class="outline-3">
+<h3 id="orgfb5f5f0"><a href="#orgfb5f5f0"><a href="https://ebiten.org/">Ebitengine - A dead simple 2D game library for Go</a></a></h3>
+<div class="outline-text-3" id="text-orgfb5f5f0">
 <p>
 Goのゲームライブラリ。
 </p>
 </div>
 </div>
-<div id="outline-container-orgd277d3e" class="outline-3">
-<h3 id="orgd277d3e"><a href="#orgd277d3e"><a href="https://www.techscore.com/tech/Go/Lang/Basic15/">15. スライスのハマりどころ | TECHSCORE(テックスコア)</a></a></h3>
-<div class="outline-text-3" id="text-orgd277d3e">
+<div id="outline-container-orgf9657ce" class="outline-3">
+<h3 id="orgf9657ce"><a href="#orgf9657ce"><a href="https://www.techscore.com/tech/Go/Lang/Basic15/">15. スライスのハマりどころ | TECHSCORE(テックスコア)</a></a></h3>
+<div class="outline-text-3" id="text-orgf9657ce">
 <p>
 スライスの詳しい解説。
 </p>
@@ -2464,13 +2610,13 @@ Goのゲームライブラリ。
 </div>
 </div>
 </div>
-<div id="outline-container-org883850a" class="outline-2">
-<h2 id="org883850a"><a href="#org883850a">Archives</a></h2>
-<div class="outline-text-2" id="text-org883850a">
+<div id="outline-container-org807d45f" class="outline-2">
+<h2 id="org807d45f"><a href="#org807d45f">Archives</a></h2>
+<div class="outline-text-2" id="text-org807d45f">
 </div>
-<div id="outline-container-org2f44bd3" class="outline-3">
-<h3 id="org2f44bd3"><a href="#org2f44bd3"><span class="done DONE">DONE</span> <a href="https://tatsu-zine.com/books/go-five-recipes">Go言語を楽しむ5つのレシピ コタツと蜜柑とゴーファーとわたし【委託】 - 達人出版会</a></a></h3>
-<div class="outline-text-3" id="text-org2f44bd3">
+<div id="outline-container-orgfb5524a" class="outline-3">
+<h3 id="orgfb5524a"><a href="#orgfb5524a"><span class="done DONE">DONE</span> <a href="https://tatsu-zine.com/books/go-five-recipes">Go言語を楽しむ5つのレシピ コタツと蜜柑とゴーファーとわたし【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-orgfb5524a">
 <p>
 画像処理やWebAssemblyなど。
 </p>
@@ -2480,41 +2626,41 @@ Goのゲームライブラリ。
 </p>
 </div>
 </div>
-<div id="outline-container-org456d040" class="outline-3">
-<h3 id="org456d040"><a href="#org456d040"><span class="done DONE">DONE</span> <a href="https://go-tour-jp.appspot.com/list">A Tour of Go</a></a></h3>
-<div class="outline-text-3" id="text-org456d040">
+<div id="outline-container-org4a5fe8d" class="outline-3">
+<h3 id="org4a5fe8d"><a href="#org4a5fe8d"><span class="done DONE">DONE</span> <a href="https://go-tour-jp.appspot.com/list">A Tour of Go</a></a></h3>
+<div class="outline-text-3" id="text-org4a5fe8d">
 <p>
 最初のチュートリアル。
 </p>
 </div>
 </div>
-<div id="outline-container-org28865f1" class="outline-3">
-<h3 id="org28865f1"><a href="#org28865f1"><span class="done DONE">DONE</span> <a href="https://dev.classmethod.jp/articles/list-containers-by-docker-sdk-go/">Docker Engine SDKでコンテナ一覧を取得する | DevelopersIO</a></a></h3>
-<div class="outline-text-3" id="text-org28865f1">
+<div id="outline-container-orge14ece5" class="outline-3">
+<h3 id="orge14ece5"><a href="#orge14ece5"><span class="done DONE">DONE</span> <a href="https://dev.classmethod.jp/articles/list-containers-by-docker-sdk-go/">Docker Engine SDKでコンテナ一覧を取得する | DevelopersIO</a></a></h3>
+<div class="outline-text-3" id="text-orge14ece5">
 <p>
 小さなコマンドラインツールの例。
 </p>
 </div>
 </div>
-<div id="outline-container-org9a91125" class="outline-3">
-<h3 id="org9a91125"><a href="#org9a91125"><span class="done DONE">DONE</span> <a href="https://haibara-works.hatenablog.com/entry/2020/12/05/235227">GoでDockerを操る [Docker Engine SDK] - はいばらのブログ</a></a></h3>
-<div class="outline-text-3" id="text-org9a91125">
+<div id="outline-container-orgfd5b9bd" class="outline-3">
+<h3 id="orgfd5b9bd"><a href="#orgfd5b9bd"><span class="done DONE">DONE</span> <a href="https://haibara-works.hatenablog.com/entry/2020/12/05/235227">GoでDockerを操る [Docker Engine SDK] - はいばらのブログ</a></a></h3>
+<div class="outline-text-3" id="text-orgfd5b9bd">
 <p>
 goとdockerの解説。
 </p>
 </div>
 </div>
-<div id="outline-container-orgf54161f" class="outline-3">
-<h3 id="orgf54161f"><a href="#orgf54161f"><span class="done DONE">DONE</span> <a href="https://zenn.dev/kenny/articles/b9dd668bf09efe">Goで作成したAPIをDockerで動かす</a></a></h3>
-<div class="outline-text-3" id="text-orgf54161f">
+<div id="outline-container-org9be4d26" class="outline-3">
+<h3 id="org9be4d26"><a href="#org9be4d26"><span class="done DONE">DONE</span> <a href="https://zenn.dev/kenny/articles/b9dd668bf09efe">Goで作成したAPIをDockerで動かす</a></a></h3>
+<div class="outline-text-3" id="text-org9be4d26">
 <p>
 APIのサンプルコード。
 </p>
 </div>
 </div>
-<div id="outline-container-org602610e" class="outline-3">
-<h3 id="org602610e"><a href="#org602610e"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/%E6%94%B9%E8%A8%822%E7%89%88-%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B-Go%E8%A8%80%E8%AA%9E-%E5%8F%A4%E5%B7%9D%E6%98%87-ebook/dp/B06WP6S2QT/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1GPYX46MK3OK&amp;keywords=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B+go%E8%A8%80%E8%AA%9E&amp;qid=1663028634&amp;sprefix=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8Bgo%E8%A8%80%E8%AA%9E%2Caps%2C2056&amp;sr=8-1">改訂2版 基礎からわかる Go言語 | 古川昇 | 工学 | Kindleストア | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org602610e">
+<div id="outline-container-org9ee0830" class="outline-3">
+<h3 id="org9ee0830"><a href="#org9ee0830"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/%E6%94%B9%E8%A8%822%E7%89%88-%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B-Go%E8%A8%80%E8%AA%9E-%E5%8F%A4%E5%B7%9D%E6%98%87-ebook/dp/B06WP6S2QT/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=1GPYX46MK3OK&amp;keywords=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B+go%E8%A8%80%E8%AA%9E&amp;qid=1663028634&amp;sprefix=%E5%9F%BA%E7%A4%8E%E3%81%8B%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8Bgo%E8%A8%80%E8%AA%9E%2Caps%2C2056&amp;sr=8-1">改訂2版 基礎からわかる Go言語 | 古川昇 | 工学 | Kindleストア | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-org9ee0830">
 <ul class="org-ul">
 <li>117, 133, 141, 155</li>
 </ul>
@@ -2545,7 +2691,7 @@ func main() {
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 34: </span>ポインタ</label><pre class="src src-go">var ptr *int
+<label class="org-src-name"><span class="listing-number">Listing 37: </span>ポインタ</label><pre class="src src-go">var ptr *int
 var i int = 12345
 ptr = &amp;i
 
@@ -2560,7 +2706,7 @@ fmt.Println("ポインタ経由で変更したiの値:", i)
 </pre>
 </div>
 
-<div class="results" id="org7873fe5">
+<div class="results" id="orged7b6d6">
 <p>
 iのアドレス: 0xc0000b6010
 ptrの値(変数iのアドレス): 0xc0000b6010
@@ -2587,7 +2733,7 @@ func double(x int, y *int) {
 </pre>
 </div>
 
-<div class="results" id="org2c68d68">
+<div class="results" id="orgaeacf0d">
 <p>
 値渡し: 1
 ポインタ渡し: 2
@@ -2600,7 +2746,7 @@ func double(x int, y *int) {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 35: </span>関数リテラル = 無名関数</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 38: </span>関数リテラル = 無名関数</label><pre class="src src-go">func main() {
         val := 123
 
         // 関数リテラルの記述と呼び出しを同時に行う
@@ -2619,7 +2765,7 @@ func double(x int, y *int) {
 </pre>
 </div>
 
-<div class="results" id="org24547f2">
+<div class="results" id="orgd6e8ad3">
 <p>
 1230
 hoge
@@ -2632,7 +2778,7 @@ hoge
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 36: </span>代入して呼び出す</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 39: </span>代入して呼び出す</label><pre class="src src-go">func main() {
         // 関数型の変数宣言
         var f func(int, int) int
 
@@ -2658,7 +2804,7 @@ func multiply(x int, y int) int {
 </pre>
 </div>
 
-<div class="results" id="org778942c">
+<div class="results" id="org555cd3e">
 <p>
 3
 2
@@ -2671,7 +2817,7 @@ func multiply(x int, y int) int {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 37: </span>型に実装する</label><pre class="src src-go">type myType int
+<label class="org-src-name"><span class="listing-number">Listing 40: </span>型に実装する</label><pre class="src src-go">type myType int
 
 // myType型をレシーバに持つ関数、すなわちmyType型のメソッドを宣言。レシーバは一番最初に書く
 func (value myType) println() {
@@ -2688,7 +2834,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="org0aaf795">
+<div class="results" id="orgbab78f1">
 <p>
 1234
 </p>
@@ -2727,7 +2873,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="orgd0cfd45">
+<div class="results" id="org4affc70">
 <p>
 値: 0 -&gt; 0
 ポインタ: 0 -&gt; 2
@@ -2740,14 +2886,14 @@ func main() {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 38: </span>構造体にMyDataという新しい型名を与える</label><pre class="src src-go">type MyData struct {
+<label class="org-src-name"><span class="listing-number">Listing 41: </span>構造体にMyDataという新しい型名を与える</label><pre class="src src-go">type MyData struct {
       s string
       b byte
 }
 </pre>
 </div>
 
-<div class="results" id="org666be93">
+<div class="results" id="orga705a23">
 
 </div>
 
@@ -2769,7 +2915,7 @@ func main() {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 39: </span>埋め込み</label><pre class="src src-go">// 埋め込まれる型の構造体
+<label class="org-src-name"><span class="listing-number">Listing 42: </span>埋め込み</label><pre class="src src-go">// 埋め込まれる型の構造体
 type embedded struct {
         i int
 }
@@ -2796,7 +2942,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="org2ad164f">
+<div class="results" id="orgfed75d5">
 <p>
 test.doSomething()
 0
@@ -2809,7 +2955,7 @@ test.doSomething()
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 40: </span>2つの方法がある</label><pre class="src src-go">type Person struct {
+<label class="org-src-name"><span class="listing-number">Listing 43: </span>2つの方法がある</label><pre class="src src-go">type Person struct {
         name string
         age int
 }
@@ -2829,7 +2975,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="org89701d1">
+<div class="results" id="org43860dd">
 <p>
 {Jhon 23} {Tom 31} {Jane 42} &amp;{Mike 36}
 </p>
@@ -2841,7 +2987,7 @@ func main() {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 41: </span>埋め込み</label><pre class="src src-go">type Person struct {
+<label class="org-src-name"><span class="listing-number">Listing 44: </span>埋め込み</label><pre class="src src-go">type Person struct {
         name string
         age int
 }
@@ -2858,7 +3004,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="org1bc4ae2">
+<div class="results" id="orgbed5d48">
 <p>
 {1 {jack 28}}
 </p>
@@ -2870,7 +3016,7 @@ Go言語のインターフェースの役割は「振る舞い」を規定する
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 42: </span>インターフェースと型は自動で関連付けられる</label><pre class="src src-go">type Calculator interface {
+<label class="org-src-name"><span class="listing-number">Listing 45: </span>インターフェースと型は自動で関連付けられる</label><pre class="src src-go">type Calculator interface {
         // 関数の定義
         Calculate(a int, b int) int
 }
@@ -2905,7 +3051,7 @@ func main() {
 </pre>
 </div>
 
-<div class="results" id="orgc726931">
+<div class="results" id="org5be6da2">
 <p>
 和: 3
 差: -1
@@ -2918,7 +3064,7 @@ func main() {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 43: </span>空インターフェース。どんな値でも代入できる。_ は未使用エラーを防ぐため</label><pre class="src src-go">var empty interface {}
+<label class="org-src-name"><span class="listing-number">Listing 46: </span>空インターフェース。どんな値でも代入できる。_ は未使用エラーを防ぐため</label><pre class="src src-go">var empty interface {}
 
 empty = "abc"
 empty = 12345
@@ -2928,7 +3074,7 @@ _ = empty
 </pre>
 </div>
 
-<div class="results" id="org1e21ceb">
+<div class="results" id="org40ca6c6">
 
 </div>
 
@@ -2937,7 +3083,7 @@ _ = empty
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 44: </span>関数名がReadであれば、インターフェース名はReader</label><pre class="src src-go">type Reader interface {
+<label class="org-src-name"><span class="listing-number">Listing 47: </span>関数名がReadであれば、インターフェース名はReader</label><pre class="src src-go">type Reader interface {
         Read(p []byte) (n int, err error)
 }
 </pre>
@@ -2948,7 +3094,7 @@ _ = empty
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 45: </span>型アサーション</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 48: </span>型アサーション</label><pre class="src src-go">func main() {
         // 空インターフェースにstring型の値を格納
         var i interface{} = "test"
         // 型アサーションを使いstring型へ
@@ -2959,7 +3105,7 @@ _ = empty
 </pre>
 </div>
 
-<div class="results" id="org1dcf9c9">
+<div class="results" id="orgde6b41a">
 <p>
 i: string
 s: string
@@ -2972,7 +3118,7 @@ s: string
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 46: </span>型アサーションから2番目の値を受け取るときは、変換できなくてもランタイムパニックは起きない</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 49: </span>型アサーションから2番目の値を受け取るときは、変換できなくてもランタイムパニックは起きない</label><pre class="src src-go">func main() {
         // 空インターフェースにstring型の値を格納
         var i interface{} = "test"
 
@@ -2990,7 +3136,7 @@ s: string
 </pre>
 </div>
 
-<div class="results" id="org8c3c4bc">
+<div class="results" id="org3be6a8b">
 <p>
 test true
 &lt;nil&gt; false
@@ -3003,7 +3149,7 @@ test true
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 47: </span>型switch</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 50: </span>型switch</label><pre class="src src-go">func main() {
         showType(nil)
         showType(12345)
         showType("abcdef")
@@ -3029,7 +3175,7 @@ func showType(x interface{}) {
 </pre>
 </div>
 
-<div class="results" id="org7cfa695">
+<div class="results" id="org6c5271c">
 <p>
 nil
 整数
@@ -3044,7 +3190,7 @@ nil
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 48: </span>配列にアクセスする</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 51: </span>配列にアクセスする</label><pre class="src src-go">func main() {
         var date [7]string
 
         date[0] = "日曜日"
@@ -3073,7 +3219,7 @@ nil
 </pre>
 </div>
 
-<div class="results" id="org7f68244">
+<div class="results" id="orgeea7643">
 <p>
 日曜日 月曜日 火曜日 水曜日 木曜日 金曜日 土曜日
 日曜日 月曜日 火曜日 水曜日 木曜日 金曜日 土曜日
@@ -3091,7 +3237,7 @@ nil
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 49: </span>スライスにアクセスする</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 52: </span>スライスにアクセスする</label><pre class="src src-go">func main() {
         // 配列を宣言
         x := [5]string{"a", "b", "c", "d", "e"}
         // スライス型の変数を宣言
@@ -3116,7 +3262,7 @@ nil
 </pre>
 </div>
 
-<div class="results" id="orge93368f">
+<div class="results" id="orgdef0678">
 <p>
 [a b c d e]
 [b c d]
@@ -3135,7 +3281,7 @@ nil
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 50: </span>スライス&#x2026;で展開して渡す</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 53: </span>スライス&#x2026;で展開して渡す</label><pre class="src src-go">func main() {
         s := []string{"a", "b", "c"}
 
         // 以下2つの結果は同じ
@@ -3148,7 +3294,7 @@ func test(s ...string) {
 </pre>
 </div>
 
-<div class="results" id="org6a01824">
+<div class="results" id="org20fa1a7">
 <p>
 3 [a b c]
 3 [a b c]
@@ -3161,7 +3307,7 @@ func test(s ...string) {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 51: </span>存在しないファイルを参照して失敗させて検証する</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 54: </span>存在しないファイルを参照して失敗させて検証する</label><pre class="src src-go">func main() {
         file, err := os.Open("test.txt")
 
         if err != nil {
@@ -3175,7 +3321,7 @@ func test(s ...string) {
 </pre>
 </div>
 
-<div class="results" id="orgc7a4dc0">
+<div class="results" id="org08aef13">
 <p>
 open test.txt: no such file or directory
 finish
@@ -3232,7 +3378,7 @@ finish
 </pre>
 </div>
 
-<div class="results" id="org4eac410">
+<div class="results" id="orgce5920e">
 <p>
 1 &lt;nil&gt;
 15 &lt;nil&gt;
@@ -3247,7 +3393,7 @@ finish
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 52: </span>panic関数</label><pre class="src src-go">func main() {
+<label class="org-src-name"><span class="listing-number">Listing 55: </span>panic関数</label><pre class="src src-go">func main() {
         f1()
 }
 
@@ -3257,7 +3403,7 @@ func f1() {
 </pre>
 </div>
 
-<div class="results" id="org042567d">
+<div class="results" id="org6f75408">
 
 </div>
 
@@ -3276,7 +3422,7 @@ func f1() {
 </pre>
 </div>
 
-<div class="results" id="org17d6c20">
+<div class="results" id="org47253e9">
 <p>
 cap: 10
 len: 1
@@ -3289,41 +3435,41 @@ selectは複数のチャネルに対して同時に送受信待ちを行うと�
 </p>
 </div>
 </div>
-<div id="outline-container-org48ee633" class="outline-3">
-<h3 id="org48ee633"><a href="#org48ee633"><span class="done DONE">DONE</span> <a href="https://future-architect.github.io/articles/20210427b/">GoでDockerのAPIを叩いてみる | フューチャー技術ブログ</a></a></h3>
-<div class="outline-text-3" id="text-org48ee633">
+<div id="outline-container-orgd8d9452" class="outline-3">
+<h3 id="orgd8d9452"><a href="#orgd8d9452"><span class="done DONE">DONE</span> <a href="https://future-architect.github.io/articles/20210427b/">GoでDockerのAPIを叩いてみる | フューチャー技術ブログ</a></a></h3>
+<div class="outline-text-3" id="text-orgd8d9452">
 <p>
 goとdocker。
 </p>
 </div>
 </div>
-<div id="outline-container-org95a85e9" class="outline-3">
-<h3 id="org95a85e9"><a href="#org95a85e9"><span class="done DONE">DONE</span> <a href="https://blog.zaim.co.jp/n/nc05117f6dffd">Go でコマンドラインツールを作るときに便利なパッケージ｜@hira</a></a></h3>
-<div class="outline-text-3" id="text-org95a85e9">
+<div id="outline-container-org962264c" class="outline-3">
+<h3 id="org962264c"><a href="#org962264c"><span class="done DONE">DONE</span> <a href="https://blog.zaim.co.jp/n/nc05117f6dffd">Go でコマンドラインツールを作るときに便利なパッケージ｜@hira</a></a></h3>
+<div class="outline-text-3" id="text-org962264c">
 <p>
 環境変数、カラー、インジケータ。
 </p>
 </div>
 </div>
-<div id="outline-container-org33c485f" class="outline-3">
-<h3 id="org33c485f"><a href="#org33c485f"><span class="done DONE">DONE</span> cloneツール作成</a></h3>
-<div class="outline-text-3" id="text-org33c485f">
+<div id="outline-container-orgf3057b0" class="outline-3">
+<h3 id="orgf3057b0"><a href="#orgf3057b0"><span class="done DONE">DONE</span> cloneツール作成</a></h3>
+<div class="outline-text-3" id="text-orgf3057b0">
 <p>
 clonerのgoバージョンを作成する。
 </p>
 </div>
 </div>
-<div id="outline-container-org35f9164" class="outline-3">
-<h3 id="org35f9164"><a href="#org35f9164"><span class="done DONE">DONE</span> gcloneをリファクタする</a></h3>
-<div class="outline-text-3" id="text-org35f9164">
+<div id="outline-container-org56350aa" class="outline-3">
+<h3 id="org56350aa"><a href="#org56350aa"><span class="done DONE">DONE</span> gcloneをリファクタする</a></h3>
+<div class="outline-text-3" id="text-org56350aa">
 <p>
 goclocを読んでいると、gcloneのひどい書き方が目につく。型、構造体の使い方、ファイルやモジュール分割。一通り完了。非常に勉強になった。
 </p>
 </div>
 </div>
-<div id="outline-container-orgcc887d9" class="outline-3">
-<h3 id="orgcc887d9"><a href="#orgcc887d9"><span class="done DONE">DONE</span> <a href="https://zenn.dev/hsaki/books/golang-io-package">Goから学ぶI/O</a></a></h3>
-<div class="outline-text-3" id="text-orgcc887d9">
+<div id="outline-container-orgd961d83" class="outline-3">
+<h3 id="orgd961d83"><a href="#orgd961d83"><span class="done DONE">DONE</span> <a href="https://zenn.dev/hsaki/books/golang-io-package">Goから学ぶI/O</a></a></h3>
+<div class="outline-text-3" id="text-orgd961d83">
 <p>
 GoのIOの解説。
 </p>
@@ -3350,9 +3496,9 @@ os.File型のReadメソッドは以下のような実装となっています。
 </ul>
 </div>
 </div>
-<div id="outline-container-org2605422" class="outline-3">
-<h3 id="org2605422"><a href="#org2605422"><span class="done DONE">DONE</span> gclone拡張</a></h3>
-<div class="outline-text-3" id="text-org2605422">
+<div id="outline-container-org707f1a9" class="outline-3">
+<h3 id="org707f1a9"><a href="#org707f1a9"><span class="done DONE">DONE</span> gclone拡張</a></h3>
+<div class="outline-text-3" id="text-org707f1a9">
 <p>
 ファイルサイズの増分、各所要時間を表示する。
 </p>
@@ -3375,9 +3521,9 @@ github@go............ &#10007; (0.6s)
 </p>
 </div>
 </div>
-<div id="outline-container-org97850be" class="outline-3">
-<h3 id="org97850be"><a href="#org97850be"><span class="done DONE">DONE</span> GitHub APIで統計を取る</a></h3>
-<div class="outline-text-3" id="text-org97850be">
+<div id="outline-container-orgce3b721" class="outline-3">
+<h3 id="orgce3b721"><a href="#orgce3b721"><span class="done DONE">DONE</span> GitHub APIで統計を取る</a></h3>
+<div class="outline-text-3" id="text-orgce3b721">
 <p>
 アイデア。
 </p>
@@ -3431,43 +3577,43 @@ github@go............ &#10007; (0.6s)
 </ul>
 </div>
 
-<div id="outline-container-orgfa82dba" class="outline-4">
-<h4 id="orgfa82dba"><a href="#orgfa82dba">作業ログ</a></h4>
-<div class="outline-text-4" id="text-orgfa82dba">
+<div id="outline-container-org3d4059b" class="outline-4">
+<h4 id="org3d4059b"><a href="#org3d4059b">作業ログ</a></h4>
+<div class="outline-text-4" id="text-org3d4059b">
 <p>
 コミット数を取るのが難しい。<a href="20211030122204-graphql.html#ID-b4f456cf-d250-4877-ac4c-4b03144392f0">GraphQL</a>で取るようにした。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org3519163" class="outline-3">
-<h3 id="org3519163"><a href="#org3519163"><span class="done DONE">DONE</span> 丸画像を生成する</a></h3>
-<div class="outline-text-3" id="text-org3519163">
+<div id="outline-container-org7c3ddb2" class="outline-3">
+<h3 id="org7c3ddb2"><a href="#org7c3ddb2"><span class="done DONE">DONE</span> 丸画像を生成する</a></h3>
+<div class="outline-text-3" id="text-org7c3ddb2">
 <p>
 言語別の色の丸画像を生成するパッケージ。
 </p>
 </div>
 </div>
-<div id="outline-container-orgc7eba44" class="outline-3">
-<h3 id="orgc7eba44"><a href="#orgc7eba44"><span class="done DONE">DONE</span> act出力の順番固定</a></h3>
-<div class="outline-text-3" id="text-orgc7eba44">
+<div id="outline-container-orge056791" class="outline-3">
+<h3 id="orge056791"><a href="#orge056791"><span class="done DONE">DONE</span> act出力の順番固定</a></h3>
+<div class="outline-text-3" id="text-orge056791">
 <ol class="org-ol">
 <li>keyだけを別のスライスにして、ソートする。</li>
 <li>keyをイテレートして、mapの中身を取り出す</li>
 </ol>
 </div>
 </div>
-<div id="outline-container-orgbc697da" class="outline-3">
-<h3 id="orgbc697da"><a href="#orgbc697da"><span class="done DONE">DONE</span> バナー生成</a></h3>
-<div class="outline-text-3" id="text-orgbc697da">
+<div id="outline-container-orgabcb08e" class="outline-3">
+<h3 id="orgabcb08e"><a href="#orgabcb08e"><span class="done DONE">DONE</span> バナー生成</a></h3>
+<div class="outline-text-3" id="text-orgabcb08e">
 <p>
 ほかの形も追加する。
 </p>
 </div>
 </div>
-<div id="outline-container-orgfc6154a" class="outline-3">
-<h3 id="orgfc6154a"><a href="#orgfc6154a"><span class="done DONE">DONE</span> 誤字修正PRを送る</a></h3>
-<div class="outline-text-3" id="text-orgfc6154a">
+<div id="outline-container-org69d7da2" class="outline-3">
+<h3 id="org69d7da2"><a href="#org69d7da2"><span class="done DONE">DONE</span> 誤字修正PRを送る</a></h3>
+<div class="outline-text-3" id="text-org69d7da2">
 <ul class="org-ul">
 <li><a href="https://github.com/golang/go">golang/go: The Go programming language</a></li>
 
@@ -3476,9 +3622,9 @@ github@go............ &#10007; (0.6s)
 </ul>
 </div>
 </div>
-<div id="outline-container-org720d953" class="outline-3">
-<h3 id="org720d953"><a href="#org720d953"><span class="done DONE">DONE</span> <a href="https://www.oreilly.co.jp/books/9784873118222/">O&rsquo;Reilly Japan - Go言語でつくるインタプリタ</a></a></h3>
-<div class="outline-text-3" id="text-org720d953">
+<div id="outline-container-orgbecb220" class="outline-3">
+<h3 id="orgbecb220"><a href="#orgbecb220"><span class="done DONE">DONE</span> <a href="https://www.oreilly.co.jp/books/9784873118222/">O&rsquo;Reilly Japan - Go言語でつくるインタプリタ</a></a></h3>
+<div class="outline-text-3" id="text-orgbecb220">
 <ul class="org-ul">
 <li>31, 42, 45, 52, 75, 86, 105, 115, 162, 184, 238, 252, 297</li>
 </ul>
@@ -3499,9 +3645,9 @@ github@go............ &#10007; (0.6s)
 </p>
 </div>
 </div>
-<div id="outline-container-orgf1f9837" class="outline-3">
-<h3 id="orgf1f9837"><a href="#orgf1f9837"><span class="done DONE">DONE</span> <a href="https://tatsu-zine.com/books/nuxt-go-web-app-development">NuxtとGoではじめるWebアプリ開発【委託】 - 達人出版会</a></a></h3>
-<div class="outline-text-3" id="text-orgf1f9837">
+<div id="outline-container-orge5f1063" class="outline-3">
+<h3 id="orge5f1063"><a href="#orge5f1063"><span class="done DONE">DONE</span> <a href="https://tatsu-zine.com/books/nuxt-go-web-app-development">NuxtとGoではじめるWebアプリ開発【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-orge5f1063">
 <p>
 動画検索アプリを題材に、NuxtとGoを使ったアプリ開発をやる本。
 </p>
@@ -3511,9 +3657,9 @@ github@go............ &#10007; (0.6s)
 </p>
 </div>
 </div>
-<div id="outline-container-org72bf5a3" class="outline-3">
-<h3 id="org72bf5a3"><a href="#org72bf5a3"><span class="done DONE">DONE</span> ライフゲーム作成</a></h3>
-<div class="outline-text-3" id="text-org72bf5a3">
+<div id="outline-container-org8c68f93" class="outline-3">
+<h3 id="org8c68f93"><a href="#org8c68f93"><span class="done DONE">DONE</span> ライフゲーム作成</a></h3>
+<div class="outline-text-3" id="text-org8c68f93">
 <p>
 バックエンドGo, フロントReactで作る。
 </p>
@@ -3523,9 +3669,9 @@ github@go............ &#10007; (0.6s)
 </ul>
 </div>
 </div>
-<div id="outline-container-org488302d" class="outline-3">
-<h3 id="org488302d"><a href="#org488302d"><span class="done DONE">DONE</span> gofmtを読む</a></h3>
-<div class="outline-text-3" id="text-org488302d">
+<div id="outline-container-orga9d5609" class="outline-3">
+<h3 id="orga9d5609"><a href="#orga9d5609"><span class="done DONE">DONE</span> gofmtを読む</a></h3>
+<div class="outline-text-3" id="text-orga9d5609">
 <p>
 整形の方法を読む。
 </p>
@@ -3535,11 +3681,11 @@ github@go............ &#10007; (0.6s)
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 53: </span>各ファイルにフォーマットを実行する関数</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/51af90445696772703ed88d967e8c23c8e9e992d/src/cmd/gofmt/gofmt.go#L229
+<label class="org-src-name"><span class="listing-number">Listing 56: </span>各ファイルにフォーマットを実行する関数</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/51af90445696772703ed88d967e8c23c8e9e992d/src/cmd/gofmt/gofmt.go#L229
 </pre>
 </div>
 
-<div class="results" id="org82b1758">
+<div class="results" id="orgeb4cc27">
 <p>
 func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) error {
 </p>
@@ -3559,11 +3705,11 @@ func processFile(filename string, info fs.FileInfo, in io.Reader, r *reporter) e
 </ol>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 54: </span>実行の全体像</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/51af90445696772703ed88d967e8c23c8e9e992d/src/cmd/gofmt/gofmt.go#L387
+<label class="org-src-name"><span class="listing-number">Listing 57: </span>実行の全体像</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/51af90445696772703ed88d967e8c23c8e9e992d/src/cmd/gofmt/gofmt.go#L387
 </pre>
 </div>
 
-<div class="results" id="org49deabb">
+<div class="results" id="org68b832c">
 <p>
 func gofmtMain(s *sequencer) {
 </p>
@@ -3600,9 +3746,9 @@ func gofmtMain(s *sequencer) {
 </ul>
 </div>
 </div>
-<div id="outline-container-org831c6e8" class="outline-3">
-<h3 id="org831c6e8"><a href="#org831c6e8"><span class="done DONE">DONE</span> bufioを読む</a></h3>
-<div class="outline-text-3" id="text-org831c6e8">
+<div id="outline-container-orgdb3db70" class="outline-3">
+<h3 id="orgdb3db70"><a href="#orgdb3db70"><span class="done DONE">DONE</span> bufioを読む</a></h3>
+<div class="outline-text-3" id="text-orgdb3db70">
 <p>
 結局全然ピンと来てない。
 </p>
@@ -3619,11 +3765,11 @@ func gofmtMain(s *sequencer) {
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 55: </span>重要そうな部分。余りバッファがあればコピーし、余りバッファがないときはコピーせず直接write</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/bufio/bufio.go#L662-L685
+<label class="org-src-name"><span class="listing-number">Listing 58: </span>重要そうな部分。余りバッファがあればコピーし、余りバッファがないときはコピーせず直接write</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/122a22e0e9eba7fe712030d429fc4bcf6f447f5e/src/bufio/bufio.go#L662-L685
 </pre>
 </div>
 
-<div class="results" id="org68ef039">
+<div class="results" id="orga12f42b">
 <p>
 func (b *Writer) Write(p []byte) (nn int, err error) {
 	for len(p) &gt; b.Available() &amp;&amp; b.err == nil {
@@ -3653,33 +3799,33 @@ func (b *Writer) Write(p []byte) (nn int, err error) {
 </div>
 </div>
 </div>
-<div id="outline-container-org7d778b2" class="outline-3">
-<h3 id="org7d778b2"><a href="#org7d778b2"><span class="done DONE">DONE</span> <a href="https://gihyo.jp/dp/ebook/2021/978-4-297-12520-2">エキスパートたちのGo言語 一流のコードから応用力を学ぶ | Gihyo Digital Publishing … 技術評論社の電子書籍</a></a></h3>
-<div class="outline-text-3" id="text-org7d778b2">
+<div id="outline-container-org8880743" class="outline-3">
+<h3 id="org8880743"><a href="#org8880743"><span class="done DONE">DONE</span> <a href="https://gihyo.jp/dp/ebook/2021/978-4-297-12520-2">エキスパートたちのGo言語 一流のコードから応用力を学ぶ | Gihyo Digital Publishing … 技術評論社の電子書籍</a></a></h3>
+<div class="outline-text-3" id="text-org8880743">
 <p>
 ノウハウ集。通読するものというよりは、好きな箇所をつまみ食いする本。
 </p>
 </div>
 </div>
-<div id="outline-container-org1cb2243" class="outline-3">
-<h3 id="org1cb2243"><a href="#org1cb2243"><span class="done DONE">DONE</span> <a href="https://zenn.dev/empenguin/articles/09c1b50ebeb8e7">Golang による Strategy パターン</a></a></h3>
-<div class="outline-text-3" id="text-org1cb2243">
+<div id="outline-container-org29c13af" class="outline-3">
+<h3 id="org29c13af"><a href="#org29c13af"><span class="done DONE">DONE</span> <a href="https://zenn.dev/empenguin/articles/09c1b50ebeb8e7">Golang による Strategy パターン</a></a></h3>
+<div class="outline-text-3" id="text-org29c13af">
 <p>
 必要になったので参考にする。
 </p>
 </div>
 </div>
-<div id="outline-container-orgda9c51b" class="outline-3">
-<h3 id="orgda9c51b"><a href="#orgda9c51b"><span class="done DONE">DONE</span> <a href="https://selfnote.work/20210516/programming/golang-design-pattern-prototype/">[Go言語]Prototypeパターンを学ぼう | セルフノート</a></a></h3>
-<div class="outline-text-3" id="text-orgda9c51b">
+<div id="outline-container-org96c514c" class="outline-3">
+<h3 id="org96c514c"><a href="#org96c514c"><span class="done DONE">DONE</span> <a href="https://selfnote.work/20210516/programming/golang-design-pattern-prototype/">[Go言語]Prototypeパターンを学ぼう | セルフノート</a></a></h3>
+<div class="outline-text-3" id="text-org96c514c">
 <p>
 デザインパターンの紹介。
 </p>
 </div>
 </div>
-<div id="outline-container-org83fab70" class="outline-3">
-<h3 id="org83fab70"><a href="#org83fab70"><span class="done DONE">DONE</span> <a href="https://andmorefine.gitbook.io/learn-go-with-tests/">テスト駆動開発でGO言語を学びましょう - テスト駆動開発でGO言語を学びましょう</a></a></h3>
-<div class="outline-text-3" id="text-org83fab70">
+<div id="outline-container-org66b5242" class="outline-3">
+<h3 id="org66b5242"><a href="#org66b5242"><span class="done DONE">DONE</span> <a href="https://andmorefine.gitbook.io/learn-go-with-tests/">テスト駆動開発でGO言語を学びましょう - テスト駆動開発でGO言語を学びましょう</a></a></h3>
+<div class="outline-text-3" id="text-org66b5242">
 <p>
 テスト駆動開発によるGo入門。動かしてわかりやすいだけでなく、後の学習に役に立ちそうな言葉も多い。
 </p>
@@ -3725,9 +3871,9 @@ TDDアプローチの詳細
 </blockquote>
 </div>
 </div>
-<div id="outline-container-org92eeef3" class="outline-3">
-<h3 id="org92eeef3"><a href="#org92eeef3"><span class="done DONE">DONE</span> 実行結果をいい感じに保持するにはどうするか</a></h3>
-<div class="outline-text-3" id="text-org92eeef3">
+<div id="outline-container-org77771ee" class="outline-3">
+<h3 id="org77771ee"><a href="#org77771ee"><span class="done DONE">DONE</span> 実行結果をいい感じに保持するにはどうするか</a></h3>
+<div class="outline-text-3" id="text-org77771ee">
 <p>
 都度printするのではなく、貯めておいて、表示する箇所で整形して表示したい。表示部分と処理が分離される効果もある。何か公開されているツールを参考にすればできそう。
 </p>
@@ -3743,9 +3889,9 @@ TDDアプローチの詳細
 </pre>
 </div>
 </div>
-<div id="outline-container-orgee435f6" class="outline-3">
-<h3 id="orgee435f6"><a href="#orgee435f6"><span class="done DONE">DONE</span> <a href="https://qiita.com/tenntenn/items/ac5940dfbca703183fdf">Goのスコープについて考えてみよう #golang - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgee435f6">
+<div id="outline-container-org2d90b8e" class="outline-3">
+<h3 id="org2d90b8e"><a href="#org2d90b8e"><span class="done DONE">DONE</span> <a href="https://qiita.com/tenntenn/items/ac5940dfbca703183fdf">Goのスコープについて考えてみよう #golang - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org2d90b8e">
 <p>
 スコープの解説。
 </p>
@@ -3856,9 +4002,9 @@ TDDアプローチの詳細
 </table>
 </div>
 </div>
-<div id="outline-container-orgef28ddc" class="outline-3">
-<h3 id="orgef28ddc"><a href="#orgef28ddc"><span class="done DONE">DONE</span> <a href="https://qiita.com/tenntenn/items/e15cc0c54b3bbfddb04e">Goの比較可能性（comparable） - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-orgef28ddc">
+<div id="outline-container-org4075dd3" class="outline-3">
+<h3 id="org4075dd3"><a href="#org4075dd3"><span class="done DONE">DONE</span> <a href="https://qiita.com/tenntenn/items/e15cc0c54b3bbfddb04e">Goの比較可能性（comparable） - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org4075dd3">
 <p>
 比較可能な型の説明。
 </p>
@@ -3889,12 +4035,12 @@ TDDアプローチの詳細
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 57: </span>falseになる。動的型はint型で同じだが、動的値が同じなため</label><pre class="src src-go">var x, y any = 100, 200
+<label class="org-src-name"><span class="listing-number">Listing 60: </span>falseになる。動的型はint型で同じだが、動的値が同じなため</label><pre class="src src-go">var x, y any = 100, 200
 fmt.Println(x == y)
 </pre>
 </div>
 
-<div class="results" id="orgc26e5b8">
+<div class="results" id="org36ac41e">
 <p>
 false
 </p>
@@ -3902,12 +4048,12 @@ false
 </div>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 58: </span>falseになる。動的型が違うので</label><pre class="src src-go">var x, y any = int(100), int32(100)
+<label class="org-src-name"><span class="listing-number">Listing 61: </span>falseになる。動的型が違うので</label><pre class="src src-go">var x, y any = int(100), int32(100)
 fmt.Println(x == y)
 </pre>
 </div>
 
-<div class="results" id="org9860533">
+<div class="results" id="orge10c7c1">
 <p>
 false
 </p>
@@ -3926,9 +4072,9 @@ false
 </ul>
 </div>
 </div>
-<div id="outline-container-org2f8630a" class="outline-3">
-<h3 id="org2f8630a"><a href="#org2f8630a"><span class="done DONE">DONE</span> ネストしたときのoavの挙動を確認する</a></h3>
-<div class="outline-text-3" id="text-org2f8630a">
+<div id="outline-container-org0bc910f" class="outline-3">
+<h3 id="org0bc910f"><a href="#org0bc910f"><span class="done DONE">DONE</span> ネストしたときのoavの挙動を確認する</a></h3>
+<div class="outline-text-3" id="text-org0bc910f">
 <ul class="org-ul">
 <li><a href="https://github.com/kijimaD/oav">kijimaD/oav</a></li>
 </ul>
@@ -3944,9 +4090,9 @@ false
 </ul>
 </div>
 </div>
-<div id="outline-container-orgadd3469" class="outline-3">
-<h3 id="orgadd3469"><a href="#orgadd3469"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/Go%E3%81%AA%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4908686033/ref=sr_1_3?keywords=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0&amp;qid=1653145833&amp;sprefix=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%2Caps%2C206&amp;sr=8-3">Goならわかるシステムプログラミング | 渋川 よしき, ごっちん |本 | 通販 - Amazon.co.jp</a></a></h3>
-<div class="outline-text-3" id="text-orgadd3469">
+<div id="outline-container-orge0c2611" class="outline-3">
+<h3 id="orge0c2611"><a href="#orge0c2611"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/Go%E3%81%AA%E3%82%89%E3%82%8F%E3%81%8B%E3%82%8B%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0-%E6%B8%8B%E5%B7%9D-%E3%82%88%E3%81%97%E3%81%8D/dp/4908686033/ref=sr_1_3?keywords=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0&amp;qid=1653145833&amp;sprefix=go+%E3%82%B7%E3%82%B9%E3%83%86%E3%83%A0%2Caps%2C206&amp;sr=8-3">Goならわかるシステムプログラミング | 渋川 よしき, ごっちん |本 | 通販 - Amazon.co.jp</a></a></h3>
+<div class="outline-text-3" id="text-orge0c2611">
 <p>
 途中まで読んだが、あまりおもしろくないので後回しにする。
 </p>
