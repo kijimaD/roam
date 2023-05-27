@@ -1,0 +1,64 @@
+#+title:      Docker progress を読む
+#+date:       [2023-05-27 Sat 00:01]
+#+filetags:   :code:
+#+identifier: 20230527T000152
+
+* Progressのコードを読む
+
+- [[https://github.com/moby/moby/pull/45602/files][[backport 24.0] c8d/pull: Use same progress action as distribution by vvoland · Pull Request #45602 · moby/moby]]
+
+を見て、progressという箇所があることを知る。ここを読んでみる。
+
+- インターフェースprogressUpdaterは更新するインターフェース
+  - 構造体pullProgressはインターフェースを満たす。こいつはStore, ShowExistsを持っていて情報を保持してる
+- 構造体jobsはミューテックスとdescを持つ。descsは何に使われている
+  - イメージの情報が入ってるんだろうな
+
+#+caption: Descriptor
+#+begin_src git-permalink
+https://github.com/opencontainers/image-spec/blob/9615142d016838b5dfe7453f80af0be74feb5c7c/specs-go/v1/descriptor.go#L22-L50
+#+end_src
+
+#+RESULTS:
+#+begin_example go
+type Descriptor struct {
+	// MediaType is the media type of the object this schema refers to.
+	MediaType string `json:"mediaType,omitempty"`
+
+	// Digest is the digest of the targeted content.
+	Digest digest.Digest `json:"digest"`
+
+	// Size specifies the size in bytes of the blob.
+	Size int64 `json:"size"`
+
+	// URLs specifies a list of URLs from which this object MAY be downloaded
+	URLs []string `json:"urls,omitempty"`
+
+	// Annotations contains arbitrary metadata relating to the targeted content.
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Data is an embedding of the targeted content. This is encoded as a base64
+	// string when marshalled to JSON (automatically, by encoding/json). If
+	// present, Data can be used directly to avoid fetching the targeted content.
+	Data []byte `json:"data,omitempty"`
+
+	// Platform describes the platform which the image in the manifest runs on.
+	//
+	// This should only be used when referring to a manifest.
+	Platform *Platform `json:"platform,omitempty"`
+
+	// ArtifactType is the IANA media type of this artifact.
+	ArtifactType string `json:"artifactType,omitempty"`
+}
+#+end_example
+
+- 表示するのはshowProgress。こいつはupdater interfaceを受け取って、更新する方法を抽象化している
+  - データはレシーバのjobsに保持している
+
+[[file:../images/20230527-progress.drawio.svg]]
+
+- UpdateProgressは何をしているか
+  - storeの中のstatusを更新する(アクティブなものだけにする)
+  - 引数のjobsでループ
+  - アクティブなjobのときだけWriteProgress()で進捗を書き込む
+  - 条件によって、「ダウンロード完了」とか、「すでに存在」とかメッセージを分ける
