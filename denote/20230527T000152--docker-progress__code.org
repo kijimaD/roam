@@ -3,7 +3,15 @@
 #+filetags:   :code:
 #+identifier: 20230527T000152
 
-* Progressのコードを読む
+* DONE Progressのコードを読む
+CLOSED: [2023-05-27 Sat 14:29]
+:LOGBOOK:
+CLOCK: [2023-05-27 Sat 12:24]--[2023-05-27 Sat 12:49] =>  0:25
+CLOCK: [2023-05-27 Sat 11:56]--[2023-05-27 Sat 12:21] =>  0:25
+CLOCK: [2023-05-27 Sat 11:13]--[2023-05-27 Sat 11:38] =>  0:25
+CLOCK: [2023-05-27 Sat 10:32]--[2023-05-27 Sat 10:57] =>  0:25
+CLOCK: [2023-05-27 Sat 00:01]--[2023-05-27 Sat 00:26] =>  0:25
+:END:
 
 - [[https://github.com/moby/moby/pull/45602/files][[backport 24.0] c8d/pull: Use same progress action as distribution by vvoland · Pull Request #45602 · moby/moby]]
 
@@ -62,3 +70,30 @@ type Descriptor struct {
   - 引数のjobsでループ
   - アクティブなjobのときだけWriteProgress()で進捗を書き込む
   - 条件によって、「ダウンロード完了」とか、「すでに存在」とかメッセージを分ける
+
+* DONE Pullのコードを読む
+CLOSED: [2023-05-27 Sat 15:45]
+:LOGBOOK:
+CLOCK: [2023-05-27 Sat 15:13]--[2023-05-27 Sat 15:38] =>  0:25
+CLOCK: [2023-05-27 Sat 14:46]--[2023-05-27 Sat 15:11] =>  0:25
+:END:
+
+- daemon/containerd/image_pull.go
+- レシーバはImageService。イメージに関するアクションを一手に引き受けるインターフェース及び構造体
+  - インターフェース https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/daemon/image_service.go#L25
+  - 構造体 https://github.com/kd-collective/moby/blob/c030f7f40d62ecabfedd1cf96fbb734ce051ce73/daemon/containerd/service.go#L20
+- platformを読み取ってオプションに追加する
+- image名をパースしてrefオブジェクトを作成する
+- tagOrDigestをパースして分離する
+- パースした結果はrefに入れる
+- リゾルバーを作成してオプションに追加する
+- ハンドル関数をオプションに追加する
+  - ハンドル関数の中身でjobsを追加している
+- ここのハンドラは何をするのだろう
+- JSONProgressOutputオブジェクトを作成
+- finishProgressを作成
+- deferでfinishProgress()を実行する
+- オプションにWithPullUnpack, WithPullSnapshotterを追加する
+  - 展開とかスナップショット...
+- Pullを実行する。これが本質か。Pull自体はrefがあれば実行できる。コードの途中は本質ではない。
+  - imageService.client.Pull なので、普通にdocker clientのpullを実行するんだろう
