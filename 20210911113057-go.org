@@ -7,6 +7,62 @@
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
+** オプションパターン
+オプションがたくさんある、でかいコードベースで見る表現の解説を見つけた。
+
+- [[https://thomasnguyen.site/functional-options-pattern-in-golang][Functional Options Pattern in Golang]]
+
+#+caption: optionsをループさせて、自在な組み合わせでオプションを設定する
+#+begin_src go
+package main
+
+import "fmt"
+
+type Config struct {
+    Host     string
+    Port     int
+    Username string
+    Password string
+}
+
+type Option func(*Config)
+
+func WithHost(host string) Option {
+    return func(c *Config) {
+        c.Host = host
+    }
+}
+
+func WithPort(port int) Option {
+    return func(c *Config) {
+        c.Port = port
+    }
+}
+
+func WithCredentials(username, password string) Option {
+    return func(c *Config) {
+        c.Username = username
+        c.Password = password
+    }
+}
+
+func NewConfig(options ...Option) *Config {
+    config := &Config{
+        Host:     "localhost",
+        Port:     8080,
+        Username: "",
+        Password: "",
+    }
+
+    for _, option := range options {
+        option(config)
+    }
+
+    return config
+}
+
+#+end_src
+
 ** 型でラップする
 型で挙動を変える書き方ができる。
 
@@ -908,14 +964,173 @@ type rune = int32
 [227 129 130 227 129 132 227 129 134]
 #+end_results
 * Tasks
-** TODO [[https://techbookfest.org/product/vJdm4hcCDab9xE5Yjshyv8?productVariantID=6CzemppiY937uDD4bXT6nE][詳解Go標準パッケージ：web-apps.tech]]
+** TODO [[https://gist.github.com/kofuk/922bdce139e657d67baf22e053f4b548][Goアセンブラのクイックガイド]]
+公式ドキュメントの翻訳。
+** TODO [[https://docs.google.com/presentation/d/10ru3LdbofJqgdmD8pprZuZyWbGvOFC8rKxb6q5Q46Xc/edit#slide=id.p][Go言語低レイヤー入門 Hello world が 画面に表示されるまで (GoConforenceTokyo2021) - Google Slides]]
+:LOGBOOK:
+CLOCK: [2023-06-22 Thu 21:33]--[2023-06-22 Thu 21:58] =>  0:25
+:END:
+低レイヤーの解説。
+** TODO [[https://zenn.dev/hsaki/articles/godoc-asm-ja][解説&翻訳 - A Quick Guide to Go's Assembler]]
+Goアセンブラの解説。
+** TODO [[https://zenn.dev/dqneo/articles/ce9459676a3303][go build を使わずにGoプログラムをビルドする]]
+:LOGBOOK:
+CLOCK: [2023-06-22 Thu 23:15]--[2023-06-22 Thu 23:40] =>  0:25
+:END:
+
+go buildの仕組み。実際に動かして取っ掛かりを見つけるのが面白い。
+
+そういうアプローチもあるのか。
+
+#+begin_quote
+私はソースを読むよりもリバースエンジニアリングする方が得意なので、今回もログだけを見て処理内容を推測して自作しました。
+#+end_quote
+
+ビルドタグで言及されてたページ。
+
+-[[https://zenn.dev/team_soda/articles/golang-build-tags-history][ Goのビルドタグの書き方が// +buildから//go:buildに変わった理由]]
+** TODO [[https://techbookfest.org/product/5127270203129856?productVariantID=5036058678919168][Goでちょっとひといき：Women Who Go Tokyo]]
 :PROPERTIES:
-:Effort:   3:00
+:Effort:   10:00
 :END:
 :LOGBOOK:
-CLOCK: [2023-06-23 Fri 09:07]--[2023-06-23 Fri 09:32] =>  0:25
+CLOCK: [2023-06-25 Sun 18:56]
+CLOCK: [2023-06-25 Sun 18:31]--[2023-06-25 Sun 18:56] =>  0:25
+CLOCK: [2023-06-25 Sun 18:06]--[2023-06-25 Sun 18:31] =>  0:25
+CLOCK: [2023-06-25 Sun 15:09]--[2023-06-25 Sun 15:34] =>  0:25
+CLOCK: [2023-06-25 Sun 14:44]--[2023-06-25 Sun 15:09] =>  0:25
+CLOCK: [2023-06-25 Sun 14:17]--[2023-06-25 Sun 14:42] =>  0:25
+CLOCK: [2023-06-25 Sun 13:42]--[2023-06-25 Sun 14:07] =>  0:25
+CLOCK: [2023-06-25 Sun 12:59]--[2023-06-25 Sun 13:24] =>  0:25
+CLOCK: [2023-06-25 Sun 11:16]--[2023-06-25 Sun 11:41] =>  0:25
+CLOCK: [2023-06-25 Sun 10:48]--[2023-06-25 Sun 11:13] =>  0:25
+CLOCK: [2023-06-24 Sat 23:32]--[2023-06-24 Sat 23:57] =>  0:25
+CLOCK: [2023-06-24 Sat 22:57]--[2023-06-24 Sat 23:22] =>  0:25
+CLOCK: [2023-06-24 Sat 22:17]--[2023-06-24 Sat 22:42] =>  0:25
+CLOCK: [2023-06-24 Sat 21:46]--[2023-06-24 Sat 22:11] =>  0:25
+CLOCK: [2023-06-24 Sat 20:41]--[2023-06-24 Sat 21:06] =>  0:25
+CLOCK: [2023-06-24 Sat 19:52]--[2023-06-24 Sat 20:17] =>  0:25
+CLOCK: [2023-06-24 Sat 19:22]--[2023-06-24 Sat 19:47] =>  0:25
+CLOCK: [2023-06-24 Sat 18:50]--[2023-06-24 Sat 19:15] =>  0:25
+CLOCK: [2023-06-24 Sat 16:16]--[2023-06-24 Sat 16:41] =>  0:25
+CLOCK: [2023-06-24 Sat 15:51]--[2023-06-24 Sat 16:16] =>  0:25
 :END:
-Goの標準パッケージを詳解する本。
+Goの解説集。
+
+#+caption: エントリポイントから呼ばれる
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/rt0_linux_amd64.s#L7-L8
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+TEXT _rt0_amd64_linux(SB),NOSPLIT,$-8
+	JMP	_rt0_amd64(SB)
+#+end_results
+
+#+caption: ジャンプ先
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L15-L18
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+TEXT _rt0_amd64(SB),NOSPLIT,$-8
+	MOVQ	0(SP), DI	// argc
+	LEAQ	8(SP), SI	// argv
+	JMP	runtime rt0_go(SB)
+#+end_results
+
+#+caption: g0とはproc.goで定義されている変数のこと
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L115
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+	g0           g
+#+end_results
+
+#+caption: g型の定義
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/runtime2.go#L414
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type g struct {
+#+end_results
+
+#+caption: どのプロセッサが使われているか確認する
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L183-L187
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+	CMPL	BX, $0x756E6547  // "Genu"
+	JNE	notintel
+	CMPL	DX, $0x49656E69  // "ineI"
+	JNE	notintel
+	CMPL	CX, $0x6C65746E  // "ntel"
+#+end_results
+
+- TLS :: Thread Local Storage
+- runtimeまわりでは ~g~ はgoroutine、 ~m~ はワーカースレッドをさす
+
+#+caption: 初期化する。CPU数、ページサイズをセットする
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/os_linux.go#L346-L368
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func osinit() {
+	ncpu = getproccount()
+	physHugePageSize = getHugePageSize()
+	if iscgo {
+		// #42494 glibc and musl reserve some signals for
+		// internal use and require they not be blocked by
+		// the rest of a normal C runtime. When the go runtime
+		// blocks...unblocks signals, temporarily, the blocked
+		// interval of time is generally very short. As such,
+		// these expectations of *libc code are mostly met by
+		// the combined go+cgo system of threads. However,
+		// when go causes a thread to exit, via a return from
+		// mstart(), the combined runtime can deadlock if
+		// these signals are blocked. Thus, don't block these
+		// signals when exiting threads.
+		// - glibc: SIGCANCEL (32), SIGSETXID (33)
+		// - musl: SIGTIMER (32), SIGCANCEL (33), SIGSYNCCALL (34)
+		sigdelset(&sigsetAllExiting, 32)
+		sigdelset(&sigsetAllExiting, 33)
+		sigdelset(&sigsetAllExiting, 34)
+	}
+	osArchInit()
+}
+#+end_results
+
+#+caption: スケジューラの初期化
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L694-L779
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func schedinit() {
+	lockInit(&sched.lock, lockRankSched)
+	lockInit(&sched.sysmonlock, lockRankSysmon)
+	lockInit(&sched.deferlock, lockRankDefer)
+(略)
+#+end_results
+
+#+caption: ここでmainパッケージのmain関数にリンクする
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L131-L132
+#+end_src
+
+- デバッガでステップインしたあとパブリックな関数を見つけて、それを呼び出すようにすると再度デバッガを実行するときに素早く目的の関数までたどり着きやすくなる。変数まわりを調べて同じ引数で渡せるようにする
+
 ** TODO [[https://go.dev/doc/comment][Go Doc Comments - The Go Programming Language]]
 Go Docのコメントの仕様。
 ** TODO [[https://github.com/golang/go/wiki/CompilerOptimizations#function-inlining][CompilerOptimizations · golang/go Wiki]]
@@ -1073,33 +1288,6 @@ CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
 func len(v Type) int
 #+end_results
 
-** TODO [[https://zenn.dev/hsaki/articles/go-convert-json-struct][Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて]]
-:LOGBOOK:
-CLOCK: [2022-11-06 Sun 17:37]--[2022-11-06 Sun 18:02] =>  0:25
-CLOCK: [2022-11-06 Sun 17:12]--[2022-11-06 Sun 17:37] =>  0:25
-:END:
-エンコードの解説。
-
-- インメモリ表現
-  - 何らかの構造を持つことを前提とした扱い方
-    - リスト
-    - 配列
-    - 構造体
-- バイト列表現
-  - ただのバイト列として扱い。データそのものに何が書いてあるかを気にする必要がない
-  - ファイルへの書き込み
-  - ネットワークへの受信
-
-エンコードはインメモリ表現からバイト列表現への変換のこと。
-
-- Go構造体からjsonを生成する
-- 平文から暗号文を生成する
-
-デコーディングはバイト列表現からインメモリ表現への変換のこと。
-
-- jsonからGo構造体を生成する
-- 暗号文から平文を生成する
-
 ** TODO [[https://zenn.dev/hsaki/books/golang-httpserver-internal][Deep Dive into The Go's Web Server]]
 Goのサーバーの解説。
 ** TODO [[https://zenn.dev/hsaki/books/golang-context/viewer/intro][よくわかるcontextの使い方]]
@@ -1114,8 +1302,6 @@ CLOCK: [2022-10-30 Sun 23:01]--[2022-10-30 Sun 23:26] =>  0:25
 CLOCK: [2022-10-30 Sun 10:22]--[2022-10-30 Sun 10:47] =>  0:25
 :END:
 contextの詳しい解説。この人すごいなあ。
-** TODO 誤字修正
-- driectory
 ** TODO orgパーサを書く
 :LOGBOOK:
 CLOCK: [2022-10-20 Thu 17:29]--[2022-10-20 Thu 17:54] =>  0:25
@@ -1663,6 +1849,8 @@ CLOSED: [2022-10-29 Sat 11:19]
 - 手元ビルドした最新のgoへのパスが通っていないためだった。パスを通すと、テストを失敗させられるように
 - どうしてテストが反映されないという結果になるのかわからない
 * Reference
+** [[https://go.dev/blog/comparable][All your comparable types - The Go Programming Language]]
+1.20の変更。比較可能な型。
 ** [[https://go.dev/doc/toolchain][Go Toolchains - The Go Programming Language]]
 Goツールチェイン。
 ** [[https://github.com/golang/go/issues/57001][extended forwards compatibility for Go · Issue #57001 · golang/go]]
@@ -3657,3 +3845,47 @@ CLOCK: [2023-05-18 Thu 23:13]--[2023-05-18 Thu 23:38] =>  0:25
 #+end_quote
 
 - メッセージが送信されるたびにアバター画像URLを生成するとスケールしない。アバターURLはクッキーの中にキャッシュすることにする
+** DONE [[https://zenn.dev/hsaki/articles/go-convert-json-struct][Goにおけるjsonの扱い方を整理・考察してみた ~ データスキーマを添えて]]
+CLOSED: [2023-06-23 Fri 23:28]
+:LOGBOOK:
+CLOCK: [2023-06-23 Fri 22:53]--[2023-06-23 Fri 23:18] =>  0:25
+CLOCK: [2022-11-06 Sun 17:37]--[2022-11-06 Sun 18:02] =>  0:25
+CLOCK: [2022-11-06 Sun 17:12]--[2022-11-06 Sun 17:37] =>  0:25
+:END:
+エンコードの解説。
+
+- インメモリ表現
+  - 何らかの構造を持つことを前提とした扱い方
+    - リスト
+    - 配列
+    - 構造体
+- バイト列表現
+  - ただのバイト列として扱い。データそのものに何が書いてあるかを気にする必要がない
+  - ファイルへの書き込み
+  - ネットワークへの受信
+
+エンコードはインメモリ表現からバイト列表現への変換のこと。
+
+- Go構造体からjsonを生成する
+- 平文から暗号文を生成する
+
+デコーディングはバイト列表現からインメモリ表現への変換のこと。
+
+- jsonからGo構造体を生成する
+- 暗号文から平文を生成する
+
+Unmarshalは、対応してないjsonのフィールドがあると取りこぼす。そしてゼロ値を入れる。この挙動を防ぎたいときは、Unmarshalで書き込む先の変数をinterface{}型にして入れ、それから型アサーションで確かめればよい。
+** DONE [[https://techbookfest.org/product/vJdm4hcCDab9xE5Yjshyv8?productVariantID=6CzemppiY937uDD4bXT6nE][詳解Go標準パッケージ：web-apps.tech]]
+CLOSED: [2023-06-24 Sat 14:36]
+:PROPERTIES:
+:Effort:   3:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-06-24 Sat 12:50]--[2023-06-24 Sat 13:15] =>  0:25
+CLOCK: [2023-06-24 Sat 11:24]--[2023-06-24 Sat 11:49] =>  0:25
+CLOCK: [2023-06-24 Sat 10:58]--[2023-06-24 Sat 11:23] =>  0:25
+CLOCK: [2023-06-24 Sat 03:47]--[2023-06-24 Sat 04:12] =>  0:25
+CLOCK: [2023-06-24 Sat 00:34]--[2023-06-24 Sat 00:59] =>  0:25
+CLOCK: [2023-06-23 Fri 09:07]--[2023-06-23 Fri 09:32] =>  0:25
+:END:
+Goの標準パッケージを詳解する本。
