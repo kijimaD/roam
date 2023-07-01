@@ -7,6 +7,21 @@
 * 概要
 Go言語はGoogleによって開発された[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]]はGoで書かれている。シンプルさをコンセプトにしている。シンプルすぎて必要な機能が足りてない、という批判もあるくらい。
 * Memo
+** delveを使う
+
+gdbだと謎のgoroutineらしきものがたびたび挿入される( ~runtime.sigtramp~ )。直し方がよくわからないのでやめた。代わりにdelveを使うことに。構造体の表示がいい感じだ。使い方はだいたい同じ。
+
+Emacsの ~M-x gdb~ と同等になるのが[[https://github.com/benma/go-dlv.el/][benma/go-dlv.el]]で配布されている。dap-modeよりこちらが好み。
+
+** gdbで変数表示すると<optimized out>となるのを防ぐ
+
+コンパイル時に最適化した結果、変数や式を削除することがある。その場合デバッガで表示できなくなる。コンパイルオプションで最適化を無効化すると表示できる。
+
+#+caption: 最適化を無効化する
+#+begin_src shell
+  go build -gcflags="-N -l" main.go
+#+end_src
+
 ** オプションパターン
 オプションがたくさんある、でかいコードベースで見る表現の解説を見つけた。
 
@@ -989,148 +1004,6 @@ go buildの仕組み。実際に動かして取っ掛かりを見つけるのが
 ビルドタグで言及されてたページ。
 
 -[[https://zenn.dev/team_soda/articles/golang-build-tags-history][ Goのビルドタグの書き方が// +buildから//go:buildに変わった理由]]
-** TODO [[https://techbookfest.org/product/5127270203129856?productVariantID=5036058678919168][Goでちょっとひといき：Women Who Go Tokyo]]
-:PROPERTIES:
-:Effort:   10:00
-:END:
-:LOGBOOK:
-CLOCK: [2023-06-25 Sun 18:56]
-CLOCK: [2023-06-25 Sun 18:31]--[2023-06-25 Sun 18:56] =>  0:25
-CLOCK: [2023-06-25 Sun 18:06]--[2023-06-25 Sun 18:31] =>  0:25
-CLOCK: [2023-06-25 Sun 15:09]--[2023-06-25 Sun 15:34] =>  0:25
-CLOCK: [2023-06-25 Sun 14:44]--[2023-06-25 Sun 15:09] =>  0:25
-CLOCK: [2023-06-25 Sun 14:17]--[2023-06-25 Sun 14:42] =>  0:25
-CLOCK: [2023-06-25 Sun 13:42]--[2023-06-25 Sun 14:07] =>  0:25
-CLOCK: [2023-06-25 Sun 12:59]--[2023-06-25 Sun 13:24] =>  0:25
-CLOCK: [2023-06-25 Sun 11:16]--[2023-06-25 Sun 11:41] =>  0:25
-CLOCK: [2023-06-25 Sun 10:48]--[2023-06-25 Sun 11:13] =>  0:25
-CLOCK: [2023-06-24 Sat 23:32]--[2023-06-24 Sat 23:57] =>  0:25
-CLOCK: [2023-06-24 Sat 22:57]--[2023-06-24 Sat 23:22] =>  0:25
-CLOCK: [2023-06-24 Sat 22:17]--[2023-06-24 Sat 22:42] =>  0:25
-CLOCK: [2023-06-24 Sat 21:46]--[2023-06-24 Sat 22:11] =>  0:25
-CLOCK: [2023-06-24 Sat 20:41]--[2023-06-24 Sat 21:06] =>  0:25
-CLOCK: [2023-06-24 Sat 19:52]--[2023-06-24 Sat 20:17] =>  0:25
-CLOCK: [2023-06-24 Sat 19:22]--[2023-06-24 Sat 19:47] =>  0:25
-CLOCK: [2023-06-24 Sat 18:50]--[2023-06-24 Sat 19:15] =>  0:25
-CLOCK: [2023-06-24 Sat 16:16]--[2023-06-24 Sat 16:41] =>  0:25
-CLOCK: [2023-06-24 Sat 15:51]--[2023-06-24 Sat 16:16] =>  0:25
-:END:
-Goの解説集。
-
-#+caption: エントリポイントから呼ばれる
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/rt0_linux_amd64.s#L7-L8
-#+end_src
-
-#+RESULTS:
-#+begin_results asm
-TEXT _rt0_amd64_linux(SB),NOSPLIT,$-8
-	JMP	_rt0_amd64(SB)
-#+end_results
-
-#+caption: ジャンプ先
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L15-L18
-#+end_src
-
-#+RESULTS:
-#+begin_results asm
-TEXT _rt0_amd64(SB),NOSPLIT,$-8
-	MOVQ	0(SP), DI	// argc
-	LEAQ	8(SP), SI	// argv
-	JMP	runtime rt0_go(SB)
-#+end_results
-
-#+caption: g0とはproc.goで定義されている変数のこと
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L115
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-	g0           g
-#+end_results
-
-#+caption: g型の定義
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/runtime2.go#L414
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-type g struct {
-#+end_results
-
-#+caption: どのプロセッサが使われているか確認する
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L183-L187
-#+end_src
-
-#+RESULTS:
-#+begin_results asm
-	CMPL	BX, $0x756E6547  // "Genu"
-	JNE	notintel
-	CMPL	DX, $0x49656E69  // "ineI"
-	JNE	notintel
-	CMPL	CX, $0x6C65746E  // "ntel"
-#+end_results
-
-- TLS :: Thread Local Storage
-- runtimeまわりでは ~g~ はgoroutine、 ~m~ はワーカースレッドをさす
-
-#+caption: 初期化する。CPU数、ページサイズをセットする
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/os_linux.go#L346-L368
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-func osinit() {
-	ncpu = getproccount()
-	physHugePageSize = getHugePageSize()
-	if iscgo {
-		// #42494 glibc and musl reserve some signals for
-		// internal use and require they not be blocked by
-		// the rest of a normal C runtime. When the go runtime
-		// blocks...unblocks signals, temporarily, the blocked
-		// interval of time is generally very short. As such,
-		// these expectations of *libc code are mostly met by
-		// the combined go+cgo system of threads. However,
-		// when go causes a thread to exit, via a return from
-		// mstart(), the combined runtime can deadlock if
-		// these signals are blocked. Thus, don't block these
-		// signals when exiting threads.
-		// - glibc: SIGCANCEL (32), SIGSETXID (33)
-		// - musl: SIGTIMER (32), SIGCANCEL (33), SIGSYNCCALL (34)
-		sigdelset(&sigsetAllExiting, 32)
-		sigdelset(&sigsetAllExiting, 33)
-		sigdelset(&sigsetAllExiting, 34)
-	}
-	osArchInit()
-}
-#+end_results
-
-#+caption: スケジューラの初期化
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L694-L779
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-func schedinit() {
-	lockInit(&sched.lock, lockRankSched)
-	lockInit(&sched.sysmonlock, lockRankSysmon)
-	lockInit(&sched.deferlock, lockRankDefer)
-(略)
-#+end_results
-
-#+caption: ここでmainパッケージのmain関数にリンクする
-#+begin_src git-permalink
-https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L131-L132
-#+end_src
-
-- デバッガでステップインしたあとパブリックな関数を見つけて、それを呼び出すようにすると再度デバッガを実行するときに素早く目的の関数までたどり着きやすくなる。変数まわりを調べて同じ引数で渡せるようにする
-
 ** TODO [[https://go.dev/doc/comment][Go Doc Comments - The Go Programming Language]]
 Go Docのコメントの仕様。
 ** TODO [[https://github.com/golang/go/wiki/CompilerOptimizations#function-inlining][CompilerOptimizations · golang/go Wiki]]
@@ -1263,6 +1136,14 @@ func make(t Type, size ...IntegerType) Type
 
 ** TODO Len()の仕組み                                            :DontKnow:
 :LOGBOOK:
+CLOCK: [2023-06-28 Wed 00:15]--[2023-06-28 Wed 00:40] =>  0:25
+CLOCK: [2023-06-27 Tue 23:46]--[2023-06-28 Wed 00:11] =>  0:25
+CLOCK: [2023-06-27 Tue 23:11]--[2023-06-27 Tue 23:36] =>  0:25
+CLOCK: [2023-06-26 Mon 00:20]--[2023-06-26 Mon 00:45] =>  0:25
+CLOCK: [2023-06-25 Sun 21:48]--[2023-06-25 Sun 22:13] =>  0:25
+CLOCK: [2023-06-25 Sun 21:15]--[2023-06-25 Sun 21:40] =>  0:25
+CLOCK: [2023-06-25 Sun 20:48]--[2023-06-25 Sun 21:13] =>  0:25
+CLOCK: [2023-06-25 Sun 20:18]--[2023-06-25 Sun 20:43] =>  0:25
 CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
 :END:
 スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。組み込みだから、ほかの関数とは異なりそう。
@@ -3889,3 +3770,146 @@ CLOCK: [2023-06-24 Sat 00:34]--[2023-06-24 Sat 00:59] =>  0:25
 CLOCK: [2023-06-23 Fri 09:07]--[2023-06-23 Fri 09:32] =>  0:25
 :END:
 Goの標準パッケージを詳解する本。
+** DONE [[https://techbookfest.org/product/5127270203129856?productVariantID=5036058678919168][Goでちょっとひといき：Women Who Go Tokyo]]
+CLOSED: [2023-06-25 Sun 20:18]
+:PROPERTIES:
+:Effort:   10:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-06-25 Sun 19:42]--[2023-06-25 Sun 20:07] =>  0:25
+CLOCK: [2023-06-25 Sun 18:56]--[2023-06-25 Sun 19:21] =>  0:25
+CLOCK: [2023-06-25 Sun 18:31]--[2023-06-25 Sun 18:56] =>  0:25
+CLOCK: [2023-06-25 Sun 18:06]--[2023-06-25 Sun 18:31] =>  0:25
+CLOCK: [2023-06-25 Sun 15:09]--[2023-06-25 Sun 15:34] =>  0:25
+CLOCK: [2023-06-25 Sun 14:44]--[2023-06-25 Sun 15:09] =>  0:25
+CLOCK: [2023-06-25 Sun 14:17]--[2023-06-25 Sun 14:42] =>  0:25
+CLOCK: [2023-06-25 Sun 13:42]--[2023-06-25 Sun 14:07] =>  0:25
+CLOCK: [2023-06-25 Sun 12:59]--[2023-06-25 Sun 13:24] =>  0:25
+CLOCK: [2023-06-25 Sun 11:16]--[2023-06-25 Sun 11:41] =>  0:25
+CLOCK: [2023-06-25 Sun 10:48]--[2023-06-25 Sun 11:13] =>  0:25
+CLOCK: [2023-06-24 Sat 23:32]--[2023-06-24 Sat 23:57] =>  0:25
+CLOCK: [2023-06-24 Sat 22:57]--[2023-06-24 Sat 23:22] =>  0:25
+CLOCK: [2023-06-24 Sat 22:17]--[2023-06-24 Sat 22:42] =>  0:25
+CLOCK: [2023-06-24 Sat 21:46]--[2023-06-24 Sat 22:11] =>  0:25
+CLOCK: [2023-06-24 Sat 20:41]--[2023-06-24 Sat 21:06] =>  0:25
+CLOCK: [2023-06-24 Sat 19:52]--[2023-06-24 Sat 20:17] =>  0:25
+CLOCK: [2023-06-24 Sat 19:22]--[2023-06-24 Sat 19:47] =>  0:25
+CLOCK: [2023-06-24 Sat 18:50]--[2023-06-24 Sat 19:15] =>  0:25
+CLOCK: [2023-06-24 Sat 16:16]--[2023-06-24 Sat 16:41] =>  0:25
+CLOCK: [2023-06-24 Sat 15:51]--[2023-06-24 Sat 16:16] =>  0:25
+:END:
+Goの解説集。
+
+#+caption: エントリポイントから呼ばれる
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/rt0_linux_amd64.s#L7-L8
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+TEXT _rt0_amd64_linux(SB),NOSPLIT,$-8
+	JMP	_rt0_amd64(SB)
+#+end_results
+
+#+caption: ジャンプ先
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L15-L18
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+TEXT _rt0_amd64(SB),NOSPLIT,$-8
+	MOVQ	0(SP), DI	// argc
+	LEAQ	8(SP), SI	// argv
+	JMP	runtime rt0_go(SB)
+#+end_results
+
+#+caption: g0とはproc.goで定義されている変数のこと
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L115
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+	g0           g
+#+end_results
+
+#+caption: g型の定義
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/runtime2.go#L414
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+type g struct {
+#+end_results
+
+#+caption: どのプロセッサが使われているか確認する
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/asm_amd64.s#L183-L187
+#+end_src
+
+#+RESULTS:
+#+begin_results asm
+	CMPL	BX, $0x756E6547  // "Genu"
+	JNE	notintel
+	CMPL	DX, $0x49656E69  // "ineI"
+	JNE	notintel
+	CMPL	CX, $0x6C65746E  // "ntel"
+#+end_results
+
+- TLS :: Thread Local Storage
+- runtimeまわりでは ~g~ はgoroutine、 ~m~ はワーカースレッドをさす
+
+#+caption: 初期化する。CPU数、ページサイズをセットする
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/os_linux.go#L346-L368
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func osinit() {
+	ncpu = getproccount()
+	physHugePageSize = getHugePageSize()
+	if iscgo {
+		// #42494 glibc and musl reserve some signals for
+		// internal use and require they not be blocked by
+		// the rest of a normal C runtime. When the go runtime
+		// blocks...unblocks signals, temporarily, the blocked
+		// interval of time is generally very short. As such,
+		// these expectations of *libc code are mostly met by
+		// the combined go+cgo system of threads. However,
+		// when go causes a thread to exit, via a return from
+		// mstart(), the combined runtime can deadlock if
+		// these signals are blocked. Thus, don't block these
+		// signals when exiting threads.
+		// - glibc: SIGCANCEL (32), SIGSETXID (33)
+		// - musl: SIGTIMER (32), SIGCANCEL (33), SIGSYNCCALL (34)
+		sigdelset(&sigsetAllExiting, 32)
+		sigdelset(&sigsetAllExiting, 33)
+		sigdelset(&sigsetAllExiting, 34)
+	}
+	osArchInit()
+}
+#+end_results
+
+#+caption: スケジューラの初期化
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L694-L779
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+func schedinit() {
+	lockInit(&sched.lock, lockRankSched)
+	lockInit(&sched.sysmonlock, lockRankSysmon)
+	lockInit(&sched.deferlock, lockRankDefer)
+(略)
+#+end_results
+
+#+caption: ここでmainパッケージのmain関数にリンクする
+#+begin_src git-permalink
+https://github.com/golang/go/blob/a031f4ef83edc132d5f49382bfef491161de2476/src/runtime/proc.go#L131-L132
+#+end_src
+
+- デバッガでステップインしたあとパブリックな関数を見つけて、それを呼び出すようにすると再度デバッガを実行するときに素早く目的の関数までたどり着きやすくなる。変数まわりを調べて同じ引数で渡せるようにする
