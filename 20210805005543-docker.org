@@ -9,6 +9,85 @@ Dockerはパフォーマンスに優れた仮想環境を作るプログラム�
 得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
 その意味で[[id:eaf6ed04-7927-4a16-ba94-fbb9f6e76166][CI]], [[id:2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764][CD]]の基礎的な技術となっている。
 * Memo
+** バインドマウント先を削除した場合の挙動
+:LOGBOOK:
+CLOCK: [2023-07-05 Wed 23:19]--[2023-07-05 Wed 23:44] =>  0:25
+CLOCK: [2023-07-05 Wed 22:50]--[2023-07-05 Wed 23:15] =>  0:25
+:END:
+バインドマウントしているディレクトリをまるごと削除すると、後からそこにディレクトリをおいても中身がバインドされないことに気づいた。
+
+#+caption: ファイル構成。lsするとaaaとbbbだけが見える状態
+#+begin_src
+- ワーキングディレクトリ
+  - aaa(ディレクトリ)
+    - test1(ファイル)
+    - test2(ファイル)
+  - bbb(ディレクトリ)
+    - test1(ファイル)
+    - test2(ファイル)
+#+end_src
+
+#+caption: 検証用のコンテナを起動する
+#+begin_src shell
+docker run -d -it --name devtest --mount type=bind,source="$(pwd)"/aaa,target=/aaa nginx:latest
+#+end_src
+
+#+caption: 検証方法
+#+begin_src shell
+  docker inspect devtest
+#+end_src
+
+#+caption: コンテナに入って見えることを確認する
+#+begin_src shell
+  $ docker exec -it devtest /bin/sh
+
+  > cd /app
+  > ls
+test1 test2
+#+end_src
+
+#+caption: バインドマウントしているディレクトリをホストマシンから削除する
+#+begin_src shell
+  $ rm -rf /tmp/aaa
+#+end_src
+
+#+caption: ホストマシンから消したので、コンテナからも見えない
+#+begin_src shell
+  $ docker exec -it devtest /bin/sh
+
+  > cd /app
+  > ls
+(何も出ない)
+#+end_src
+
+#+caption: 削除したディレクトリと中身を復活させる
+#+begin_src shell
+  $ cp -r /tmp/bbb /tmp/aaa
+#+end_src
+
+#+caption: ホストマシンには復活しているが、コンテナ内には戻らない
+#+begin_src shell
+  $ docker exec -it devtest /bin/sh
+
+  > cd /ap
+  > ls
+(何も出ない)
+#+end_src
+
+#+caption: inspect結果は削除前と変わらない
+#+begin_src shell
+  docker inspect devtest
+#+end_src
+
+-[[https://github.com/moby/moby/issues/15793#issuecomment-135411504][ File mount does not update with changes from host · Issue #15793 · moby/moby]]
+
+バインドマウントはinodeで一致しているかで同期を管理しているという。新しく作る場合はinodeが変わるので同期されなくなる。
+
+- mvだとinodeが変わらない。のでバインドマウントをし続けられる。そのシェルセッションで何もしていなくても、別で名前を変えても追従し、ワーキングディレクトリは変わることがある
+- cpだとinodeが変わる。のでバインドマウントの同期が切れ、同じ名前のディレクトリを配置しても同期はされない
+
+~docker-compose restart~ するとまたバインドマウントされるようになった。
+
 ** サービス名をつけると管理が便利
 サービス名をつけて起動すると、名前を指定して止めることもできるようになる。
 
