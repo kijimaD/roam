@@ -5,6 +5,37 @@
 * 概要
 GitHubは[[id:90c6b715-9324-46ce-a354-63d09403b066][Git]]のコードホスティングサービス。
 * Memo
+** 一括でリポジトリのwatch状態を変更する
+:LOGBOOK:
+CLOCK: [2023-07-30 Sun 23:14]--[2023-07-30 Sun 23:39] =>  0:25
+:END:
+フォーク用のorganizationアカウントを使っている。最近自動fetchをするようにしたところ、GitHub Actionsの失敗通知が非常にうるさい。トークンなどが入ってないとエラーになるジョブが多くあるようだ。並列 + 長時間でいくつも実行するので、数が多い。1つのリポジトリを1日放置で200件くらい来る。
+
+メールは設定項目があるし無視すればいいのだが、自作した通知ツールの動作が阻害されてしまうのが問題だった。workflowの失敗もnotificationなので、それだけでページを埋め尽くしてしまう。そんなに大量のページをたどる設定になっていない。
+
+ユーザ所有のリポジトリについてはブラウザでリスト表示して設定できるようだ[fn:1]。しかしorganizationのリポジトリは一覧設定に出てこない。設定がないようだ。1件1件開いて、watchingをignoreにするしかない。なので、コマンドでやることにした。
+
+watching状態の変更エンドポイントの説明は[[https://docs.github.com/ja/rest/activity/watching?apiVersion=2022-11-28#set-a-repository-subscription][Watch中 - GitHub Docs]]にある。
+
+[fn:1]それでも400件は大変だ。
+
+#+caption: トークンやorganization名を入れる
+#+begin_src shell
+  curl -L \
+    -H "Accept: application/vnd.github+json" \
+    -H "X-GitHub-Api-Version: 2022-11-28" \
+    "https://api.github.com/orgs/kd-collective/repos?per_page=100&page=1" | \
+      jq .[].name | \
+      xargs -i -n 1 curl -L -X PUT \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer <TOKEN>" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/kd-collective/{}/subscription \
+            -d '{"subscribed":false,"ignored":true}'
+#+end_src
+
+organizationのリポジトリを一覧してから、順にignoreを実行していく。
+
 ** Readmeでの画像の揃え方
 
 - [[https://gist.github.com/DavidWells/7d2e0e1bc78f4ac59a123ddf8b74932d][Guide to aligning images in github readme.md files.]]
