@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-08-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debugger</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Debugger</h1>
+<div id="outline-container-org4f1f552" class="outline-2">
+<h2 id="org4f1f552"><a href="#org4f1f552">概要</a></h2>
+<div class="outline-text-2" id="text-org4f1f552">
+<p>
+デバッガは、デバッグ作業を支援するコンピュータプログラムのこと。
+</p>
+</div>
+</div>
+<div id="outline-container-org3579c2d" class="outline-2">
+<h2 id="org3579c2d"><a href="#org3579c2d">gdb</a></h2>
+<div class="outline-text-2" id="text-org3579c2d">
+<p>
+add.cファイルの、main関数のデバッグをするときを考える。
+</p>
+</div>
+<div id="outline-container-org0975113" class="outline-3">
+<h3 id="org0975113"><a href="#org0975113">.gdbinitファイル</a></h3>
+<div class="outline-text-3" id="text-org0975113">
+<p>
+カレントディレクトリに <code>.gdbinit</code> ファイルを作成しておくと、定点観測しやすくなる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>.gdbinit</label><pre class="src src-shell"><span class="org-keyword">break</span> *main
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">/x&#12399;16&#36914;&#25968;&#34920;&#31034;&#12377;&#12427;</span>
+display /x $<span class="org-variable-name">eax</span>
+display /x $<span class="org-variable-name">ebx</span>
+display /x $<span class="org-variable-name">esi</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">/4i&#12399;&#27425;&#12398;4&#21629;&#20196;&#12434;&#34920;&#31034;&#12377;&#12427;</span>
+display /4i $<span class="org-variable-name">pc</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>-qオプションは起動時のメッセージ抑制する</label><pre class="src src-shell">gdb -q add
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org64e908a" class="outline-3">
+<h3 id="org64e908a"><a href="#org64e908a">実行する</a></h3>
+<div class="outline-text-3" id="text-org64e908a">
+<p>
+gdbコンソールでrunを実行する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>gdbコマンド実行後の対話環境内</label><pre class="src src-shell">Reading symbols from add...
+(No debugging symbols found<span class="org-keyword"> in</span> add)
+Breakpoint 1 at 0x1129
+
+(gdb) r
+Starting program: /home/orange/Project/my_asm/dokusyu/ch4/add
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library <span class="org-string">"/lib/x86_64-linux-gnu/libthread_db.so.1"</span>.
+
+Breakpoint 1, 0x0000555555555129<span class="org-keyword"> in</span> main ()
+1: /x $<span class="org-variable-name">eax</span> = 0x55555129
+2: /x $<span class="org-variable-name">ebx</span> = 0x0
+3: /x $<span class="org-variable-name">esi</span> = 0xffffdb48
+4: x/4i $<span class="org-variable-name">pc</span>
+=&gt; 0x555555555129 &lt;main&gt;:       endbr64
+   0x55555555512d &lt;main+4&gt;:     push   %rbp
+   0x55555555512e &lt;main+5&gt;:     push   %rbx
+   0x55555555512f &lt;main+6&gt;:     mov    $<span class="org-variable-name">0</span>x7b,%ebp
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>スタックの上位32バイトを16進数でダンプする</label><pre class="src src-shell">(gdb) x/ 32b $<span class="org-variable-name">esp</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org98d9188" class="outline-3">
+<h3 id="org98d9188"><a href="#org98d9188">ステップイン</a></h3>
+<div class="outline-text-3" id="text-org98d9188">
+<p>
+<code>si</code> で進める。
+</p>
+
+<pre class="example">
+(gdb) si
+0x000055555555512f in main ()
+1: /x $eax = 0x55555129
+2: /x $ebx = 0x0
+3: /x $esi = 0xffffdb18
+4: x/4i $pc
+=&gt; 0x55555555512f &lt;main+6&gt;:     mov    $0x7b,%ebp
+   0x555555555134 &lt;main+11&gt;:    add    $0x1,%ebp
+   0x555555555137 &lt;main+14&gt;:    mov    $0x1c8,%ebx
+   0x55555555513c &lt;main+19&gt;:    add    %ebp,%ebx
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgbe321cc" class="outline-2">
+<h2 id="orgbe321cc"><a href="#orgbe321cc">Memo</a></h2>
+</div>
+<div id="outline-container-orge2f8375" class="outline-2">
+<h2 id="orge2f8375"><a href="#orge2f8375">Tasks</a></h2>
+</div>
+<div id="outline-container-org17dcdb3" class="outline-2">
+<h2 id="org17dcdb3"><a href="#org17dcdb3">Reference</a></h2>
+<div class="outline-text-2" id="text-org17dcdb3">
+<ul class="org-ul">
+<li><a href="https://ja.wikipedia.org/wiki/%E3%83%87%E3%83%90%E3%83%83%E3%82%AC">デバッガ - Wikipedia</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2e1ee19" class="outline-2">
+<h2 id="org2e1ee19"><a href="#org2e1ee19">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

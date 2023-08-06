@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2023-08-05 -->
+<!-- 2023-08-06 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>assembly language</title>
@@ -15,36 +15,182 @@
 </div>
 <div id="content">
 <h1 class="title">assembly language</h1>
-<div id="outline-container-org30722d2" class="outline-2">
-<h2 id="org30722d2"><a href="#org30722d2">概要</a></h2>
-<div class="outline-text-2" id="text-org30722d2">
+<div id="outline-container-org26b9484" class="outline-2">
+<h2 id="org26b9484"><a href="#org26b9484">概要</a></h2>
+<div class="outline-text-2" id="text-org26b9484">
 <p>
 アセンブリ言語はビット列命令に対応した文字列命令を利用するプログラミング言語の種類。ビット列に対応する文字列命令(ニーモニック)を利用する。アセンブリ言語を用いることで、機械語相当の低水準なコードをより直感的に記述できる。
 </p>
 </div>
 </div>
-<div id="outline-container-orgfadb1e5" class="outline-2">
-<h2 id="orgfadb1e5"><a href="#orgfadb1e5">Memo</a></h2>
-<div class="outline-text-2" id="text-orgfadb1e5">
+<div id="outline-container-orgb8de6b5" class="outline-2">
+<h2 id="orgb8de6b5"><a href="#orgb8de6b5">Memo</a></h2>
+<div class="outline-text-2" id="text-orgb8de6b5">
 </div>
-<div id="outline-container-org00a604e" class="outline-3">
-<h3 id="org00a604e"><a href="#org00a604e">ニーモニック</a></h3>
-<div class="outline-text-3" id="text-org00a604e">
+<div id="outline-container-orgdf31562" class="outline-3">
+<h3 id="orgdf31562"><a href="#orgdf31562">objdumpでオブジェクトファイルの中身を確認する</a></h3>
+<div class="outline-text-3" id="text-orgdf31562">
+<p>
+abc.cがあるとする。このデータがオブジェクトファイルではどう表現されているかを見る。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-c"><span class="org-type">char</span> <span class="org-variable-name">str</span>[] = <span class="org-string">"ABC"</span>;
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>確認する</label><pre class="src src-shell">$ gcc -fno-pic -fomit-frame-pointer -c -o abc.o abc.c
+$ objdump -s -j .data abc.o
+</pre>
+</div>
+
+<pre class="example">
+abc.o:     file format elf64-x86-64
+
+Contents of section .data:
+ 0000 41424300                             ABC.
+</pre>
+
+<p>
+文字列ABCが、4バイト(0x41, 0x42, 0x43, 0x00)に変換されたことがわかる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgf59b472" class="outline-3">
+<h3 id="orgf59b472"><a href="#orgf59b472">各種コマンド</a></h3>
+<div class="outline-text-3" id="text-orgf59b472">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>コンパイル</label><pre class="src src-shell">$ gcc -c add.c
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>アセンブリ言語のプログラムadd.sにコンパイルする。</label><pre class="src src-shell">$ gcc -S -fno-pic -fomit-frame-pointer add.c
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>アセンブリ言語で書かれたプログラムadd.sを機械語に変換する。</label><pre class="src src-shell">$ as -o add.o add.s
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>アセンブラに-aオプションを指定すると、アセンブル結果を標準出力に表示する。</label><pre class="src src-shell">$ as -a -o add.o add.s
+</pre>
+</div>
+
+<pre class="example">
+GAS LISTING add.s                       page 1
+
+
+   1                            .file   "add.c"
+   2                            .text
+   3                            .globl  i
+   4                            .data
+   5                            .align 4
+   6                            .type   i, @object
+   7                            .size   i, 4
+   8                    i:
+   9 0000 7B000000              .long   123
+  10                            .text
+  11                            .globl  main
+  12                            .type   main, @function
+  13                    main:
+  14                    .LFB0:
+  15                            .cfi_startproc
+  16 0000 F30F1EFA              endbr64
+  17 0004 8B050000              movl    i(%rip), %eax
+  17      0000
+  18 000a 05C80100              addl    $456, %eax
+  18      00
+  19 000f 89050000              movl    %eax, i(%rip)
+  19      0000
+  20 0015 B8000000              movl    $0, %eax
+  20      00
+  21 001a C3                    ret
+  22                            .cfi_endproc
+  23                    .LFE0:
+  24                            .size   main, .-main
+  25                            .ident  "GCC: (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0"
+  26                            .section        .note.GNU-stack,"",@progbits
+  27                            .section        .note.gnu.property,"a"
+  28                            .align 8
+  29 0000 04000000              .long   1f - 0f
+  30 0004 10000000              .long   4f - 1f
+  31 0008 05000000              .long   5
+  32                    0:
+  33 000c 474E5500              .string "GNU"
+  34                    1:
+  35                            .align 8
+  36 0010 020000C0              .long   0xc0000002
+  37 0014 04000000              .long   3f - 2f
+  38                    2:
+  39 0018 03000000              .long   0x3
+  40                    3:
+  41 001c 00000000              .align 8
+  42                    4:
+
+GAS LISTING add.s                       page 2
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 add.c
+               add.s:8      .data:0000000000000000 i
+               add.s:13     .text:0000000000000000 main
+
+NO UNDEFINED SYMBOLS
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org9354319" class="outline-3">
+<h3 id="org9354319"><a href="#org9354319">ニーモニック</a></h3>
+<div class="outline-text-3" id="text-org9354319">
 <ul class="org-ul">
 <li>ニーモニックは処理内容に応じて各機械語命令に与えられた文字列・命令語。機械語のオペコードに相当する</li>
 <li>オペランドは命令の対象・引数</li>
 </ul>
 </div>
 </div>
-</div>
-<div id="outline-container-orge0201f9" class="outline-2">
-<h2 id="orge0201f9"><a href="#orge0201f9">Tasks</a></h2>
-<div class="outline-text-2" id="text-orge0201f9">
-</div>
-<div id="outline-container-org6bb1de4" class="outline-3">
-<h3 id="org6bb1de4"><a href="#org6bb1de4"><a href="https://www.amazon.co.jp/%E7%8B%AC%E7%BF%92%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9-%E6%96%B0%E7%89%88-%E5%A4%A7%E5%B4%8E-%E5%8D%9A%E4%B9%8B/dp/4798170291">独習アセンブラ 新版 | 大崎 博之 |本 | 通販 | Amazon</a></a></h3>
-<div class="outline-text-3" id="text-org6bb1de4">
+<div id="outline-container-org308de8b" class="outline-3">
+<h3 id="org308de8b"><a href="#org308de8b">機械語との対応</a></h3>
+<div class="outline-text-3" id="text-org308de8b">
+<p>
+アセンブリ言語と機械語の表現は一対一で対応している。これに対して、高級言語とアセンブリ言語は一対一対応していない。コンパイラの実装によって結果は異なる。
+</p>
+
+<p>
+アセンブリ言語と機械語を比較する読み方。gccの-aオプションでコンパイルすると、機械語を見られる。
+</p>
+
+<pre class="example">
+18 000a 05C80100              addl    $456, %eax
+18      00
+</pre>
+
+<p>
+これは、メモリ0018番地に、16進数で0x05, 0xc8, 0x01, 0x00という5バイトの機械語を生成したことを意味する。
+</p>
+
 <ul class="org-ul">
+<li>1つのアセンブリ言語の命令につき1バイト(ret)から5バイト(movl, addl)の機械語が生成されている</li>
+<li><code>.</code> から始まる命令に対しては機械語が生成されていない</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4e20026" class="outline-2">
+<h2 id="org4e20026"><a href="#org4e20026">Tasks</a></h2>
+<div class="outline-text-2" id="text-org4e20026">
+</div>
+<div id="outline-container-orgaef4598" class="outline-3">
+<h3 id="orgaef4598"><a href="#orgaef4598"><span class="todo TODO">TODO</span> <a href="https://www.amazon.co.jp/%E7%8B%AC%E7%BF%92%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9-%E6%96%B0%E7%89%88-%E5%A4%A7%E5%B4%8E-%E5%8D%9A%E4%B9%8B/dp/4798170291">独習アセンブラ 新版 | 大崎 博之 |本 | 通販 | Amazon</a></a></h3>
+<div class="outline-text-3" id="text-orgaef4598">
+<ul class="org-ul">
+<li>107, 130</li>
 <li>「アセンブリ言語のプログラムを、アセンブラを使ってアセンブルする」というのが正しい用法になる
 <ul class="org-ul">
 <li>アセンブリ: 組み立てるという「行為」</li>
@@ -59,41 +205,91 @@
 <li>機械語(オブジェクトファイル)</li>
 <li>機械語(実行ファイル)</li>
 </ol></li>
+<li>ビットという名前は Binary digIT から来ている</li>
+<li>フランス、ドイツ、イタリアでは小数の区切りにはカンマを用いる</li>
+<li>文字情報を含んだバイナリファイルやバイナリデータを扱うプログラムを書いたり読んだりする場合には、文字の表現に対する理解が不可欠</li>
+<li>コンピュータにおける文字の用語
+<dl class="org-dl">
+<dt>文字(character)</dt><dd>書き言葉における最小の構成要素であり、何らかの意味を持ったものを指す。コンピュータにおける文字は制御文字も含む。文字そのものは抽象的な概念で、具体的にコンピュータでその文字をどのように格納したり、表示するのかとは直接関係ない</dd>
+<dt>文字列(string)</dt><dd>1つまたは複数の文字の並び</dd>
+<dt>文字集合(character set)</dt><dd>文字(character)の集合(set)。英語大文字26個を集めれば、それは英語大文字の文字集合。通常、文字集合には何らかの書き言葉を構成するすべての文字を含める</dd>
+<dt>エンコーディング</dt><dd>何らかのデータを一定の規則に従って変換することを指し、符号化ともいう。ファイルの圧縮や暗号化、画像やビデオの符号化もエンコーディング。文字の表現におけるエンコーディングは文字エンコーディングを意味する。つまり文字の情報をある一定の規則に従って何らかのビット列に変換すること。ASCII, ISO-8859-1, UTF-8, EUC-JP, ISO-2022-JP, Shift_JISなどがある。エンコーディングは文字を一定の規則に従ってビット列に変換すること</dd>
+<dt>文字コード</dt><dd>本来、ある特定の文字に定められた符号(code)のこと。例えばASCIIにおいて、英大文字の「A」の文字コードは0x41。より正確には、ASCIIは7ビットのエンコーディングなので、英大文字「A」の文字コードは1000001となる。つまりASCIIにおいて、ある特定の文字「A」に定められた符号は1000001となる。日本では、文字エンコーディングと文字コードという言葉が混同して使用されることが多い…。文字コードとは、エンコーディングごとにそれぞれの文字に対して定められた符号を指す</dd>
+<dt>CCS(Coded Character Set)</dt><dd>符号化文字の集合。抽象的な文字の集合から整数の集合への1対1対応のマッピング</dd>
+<dt>(no term)</dt><dd>CES(Character Encoding Scheme) ::文字エンコーディング体系。単一もしくは複数の符号化文字の集合CCSから、オクテット列の集合へのマッピング。文字、コード、バイト列との対応関係を定める。CCSの各文字のコードから、それに対応するバイト列への変換方法を定める。例えば1. 文字のコードの上位8バイトに0x80を足したものを1バイト目とする。2.文字のコードの下位8バイトに0x80を足したものを2バイト目とする。という規則で文字のコードからバイト列へと対応させている</dd>
+</dl></li>
+<li>制御文字は図形を表示するためのものではない。端末エミュレータ上で出力しても画面には何も表示されない。反対に、図形を表示するための文字をグラフィック文字という</li>
+<li>ASCII
+<ul class="org-ul">
+<li>JISキーボードの数字キーの記号配列は、ASCIIの範囲に対応している
+<ol class="org-ol">
+<li><code>&amp;</code> の文字コードが知りたい</li>
+<li>JISキーボードを見ると <code>&amp;</code> は <code>6</code> キーにある</li>
+<li>したがって <code>&amp;</code> の文字コードは0x20 + 6 = 0x26</li>
+</ol></li>
+<li>0x30 ~ 0x39 には数字の0~9が配置されている。なので数字の文字コードは 0x30 + 数 とわかる</li>
+<li>0x41 ~ 0x5a には英大文字A~Zが配置されている。Aは1文字目のアルファベットなので、Aの文字コードは0x40 + 1 = 0x41。Cは3文字目のアルファベットなので、Cの文字コードは0x40 + 3 = 0x43</li>
+<li>0x61 ~ 0x7a には英小文字a~zが配置されている。Aとaの文字コードを2進数で表記すると1ビットだけが異なるように意図して配置されている</li>
+<li>つまり配置として、多くの記号の文字コード &lt; 英大文字の文字コード &lt; 小文字の文字コードとなる。なので、文字コードでソートしたときに記号、大文字、小文字という順番になる</li>
+<li>タブは制御文字とグラフィック文字の両方の側面を持っている</li>
+</ul></li>
+<li>制御文字LFはラインフィードの意味。タイプライタ時代に用紙を読み込む指示をしていたから。当時のテレタイプには行を送るだけのものと、行を送ったあとキャリッジリターン(行頭に移動)するものがあった。Unixではラインフィードを「改行(行送り+行頭に移動」の意味で解釈している、といえる</li>
+<li>一方で<a href="20230308002933-windows.html#ID-a15d346a-f82e-4796-a78b-85a8d227f0ef">Windows</a>での改行は制御文字CRとLFの2文字である。これはラインフィードを「単なる行送り」の意味で解釈しているといえる。キャリッジリターンCRで行頭に戻して、その後ラインフィードLFで1行進めている、といえる</li>
+<li>キャリッジリターンという言葉は昔のタイプライタから来ている。キャリッジはタイプライタの用紙を動かす部分の名称。タイプライタは活字が刻印されたハンマーを打ち付けることによって印字する。ハンマーではなく用紙のほうを移動させる。キャリッジリターンはキャリッジを戻すという操作を意味している。キャリッジを戻すことにより、用紙のほうを移動させるという仕組みになっている</li>
+<li>DELが 0x7f(0b1111111)に配置されているのは、紙テープがすべて穿孔されていれば間違いがあり意味のないデータとして取り扱っていたため</li>
+<li><a href="20230709154946-unicode.html#ID-c76de2cf-e70d-4bc6-aa3a-f14d05debb6e">Unicode</a>
+<ul class="org-ul">
+<li>世界中の言語で使用されている文字を統一的に扱う規格であるUnicodeと、Unicodeの文字エンコーディング体系であるUTF-8やUTF-16</li>
+<li>Unicodeではそれぞれの文字に割り当てられている整数をコードポイントと呼ぶ。例えば「あ」のコードポイントは0x3042</li>
+<li>文字とUnicodeのコードポイントが必ずしも1対1で対応しない。アクセントや濁音、半濁音がついた文字は複数の表現がある</li>
+<li>Unicodeを使って文字をバイト列として表現するためには、符号化文字の集合に加えて、文字エンコーディング体系が必要になる</li>
+<li>UTF-32, UTF-16, UTF-8のいずれかでエンコードされたバイト列を見ても、それがどの文字エンコード体系でエンコードされたのかはわからない。区別のために、BOM(Byte Order Mark)を使用できる</li>
+<li><a href="20230709154946-unicode.html#ID-c76de2cf-e70d-4bc6-aa3a-f14d05debb6e">Unicode</a>の特殊文字BOM(コードポイントU+FEFF)をUnicodeテキストの先頭にうめこんでおくと、エンコードしたバイト列から、このバイト列はどの文字エンコーディング体系でエンコードされたものかわかるようになる</li>
+<li><a href="20230709154946-unicode.html#ID-c76de2cf-e70d-4bc6-aa3a-f14d05debb6e">Unicode</a>テキストの先頭にU+FEFFがあればそれはBOMを意味するが、Unicodeテキストの2文字目以降にU+FEFFがあれば、それは「幅がゼロの改行できない空白」を意味する。</li>
+<li>なのでBOMを表示・印刷しても何も見えない</li>
+</ul></li>
+<li>ドットから始まる命令はアセンブラの疑似命令であり、ディレクティブとも呼ばれる
+<ul class="org-ul">
+<li>アセンブラの疑似命令は、CPUが実行する命令ではなく、プログラマからアセンブラへの指示</li>
+</ul></li>
+<li>.gdbinitでプリント対象の変数を指定できる</li>
+<li><code>$ gcc -q add</code> オプションは起動時のメッセージを抑制する</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org1ba2ef7" class="outline-3">
-<h3 id="org1ba2ef7"><a href="#org1ba2ef7"><span class="todo TODO">TODO</span> <a href="https://qiita.com/edo_m18/items/83c63cd69f119d0b9831">アセンブラに手を出してみる - Qiita</a></a></h3>
-<div class="outline-text-3" id="text-org1ba2ef7">
+
+<div id="outline-container-orgff05780" class="outline-3">
+<h3 id="orgff05780"><a href="#orgff05780"><span class="todo TODO">TODO</span> <a href="https://qiita.com/edo_m18/items/83c63cd69f119d0b9831">アセンブラに手を出してみる - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgff05780">
 <p>
 アセンブラの説明集。
 </p>
 </div>
 </div>
-<div id="outline-container-org9182de7" class="outline-3">
-<h3 id="org9182de7"><a href="#org9182de7"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/my-emulator-x86-architecture">自作エミュレータで学ぶx86アーキテクチャ コンピュータが動く仕組みを徹底理解！【委託】 - 達人出版会</a></a></h3>
-<div class="outline-text-3" id="text-org9182de7">
+<div id="outline-container-orga3bb88a" class="outline-3">
+<h3 id="orga3bb88a"><a href="#orga3bb88a"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/my-emulator-x86-architecture">自作エミュレータで学ぶx86アーキテクチャ コンピュータが動く仕組みを徹底理解！【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-orga3bb88a">
 <p>
 エミュレータで再現しながらの解説。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-org75214dc" class="outline-2">
-<h2 id="org75214dc"><a href="#org75214dc">Reference</a></h2>
-<div class="outline-text-2" id="text-org75214dc">
+<div id="outline-container-orgb7c5111" class="outline-2">
+<h2 id="orgb7c5111"><a href="#orgb7c5111">Reference</a></h2>
+<div class="outline-text-2" id="text-orgb7c5111">
 </div>
-<div id="outline-container-orgb923d40" class="outline-3">
-<h3 id="orgb923d40"><a href="#orgb923d40"><a href="https://ja.wikipedia.org/wiki/%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%AA%E8%A8%80%E8%AA%9E">アセンブリ言語 - Wikipedia</a></a></h3>
-<div class="outline-text-3" id="text-orgb923d40">
+<div id="outline-container-orgbbaca2b" class="outline-3">
+<h3 id="orgbbaca2b"><a href="#orgbbaca2b"><a href="https://ja.wikipedia.org/wiki/%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%AA%E8%A8%80%E8%AA%9E">アセンブリ言語 - Wikipedia</a></a></h3>
+<div class="outline-text-3" id="text-orgbbaca2b">
 <p>
 解説。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orgfe8b920" class="outline-2">
-<h2 id="orgfe8b920"><a href="#orgfe8b920">Archives</a></h2>
+<div id="outline-container-orgb739ba3" class="outline-2">
+<h2 id="orgb739ba3"><a href="#orgb739ba3">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
