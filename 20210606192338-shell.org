@@ -7,6 +7,64 @@
 * 概要
 シェルスクリプトはUnixシェルで使われる[[id:868ac56a-2d42-48d7-ab7f-7047c85a8f39][Programming Language]]。
 * Memo
+** プログラムの実行状態を表示する
+キャリッジリターンのよくある利用法の1つは、プログラムの実行状態を表示するために用いるというもの。毎回行頭に戻り、直前に表示した文字列を上書きしているので、パーセントだけが変わっているように見える。
+
+#+caption: 実行状態を表示するのに用いる
+#+begin_src shell
+  #! /bin/sh
+  for i in `seq 100`
+  do
+      printf 'Loading object files...%3d%%\r' $i
+      sleep 0.05
+  done
+  echo 'Loading object files ... Done'
+#+end_src
+
+[[https://www.amazon.co.jp/%E7%8B%AC%E7%BF%92%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9-%E6%96%B0%E7%89%88-%E5%A4%A7%E5%B4%8E-%E5%8D%9A%E4%B9%8B/dp/4798170291][独習アセンブラ]]に載っていた。
+
+** 水平タブは表を揃えるのに便利
+
+#+caption: 文字の長さに幅があってやや表示が崩れているが、揃って見やすい
+#+begin_src shell
+  ls -l . | awk '{ printf "%s\t%s\t%s\n", $9,$5,$3 }' | head
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+20210508233810-org_roam.org	15343	orange
+20210508234743-emacs.org	63296	orange
+20210509095513-ruby.org	59766	orange
+20210509095946-rails.org	57004	orange
+20210509100112-javascript.org	26017	orange
+20210509101246-programming_language.org	29086	orange
+20210509122633-emacs_lisp.org	55114	orange
+20210511013549-textlint.org	11189	orange
+20210512001700-create_link.org	9776	orange
+#+end_results
+
+タブを使わないバージョン。
+
+#+caption: タブを使わない場合、ガタガタして見にくい
+#+begin_src shell
+  ls -l . | awk '{ printf "%s, %s, %s\n", $9,$5,$3 }' | head
+#+end_src
+
+#+RESULTS:
+#+begin_results
+, ,
+20210508233810-org_roam.org, 15343, orange
+20210508234743-emacs.org, 63296, orange
+20210509095513-ruby.org, 59766, orange
+20210509095946-rails.org, 57004, orange
+20210509100112-javascript.org, 26017, orange
+20210509101246-programming_language.org, 29086, orange
+20210509122633-emacs_lisp.org, 55114, orange
+20210511013549-textlint.org, 11189, orange
+20210512001700-create_link.org, 9776, orange
+#+end_results
+
 ** sudoでセットされる環境変数は異なる
 普通の実行時とsudo時で、セットされている環境変数は異なる。
 
