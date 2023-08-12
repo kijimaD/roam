@@ -1,10 +1,50 @@
 :PROPERTIES:
 :ID:       e9a608aa-8545-42be-90bb-303097800a85
+:header-args+: :wrap :results raw
 :END:
 #+title: assembly language
 * 概要
 アセンブリ言語はビット列命令に対応した文字列命令を利用するプログラミング言語の種類。ビット列に対応する文字列命令(ニーモニック)を利用する。アセンブリ言語を用いることで、機械語相当の低水準なコードをより直感的に記述できる。
 * Memo
+** objdumpでlsコマンドを逆アセンブルする
+#+begin_src shell
+  objdump -d -M intel /bin/ls | head -n 30
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+/bin/ls:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+0000000000004000 <.init>:
+    4000:	f3 0f 1e fa          	endbr64
+    4004:	48 83 ec 08          	sub    rsp,0x8
+    4008:	48 8b 05 b1 df 01 00 	mov    rax,QWORD PTR [rip+0x1dfb1]        # 21fc0 <__gmon_start__@Base>
+    400f:	48 85 c0             	test   rax,rax
+    4012:	74 02                	je     4016 <free@plt-0x66a>
+    4014:	ff d0                	call   rax
+    4016:	e8 c5 2b 00 00       	call   6be0 <__sprintf_chk@plt+0x1f00>
+    401b:	e8 d0 30 01 00       	call   170f0 <_obstack_memory_used@@Base+0x6940>
+    4020:	48 83 c4 08          	add    rsp,0x8
+    4024:	c3                   	ret
+
+Disassembly of section .plt:
+
+0000000000004030 <.plt>:
+    4030:	ff 35 2a dc 01 00    	push   QWORD PTR [rip+0x1dc2a]        # 21c60 <_obstack_memory_used@@Base+0x114b0>
+    4036:	f2 ff 25 2b dc 01 00 	bnd jmp QWORD PTR [rip+0x1dc2b]        # 21c68 <_obstack_memory_used@@Base+0x114b8>
+    403d:	0f 1f 00             	nop    DWORD PTR [rax]
+    4040:	f3 0f 1e fa          	endbr64
+    4044:	68 00 00 00 00       	push   0x0
+    4049:	f2 e9 e1 ff ff ff    	bnd jmp 4030 <free@plt-0x650>
+    404f:	90                   	nop
+    4050:	f3 0f 1e fa          	endbr64
+    4054:	68 01 00 00 00       	push   0x1
+#+end_results
+
 ** objdumpでオブジェクトファイルの中身を確認する
 
 abc.cがあるとする。このデータがオブジェクトファイルではどう表現されているかを見る。
@@ -136,6 +176,15 @@ NO UNDEFINED SYMBOLS
 * Tasks
 ** TODO [[https://www.amazon.co.jp/%E7%8B%AC%E7%BF%92%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9-%E6%96%B0%E7%89%88-%E5%A4%A7%E5%B4%8E-%E5%8D%9A%E4%B9%8B/dp/4798170291][独習アセンブラ 新版 | 大崎 博之 |本 | 通販 | Amazon]]
 :LOGBOOK:
+CLOCK: [2023-08-12 Sat 11:33]--[2023-08-12 Sat 11:58] =>  0:25
+CLOCK: [2023-08-12 Sat 10:50]--[2023-08-12 Sat 11:15] =>  0:25
+CLOCK: [2023-08-12 Sat 10:25]--[2023-08-12 Sat 10:50] =>  0:25
+CLOCK: [2023-08-11 Fri 21:59]--[2023-08-11 Fri 22:24] =>  0:25
+CLOCK: [2023-08-11 Fri 21:29]--[2023-08-11 Fri 21:54] =>  0:25
+CLOCK: [2023-08-11 Fri 20:56]--[2023-08-11 Fri 21:21] =>  0:25
+CLOCK: [2023-08-11 Fri 20:31]--[2023-08-11 Fri 20:56] =>  0:25
+CLOCK: [2023-08-11 Fri 18:48]--[2023-08-11 Fri 19:13] =>  0:25
+CLOCK: [2023-08-11 Fri 18:19]--[2023-08-11 Fri 18:44] =>  0:25
 CLOCK: [2023-08-08 Tue 23:25]--[2023-08-08 Tue 23:50] =>  0:25
 CLOCK: [2023-08-08 Tue 22:59]--[2023-08-08 Tue 23:24] =>  0:25
 CLOCK: [2023-08-08 Tue 22:01]--[2023-08-08 Tue 22:26] =>  0:25
@@ -232,6 +281,13 @@ CLOCK: [2023-08-05 Sat 14:22]--[2023-08-05 Sat 14:47] =>  0:25
 - コンピュータ内部で情報を保存できるのはレジスタとメモリしかない。したがって情報の受け渡しには、レジスタを使うかメモリを使うかの二択になる
 - ~call アドレス~ で、リターンアドレスをスタックにプッシュし、指定されたアドレスにジャンプできる
 - ~ret~ で、スタックからリターンアドレスを取り出して、そのアドレスにジャンプできる
+- スタックの一番上のアドレス = レジスタESP
+- ~cmpl	$0x1, 0x10(%esp)~
+  - $0x1 → 整数1
+  - 0x10(%esp) → ESPレジスタの値+0x10
+  - を比較する、ということ
+- サブルーチンの呼び出しアドレスは、最終的に隣家によって結合された時点で確定する。オブジェクトファイルがまだリンクされていないと、アドレスが未確定のままになっている
+- writeシステムコールでは、レジスタEBXでファイルディスクリプタを、レジスタECXで文字列が格納されているアドレスを、レジスタEDXで出力する文字列長を指定する
 
 ** TODO [[https://qiita.com/edo_m18/items/83c63cd69f119d0b9831][アセンブラに手を出してみる - Qiita]]
 アセンブラの説明集。
