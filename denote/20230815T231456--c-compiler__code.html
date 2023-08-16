@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2023-08-15 -->
+<!-- 2023-08-16 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Cコンパイラを書く</title>
@@ -16,22 +16,22 @@
 <div id="content">
 <h1 class="title">Cコンパイラを書く</h1>
 
-<div id="outline-container-org759eab7" class="outline-2">
-<h2 id="org759eab7"><a href="#org759eab7">Cコンパイラを書く</a></h2>
-<div class="outline-text-2" id="text-org759eab7">
+<div id="outline-container-orga2fcd16" class="outline-2">
+<h2 id="orga2fcd16"><a href="#orga2fcd16">Cコンパイラを書く</a></h2>
+<div class="outline-text-2" id="text-orga2fcd16">
 </div>
-<div id="outline-container-org3acf095" class="outline-3">
-<h3 id="org3acf095"><a href="#org3acf095">この文書のステータス</a></h3>
-<div class="outline-text-3" id="text-org3acf095">
+<div id="outline-container-orge38fb9c" class="outline-3">
+<h3 id="orge38fb9c"><a href="#orge38fb9c">この文書のステータス</a></h3>
+<div class="outline-text-3" id="text-orge38fb9c">
 <ul class="org-ul">
 <li class="off"><code>[&#xa0;]</code> 作成</li>
 <li class="off"><code>[&#xa0;]</code> レビュー</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org5f0f2db" class="outline-3">
-<h3 id="org5f0f2db"><a href="#org5f0f2db">概要</a></h3>
-<div class="outline-text-3" id="text-org5f0f2db">
+<div id="outline-container-orge309f2e" class="outline-3">
+<h3 id="orge309f2e"><a href="#orge309f2e">概要</a></h3>
+<div class="outline-text-3" id="text-orge309f2e">
 <p>
 自作言語だとだるくなるので、既存の言語仕様で作る。
 </p>
@@ -45,60 +45,107 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org1861176" class="outline-3">
-<h3 id="org1861176"><a href="#org1861176">導入</a></h3>
-<div class="outline-text-3" id="text-org1861176">
+<div id="outline-container-orgf69f385" class="outline-3">
+<h3 id="orgf69f385"><a href="#orgf69f385">導入</a></h3>
+<div class="outline-text-3" id="text-orgf69f385">
 <p>
 背景。
 </p>
 </div>
 </div>
 </div>
-<div id="outline-container-orga68cd21" class="outline-2">
-<h2 id="orga68cd21"><a href="#orga68cd21">Tasks</a></h2>
-<div class="outline-text-2" id="text-orga68cd21">
+<div id="outline-container-orga135638" class="outline-2">
+<h2 id="orga135638"><a href="#orga135638">Tasks</a></h2>
+<div class="outline-text-2" id="text-orga135638">
 </div>
-<div id="outline-container-org283d436" class="outline-3">
-<h3 id="org283d436"><a href="#org283d436"><span class="todo TODO">TODO</span> 8ccを読む</a></h3>
-<div class="outline-text-3" id="text-org283d436">
+<div id="outline-container-orgede74a4" class="outline-3">
+<h3 id="orgede74a4"><a href="#orgede74a4"><span class="todo WIP">WIP</span> 8ccを読む</a></h3>
+<div class="outline-text-3" id="text-orgede74a4">
 <p>
 まず全体像を把握する。
 </p>
 </div>
 </div>
-<div id="outline-container-org69d8cd4" class="outline-3">
-<h3 id="org69d8cd4"><a href="#org69d8cd4"><span class="todo TODO">TODO</span> 終端のチェックをやる</a></h3>
-<div class="outline-text-3" id="text-org69d8cd4">
+<div id="outline-container-org6fc8be6" class="outline-3">
+<h3 id="org6fc8be6"><a href="#org6fc8be6"><span class="todo TODO">TODO</span> 終端のチェックをやる</a></h3>
+<div class="outline-text-3" id="text-org6fc8be6">
 <p>
 セミコロンをチェックする。
 </p>
 </div>
 </div>
-<div id="outline-container-org7536614" class="outline-3">
-<h3 id="org7536614"><a href="#org7536614"><span class="todo TODO">TODO</span> 変数宣言まわりで式の評価順が間違っているのを直す</a></h3>
-<div class="outline-text-3" id="text-org7536614">
+<div id="outline-container-orgb27b119" class="outline-3">
+<h3 id="orgb27b119"><a href="#orgb27b119"><span class="todo TODO">TODO</span> 変数宣言まわりで式の評価順が間違っているのを直す</a></h3>
+<div class="outline-text-3" id="text-orgb27b119">
+<p>
+なぜか違う値になる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>期待している答えは3だが、4が返ってくる</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">'int a = 1;a+2'</span> | go run ./main.go &gt; gogo.s
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>変数を使ってコンパイルしたほう。4は誤っている</label><pre class="src src-asm"><span class="org-keyword">.text</span>
+        <span class="org-keyword">.global</span> mymain
+<span class="org-function-name">mymain</span>:
+        <span class="org-keyword">mov</span> $1, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">mov</span> <span class="org-variable-name">%eax</span>, -4(<span class="org-variable-name">%rbp</span>)
+        <span class="org-keyword">mov</span> $2, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">push</span> <span class="org-variable-name">%rax</span>
+        <span class="org-keyword">mov</span> <span class="org-variable-name">%eax</span>, -4(<span class="org-variable-name">%rbp</span>)
+        <span class="org-keyword">pop</span> <span class="org-variable-name">%rbx</span>
+        <span class="org-keyword">add</span> <span class="org-variable-name">%ebx</span>, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">ret</span>
+</pre>
 </div>
 </div>
-<div id="outline-container-org737f07c" class="outline-3">
-<h3 id="org737f07c"><a href="#org737f07c"><span class="todo TODO">TODO</span> 文字列のテスト落ちを直す</a></h3>
-<div class="outline-text-3" id="text-org737f07c">
+</div>
+<div id="outline-container-orgc869515" class="outline-3">
+<h3 id="orgc869515"><a href="#orgc869515"><span class="todo TODO">TODO</span> DeclStatementは中置演算子で書けないか</a></h3>
+<div class="outline-text-3" id="text-orgc869515">
+<p>
+別枠にしているが、中置演算子で共用するときれいにかけるのではないか。
+</p>
+
+<p>
+宣言文は <code>int a = 1</code> みたいな文。
+</p>
+
+<p>
+今はidentが特定の名前だったらトークン認識するが、これは最初の判定にイコールを使ったほうがよさそうだ。代入しなおすときに型名はないから。イコールを使えば中置演算子とできそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgce42769" class="outline-3">
+<h3 id="orgce42769"><a href="#orgce42769"><span class="todo TODO">TODO</span> 変数宣言の名前をDecl → Assignにしたほうがよさそう</a></h3>
+<div class="outline-text-3" id="text-orgce42769">
+<p>
+ヘッダファイルで書くものも宣言という。関数の本体が書かれたのは定義。8ccに合わせる。
+</p>
+</div>
+</div>
+<div id="outline-container-org537f25f" class="outline-3">
+<h3 id="org537f25f"><a href="#org537f25f"><span class="done DONE">DONE</span> 文字列のテスト落ちを直す</a></h3>
+<div class="outline-text-3" id="text-org537f25f">
 <p>
 テスト用のCの関数がintを返すようになっているから、文字列は返せないんだな。8ccではASTで文字列を返すようになっているので、同じ感じにする。
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgbf7874c" class="outline-3">
-<h3 id="orgbf7874c"><a href="#orgbf7874c"><span class="done DONE">DONE</span> identを直す</a></h3>
-<div class="outline-text-3" id="text-orgbf7874c">
+<div id="outline-container-org31351ad" class="outline-3">
+<h3 id="org31351ad"><a href="#org31351ad"><span class="done DONE">DONE</span> identを直す</a></h3>
+<div class="outline-text-3" id="text-org31351ad">
 <p>
 envが初期状態のままになっているようだ。分岐の箇所を間違っていた。
 </p>
 </div>
 </div>
-<div id="outline-container-org4f19f73" class="outline-3">
-<h3 id="org4f19f73"><a href="#org4f19f73"><span class="done DONE">DONE</span> stringを直す</a></h3>
-<div class="outline-text-3" id="text-org4f19f73">
+<div id="outline-container-org9fcbf48" class="outline-3">
+<h3 id="org9fcbf48"><a href="#org9fcbf48"><span class="done DONE">DONE</span> stringを直す</a></h3>
+<div class="outline-text-3" id="text-org9fcbf48">
 <p>
 データラベルが必要。
 </p>
