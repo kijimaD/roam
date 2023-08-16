@@ -102,7 +102,7 @@ CLOCK: [2023-07-25 Tue 23:56]--[2023-07-26 Wed 00:21] =>  0:25
 ** 導入
 背景。
 * Tasks
-** TODO 8ccを読む
+** WIP 8ccを読む
 :LOGBOOK:
 CLOCK: [2023-08-11 Fri 17:44]--[2023-08-11 Fri 18:09] =>  0:25
 CLOCK: [2023-08-11 Fri 17:15]--[2023-08-11 Fri 17:40] =>  0:25
@@ -126,9 +126,54 @@ CLOCK: [2023-07-29 Sat 22:33]--[2023-07-29 Sat 22:58] =>  0:25
 セミコロンをチェックする。
 ** TODO 変数宣言まわりで式の評価順が間違っているのを直す
 :LOGBOOK:
+CLOCK: [2023-08-15 Tue 23:50]--[2023-08-16 Wed 00:15] =>  0:25
 CLOCK: [2023-08-15 Tue 21:25]--[2023-08-15 Tue 21:50] =>  0:25
 :END:
-** TODO 文字列のテスト落ちを直す
+
+なぜか違う値になる。
+
+#+caption: 期待している答えは3だが、4が返ってくる
+#+begin_src shell
+echo 'int a = 1;a+2' | go run ./main.go > gogo.s
+#+end_src
+
+#+caption: 変数を使ってコンパイルしたほう。4は誤っている
+#+begin_src asm
+.text
+	.global mymain
+mymain:
+	mov $1, %eax
+	mov %eax, -4(%rbp)
+	mov $2, %eax
+	push %rax
+	mov %eax, -4(%rbp)
+	pop %rbx
+	add %ebx, %eax
+	ret
+#+end_src
+
+#+caption: 変数を使わずにコンパイルした場合。正しく3になる
+#+begin_export asm
+.text
+	.global mymain
+mymain:
+	mov $2, %eax
+	push %rax
+	mov $1, %eax
+	pop %rbx
+	add %ebx, %eax
+	ret
+#+end_export
+** TODO DeclStatementは中置演算子で書けないか
+別枠にしているが、中置演算子で共用するときれいにかけるのではないか。
+
+宣言文は ~int a = 1~ みたいな文。
+
+今はidentが特定の名前だったらトークン認識するが、これは最初の判定にイコールを使ったほうがよさそうだ。代入しなおすときに型名はないから。イコールを使えば中置演算子とできそう。
+** TODO 変数宣言の名前をDecl → Assignにしたほうがよさそう
+ヘッダファイルで書くものも宣言という。関数の本体が書かれたのは定義。8ccに合わせる。
+** DONE 文字列のテスト落ちを直す
+CLOSED: [2023-08-16 Wed 10:10]
 :LOGBOOK:
 CLOCK: [2023-08-15 Tue 23:17]--[2023-08-15 Tue 23:42] =>  0:25
 :END:
