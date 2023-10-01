@@ -1,8 +1,10 @@
-#+title:      Simutransのコードを読む1
+:PROPERTIES:
+:header-args+: :wrap :results raw
+:END:
+#+title:      Simutransのコードを読む
 #+date:       [2023-09-10 Sun 23:10]
 #+filetags:   :code:
 #+identifier: 20230910T231044
-
 * この文書のステータス
 - [ ] 作成
 - [ ] レビュー
@@ -11,6 +13,48 @@
 CLOCK: [2023-09-10 Sun 23:15]--[2023-09-10 Sun 23:40] =>  0:25
 :END:
 Simutransのコードを読む。
+* Tasks
+** TODO 建設したときに何が起こっているか
+:PROPERTIES:
+:Effort:   3:00
+:END:
+:LOGBOOK:
+CLOCK: [2023-09-30 Sat 17:28]--[2023-09-30 Sat 17:53] =>  0:25
+CLOCK: [2023-09-30 Sat 16:04]--[2023-09-30 Sat 16:29] =>  0:25
+CLOCK: [2023-09-30 Sat 15:39]--[2023-09-30 Sat 16:04] =>  0:25
+CLOCK: [2023-09-30 Sat 15:02]--[2023-09-30 Sat 15:27] =>  0:25
+CLOCK: [2023-09-30 Sat 14:33]--[2023-09-30 Sat 14:58] =>  0:25
+CLOCK: [2023-09-30 Sat 14:06]--[2023-09-30 Sat 14:31] =>  0:25
+CLOCK: [2023-09-30 Sat 12:45]--[2023-09-30 Sat 13:10] =>  0:25
+CLOCK: [2023-09-30 Sat 12:16]--[2023-09-30 Sat 12:41] =>  0:25
+:END:
+
+- simtool.ccにツール類の定義がある。建物破壊、地形改変、町の建設、スケジュール指定など
+  - クリックしたときの動作がすべて関数workとして定義されているよう
+- tool_build_way_tが線路系建設クラスか
+  - 構成メソッド…
+    - get_desc
+    - get_icon
+    - get_tooltip
+      - クリックしたときに出るやつ
+    - get_defaultparam
+    - is_selected
+    - init
+    - get_watype
+      - get-desc()でdescを取り出し、descからget_wtyp()でwaytypeを取り出す
+    - start_at
+    - is_valid_pos
+    - calc_route
+      - 線路建設時のルート検索。線路建設時は始点と終点を指定する
+      - shift押すとできるだけ直線するところを確認した
+    - do_work
+    - mark_tiles
+  - waytype_tが交通手段を示す
+  - 年月によってdescriptionが変わる
+  - playerをとる関数が多いのは、プレイヤーが複数いるからか
+  - ~grund_t *gr=welt->lookup(new_start);~ でクリック開始時の地面オブジェクトを取得する
+    - new_startは3次元座標オブジェクト(coord3d)
+
 * Memo
 - lineは路線のことか
 - 停車を登録するメソッドがある
@@ -18,3 +62,115 @@ Simutransのコードを読む。
 
 - 近隣8タイルの高さ情報を取得する
   - https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/surface.cc#L197
+- モニュメントへの経路を探索する
+  - 親クラスのplacefinder_tからオーバーライドしている
+- 2回クリックのクラスがある
+
+#+caption: 線路建設は2回クリックが必要。開始と終点
+#+begin_src git-permalink
+https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/tool/simmenu.h#L374-L378
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/**
+ * Class for tools needing two clicks (e.g. building ways).
+ * Dragging is also possible.
+ */
+class two_click_tool_t : public tool_t {
+#+end_results
+
+#+caption: 経路探索
+#+begin_src git-permalink  https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/simcity.cc#L485-L490
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/**
+ * Search a free place for a monument building
+ * Im Gegensatz zum building_placefinder_t werden Strassen auf den Raendern
+ * toleriert.
+ */
+class monument_placefinder_t : public placefinder_t {
+#+end_results
+
+- ~get_tile_list~ でそのタイルの一覧を取っているようだ
+- レベルを取得する方法
+  - ~uint16 level = gb->get_tile()->get_desc()->get_level()+1;~
+  - 建物がタイル、情報、高さを持っている
+- 市庁舎かを確認する方法
+  ~add_gb->get_tile()->get_desc()->is_townhall()~
+- 座標のほかに、町の家リストがある
+
+#+caption: 家リストから消す
+#+begin_src git-permalink
+https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/simcity.cc#L611-L617
+#+end_src
+
+#+RESULTS:
+#+begin_results
+// this function removes houses from the city house list
+void stadt_t::remove_gebaeude_from_stadt(gebaeude_t* gb)
+{
+	buildings.remove(gb);
+	gb->set_stadt(NULL);
+	recalc_city_size();
+}
+#+end_results
+
+- 重み付けしたベクタ。要素をソートするのに役立つ
+  - ~weighted_vector_tpl~
+  - 各要素が重みを保持している
+
+#+caption: 重みを考慮してランダムに選択する
+#+begin_src git-permalink
+https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/simcity.cc#L739-L753
+#+end_src
+
+#+RESULTS:
+#+begin_results
+stadt_t::factory_entry_t* stadt_t::factory_set_t::get_random_entry()
+{
+	if(  total_remaining>0  ) {
+		sint32 weight = simrand(total_remaining);
+		for(factory_entry_t & entry : entries) {
+			if(  entry.remaining>0  ) {
+				if(  weight<entry.remaining  ) {
+					return &entry;
+				}
+				weight -= entry.remaining;
+			}
+		}
+	}
+	return NULL;
+}
+#+end_results
+
+- entriesはイベントキューみたいな感じなのかな。各建物に対する操作を保持して、処理する
+
+#+caption: タイルから削除する
+#+begin_src git-permalink
+https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/tool/simtool.cc#L431-L434
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/* delete things from a tile
+ * citycars and pedestrian first and then go up to queue to more important objects
+ */
+bool tool_remover_t::tool_remover_intern(player_t *player, koord3d pos, sint8 type, const char *&msg)
+#+end_results
+
+- 三次元座標はいい感じに抽象化されている
+
+#+begin_src git-permalink
+https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/dataobj/koord3d.h#L16-L19
+#+end_src
+
+#+RESULTS:
+#+begin_results
+/**
+ * 3D Coordinates
+ */
+class koord3d
+#+end_results
