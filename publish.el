@@ -47,6 +47,12 @@
 (use-package esxml
   :ensure t)
 
+(use-package denote
+  :straight t
+  :commands (denote-directory)
+  :custom ((denote-directory "./denote")
+           (denote-file-type 'org)))
+
 (use-package org-roam
   :ensure t)
 (setq org-roam-directory "./")
