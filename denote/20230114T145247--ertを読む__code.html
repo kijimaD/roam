@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-10-07 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ertを読む</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css'><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">ertを読む</h1>
+<p>
+ertは<a href="../20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>組み込みのテストフレームワーク。
+</p>
+
+<div id="outline-container-org362b8e3" class="outline-2">
+<h2 id="org362b8e3"><a href="#org362b8e3">Tasks</a></h2>
+<div class="outline-text-2" id="text-org362b8e3">
+</div>
+<div id="outline-container-org07632da" class="outline-3">
+<h3 id="org07632da"><a href="#org07632da"><span class="todo TODO">TODO</span> shouldはどうやって検証しているか</a></h3>
+<div class="outline-text-3" id="text-org07632da">
+<p>
+ertで定義された関数では、shouldで検証している。名前的にertに含まれないように見えるが、ertファイルで定義されている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/ert.el#L378-L379
+</pre>
+</div>
+
+<div class="results" id="org2528a3f">
+<p>
+(cl-defmacro should (form)
+  &ldquo;Evaluate FORM.  If it returns nil, abort the current test as failed.
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>should
+<ul class="org-ul">
+<li>ert&#x2013;expand-should
+<ul class="org-ul">
+<li>ert&#x2013;expand-should1</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orge0af54e" class="outline-3">
+<h3 id="orge0af54e"><a href="#orge0af54e"><span class="todo TODO">TODO</span> 失敗時の値の比較表示はどうやっているか</a></h3>
+<div class="outline-text-3" id="text-orge0af54e">
+<p>
+expectedとresultの値を表示して、どこがおかしいのかを表示してくれる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf2106ce" class="outline-3">
+<h3 id="orgf2106ce"><a href="#orgf2106ce"><span class="todo TODO">TODO</span> 統計記録をどうやっているか</a></h3>
+<div class="outline-text-3" id="text-orgf2106ce">
+<p>
+実行テストは選択できる。実行したテストについて、成功数や時間を表示する。
+</p>
+</div>
+</div>
+<div id="outline-container-org66bdf43" class="outline-3">
+<h3 id="org66bdf43"><a href="#org66bdf43"><span class="todo TODO">TODO</span> 結果バッファの表示をどうやっているか</a></h3>
+<div class="outline-text-3" id="text-org66bdf43">
+<p>
+テスト結果が表示される。
+</p>
+</div>
+</div>
+<div id="outline-container-orge1418c2" class="outline-3">
+<h3 id="orge1418c2"><a href="#orge1418c2"><span class="todo TODO">TODO</span> <code>cl-defmacro</code> と <code>defmacro</code> の違い</a></h3>
+<div class="outline-text-3" id="text-orge1418c2">
+<p>
+使い分けているように見えるが、何が違うのかわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-org61159bc" class="outline-3">
+<h3 id="org61159bc"><a href="#org61159bc"><span class="todo TODO">TODO</span> run-test-at-pointを作ってみる</a></h3>
+<div class="outline-text-3" id="text-org61159bc">
+<p>
+リストから選ぶのが面倒なので、実行できるようにする。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org6dba37f" class="outline-2">
+<h2 id="org6dba37f"><a href="#org6dba37f">Memo</a></h2>
+<div class="outline-text-2" id="text-org6dba37f">
+</div>
+<div id="outline-container-org29248d5" class="outline-3">
+<h3 id="org29248d5"><a href="#org29248d5">ertの全体像</a></h3>
+<div class="outline-text-3" id="text-org29248d5">
+<p>
+テストフレームワークの全体像をソースコードから把握する。
+</p>
+
+<ul class="org-ul">
+<li>テスト定義</li>
+<li>マッチャ関数</li>
+<li>テスト実行</li>
+<li>エラー時の値表示</li>
+<li>テストセレクタ</li>
+<li>テストのサマリー表示
+<ul class="org-ul">
+<li>成功数</li>
+<li>失敗数</li>
+<li>開始時間</li>
+</ul></li>
+<li>バッチ実行</li>
+<li>JUnit形式出力</li>
+<li>実行テスト登録・削除</li>
+<li>プログレスバー</li>
+<li>モードライン表示</li>
+<li>成功時・失敗時のface設定</li>
+<li><code>ert-results-mode</code> の各種機能・キーバインド</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgcd49d8d" class="outline-3">
+<h3 id="orgcd49d8d"><a href="#orgcd49d8d">デバッグ情報を定義する</a></h3>
+<div class="outline-text-3" id="text-orgcd49d8d">
+<p>
+defmacroにメタ情報を定義するときは、declareを使う。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>デバッグ情報の定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/ert.el#L215-L217
+</pre>
+</div>
+
+<div class="results" id="org5ad1f18">
+<p>
+(declare (debug (&amp;define [&amp;name &ldquo;test@&rdquo; symbolp]
+			 sexp [&amp;optional stringp]
+			 [&amp;rest keywordp sexp] def-body))
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgca73a99" class="outline-3">
+<h3 id="orgca73a99"><a href="#orgca73a99">エラーを定義する</a></h3>
+<div class="outline-text-3" id="text-orgca73a99">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>エラーを定義する</label><pre class="src src-emacs-lisp">(define-error 'my-failed <span class="org-string">"failed"</span>)
+</pre>
+</div>
+
+<p>
+プロパティにmy-failedを登録する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb2c41cf" class="outline-3">
+<h3 id="orgb2c41cf"><a href="#orgb2c41cf">UI用の関数</a></h3>
+<div class="outline-text-3" id="text-orgb2c41cf">
+<ul class="org-ul">
+<li>insert-text-button
+<ul class="org-ul">
+<li>ボタンを追加する</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8a4fde2" class="outline-3">
+<h3 id="org8a4fde2"><a href="#org8a4fde2">deftestを実行するとどうなるか</a></h3>
+<div class="outline-text-3" id="text-org8a4fde2">
+<ul class="org-ul">
+<li>ert-deftest 構造体に必要な情報を収集
+<ul class="org-ul">
+<li>ert-set-test make-ert-testで作った構造体でシンボルを登録する
+<ul class="org-ul">
+<li>make-ert-test テスト実行に必要なスロットを用意したオブジェクトを作る。test name, body, doc, file name &#x2026;</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+ということで、テスト構造体がシンボルとして登録される、という感じか。単純。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>メインの関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/ert.el#L191
+</pre>
+</div>
+
+<div class="results" id="orga7afbfa">
+<p>
+(cl-defmacro ert-deftest (name () &amp;body docstring-keys-and-body)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>テスト構造体を作る関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/ert.el#L140
+</pre>
+</div>
+
+<div class="results" id="org607af1d">
+<p>
+(defun ert-set-test (symbol definition)
+</p>
+
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgd6f8f21" class="outline-3">
+<h3 id="orgd6f8f21"><a href="#orgd6f8f21">実行テストリストをどうやって表示しているか</a></h3>
+<div class="outline-text-3" id="text-orgd6f8f21">
+<p>
+実行できる実行の一覧から選んで実行することになる。このリストはどうやって表示しているのだろうか。
+</p>
+
+<ul class="org-ul">
+<li>obarray シンボルテーブル</li>
+<li>seq-filter リストをフィルタする</li>
+<li>obarray の中から、ert-test に割り当てられたものをフィルタリングして、ert-deftestで定義されたテストオブジェクトを取り出している</li>
+<li>取り出したリストをcompleting-readに渡して選択肢表示する</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgd57c0fb" class="outline-3">
+<h3 id="orgd57c0fb"><a href="#orgd57c0fb">テストを実行するとき何が起きているか</a></h3>
+<div class="outline-text-3" id="text-orgd57c0fb">
+<ul class="org-ul">
+<li>ert-run-tests-interactively 実行可能なテストのリストを選択、バッファ表示、実行
+<ul class="org-ul">
+<li>listenerはevent-typeを受け取る無名関数</li>
+<li>ert-run-tests 特定したテストを実行する
+<ul class="org-ul">
+<li>結果を取得し、変数most-recent-resultに保存する</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>テスト実行関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/emacs/blob/30cf1f34c583d6ed16bdc5b9578370f30c95fe1b/lisp/emacs-lisp/ert.el#L2254
+</pre>
+</div>
+
+<div class="results" id="org53635a6">
+<p>
+(defun ert-run-tests-interactively (selector)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>関数評価で実行するときは引数を渡す必要がある</label><pre class="src src-emacs-lisp">(ert-run-tests-interactively 'cl-remove-if-not-test)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ert-run-tests-interactively
+<ul class="org-ul">
+<li>テストそのものというより、ユーザ入力とバッファで見せる部分が多くを占める</li>
+<li>interactive関数によって、M-xで呼んだときにはcompletionの値が入る</li>
+<li>この引数の名前はselectorという名前がついている</li>
+<li>listerはどういう意味か。関数なのは確か
+<ul class="org-ul">
+<li>event-typeによって処理が変わる関数</li>
+<li>run-startedのときは準備バッファを表示する</li>
+<li>run-endedのとき成功してたら統計バッファを表示する</li>
+<li>test-startedのとき
+<ul class="org-ul">
+<li>ewocって何だ
+<ul class="org-ul">
+<li>ewoc関係の関数は組み込みで入っている</li>
+</ul></li>
+</ul></li>
+<li>test-endedのときは統計バッファを更新する</li>
+</ul></li>
+</ul></li>
+
+<li>ert-run-tests
+<ul class="org-ul">
+<li>ert-run-or-rerun-test</li>
+<li>ert-run-test
+<ul class="org-ul">
+<li>ert&#x2013;run-test-internal
+<ul class="org-ul">
+<li>デバッグ関連の情報を付加する</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
