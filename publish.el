@@ -36,20 +36,17 @@
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
 
-;; (use-package sqlite3
-;;   :straight t)
-;; (use-package emacsql-libsqlite3
-;;   :straight t
-;;   :custom
-;;   (org-roam-database-connector 'libsqlite3))
+(use-package emacsql-sqlite
+  :ensure t)
 
 ;; Install other dependencies
 (use-package esxml
   :ensure t)
 
+;; denote v2.0.0
 (use-package denote
-  :straight t
-  :commands (denote-directory)
+  :ensure t
+  :straight (:host github :repo "protesilaos/denote")
   :custom ((denote-directory "./denote")
            (denote-file-type 'org)))
 
@@ -223,6 +220,7 @@
 (defun kd/update-index-table ()
   "update index.org table"
   (let ((org-agenda-files '("./")))
+    (require 'denote-org-dblock)
     (find-file "index.org")
     (org-dblock-update t)
     (save-buffer)))

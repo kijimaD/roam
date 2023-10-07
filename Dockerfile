@@ -3,6 +3,7 @@
 FROM amazonlinux:2 AS ruby
 RUN yum -y update && \
     yum -y install \
+        software-properties-common \
         yum-utils \
         epel-release \
         sudo \
