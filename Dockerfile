@@ -3,6 +3,7 @@
 FROM amazonlinux:2 AS ruby
 RUN yum -y update && \
     yum -y install \
+        software-properties-common \
         yum-utils \
         epel-release \
         sudo \
@@ -28,6 +29,10 @@ RUN gem update --system
 
 FROM amazonlinux:2 AS build
 
+# MEMO: localeを日本語にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+
 RUN yum -y update && \
     yum -y install \
         make \
@@ -37,7 +42,8 @@ RUN yum -y update && \
         sqlite3 \
         emacs \
         python3 \
-        gnuplot
+        gnuplot \
+        glibc-langpack-ja
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
 
