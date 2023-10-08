@@ -49,6 +49,7 @@
   :straight (:host github :repo "protesilaos/denote")
   :custom ((denote-directory "./denote")
            (denote-file-type 'org)))
+(require 'denote-org-dblock)
 
 (use-package org-roam
   :ensure t)
@@ -220,7 +221,6 @@
 (defun kd/update-index-table ()
   "update index.org table"
   (let ((org-agenda-files '("./")))
-    (require 'denote-org-dblock)
     (find-file "index.org")
     (org-dblock-update t)
     (save-buffer)))
