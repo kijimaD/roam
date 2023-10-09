@@ -47,7 +47,7 @@
 (use-package denote
   :ensure t
   :straight (:host github :repo "protesilaos/denote")
-  :custom ((denote-directory "./denote")
+  :custom ((denote-directory "./")
            (denote-file-type 'org)))
 (require 'denote-org-dblock)
 
