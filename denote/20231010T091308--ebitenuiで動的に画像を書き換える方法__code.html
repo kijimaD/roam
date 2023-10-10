@@ -4,7 +4,7 @@
 <!-- 2023-10-10 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>上京してよかったこと</title>
+<title>EbitenUIで動的に画像を書き換える方法</title>
 <meta name="generator" content="Org mode">
 <meta name="author" content="root">
 <link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
@@ -14,14 +14,26 @@
 <div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
 </div>
 <div id="content">
-<h1 class="title">上京してよかったこと</h1>
+<h1 class="title">EbitenUIで動的に画像を書き換える方法</h1>
 <p>
-上京して3年が経った。上京して予想外によかったと思えることは、作品の中で描かれている風景をどこだとわかることが増えたことだ。たとえば上京前後で『君の名は』は別作品に見えた。舞台として描かれる四谷や新宿の風景、中央線の風景は身近なものだ。「都会っぽい架空の場所」は、リアルにイメージできる場所となった。位置関係もよくわかっている。上京後のほうが、色々考えて見られたように思える。完全に知らない場所より、知っている場所の方が想像力を掻き立てられることがある。
+EbitenUIはゲームエンジン<a href="../20230326190222-ebitengine.html#ID-1125139c-d69f-4af0-a564-6b9b399ce976">Ebitengine</a>のUIライブラリである。クリックなどのイベントに応じて動的にラベルを切り替える方法がわからなかったので、コードを読んで把握した方法を書く。そもそもUIは動的に変更しないことがほとんどなので、ケースとして強調して記載されていないように見える。
 </p>
 
 <p>
-<a href="20231008T024245--呪術廻戦__essay.html">呪術廻戦</a>でも同じように感じた。背景だけでなく、作中で明確に地名やネタが出てくる。関東にいないとわからなかっただろう。こういうことは、認識している以上にかなり多い可能性がある。それが理解できるっことは、上京してよかった、と感じる瞬間のひとつだ。
+結論としては、イベントハンドラに自身を書き換える無名関数を登録すればよい。
 </p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>ボタンをクリックするたびにラベルを現在時刻に変更する例</label><pre class="src src-go">makeLabel := func() string {
+        t := time.Now()
+        return t.Format("03:04:05")
+}
+button := newSelectButton(config.Resources, makeLabel(), buttonOptions...)
+button.ClickedEvent.AddHandler(func(args interface{}) {
+        button.Text().Label = makeLabel()
+})
+</pre>
+</div>
 </div>
 <div id="postamble" class="status">
 <footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
