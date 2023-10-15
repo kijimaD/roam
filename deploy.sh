@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eux
 
 make file-graph && \
     make line-graph && \
