@@ -223,6 +223,7 @@
          (match-end 1))
       "")))
 
+;; FIXME: denote の dynamic blockの評価に失敗している。更新されない。
 (defun kd/update-index-table ()
   "update index.org table"
   (let ((org-agenda-files '("./")))
