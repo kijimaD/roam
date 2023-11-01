@@ -1,6 +1,6 @@
 module weight
 
-go 1.21.3
+go 1.21
 
 require (
 	git.sr.ht/~sbinet/gg v0.5.0 // indirect

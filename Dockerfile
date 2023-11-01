@@ -71,7 +71,7 @@ FROM golang:1.20-buster AS gobuild
 WORKDIR /work/weight
 COPY . /work
 RUN go install github.com/kijimaD/wei@main
-RUN wei . build
+RUN wei build
 
 # release ================
 # GitHub Pages(production)
