@@ -30,6 +30,59 @@ Emacsは非常に優れた拡張性を特徴とするテキストエディタ。
 
 自分の文芸的設定は[[https://kijimad.github.io/.emacs.d/][kijimad Emacs Config]]にまとめてある。
 * Memo
+** guix でビルドする
+
+ビルドしてからパッケージを登録する。
+
+#+begin_src shell
+  guix build emacs@29.1
+  guix package -i emacs@29.1
+  guix package --roll-back # ロールバックしたいとき
+#+end_src
+
+** doom-modelineでアイコンが表示できないのを直す
+
+~(all-the-icons-install-fonts)~ しても直らないので困っていた。nerd-fontsでフォントを追加すると表示されるようになった。良い。
+
+インストール方法のメモ。
+
+#+caption: nerd-fontsをインストールする
+#+begin_src shell
+  $ git clone --depth 1 git@github.com:ryanoasis/nerd-fonts.git
+  $ ./install.sh
+#+end_src
+
+** コンパイルする
+
+[[https://naoking158.pages.dev/posts/building-emacs-on-ubuntu/][Ubuntu 18.04.5 で Gcc Emacs をビルドする | Braindump]]を参考にコンパイルする。
+
+ソースコードをクローンしてくる。
+
+#+caption: クローン
+#+begin_src shell
+  $ git clone --single-branch --depth=1 https://github.com/emacs-mirror/emacs.git
+#+end_src
+
+.configureを生成する。
+
+#+caption: .configure生成
+#+begin_src shell
+  $ ./autogen.sh
+#+end_src
+
+configureを実行する。
+
+#+caption: 一気にインストールまで
+#+begin_src shel
+  $ ./configure --with-native-compilation=aot --with-modules --with-x && \
+  make && \
+  sudo make install
+#+end_src
+
+- ~--with-native-compilation~ でelispをネイティブコンパイルして高速化する
+  - [[https://blog.tomoya.dev/posts/hello-native-comp-emacs/][ネイティブコンパイルEmacsの登場 | 日々、とんは語る。]]
+- ~--with-x~ でX Windowで動かすようにする
+
 ** 2つのregionを比較する
 ~ediff-regions-wordwise~ を使う。
 ** エラー時に表示する
@@ -977,6 +1030,15 @@ counselのリポジトリのREADMEの最後に書かれてた。
 firefox側で設定する。about:config をURLバーに打ち込み、設定項目 browser.tabs.loadDivertedInBackground を true にする。
 https://stackoverflow.com/questions/10506496/run-browse-url-in-emacs-without-giving-focus-to-the-browser
 * Tasks
+** TODO 設定整理
+:LOGBOOK:
+CLOCK: [2023-11-05 Sun 11:41]--[2023-11-05 Sun 12:06] =>  0:25
+CLOCK: [2023-11-05 Sun 11:16]--[2023-11-05 Sun 11:41] =>  0:25
+:END:
+
+- 使ってないパッケージの整理
+- サジェストまわりの設定
+
 ** TODO [[https://dl.acm.org/doi/pdf/10.1145/3386324][Evolution of Emacs Lisp]]
 Emacs Lispの進歩。
 ** TODO [[https://github.com/melpa/melpa/pull/8574][Add persist-state package by bram85 · Pull Request #8574 · melpa/melpa]]
