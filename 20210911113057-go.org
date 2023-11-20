@@ -1347,8 +1347,6 @@ CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
 func len(v Type) int
 #+end_results
 
-** TODO [[https://zenn.dev/hsaki/books/golang-httpserver-internal][Deep Dive into The Go's Web Server]]
-Goのサーバーの解説。
 ** TODO [[https://zenn.dev/hsaki/books/golang-context/viewer/intro][よくわかるcontextの使い方]]
 :LOGBOOK:
 CLOCK: [2023-11-11 Sat 13:05]--[2023-11-11 Sat 13:30] =>  0:25
@@ -4130,3 +4128,32 @@ CLOCK: [2023-08-06 Sun 19:50]--[2023-08-06 Sun 20:15] =>  0:25
 :END:
 
 Goを学んだ初期に書いた。わかりにくいコードになっているのを直す。
+** DONE [[https://zenn.dev/hsaki/books/golang-httpserver-internal][Deep Dive into The Go's Web Server]]
+CLOSED: [2023-11-19 Sun 15:35]
+:LOGBOOK:
+CLOCK: [2023-11-19 Sun 15:09]--[2023-11-19 Sun 15:34] =>  0:25
+CLOCK: [2023-11-19 Sun 14:43]--[2023-11-19 Sun 15:08] =>  0:25
+CLOCK: [2023-11-19 Sun 13:07]--[2023-11-19 Sun 13:32] =>  0:25
+:END:
+Goのサーバーの解説。
+
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/2eca0b1e1663d826893b6b1fd8bd89da98e65d1e/src/net/http/server.go#L2503-L2515
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// ServeHTTP dispatches the request to the handler whose
+// pattern most closely matches the request URL.
+func (mux *ServeMux) ServeHTTP(w ResponseWriter, r *Request) {
+	if r.RequestURI == "*" {
+		if r.ProtoAtLeast(1, 1) {
+			w.Header().Set("Connection", "close")
+		}
+		w.WriteHeader(StatusBadRequest)
+		return
+	}
+	h, _ := mux.Handler(r)
+	h.ServeHTTP(w, r)
+}
+#+end_results
