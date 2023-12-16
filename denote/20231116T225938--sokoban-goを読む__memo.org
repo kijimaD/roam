@@ -233,7 +233,7 @@ https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470
 	}))
 #+end_results
 
-↓コンポーネントはTOMLで定義されているようだ。各メニューごとにファイルがあるな。
+↓コンポーネントはTOMLで定義されているようだ。各メニューごとにファイルがあるな。translationは配置する座標だな。なぜこの単語が使われているのかわからない。
 
 #+begin_src git-permalink
 https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/assets/metadata/entities/ui/main_menu.toml#L27-L34
@@ -250,6 +250,10 @@ color = [255, 255, 255, 255]
 [entity.components.UITransform]
 translation = { x = 40, y = 400 }
 #+end_results
+
+- [[https://developer.mozilla.org/ja/docs/Web/CSS/transform][ transform - CSS: カスケーディングスタイルシート | MDN]]
+
+画像を移動や拡大縮小など変化させるのをtransformというようだ。
 
 * メニューコンポーネントのマウスオーバーイベント
 
@@ -619,6 +623,73 @@ type menu interface {
 	getCursorMenuIDs() []string
 }
 #+end_results
+
+* どうやって描画しているか
+
+- 読み込み時にコンポーネントを初期化する
+  - 初期化 = Prefabをセットする
+  - tomlから読み込む
+  - 主なコンポーネントはtext。idやtextなどを持つ
+  - あるいはマウスに反応するコンポーネントもある
+- 各stateでsystemを実行し、コンポーネントに変更を加える
+- stateMachineの内でSystemを実行している。どのステートでも描画する
+
+#+caption: stateが描画している部分
+#+begin_src git-permalink
+https://github.com/x-hgg-x/goecsengine/blob/be27b724d4c8f46b9d31959fe91c4ecf188429ea/states/lib.go#L98-L103
+#+end_src
+
+#+RESULTS:
+#+begin_results
+// Draw draws the screen after a state update
+func (sm *StateMachine) Draw(world w.World, screen *ebiten.Image) {
+	// Run drawing systems
+	s.RenderSpriteSystem(world, screen)
+	u.RenderUISystem(world, screen)
+}
+#+end_results
+
+↓呼び出されているRenderSpriteSystemの抜粋。
+
+#+caption: コンポーネントを描画する
+#+begin_src git-permalink
+https://github.com/x-hgg-x/goecsengine/blob/be27b724d4c8f46b9d31959fe91c4ecf188429ea/systems/sprite/render.go#L21-L25
+#+end_src
+
+#+RESULTS:
+#+begin_results
+// RenderSpriteSystem draws images.
+// Images are drawn in ascending order of depth.
+// Images with higher depth are thus drawn above images with lower depth.
+func RenderSpriteSystem(world w.World, screen *ebiten.Image) {
+	sprites := world.Manager.Join(world.Components.Engine.SpriteRender, world.Components.Engine.Transform)
+#+end_results
+
+* StateMachineがどういう感じになっているか
+
+ステートのスタック構造を持っているが、これはどういう感じで推移するか。
+
+- おそらくスタック構造があるために、メニュー画面を出したあとに元のステートに戻れる
+- 貯まり続けないことを保証するには
+
+* スプライトを動的に追加する
+
+真っ黒な画像をスプライト画像として登録して、フェードアウトとしている。スプライトをファイルで読み込むほかに、こういったこともできる。
+
+#+begin_src git-permalink
+https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/main.go#L73-L75
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	textureImage := ebiten.NewImage(minGameWidth, minGameHeight)
+	textureImage.Fill(color.RGBA{A: 120})
+	spriteSheets["fadeOut"] = ec.SpriteSheet{Texture: ec.Texture{Image: textureImage}, Sprites: []ec.Sprite{{Width: minGameWidth, Height: minGameHeight}}}
+#+end_results
+
+* stateとentity
+
+stateごとでファイルからentityを生成し直している。そこから、systemでいろいろentityを操作している。
 
 * Tasks
 * Footnotes
