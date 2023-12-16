@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2023-12-16 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECSを使ってサンプルゲームを作る</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">ECSを使ってサンプルゲームを作る</h1>
+<p>
+<a href="../20230930175757-entitycomponentsystem.html#ID-dc45bd7d-b8c4-47ef-ae84-c548f81c50bb">EntityComponentSystem</a>を使って、サンプルゲームを作る。
+</p>
+
+<p>
+やること。
+</p>
+
+<div id="outline-container-org08336b6" class="outline-2">
+<h2 id="org08336b6"><a href="#org08336b6">Todo</a></h2>
+<div class="outline-text-2" id="text-org08336b6">
+</div>
+<div id="outline-container-org2c8bcee" class="outline-3">
+<h3 id="org2c8bcee"><a href="#org2c8bcee"><span class="todo TODO">TODO</span> アイテムを使う</a></h3>
+<div class="outline-text-3" id="text-org2c8bcee">
+<ul class="org-ul">
+<li>キャラクタを作る</li>
+<li>ステータスを作る</li>
+<li>影響を与えられるようにする</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgac50317" class="outline-3">
+<h3 id="orgac50317"><a href="#orgac50317"><span class="todo TODO">TODO</span> ステート切り替えが怪しい部分がある</a></h3>
+<div class="outline-text-3" id="text-orgac50317">
+<p>
+特にpopしている部分。
+</p>
+
+<ul class="org-ul">
+<li>pushで、文字があると重なる</li>
+<li>popしたときにOnStartは走らないので、前の画面を削除するのはダメ</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org6d9913d" class="outline-3">
+<h3 id="org6d9913d"><a href="#org6d9913d"><span class="todo TODO">TODO</span> 図形 or 画像描画の方法を考える</a></h3>
+<div class="outline-text-3" id="text-org6d9913d">
+<p>
+UIのために図形描画したい。どうするか。画像を用意すればよいが、いい感じにやるためにはどうすればいいか。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6d36b1e" class="outline-3">
+<h3 id="org6d36b1e"><a href="#org6d36b1e"><span class="todo TODO">TODO</span> 生成をランダム化する</a></h3>
+<div class="outline-text-3" id="text-org6d36b1e">
+<p>
+ある程度ランダム化したい。プレイヤー、モンスター、ワープゲートの出る位置をバラけさせる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org410ada8" class="outline-3">
+<h3 id="org410ada8"><a href="#org410ada8"><span class="todo TODO">TODO</span> 暗闇を追加する</a></h3>
+<div class="outline-text-3" id="text-org410ada8">
+<p>
+未探検の部分は暗くなる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge3f6978" class="outline-3">
+<h3 id="orge3f6978"><a href="#orge3f6978"><span class="todo TODO">TODO</span> 照明を追加する</a></h3>
+<div class="outline-text-3" id="text-orge3f6978">
+<p>
+照明がある部分は色が変わる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge13be4b" class="outline-3">
+<h3 id="orge13be4b"><a href="#orge13be4b"><span class="todo TODO">TODO</span> キャラクタを生成する</a></h3>
+<div class="outline-text-3" id="text-orge13be4b">
+<p>
+味方/敵を生成する。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga2aeb4e" class="outline-3">
+<h3 id="orga2aeb4e"><a href="#orga2aeb4e"><span class="todo TODO">TODO</span> タイルの種類を増やす</a></h3>
+<div class="outline-text-3" id="text-orga2aeb4e">
+<p>
+見た目がよくないので、2種類の通常フロアを用意する。
+</p>
+
+<p>
+ステージ作成が少し面倒になるか。2種類のタイルの違いをファイルに書き出したくないな。勝手に判断して入れてくれるのが一番良い。壁が隣接してたら〜とか。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4e2e2e1" class="outline-3">
+<h3 id="org4e2e2e1"><a href="#org4e2e2e1"><span class="todo TODO">TODO</span> ゲームループカウントをグローバル化する</a></h3>
+<div class="outline-text-3" id="text-org4e2e2e1">
+<p>
+数えてメッセージのアニメーションさせる用。汎用的なのでグローバルでやってよさそう。アニメーションのためのもっとよい方法がある可能性はある。ちゃんと調べないとな…。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org33484d9" class="outline-3">
+<h3 id="org33484d9"><a href="#org33484d9"><span class="todo TODO">TODO</span> アニメーションのやり方を考える</a></h3>
+<div class="outline-text-3" id="text-org33484d9">
+<p>
+どうやっているのだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaec4ff6" class="outline-3">
+<h3 id="orgaec4ff6"><a href="#orgaec4ff6"><span class="todo TODO">TODO</span> 階の生成方法を考える</a></h3>
+<div class="outline-text-3" id="text-orgaec4ff6">
+<ul class="org-ul">
+<li>ランダム選択の一般階層
+<ul class="org-ul">
+<li>ダンジョンによって選ばれやすさに偏りがある</li>
+<li>5の倍数の場合は帰還ワープも出す</li>
+<li>すべてのマップに帰還ワープを設定しておく</li>
+</ul></li>
+<li>ボスの階層
+<ul class="org-ul">
+<li>特殊マップ</li>
+<li>固定</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orga624582" class="outline-3">
+<h3 id="orga624582"><a href="#orga624582"><span class="todo TODO">TODO</span> メッセージシステムのパッケージを切り出す</a></h3>
+<div class="outline-text-3" id="text-orga624582">
+<p>
+今は1パッケージに入っていてわかりにくい。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org05625c6" class="outline-2">
+<h2 id="org05625c6"><a href="#org05625c6">Memo</a></h2>
+<div class="outline-text-2" id="text-org05625c6">
+<ul class="org-ul">
+<li>entityはcomponentの集合体</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org270bd2a" class="outline-2">
+<h2 id="org270bd2a"><a href="#org270bd2a">Archives</a></h2>
+<div class="outline-text-2" id="text-org270bd2a">
+</div>
+<div id="outline-container-org8a82e44" class="outline-3">
+<h3 id="org8a82e44"><a href="#org8a82e44"><span class="done DONE">DONE</span> メッセージ表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-org8a82e44">
+<p>
+<a href="https://github.com/x-hgg-x/sokoban-go">x-hgg-x/sokoban-go</a>を使って小さいサンプルを作る。
+</p>
+</div>
+</div>
+<div id="outline-container-org163b3f3" class="outline-3">
+<h3 id="org163b3f3"><a href="#org163b3f3"><span class="done DONE">DONE</span> メッセージシステムのリファクタ</a></h3>
+<div class="outline-text-3" id="text-org163b3f3">
+<p>
+使いにくいので直す。
+</p>
+</div>
+</div>
+<div id="outline-container-org4263b53" class="outline-3">
+<h3 id="org4263b53"><a href="#org4263b53"><span class="done DONE">DONE</span> メッセージシステムに自動改行を入れる</a></h3>
+<div class="outline-text-3" id="text-org4263b53">
+<p>
+飛び出すのを防ぐ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb05fea1" class="outline-3">
+<h3 id="orgb05fea1"><a href="#orgb05fea1"><span class="done DONE">DONE</span> ファイルを埋め込む</a></h3>
+<div class="outline-text-3" id="text-orgb05fea1">
+<p>
+デプロイで扱いやすいように。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org3610305" class="outline-3">
+<h3 id="org3610305"><a href="#org3610305"><span class="done DONE">DONE</span> CI設定</a></h3>
+<div class="outline-text-3" id="text-org3610305">
+<p>
+テストとビルドとデプロイする。
+</p>
+
+<p>
+デプロイしたけど、ブラウザで表示できてないな。
+</p>
+</div>
+</div>
+<div id="outline-container-org4b3e4a5" class="outline-3">
+<h3 id="org4b3e4a5"><a href="#org4b3e4a5"><span class="done DONE">DONE</span> フィールドで動けるようにする</a></h3>
+<div class="outline-text-3" id="text-org4b3e4a5">
+<ul class="org-ul">
+<li>テキストで地図を読み込む</li>
+<li>コンポーネントを作る</li>
+<li>地図を表示する</li>
+<li>移動できるようにする</li>
+</ul>
+
+<p>
+実行時エラーになる。表示できない。インターフェースが取り出せないよう。
+</p>
+
+<ul class="org-ul">
+<li>コンポーネントの初期化を忘れていた</li>
+<li>LoadLevel()によって読み込んだComponentListをAddEntities()-&gt;AddEntityComponent()に渡す。が、AddEntitiesで失敗する。テキストで読み込んだ内容をreflectでオブジェクト化するときに、新しく作成したコンポーネントを初期化するのに失敗している</li>
+<li>ecsComponentListを調べてみよう
+<ul class="org-ul">
+<li>ecvでGameが入ってない</li>
+<li>world.Components.Game</li>
+</ul></li>
+<li>sokoban-go では main.goのw.InitWorld(&amp;gc.Components{})の時点でworld.Components.Gameがセットされている</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org346af04" class="outline-3">
+<h3 id="org346af04"><a href="#org346af04"><span class="done DONE">DONE</span> マップを表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-org346af04">
+<p>
+表示する。
+</p>
+</div>
+</div>
+<div id="outline-container-orga85eeb9" class="outline-3">
+<h3 id="orga85eeb9"><a href="#orga85eeb9"><span class="done DONE">DONE</span> 階数を移動できるようにする</a></h3>
+<div class="outline-text-3" id="text-orga85eeb9">
+<p>
+1階からはじまって、次の階層に移動する。
+</p>
+
+<p>
+ワープホール。
+</p>
+</div>
+</div>
+<div id="outline-container-orga5be956" class="outline-3">
+<h3 id="orga5be956"><a href="#orga5be956"><span class="done DONE">DONE</span> クロスコンパイルする</a></h3>
+<div class="outline-text-3" id="text-orga5be956">
+<p>
+一応CIに設定して保証しておく。
+</p>
+</div>
+</div>
+<div id="outline-container-orga015f33" class="outline-3">
+<h3 id="orga015f33"><a href="#orga015f33"><span class="done DONE">DONE</span> メッセージが飛び出すのを直す</a></h3>
+<div class="outline-text-3" id="text-orga015f33">
+<p>
+ステート遷移イベントを作る。
+</p>
+</div>
+</div>
+<div id="outline-container-orgce2b480" class="outline-3">
+<h3 id="orgce2b480"><a href="#orgce2b480"><span class="done DONE">DONE</span> 次の階をランダムに選択する</a></h3>
+<div class="outline-text-3" id="text-orgce2b480">
+<p>
+一覧からランダムに選択する。
+</p>
+</div>
+</div>
+<div id="outline-container-org3da5517" class="outline-3">
+<h3 id="org3da5517"><a href="#org3da5517"><span class="done DONE">DONE</span> HomeStateを作成する</a></h3>
+<div class="outline-text-3" id="text-org3da5517">
+<p>
+ゲームプレイの基軸になるメニュー。
+</p>
+</div>
+</div>
+<div id="outline-container-org612730a" class="outline-3">
+<h3 id="org612730a"><a href="#org612730a"><span class="done DONE">DONE</span> 脱出できるようにする</a></h3>
+<div class="outline-text-3" id="text-org612730a">
+<p>
+脱出階層で脱出できるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org7ffc9e3" class="outline-3">
+<h3 id="org7ffc9e3"><a href="#org7ffc9e3"><span class="done DONE">DONE</span> 背景を設定する</a></h3>
+<div class="outline-text-3" id="text-org7ffc9e3">
+<p>
+背景を追加する。スプライトはあるけど、同じでいいのか。いや、スプライトは1枚の画像を分割するものだから、同じ感じでは扱えないな。変えるとsystemも変えないといけない。面倒なのでとりあえずいいか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdfc4a26" class="outline-3">
+<h3 id="orgdfc4a26"><a href="#orgdfc4a26"><span class="done DONE">DONE</span> サブメニュー追加</a></h3>
+<div class="outline-text-3" id="text-orgdfc4a26">
+<p>
+拠点メニューにはサブメニューがある。どうやるか考える。
+</p>
+
+<ul class="org-ul">
+<li>別stateでやる
+<ul class="org-ul">
+<li>大量にstateができるのどうなのという感じ。背景コンポーネントとかも同じ感じで準備しないといけない</li>
+</ul></li>
+<li>リファレンスではどうやっているのだろう。ポーズでは、後ろを透明に表示しつつ、メニューを表示している。あれと同じようなことができないか
+<ul class="org-ul">
+<li>ポーズメニューでは、OnStopでポーズメニューのエンティティのみを削除しているようだ。ほかのstateでは、すべてのエンティティを削除することが異なる</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org196baaf" class="outline-3">
+<h3 id="org196baaf"><a href="#org196baaf"><span class="done DONE">DONE</span> pauseステート作成</a></h3>
+<div class="outline-text-3" id="text-org196baaf">
+<p>
+デバッグで便利なので。
+</p>
+</div>
+</div>
+<div id="outline-container-org7388018" class="outline-3">
+<h3 id="org7388018"><a href="#org7388018"><span class="done DONE">DONE</span> アイテムを生成する</a></h3>
+<div class="outline-text-3" id="text-org7388018">
+<p>
+アイテムを追加する。
+</p>
+
+<ul class="org-ul">
+<li>item
+<ul class="org-ul">
+<li>consumable</li>
+<li>name</li>
+<li>description</li>
+</ul></li>
+</ul>
+
+<p>
+まずそれぞれのコンポーネントの雛形をファイルで作成する。
+</p>
+
+<ul class="org-ul">
+<li>items
+<ul class="org-ul">
+<li>entityA
+<ul class="org-ul">
+<li>componentA(consumable)</li>
+<li>componentB(weight)</li>
+</ul></li>
+<li>entityB
+<ul class="org-ul">
+<li>componentA(consumable)</li>
+<li>componentB(weight)</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+で、そのデータを読み込んでエンティティとコンポーネントを生成する関数を作る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>engineも作らないといけない</label><pre class="src src-go">componentList := loader.EntityComponentList{}
+// engineとgameは同数でなければならない。分割されているのが面倒だな…
+componentList.Engine = append(componentList.Engine, loader.EngineComponentList{})
+componentList.Game = append(componentList.Game, gloader.GameComponentList{
+	Item: &amp;gc.Item{},
+})
+loader.AddEntities(world, componentList)
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>元ネタ</label><pre class="src src-rust">pub fn spawn_named_item(
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb6402c4" class="outline-3">
+<h3 id="orgb6402c4"><a href="#orgb6402c4"><span class="done DONE">DONE</span> UI設計</a></h3>
+<div class="outline-text-3" id="text-orgb6402c4">
+<p>
+いちいちゲーム画面見るのもアレなので、書いておく。
+</p>
+</div>
+</div>
+<div id="outline-container-orgab0f90d" class="outline-3">
+<h3 id="orgab0f90d"><a href="#orgab0f90d"><span class="done DONE">DONE</span> UIエンティティだけを消す</a></h3>
+<div class="outline-text-3" id="text-orgab0f90d">
+<p>
+DeleteAllEntitiesでステート切り替え時のUIリセットをしている。entitiesが全部消えるので、困る。ほとんどの場合、UIだけをリセットすればよさそう。
+</p>
+
+<p>
+UIコンポーネントと、UIコンポーネントを消す関数を作ればよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org33b4f97" class="outline-3">
+<h3 id="org33b4f97"><a href="#org33b4f97"><span class="done DONE">DONE</span> 各メニューを作成する</a></h3>
+<div class="outline-text-3" id="text-org33b4f97">
+<p>
+仮の内容で全部作る。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
