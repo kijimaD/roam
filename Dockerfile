@@ -96,7 +96,7 @@ FROM node:17 AS textlint
 
 WORKDIR /roam
 
-COPY package.json package-lock.json ./
+COPY package.json ./
 RUN npm install
 
 CMD /bin/bash
