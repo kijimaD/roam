@@ -189,6 +189,10 @@ xdotool key Caps_Lock
 * Tasks
 ** TODO [[https://gihyo.jp/dp/ebook/2022/978-4-297-13149-4][Linuxのしくみ ―実験と図解で学ぶOS、仮想マシン、コンテナの基礎知識【増補改訂版】 | Gihyo Digital Publishing … 技術評論社の電子書籍]]
 :LOGBOOK:
+CLOCK: [2024-01-08 Mon 10:21]--[2024-01-08 Mon 10:46] =>  0:25
+CLOCK: [2024-01-07 Sun 19:37]--[2024-01-07 Sun 20:02] =>  0:25
+CLOCK: [2024-01-07 Sun 19:04]--[2024-01-07 Sun 19:29] =>  0:25
+CLOCK: [2024-01-07 Sun 18:10]--[2024-01-07 Sun 18:35] =>  0:25
 CLOCK: [2024-01-06 Sat 08:59]--[2024-01-06 Sat 09:24] =>  0:25
 CLOCK: [2024-01-06 Sat 08:34]--[2024-01-06 Sat 08:59] =>  0:25
 CLOCK: [2024-01-05 Fri 22:48]--[2024-01-05 Fri 23:13] =>  0:25
@@ -281,6 +285,135 @@ pstree -p
 #+begin_src shell
 ps aux
 #+end_src
+
+#+caption: wait組み込みコマンドによって終了状態を得る
+#+begin_src shell
+  false &
+  wait $! # falseプロセスの終了を待ち合わせる。falseコマンドのpidは$!変数から得られる
+  echo "falseコマンドが終了しました: $?" # wait後にfalseプロセスの戻り値は$?変数から得られる
+#+end_src
+
+#+RESULTS:
+#+begin_results
+falseコマンドが終了しました: 1
+#+end_results
+
+- 親プロセスは子プロセスの終了状況を適宜回収して、リソースをカーネルに解放する
+
+#+caption: シグナルの一覧
+#+begin_src shell
+man 7 signal | head -n 10
+#+end_src
+
+#+RESULTS:
+#+begin_results
+SIGNAL(7)                  Linux Programmer's Manual                 SIGNAL(7)
+
+NAME
+       signal - overview of signals
+
+DESCRIPTION
+       Linux  supports both POSIX reliable signals (hereinafter "standard sig‐
+       nals") and POSIX real-time signals.
+
+   Signal dispositions
+#+end_results
+
+#+caption: セッションについての情報
+#+begin_src shell
+ps ajx | head -n 10
+#+end_src
+
+#+RESULTS:
+#+begin_results
+   PPID     PID    PGID     SID TTY        TPGID STAT   UID   TIME COMMAND
+      0       1       1       1 ?             -1 Ss       0   1:16 /sbin/init splash
+      0       2       0       0 ?             -1 S        0   0:04 [kthreadd]
+      2       3       0       0 ?             -1 I<       0   0:00 [rcu_gp]
+      2       4       0       0 ?             -1 I<       0   0:00 [rcu_par_gp]
+      2       5       0       0 ?             -1 I<       0   0:00 [netns]
+      2      10       0       0 ?             -1 I<       0   0:00 [mm_percpu_wq]
+      2      11       0       0 ?             -1 S        0   0:00 [rcu_tasks_rude_]
+      2      12       0       0 ?             -1 S        0   0:00 [rcu_tasks_trace]
+      2      13       0       0 ?             -1 S        0   0:41 [ksoftirqd/0]
+#+end_results
+
+- プロセスグループを使うと、当該プロセスグループに所属する全プロセスに対してシグナルを投げられる
+
+#+caption: プロセスの階層をたどる
+#+begin_src shell
+  sleep 1 &
+  ps ajx | egrep "$PPID|$!"
+#+end_src
+
+#+RESULTS:
+#+begin_results
+      1  148772  148310  148310 ?             -1 Sl    1000 409:32 /home/orange/.guix-profile/bin/emacs
+ 148772  148817  148817  148817 ?             -1 Ss    1000   0:10 /usr/bin/cmigemo -q --emacs -d /usr/share/cmigemo/utf-8/migemo-dict
+ 148772  153047  153047  153047 pts/11    153047 SLsl+ 1000 1347:41 /opt/google/chrome/chrome
+ 148772  153626  153626  153626 pts/6     153626 Ss+   1000   0:00 /bin/bash
+ 148772  153657  153657  153657 pts/3     153657 Ss+   1000   0:00 /bin/bash
+ 148772  153776  153776  153776 pts/4     153776 Ss+   1000   0:00 /bin/bash
+ 148772  153837  153837  153837 pts/0     153837 Ss+   1000   0:00 /bin/bash
+ 148772  156827  156827  156827 ?             -1 Ss    1000   0:44 /usr/bin/mozc_emacs_helper --suppress_stderr
+ 148772  449717  449717  449717 ?             -1 Ssl   1000   0:09 /home/orange/.emacs.d/.cask/.cache/lsp/rust/rust-analyzer
+ 148772  956786  956786  956786 pts/2     956786 Ss+   1000   0:00 /bin/bash
+ 148772 1030938 1030938 1030938 pts/7    1030938 Ss+   1000   1:40 /usr/bin/python3 -m http.server 8000
+ 148772 1052415 1052415 1052415 pts/8    1052415 Ss+   1000   0:00 /bin/bash
+ 148772 1203772 1203772 1203772 pts/9    1203772 Ss+   1000   0:00 /bin/bash
+ 148772 1215308 1215308 1215308 ?             -1 Ssl   1000   0:50 /home/orange/go/bin/gopls -remote=auto
+ 148772 1224161 1224161 1224161 ?             -1 Ssl   1000   0:29 /home/orange/go/bin/gopls -remote=auto
+ 148772 1260197 1260197 1260197 ?             -1 Ssl   1000   0:27 /home/orange/go/bin/gopls -remote=auto
+ 148772 1260667 1260667 1260667 pts/10   1260667 Ss+   1000   0:00 /bin/bash
+ 148772 1278406 1278406 1278406 ?             -1 Ssl   1000   1:35 /home/orange/go/bin/gopls -remote=auto
+ 148772 1386122 1386122 1386122 ?             -1 Ssl   1000   0:36 /home/orange/go/bin/gopls -remote=auto
+ 148772 1633877 1633877 1633877 pts/12   1633877 Ss+   1000   0:00 /bin/bash
+ 148772 2345920 2345920 2345920 ?             -1 Ssl   1000   0:12 /home/orange/go/bin/gopls -remote=auto
+ 148772 2463164 2463164 2463164 pts/13   2463164 Ss+   1000   0:00 /bin/bash
+ 148772 2791028 2791028 2791028 pts/14   2791028 Ss+   1000   0:00 /bin/bash
+ 148772 2798220 2798220 2798220 ?             -1 Ssl   1000   0:06 /home/orange/go/bin/gopls -remote=auto
+ 148772 2798497 2798497 2798497 pts/15   2798497 Ss+   1000   0:00 /bin/bash
+ 148772 3126717 3126717 3126717 ?             -1 Ss    1000   0:00 /bin/bash
+3126717 3126718 3126717 3126717 ?             -1 S     1000   0:00 sleep 1
+3126717 3126720 3126717 3126717 ?             -1 S     1000   0:00 grep -E 148772|3126718
+#+end_results
+
+- 親 ppid: 1, pid: 148772 ~//home/orange/.guix-profile/bin/emacs~
+- 子 ppid: 148772, pid: 3126717 ~/bin/bash~
+- 子 ppid: 3126717, pid: 3126718 ~sleep 1~
+  ~/bin/bash~, ~sleep 1~, ~grep -E 148772|3126718~ はPGID(プロセスグループID)が同じである
+
+デーモンの特徴
+
+- 端末から入出力する必要がないので、端末が割り当てられていない
+- あらゆるログインセッションが終了しても影響を受けないように、独自のセッションを持つ
+- デーモンを生成したプロセスがデーモンの終了を気にしなくていいように、initが親になっている
+
+#+caption: デーモンの場合
+#+begin_src shell
+  ps ajx | grep dockerd
+#+end_src
+
+#+RESULTS:
+#+begin_results
+   PPID     PID    PGID     SID TTY        TPGID STAT   UID   TIME COMMAND
+      1 2952095 2952095 2952095 ?             -1 Ssl      0  23:14 /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock
+3130365 3130367 3130365 3130365 ?             -1 S     1000   0:00 grep dockerd
+#+end_results
+
+- 親プロセスはinit(PPIDが1)
+- TTYは割り当てられていない
+- セッションIDがPIDと同じ
+
+#+caption: 経過時間の実験
+#+begin_src shell
+  time sleep 1
+  # real	0m1.002s
+  # user	0m0.002s
+  # sys	0m0.001s
+#+end_src
+
+- realはほぼ1秒。開始直後にCPUを手放しスリープ状態になり、1秒後にCPUをまた使いはじめても終了処理をするだけなので、userとsysはほぼ0
 
 ** TODO [[https://www.kanzennirikaisita.com/posts/linux-learning-roadmap][Linux について学ぶおすすめの流れ【書籍を中心に紹介】 - 完全に理解した.com]]
 おすすめの本の紹介記事。
