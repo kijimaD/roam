@@ -79,7 +79,6 @@ FROM amazonlinux:2 as release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
-COPY --from=gobuild /work/weight/timeseries.png /roam/public/timeseries.png
 
 CMD /bin/sh
 
