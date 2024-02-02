@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-02 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 29: Simutransのコードを読む</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 29: Simutransのコードを読む</h1>
+
+<div id="outline-container-orgc3db0e9" class="outline-2">
+<h2 id="orgc3db0e9"><a href="#orgc3db0e9">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgc3db0e9">
+<ul class="org-ul">
+<li class="off"><code>[&#xa0;]</code> 作成</li>
+<li class="off"><code>[&#xa0;]</code> レビュー</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf854bbf" class="outline-2">
+<h2 id="orgf854bbf"><a href="#orgf854bbf">概要</a></h2>
+<div class="outline-text-2" id="text-orgf854bbf">
+<p>
+Simutransはオープンソースの鉄道会社シミュレーションゲームである。コードを読む。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfd635f0" class="outline-2">
+<h2 id="orgfd635f0"><a href="#orgfd635f0">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgfd635f0">
+</div>
+<div id="outline-container-org951c906" class="outline-3">
+<h3 id="org951c906"><a href="#org951c906"><span class="done DONE">DONE</span> 建設したときに何が起こっているか</a></h3>
+<div class="outline-text-3" id="text-org951c906">
+<ul class="org-ul">
+<li>simtool.ccにツール類の定義がある。建物破壊、地形改変、町の建設、スケジュール指定など
+<ul class="org-ul">
+<li>クリックしたときの動作がすべて関数workとして定義されているよう</li>
+</ul></li>
+<li>tool_build_way_tが線路系建設クラスか
+<ul class="org-ul">
+<li>構成メソッド…
+<ul class="org-ul">
+<li>get_desc</li>
+<li>get_icon</li>
+<li>get_tooltip
+<ul class="org-ul">
+<li>クリックしたときに出るやつ</li>
+</ul></li>
+<li>get_defaultparam</li>
+<li>is_selected</li>
+<li>init</li>
+<li>get_watype
+<ul class="org-ul">
+<li>get-desc()でdescを取り出し、descからget_wtyp()でwaytypeを取り出す</li>
+</ul></li>
+<li>start_at</li>
+<li>is_valid_pos</li>
+<li>calc_route
+<ul class="org-ul">
+<li>線路建設時のルート検索。線路建設時は始点と終点を指定する</li>
+<li>shift押すとできるだけ直線するところを確認した</li>
+</ul></li>
+<li>do_work</li>
+<li>mark_tiles</li>
+</ul></li>
+<li>waytype_tが交通手段を示す</li>
+<li>年月によってdescriptionが変わる</li>
+<li>playerをとる関数が多いのは、プレイヤーが複数いるからか</li>
+<li><code>grund_t *gr=welt-&gt;lookup(new_start);</code> でクリック開始時の地面オブジェクトを取得する
+<ul class="org-ul">
+<li>new_startは3次元座標オブジェクト(coord3d)</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8a485d5" class="outline-2">
+<h2 id="org8a485d5"><a href="#org8a485d5">Memo</a></h2>
+<div class="outline-text-2" id="text-org8a485d5">
+<ul class="org-ul">
+<li>lineは路線のことか</li>
+<li>停車を登録するメソッドがある</li>
+<li>スケジュールの中に停車駅がある。スケジュールを追加、停車駅を追加、スケジュールを割り当てという流れ</li>
+
+<li>近隣8タイルの高さ情報を取得する
+<ul class="org-ul">
+<li><a href="https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/surface.cc#L197">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/surface.cc#L197</a></li>
+</ul></li>
+<li>モニュメントへの経路を探索する
+<ul class="org-ul">
+<li>親クラスのplacefinder_tからオーバーライドしている</li>
+</ul></li>
+<li>2回クリックのクラスがある</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>線路建設は2回クリックが必要。開始と終点</label><pre class="src src-git-permalink">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/tool/simmenu.h#L374-L378
+</pre>
+</div>
+
+<div class="results" id="orgd6051c3">
+<p>
+/**
+</p>
+<ul class="org-ul">
+<li>Class for tools needing two clicks (e.g. building ways).</li>
+<li>Dragging is also possible.</li>
+</ul>
+<p>
+ */
+class two_click_tool_t : public tool_t {
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>経路探索</label><pre class="src src-git-permalink">
+</pre>
+</div>
+
+<div class="results" id="org7e04f4f">
+<p>
+/**
+</p>
+<ul class="org-ul">
+<li>Search a free place for a monument building</li>
+<li>Im Gegensatz zum building_placefinder_t werden Strassen auf den Raendern</li>
+<li>toleriert.</li>
+</ul>
+<p>
+ */
+class monument_placefinder_t : public placefinder_t {
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li><code>get_tile_list</code> でそのタイルの一覧を取っているようだ</li>
+<li>レベルを取得する方法
+<ul class="org-ul">
+<li><code>uint16 level = gb-&gt;get_tile()-&gt;get_desc()-&gt;get_level()+1;</code></li>
+<li>建物がタイル、情報、高さを持っている</li>
+</ul></li>
+<li>市庁舎かを確認する方法
+<code>add_gb-&gt;get_tile()-&gt;get_desc()-&gt;is_townhall()</code></li>
+<li>座標のほかに、町の家リストがある</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>家リストから消す</label><pre class="src src-git-permalink">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/simcity.cc#L611-L617
+</pre>
+</div>
+
+<div class="results" id="orgb8f8ba4">
+<p>
+// this function removes houses from the city house list
+void stadt_t::remove_gebaeude_from_stadt(gebaeude_t* gb)
+{
+	buildings.remove(gb);
+	gb-&gt;set_stadt(NULL);
+	recalc_city_size();
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>重み付けしたベクタ。要素をソートするのに役立つ
+<ul class="org-ul">
+<li><code>weighted_vector_tpl</code></li>
+<li>各要素が重みを保持している</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>重みを考慮してランダムに選択する</label><pre class="src src-git-permalink">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/world/simcity.cc#L739-L753
+</pre>
+</div>
+
+<div class="results" id="org060f49c">
+<p>
+stadt_t::factory_entry_t* stadt_t::factory_set_t::get_random_entry()
+{
+	if(  total_remaining&gt;0  ) {
+		sint32 weight = simrand(total_remaining);
+		for(factory_entry_t &amp; entry : entries) {
+			if(  entry.remaining&gt;0  ) {
+				if(  weight&lt;entry.remaining  ) {
+					return &amp;entry;
+				}
+				weight -= entry.remaining;
+			}
+		}
+	}
+	return NULL;
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>entriesはイベントキューみたいな感じなのかな。各建物に対する操作を保持して、処理する</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>タイルから削除する</label><pre class="src src-git-permalink">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/tool/simtool.cc#L431-L434
+</pre>
+</div>
+
+<div class="results" id="org51fe82f">
+<p>
+/* delete things from a tile
+</p>
+<ul class="org-ul">
+<li>citycars and pedestrian first and then go up to queue to more important objects</li>
+</ul>
+<p>
+ */
+bool tool_remover_t::tool_remover_intern(player_t *player, koord3d pos, sint8 type, const char *&amp;msg)
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>三次元座標はいい感じに抽象化されている</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/simutrans/blob/bf0bd099857494ed35a5b6e210ae02eba2cdfe36/src/simutrans/dataobj/koord3d.h#L16-L19
+</pre>
+</div>
+
+<div class="results" id="org7a86b0c">
+<p>
+/**
+</p>
+<ul class="org-ul">
+<li>3D Coordinates</li>
+</ul>
+<p>
+ */
+class koord3d
+</p>
+
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-02 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 28: 交通シミュレーションゲームを作る</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 28: 交通シミュレーションゲームを作る</h1>
+
+<div id="outline-container-orgd3891ea" class="outline-2">
+<h2 id="orgd3891ea"><a href="#orgd3891ea">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgd3891ea">
+<ul class="org-ul">
+<li class="off"><code>[&#xa0;]</code> 作成中</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0fa7961" class="outline-2">
+<h2 id="org0fa7961"><a href="#org0fa7961">概要</a></h2>
+<div class="outline-text-2" id="text-org0fa7961">
+<p>
+都市シミュレーションを作成する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc75b8b0" class="outline-2">
+<h2 id="orgc75b8b0"><a href="#orgc75b8b0">導入</a></h2>
+<div class="outline-text-2" id="text-orgc75b8b0">
+<p>
+都市と交通に着目したゲームを作る。
+</p>
+</div>
+</div>
+<div id="outline-container-org36fcd04" class="outline-2">
+<h2 id="org36fcd04"><a href="#org36fcd04">Tasks</a></h2>
+<div class="outline-text-2" id="text-org36fcd04">
+</div>
+<div id="outline-container-org6283562" class="outline-3">
+<h3 id="org6283562"><a href="#org6283562"><span class="todo TODO">TODO</span> 建物をエンティティ化する</a></h3>
+<div class="outline-text-3" id="text-org6283562">
+<p>
+建物をエンティティとして描画させる。
+</p>
+
+<p>
+まずECSを導入した。
+</p>
+</div>
+</div>
+<div id="outline-container-org8c1187d" class="outline-3">
+<h3 id="org8c1187d"><a href="#org8c1187d"><span class="todo TODO">TODO</span> ebiten UIを使う</a></h3>
+<div class="outline-text-3" id="text-org8c1187d">
+<p>
+扱いづらい方法でやっているので変える。UIというか、別の箇所にも及んでいるので大変そうだ。
+</p>
+
+<ul class="org-ul">
+<li>ゲームステートによって常時描画するもの(メニュー・アイコンとか)と、動的に変わるもの(デバッグ表示)がある。</li>
+<li>デバッグメニューは頻繁に文字が書き換わるわけだが、それをいい感じにやる方法がわからないな
+<ul class="org-ul">
+<li>再作成すると更新できるが、メモリリークして急速に重くなっていく</li>
+<li>Update()でテキストを更新するようなフックが必要</li>
+<li>デバッグ表示があったのでそれにした</li>
+</ul></li>
+<li>日付を書き換える方法がわからない。ボタンはクリック時のハンドラがあるが、時間経過のハンドラはない</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org812c836" class="outline-3">
+<h3 id="org812c836"><a href="#org812c836"><span class="todo TODO">TODO</span> UIまわりをECSっぽくする</a></h3>
+<div class="outline-text-3" id="text-org812c836">
+<p>
+UIは全部構造体のフィールドとして持っている項目を描画しているという感じ。ECSっぽくないので変える。
+</p>
+
+<p>
+前のローグライクでは、コンポーネントをかなり使っていた。UI描画はスタティックメソッドで、mainから呼び出す感じ。mainにあるグローバルなゲームステートによって変わるから、systemにはなくmainから呼び出す感じか。systemだと常時実行という感じ。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0cdede7" class="outline-3">
+<h3 id="org0cdede7"><a href="#org0cdede7"><span class="todo TODO">TODO</span> タイルを1次元配列にする</a></h3>
+<div class="outline-text-3" id="text-org0cdede7">
+<ul class="org-ul">
+<li>3次元は必要ない</li>
+<li>2次元もループを回す手間がかかるので、1次元に入れる。ヘルパーを用意すれば扱いやすくなる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org177199d" class="outline-3">
+<h3 id="org177199d"><a href="#org177199d"><span class="todo TODO">TODO</span> 連続建設と単体建設を分ける</a></h3>
+<div class="outline-text-3" id="text-org177199d">
+<p>
+道路系は範囲建設だが、建物系は単体建設になる。
+</p>
+</div>
+</div>
+<div id="outline-container-org531dea8" class="outline-3">
+<h3 id="org531dea8"><a href="#org531dea8"><span class="todo TODO">TODO</span> バス停の詳細情報を見られるようにする</a></h3>
+<div class="outline-text-3" id="text-org531dea8">
+<p>
+建設物の情報を保存する。
+</p>
+
+<p>
+エンティティ化したあとにやる。
+</p>
+</div>
+</div>
+<div id="outline-container-org493deae" class="outline-3">
+<h3 id="org493deae"><a href="#org493deae"><span class="todo TODO">TODO</span> 地形に付随したものをチェックできるようにする</a></h3>
+<div class="outline-text-3" id="text-org493deae">
+<p>
+デバッグしやすくする。
+</p>
+</div>
+</div>
+<div id="outline-container-org4347c80" class="outline-3">
+<h3 id="org4347c80"><a href="#org4347c80"><span class="todo TODO">TODO</span> バス停に名前がつくようにする</a></h3>
+<div class="outline-text-3" id="text-org4347c80">
+</div>
+</div>
+
+<div id="outline-container-org3b245d2" class="outline-3">
+<h3 id="org3b245d2"><a href="#org3b245d2"><span class="todo TODO">TODO</span> ebitenUIを使う</a></h3>
+<div class="outline-text-3" id="text-org3b245d2">
+<p>
+オレオレUIだからあまり綺麗じゃない。
+</p>
+</div>
+</div>
+<div id="outline-container-org75c290e" class="outline-3">
+<h3 id="org75c290e"><a href="#org75c290e"><span class="todo TODO">TODO</span> オブジェクトを道路上に走らせる</a></h3>
+<div class="outline-text-3" id="text-org75c290e">
+<p>
+つながっている道路だけ走れる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdd8e2c6" class="outline-3">
+<h3 id="orgdd8e2c6"><a href="#orgdd8e2c6"><span class="todo TODO">TODO</span> 高さについて考える</a></h3>
+<div class="outline-text-3" id="text-orgdd8e2c6">
+<p>
+どうすればいいのか見当もつかない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfcd427b" class="outline-3">
+<h3 id="orgfcd427b"><a href="#orgfcd427b"><span class="todo TODO">TODO</span> つながっているを表現する(平面)</a></h3>
+<div class="outline-text-3" id="text-orgfcd427b">
+<ul class="org-ul">
+<li>経路探索ライブラリがあるので、そんなに難しくない可能性がある</li>
+<li>毎回道路に走るたびに乗り物に計算させてつながっているかは判定させればよさそう。つながっているかはベースの座標によって変わるので。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org218ad1d" class="outline-3">
+<h3 id="org218ad1d"><a href="#org218ad1d"><span class="todo TODO">TODO</span> つながっているを表現する(立体)</a></h3>
+<div class="outline-text-3" id="text-org218ad1d">
+<p>
+異なる高さの道路は接続できない。スロープでしかつながらない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf49743f" class="outline-3">
+<h3 id="orgf49743f"><a href="#orgf49743f"><span class="todo TODO">TODO</span> 道路の方向を自動決定する</a></h3>
+<div class="outline-text-3" id="text-orgf49743f">
+<p>
+エンティティ化した後にやる。
+</p>
+
+<p>
+設置したときに周囲8マスの状態に応じて画像を変化させる。横にあれば曲がるアイコンになるだろう。
+</p>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0821c46" class="outline-2">
+<h2 id="org0821c46"><a href="#org0821c46">参考</a></h2>
+<div class="outline-text-2" id="text-org0821c46">
+<p>
+参考になりそうなリンクを書いておく。
+</p>
+
+<p>
+タイルマップパーサ。
+<a href="https://github.com/lafriks/go-tiled">lafriks/go-tiled: Go library to parse Tiled map editor file format (TMX) and render map to image</a>
+</p>
+
+<p>
+都市ゲーム。
+<a href="https://code.rocket9labs.com/tslocum/citylimits">tslocum/citylimits: City-building simulation video game - citylimits - Rocket Nine Labs</a>
+</p>
+
+<p>
+経路探索ライブラリ。
+<a href="https://github.com/beefsack/go-astar">beefsack/go-astar: Go implementation of the A* search algorithm</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgff1f36d" class="outline-2">
+<h2 id="orgff1f36d"><a href="#orgff1f36d">Archives</a></h2>
+<div class="outline-text-2" id="text-orgff1f36d">
+</div>
+<div id="outline-container-orgb32e11a" class="outline-3">
+<h3 id="orgb32e11a"><a href="#orgb32e11a"><span class="done DONE">DONE</span> ベースを作る</a></h3>
+<div class="outline-text-3" id="text-orgb32e11a">
+<p>
+参考コードを元にする。不要そうなところを削除していく。
+</p>
+
+<ul class="org-ul">
+<li class="on"><code>[X]</code> タイルセットを変えた</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org33008ec" class="outline-3">
+<h3 id="org33008ec"><a href="#org33008ec"><span class="done DONE">DONE</span> 道路画像を登録する</a></h3>
+<div class="outline-text-3" id="text-org33008ec">
+<ul class="org-ul">
+<li>後から追加する方法がわからない</li>
+<li>描いたほうがはやそう
+<ul class="org-ul">
+<li>gimpで追加した</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2eae462" class="outline-3">
+<h3 id="org2eae462"><a href="#org2eae462"><span class="done DONE">DONE</span> ブルドーザーアイコンが消えた</a></h3>
+<div class="outline-text-3" id="text-org2eae462">
+<p>
+タイルセットの更新を忘れていたっぽい。Tilesで保存し直したら差分が出て直った。
+</p>
+</div>
+</div>
+<div id="outline-container-org9bd11b1" class="outline-3">
+<h3 id="org9bd11b1"><a href="#org9bd11b1"><span class="done DONE">DONE</span> バス停を作る</a></h3>
+<div class="outline-text-3" id="text-org9bd11b1">
+<p>
+とりあえず画像は後回しにして、追加してみる。
+</p>
+</div>
+</div>
+<div id="outline-container-org300e2a4" class="outline-3">
+<h3 id="org300e2a4"><a href="#org300e2a4"><span class="done DONE">DONE</span> コード整理</a></h3>
+<div class="outline-text-3" id="text-org300e2a4">
+<p>
+全体ざっくり読んでみる。
+</p>
+</div>
+</div>
+<div id="outline-container-org114cb76" class="outline-3">
+<h3 id="org114cb76"><a href="#org114cb76"><span class="done DONE">DONE</span> 自動リリース</a></h3>
+<div class="outline-text-3" id="text-org114cb76">
+<p>
+設定する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd9938b6" class="outline-3">
+<h3 id="orgd9938b6"><a href="#orgd9938b6"><span class="done DONE">DONE</span> CIチェック</a></h3>
+<div class="outline-text-3" id="text-orgd9938b6">
+<p>
+ライブラリの依存関係が多いので、イメージを作成する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb8b479b" class="outline-3">
+<h3 id="orgb8b479b"><a href="#orgb8b479b"><span class="done DONE">DONE</span> バス停の位置がずれている</a></h3>
+<div class="outline-text-3" id="text-orgb8b479b">
+<p>
+設置時にカーソルとずれているのを直す。
+</p>
+
+<p>
+建物は高さが違う。描画時に高く表示されていた。
+</p>
+</div>
+</div>
+<div id="outline-container-org838ab01" class="outline-3">
+<h3 id="org838ab01"><a href="#org838ab01"><span class="done DONE">DONE</span> バス停を道路と重ねられるようにする</a></h3>
+<div class="outline-text-3" id="text-org838ab01">
+<p>
+透過して重ねる。
+</p>
+
+<ul class="org-ul">
+<li>TilesとTilesImage</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5186142" class="outline-3">
+<h3 id="org5186142"><a href="#org5186142"><span class="done DONE">DONE</span> セルの大きさを統一する</a></h3>
+<div class="outline-text-3" id="text-org5186142">
+<p>
+今はスナップの精度が違うのでずれる。同じように建設してもずれる。
+</p>
+
+<ul class="org-ul">
+<li>道路を4マスから1マスにした。自分で建てる建物は1マスでいいだろう。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb29dfc4" class="outline-3">
+<h3 id="orgb29dfc4"><a href="#orgb29dfc4"><span class="done DONE">DONE</span> タイル画像を直接触っている部分があり扱いにくい</a></h3>
+<div class="outline-text-3" id="text-orgb29dfc4">
+<p>
+タイル画像が平原なら〜という箇所が大量に存在する。タイル画像ではなくオブジェクトで判定したいよな。
+</p>
+
+<ul class="org-ul">
+<li>地形もオブジェクトとする(エンティティではない)</li>
+<li>建物もエンティティとする
+<ul class="org-ul">
+<li>Renderコンポートネントを登録して描画する</li>
+</ul></li>
+<li>diggerではタイルは配列で表現されていた。2次元配列ではない。そうだ、タイルに関しては3次元でなくてよい。各座標に1つしかないのだから</li>
+<li>タイルは配列にする</li>
+<li>描画エンティティが座標と高さを持つようにする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org27939eb" class="outline-3">
+<h3 id="org27939eb"><a href="#org27939eb"><span class="done CLOSE">CLOSE</span> マップと同じにできないのか</a></h3>
+<div class="outline-text-3" id="text-org27939eb">
+<p>
+属性とマップの画像を別々に持っている。いちいちfor文で取り出している。
+</p>
+</div>
+</div>
+<div id="outline-container-org2b61452" class="outline-3">
+<h3 id="org2b61452"><a href="#org2b61452"><span class="done DONE">DONE</span> バス停を道路上だけに建設できるようにする</a></h3>
+<div class="outline-text-3" id="text-org2b61452">
+<p>
+tiletype分岐させることで、バス停を道路上へ建設できるようになった。
+</p>
+</div>
+</div>
+<div id="outline-container-orged1be31" class="outline-3">
+<h3 id="orged1be31"><a href="#orged1be31"><span class="done DONE">DONE</span> デプロイする</a></h3>
+<div class="outline-text-3" id="text-orged1be31">
+<p>
+先例があるので簡単にできそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org0f26bae" class="outline-3">
+<h3 id="org0f26bae"><a href="#org0f26bae"><span class="done DONE">DONE</span> ECSまわりのコードを読む</a></h3>
+<div class="outline-text-3" id="text-org0f26bae">
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
