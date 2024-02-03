@@ -9,8 +9,14 @@ def to_rellink(inp: str) -> str:
 def build_graph() -> any:
     """Build a graph from the org-roam database."""
     graph = nx.DiGraph()
-    home = pathlib.Path.home()
-    conn = sqlite3.connect("org-roam.db")
+
+    graph = process_db(graph, "org-roam.db")
+    graph = process_db(graph, "./denote/org-roam.db")
+
+    return graph
+
+def process_db(graph: any, dbpath: str) -> any:
+    conn = sqlite3.connect(dbpath)
 
     # Query all nodes first
     nodes = conn.execute("SELECT file, id, title FROM nodes WHERE level = 0;")
