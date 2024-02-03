@@ -69,30 +69,27 @@ d3.json("js/graph.json").then(function(data) {
     handleMouseOver = (d, i) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", "#999")
-            .attr("r", nde.attr("r") * 1.4);
+           .attr("r", nde.attr("r") * 1.4);
 
         d3.selectAll("text")
-            .filter('#' + CSS.escape(d.currentTarget.id))
-            .style("display", "block");
+          .filter('#' + CSS.escape(d.currentTarget.id))
+          .style("font-size", "2em");
 
         d3.selectAll("line")
-            .attr("stroke-width", 1);
+          .attr("stroke-width", 1);
 
         d3.selectAll("line")
-            .filter((l, _) =>
-                    l.source.index == i.index ||
-                    l.target.index == i.index)
-            .attr("stroke-width", 8);
+          .filter((l, _) => l.source.index == i.index || l.target.index == i.index)
+          .attr("stroke-width", 8);
     };
     handleMouseOut = (d, _) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", nodeColor)
-            .attr("r", nde.attr("r") / 1.4);
+           .attr("r", nde.attr("r") / 1.4);
 
         d3.selectAll("text")
-            .filter('#' + CSS.escape(d.currentTarget.id))
-            .style("display", "none");
-
+          .filter('#' + CSS.escape(d.currentTarget.id))
+          .style("font-size", "1em");
     };
 
     // Graph data
@@ -172,7 +169,7 @@ d3.json("js/graph.json").then(function(data) {
           .style("fill", "#222")
           .style("font-size", "15px")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -25)
+          .attr("dy", -12)
           .attr("id", d => d.id.toLowerCase())
           .attr("class", "node_label")
 
