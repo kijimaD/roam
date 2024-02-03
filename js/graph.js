@@ -79,10 +79,10 @@ d3.json("js/graph.json").then(function(data) {
           .attr("stroke-width", 1);
 
         d3.selectAll("line")
-               .filter((l, _) => {
-                   return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
-               })
-               .attr("stroke-width", 8);
+          .filter((l, _) => {
+            return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
+          })
+          .attr("stroke-width", 8);
     };
     handleMouseOut = (d, _) => {
         nde = d3.select(d.currentTarget);
