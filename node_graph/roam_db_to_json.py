@@ -10,13 +10,14 @@ def build_graph() -> any:
     """Build a graph from the org-roam database."""
     graph = nx.DiGraph()
 
-    graph = process_db(graph, "org-roam.db")
-    graph = process_db(graph, "./denote/org-roam.db")
+    graph = process_db(graph, "./")
+    graph = process_db(graph, "./denote/")
 
     return graph
 
-def process_db(graph: any, dbpath: str) -> any:
-    conn = sqlite3.connect(dbpath)
+def process_db(graph: any, pathprefix: str) -> any:
+    """pathprefix は/で終わらせること"""
+    conn = sqlite3.connect(pathprefix+"org-roam.db")
 
     # Query all nodes first
     nodes = conn.execute("SELECT file, id, title FROM nodes WHERE level = 0;")
@@ -29,7 +30,7 @@ def process_db(graph: any, dbpath: str) -> any:
     graph.add_nodes_from((n[1], {
         "label": n[2].strip("\""),
         "tooltip": n[2].strip("\""),
-        "lnk": to_rellink(n[0]).lower(),
+        "lnk": pathprefix+to_rellink(n[0]),
         "id": n[1].strip("\"")
     }) for n in  nodes)
     graph.add_edges_from(n for n in links if n[0] in graph.nodes and n[1] in graph.nodes)
