@@ -1,7 +1,7 @@
 d3.json("js/graph.json").then(function(data) {
     // Canvas size
     height = 1000;
-    width = 2400;
+    width = 2000;
     scale = 1.0;
     // Radius function for nodes. Node radius are function of centrality
     radius = d => {
@@ -79,7 +79,9 @@ d3.json("js/graph.json").then(function(data) {
           .attr("stroke-width", 1);
 
         d3.selectAll("line")
-          .filter((l, _) => l.source.index == i.index || l.target.index == i.index)
+          .filter((l, _) => {
+            return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
+          })
           .attr("stroke-width", 8);
     };
     handleMouseOut = (d, _) => {
@@ -90,6 +92,9 @@ d3.json("js/graph.json").then(function(data) {
         d3.selectAll("text")
           .filter('#' + CSS.escape(d.currentTarget.id))
           .style("font-size", "1em");
+
+        d3.selectAll("line")
+          .attr("stroke-width", 1);
     };
 
     // Graph data
@@ -156,7 +161,6 @@ d3.json("js/graph.json").then(function(data) {
           .join("g");
     const label_background = label.append("text")
           .style("font-size", "45px")
-          .style("font-family", "Ultra")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
           .attr("dy", -30)
           .attr("id", d => d.id.toLowerCase())
