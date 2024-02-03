@@ -11,7 +11,6 @@ def build_graph() -> any:
     graph = nx.DiGraph()
 
     graph = process_db(graph, "./")
-    graph = process_db(graph, "./denote/")
 
     return graph
 
