@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-03 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 27: Cコンパイラを書く</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 27: Cコンパイラを書く</h1>
+
+<div id="outline-container-org83f50c4" class="outline-2">
+<h2 id="org83f50c4"><a href="#org83f50c4">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org83f50c4">
+<ul class="org-ul">
+<li class="off"><code>[&#xa0;]</code> 作成</li>
+<li class="off"><code>[&#xa0;]</code> レビュー</li>
+</ul>
+
+<p>
+作成中。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2455f4b" class="outline-2">
+<h2 id="org2455f4b"><a href="#org2455f4b">概要</a></h2>
+<div class="outline-text-2" id="text-org2455f4b">
+<p>
+プログラミング言語を作成する。自作言語だとだるくなるので、<a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C language</a>の言語仕様でコンパイラを作る。
+</p>
+
+<ul class="org-ul">
+<li>8ccを参考にする。アセンブラの部分が参考になる</li>
+<li>いきなりGoを書いているけど、いったん理解してからがいい感じがする&#x2026;</li>
+<li>パーサーとかレキサーを他から持ってきているので、乖離していく</li>
+<li>ちょっとずつ進めること、動作テストコードを書く。各コミットでテストがあるので、追いつくことはできる</li>
+<li>まだ1文しか考えなくてよい</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge651796" class="outline-2">
+<h2 id="orge651796"><a href="#orge651796">導入</a></h2>
+<div class="outline-text-2" id="text-orge651796">
+<p>
+背景。
+</p>
+</div>
+</div>
+<div id="outline-container-org40331e4" class="outline-2">
+<h2 id="org40331e4"><a href="#org40331e4">Tasks</a></h2>
+<div class="outline-text-2" id="text-org40331e4">
+</div>
+<div id="outline-container-org6e4cb31" class="outline-3">
+<h3 id="org6e4cb31"><a href="#org6e4cb31"><span class="todo WIP">WIP</span> 8ccを読む</a></h3>
+<div class="outline-text-3" id="text-org6e4cb31">
+<p>
+まず全体像を把握する。
+</p>
+</div>
+</div>
+<div id="outline-container-org0d8935f" class="outline-3">
+<h3 id="org0d8935f"><a href="#org0d8935f"><span class="todo TODO">TODO</span> 終端のチェックをやる</a></h3>
+<div class="outline-text-3" id="text-org0d8935f">
+<p>
+セミコロンをチェックする。
+</p>
+</div>
+</div>
+<div id="outline-container-org164fe6b" class="outline-3">
+<h3 id="org164fe6b"><a href="#org164fe6b"><span class="todo TODO">TODO</span> 変数宣言まわりで式の評価順が間違っているのを直す</a></h3>
+<div class="outline-text-3" id="text-org164fe6b">
+<p>
+なぜか違う値になる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>期待している答えは3だが、4が返ってくる</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">'int a = 1;a+2'</span> | go run ./main.go &gt; gogo.s
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>変数を使ってコンパイルしたほう。4は誤っている</label><pre class="src src-asm"><span class="org-keyword">.text</span>
+        <span class="org-keyword">.global</span> mymain
+<span class="org-function-name">mymain</span>:
+        <span class="org-keyword">mov</span> $1, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">mov</span> <span class="org-variable-name">%eax</span>, -4(<span class="org-variable-name">%rbp</span>)
+        <span class="org-keyword">mov</span> $2, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">push</span> <span class="org-variable-name">%rax</span>
+        <span class="org-keyword">mov</span> <span class="org-variable-name">%eax</span>, -4(<span class="org-variable-name">%rbp</span>)
+        <span class="org-keyword">pop</span> <span class="org-variable-name">%rbx</span>
+        <span class="org-keyword">add</span> <span class="org-variable-name">%ebx</span>, <span class="org-variable-name">%eax</span>
+        <span class="org-keyword">ret</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf4354a2" class="outline-3">
+<h3 id="orgf4354a2"><a href="#orgf4354a2"><span class="todo TODO">TODO</span> identの許容文字を明示する</a></h3>
+<div class="outline-text-3" id="text-orgf4354a2">
+<p>
+小文字、大文字、アンダースコアのみにする。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org235e97d" class="outline-2">
+<h2 id="org235e97d"><a href="#org235e97d">Archives</a></h2>
+<div class="outline-text-2" id="text-org235e97d">
+</div>
+<div id="outline-container-org7bda965" class="outline-3">
+<h3 id="org7bda965"><a href="#org7bda965"><span class="done DONE">DONE</span> 関数呼び出しを実装する</a></h3>
+<div class="outline-text-3" id="text-org7bda965">
+<p>
+関数定義は後でやる。
+</p>
+</div>
+</div>
+<div id="outline-container-org945d5d8" class="outline-3">
+<h3 id="org945d5d8"><a href="#org945d5d8"><span class="done DONE">DONE</span> charを実装する</a></h3>
+<div class="outline-text-3" id="text-org945d5d8">
+<p>
+文字列と同じ感じでいけそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org7bebb32" class="outline-3">
+<h3 id="org7bebb32"><a href="#org7bebb32"><span class="done DONE">DONE</span> 文字列のテスト落ちを直す</a></h3>
+<div class="outline-text-3" id="text-org7bebb32">
+<p>
+テスト用のCの関数がintを返すようになっているから、文字列は返せないんだな。8ccではASTで文字列を返すようになっているので、同じ感じにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org9588612" class="outline-3">
+<h3 id="org9588612"><a href="#org9588612"><span class="done DONE">DONE</span> identを直す</a></h3>
+<div class="outline-text-3" id="text-org9588612">
+<p>
+envが初期状態のままになっているようだ。分岐の箇所を間違っていた。
+</p>
+</div>
+</div>
+<div id="outline-container-org2506659" class="outline-3">
+<h3 id="org2506659"><a href="#org2506659"><span class="done DONE">DONE</span> stringを直す</a></h3>
+<div class="outline-text-3" id="text-org2506659">
+<p>
+データラベルが必要。
+</p>
+</div>
+</div>
+<div id="outline-container-org0442182" class="outline-3">
+<h3 id="org0442182"><a href="#org0442182"><span class="done DONE">DONE</span> 文字列テストを書き直す</a></h3>
+<div class="outline-text-3" id="text-org0442182">
+<p>
+printf関数を使って文字列テストをやる。
+</p>
+</div>
+</div>
+<div id="outline-container-org27bfb34" class="outline-3">
+<h3 id="org27bfb34"><a href="#org27bfb34"><span class="done DONE">DONE</span> lexerまわりのリファクタ</a></h3>
+<div class="outline-text-3" id="text-org27bfb34">
+<p>
+細かいやつ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf68d5b6" class="outline-3">
+<h3 id="orgf68d5b6"><a href="#orgf68d5b6"><span class="done CLOSE">CLOSE</span> DeclStatementは中置演算子で書けないか</a></h3>
+<div class="outline-text-3" id="text-orgf68d5b6">
+<p>
+いや、今のコミット時点の8ccと同じように合わせておくのが安全そう。いきなり大変になるし。
+</p>
+
+<p>
+宣言文は <code>int a = 1</code> みたいな文。
+</p>
+
+<p>
+別枠にしているが、中置演算子で共用するときれいにかけるのではないか。型名がなければ代入文で完全に中置にできる。
+</p>
+
+<p>
+int a &ldquo;=&rdquo; 2
+</p>
+
+<p>
+今はidentが特定の名前だったらトークン認識するが、これは最初の判定にイコールを使ったほうがよさそうだ。代入しなおすときに型名はないから。イコールを使えば中置演算子とできそう。
+</p>
+
+<ul class="org-ul">
+<li>宣言文と代入文は使う関数を変えたほうがいいのだろうか</li>
+<li>各ast構造体に型を追加する
+<ul class="org-ul">
+<li>プリミティブ型だけで必要。それぞれintのときは…とかで分岐するから、共通でなくていい</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb03f4d4" class="outline-3">
+<h3 id="orgb03f4d4"><a href="#orgb03f4d4"><span class="done DONE">DONE</span> astのidentをvarにする</a></h3>
+<div class="outline-text-3" id="text-orgb03f4d4">
+<p>
+astの時点でidentの中の、varと確定できるので。lexerの時点ではidentのまま。
+</p>
+</div>
+</div>
+<div id="outline-container-org3bba69d" class="outline-3">
+<h3 id="org3bba69d"><a href="#org3bba69d"><span class="done DONE">DONE</span> ctypeを追加する</a></h3>
+<div class="outline-text-3" id="text-org3bba69d">
+<ul class="org-ul">
+<li>それぞれのASTにctypeを追加する
+<ul class="org-ul">
+<li>不定なものと、確定しているものがある</li>
+</ul></li>
+<li>identをCTYPEに変換する関数を追加する</li>
+<li>型演算の結果を出す関数を追加する</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgcd0a19c" class="outline-3">
+<h3 id="orgcd0a19c"><a href="#orgcd0a19c"><span class="done DONE">DONE</span> ast読み込みの時点で変数を確定する</a></h3>
+<div class="outline-text-3" id="text-orgcd0a19c">
+<p>
+今は変数の確認をasmでやっていて確定するが、それをparserでやる。うーん、変数の確認をするにはobjectを持ってくる必要があるが、面倒だな。
+</p>
+
+<p>
+monkeyではevaluatorでやってる。インタプリタではそうするのが自然に思える。とにかく、コンパイルするので事前にそれぞれの型を確定して、チェックする必要がある。
+</p>
+
+<p>
+とりあえずparserにobjectsを保存するようにして、取り出して確定できるようにする。
+</p>
+
+<ul class="org-ul">
+<li>関数呼び出しを、変数と解釈してしまっている。</li>
+<li><code>f(1)</code> で、 <code>f</code> が見つからないエラー。</li>
+<li><code>f()</code> がidentになっているのが問題</li>
+<li>token.identは共用のもので、ast.callとast.varに分岐させたい</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-03 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 23: unusedを読む</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 23: unusedを読む</h1>
+<p>
+unusedは使われてないパッケージの識別子を探す<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>ツールである。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/gostaticanalysis/unused">gostaticanalysis/unused: Analyzer: unused finds unused package level identifiers</a></li>
+</ul>
+
+<div id="outline-container-org9230695" class="outline-2">
+<h2 id="org9230695"><a href="#org9230695">memo</a></h2>
+<div class="outline-text-2" id="text-org9230695">
+</div>
+<div id="outline-container-org82af2df" class="outline-3">
+<h3 id="org82af2df"><a href="#org82af2df">検知部分</a></h3>
+<div class="outline-text-3" id="text-org82af2df">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>ベースがskipする形。使われてないものがあるとreportを実行する</label><pre class="src src-git-permalink">https://github.com/gostaticanalysis/unused/blob/17bc41fa0d5fdae5bb1a28f83236fa0dc574b666/unused.go#L23-L32
+</pre>
+</div>
+
+<div class="results" id="orged49e2b">
+<p>
+func run(pass *analysis.Pass) (interface{}, error) {
+	m := pass.ResultOf[ident.Analyzer].(ident.Map)
+	for o := range m {
+		if !skip(o) &amp;&amp; len(m[o]) <code>= 1 {
+			n :</code> m[o][0]
+			pass.Reportf(n.Pos(), &ldquo;%s is unused&rdquo;, n.Name)
+		}
+	}
+	return nil, nil
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>mにはmapで識別子が入っている</li>
+<li>どこか別で呼び出されるとlen(m[o])は1より大きくなる</li>
+<li>一度しか出現してないと、スライスの長さは1になる(定義の1回分)</li>
+<li>m[o]には*ast.Identの配列が入ってる</li>
+<li>skip()はいったんおいておいて、ロジックは明快
+<ul class="org-ul">
+<li>識別子の数が1なら定義でしか出てきてないので、呼び出されてないことになる</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org55c4e70" class="outline-3">
+<h3 id="org55c4e70"><a href="#org55c4e70">skip関数</a></h3>
+<div class="outline-text-3" id="text-org55c4e70">
+<p>
+本質的な関数。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>最初の分岐</label><pre class="src src-git-permalink">https://github.com/gostaticanalysis/unused/blob/17bc41fa0d5fdae5bb1a28f83236fa0dc574b666/unused.go#L36-L38
+</pre>
+</div>
+
+<div class="results" id="orga61fada">
+<p>
+if o <code>= nil || o.Parent() =</code> types.Universe || o.Exported() {
+	return true
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>なんで代入なんだろう</li>
+<li>objectがnilであれスキップ</li>
+<li>parentがUniverseスコープ…つまり組み込みの識別子であればスキップ</li>
+<li>公開した識別子であればスキップ。パッケージ外で使われてる可能性があるから</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>パッケージ名はスキップする</label><pre class="src src-git-permalink">https://github.com/gostaticanalysis/unused/blob/17bc41fa0d5fdae5bb1a28f83236fa0dc574b666/unused.go#L41-L42
+</pre>
+</div>
+
+<div class="results" id="orgcb0af59">
+<p>
+case *types.PkgName:
+	return true
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>types.Objectで分岐する
+<ul class="org-ul">
+<li>パッケージ名の場合
+<ul class="org-ul">
+<li>飛ばす</li>
+<li>パッケージ名は明らかに1回しか出てこないので、まあわかる</li>
+</ul></li>
+<li>変数の場合
+<ul class="org-ul">
+<li>特定のケースでスキップ</li>
+<li>types.Varではvarがくるときとfieldが来るときがある。フィールドを初期化するときのものか</li>
+<li>オブジェクトのフィールド、無名関数、などが関係する</li>
+</ul></li>
+<li>関数の場合
+<ul class="org-ul">
+<li>object名がmainかつパッケージ名がmainのときはスキップ
+<ul class="org-ul">
+<li>mainパッケージのmain()は呼び出しはない</li>
+</ul></li>
+<li>object名がinitかつスコープが親と同じ場合スキップ</li>
+<li>メソッドだと、インターフェース内の関数を実装していれば使っているということになる
+<ul class="org-ul">
+<li>インターフェース定義の中に来るのは関数</li>
+</ul></li>
+</ul></li>
+</ul></li>
+
+<li>o.Parent()ってなんだろう。</li>
+<li>オブジェクトの名前と、オブジェクトが属するパッケージの名前がある。</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>変数の場合</label><pre class="src src-git-permalink">https://github.com/gostaticanalysis/unused/blob/17bc41fa0d5fdae5bb1a28f83236fa0dc574b666/unused.go#L43-L47
+</pre>
+</div>
+
+<div class="results" id="orga605664">
+<p>
+case *types.Var:
+	if o.Pkg().Scope() != o.Parent() &amp;&amp;
+		!(o.IsField() &amp;&amp; !o.Anonymous() &amp;&amp; isFieldInNamedStruct(o)) {
+		return true
+	}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>scopeの知識が必要そう
+<ul class="org-ul">
+<li>scopeは木構造で、parentが取れる</li>
+<li>一致しなければスルー(skip) &#x2026; trueを返す可能性
+<ul class="org-ul">
+<li>(フィールドであるかつ、無名関数ではないかつ、構造体の名前付きフィールドである(不明))…ではない</li>
+</ul></li>
+<li>一致してればskipしない &#x2026; falseを返す</li>
+<li>2回目として出てきたなら、parentが取れるはずで、一致しないだろう。なのでskip</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
