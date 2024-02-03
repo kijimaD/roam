@@ -1,8 +1,8 @@
 d3.json("js/graph.json").then(function(data) {
     // Canvas size
-    height = 800;
+    height = 1000;
     width = 2400;
-    scale = 1.;
+    scale = 1.0;
     // Radius function for nodes. Node radius are function of centrality
     radius = d => {
         if (!d.radius) {
