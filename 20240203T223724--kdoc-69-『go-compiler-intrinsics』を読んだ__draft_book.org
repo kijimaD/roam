@@ -1,0 +1,73 @@
+:properties:
+:ID: 20240203T223724
+:end:
+#+title:      KDOC 69: 『Go compiler intrinsics』を読んだ
+#+date:       [2024-02-03 Sat 22:37]
+#+filetags:   :draft:book:
+#+identifier: 20240203T223724
+
+* この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-02-04 Sun 01:23]--[2024-02-04 Sun 01:48] =>  0:25
+CLOCK: [2024-02-04 Sun 00:42]--[2024-02-04 Sun 01:07] =>  0:25
+CLOCK: [2024-02-03 Sat 23:16]--[2024-02-03 Sat 23:41] =>  0:25
+CLOCK: [2024-02-03 Sat 22:48]--[2024-02-03 Sat 23:13] =>  0:25
+:END:
+- 作成
+  - [ ] 2023-02-04 貴島
+- レビュー
+  - [ ] <日付> <署名>
+# - 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)
+# - 文脈なく読めるのを確認した
+# - おばあちゃんに説明できる
+# - いらない見出しを削除した
+* 概要
+
+[[https://dave.cheney.net/2019/08/20/go-compiler-intrinsics][Go compiler intrinsics | Dave Cheney]]を読んだメモ。
+
+コンパイラには、intrinsic(組み込み関数)という機能がある。組み込みで用意された関数で高速に処理できる。アセンブラのレベルでCPUに最適化されたアルゴリズムを用いることで、高速化できる。Goではアセンブラで関数の本体を書くのをサポートしている。しかし、アセンブラを直に書くのは大変なので、コンパイラが組み込み関数として用意してくれている。
+
+* メモ
+
+- [[id:e9a608aa-8545-42be-90bb-303097800a85][assembly language]]で書いてもインライン展開されないので遅い。アセンブラで書く代わりに、組み込み関数が用意されている
+  - [[https://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3%E5%B1%95%E9%96%8B][インライン展開 - Wikipedia]]
+- 組み込み関数はGoで書かれている
+- 特定分野に重要な演算はCPUネイティブな命令がサポートされている。それを使うことで高速になる
+  - 暗号とか圧縮分野
+
+#+caption: 組み込み関数
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/2eca0b1e1663d826893b6b1fd8bd89da98e65d1e/src/math/bits/bits.go#L116-L122
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// OnesCount returns the number of one bits ("population count") in x.
+func OnesCount(x uint) int {
+	if UintSize == 32 {
+		return OnesCount32(uint32(x))
+	}
+	return OnesCount64(uint64(x))
+}
+#+end_results
+
+- OnesCount組み込み関数を使ったとき発行されるアセンブラを見ると、POPCNT命令があるのを確認できる。これがCPUネイティブの命令である
+- CMPB命令で、CPUがPOPCNT命令をネイティブサポートしているか事前チェックしている
+
+#+caption: アトミックインクリメント
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/2eca0b1e1663d826893b6b1fd8bd89da98e65d1e/src/sync/atomic/type.go#L87-L88
+#+end_src
+
+#+RESULTS:
+#+begin_results
+// Add atomically adds delta to x and returns the new value.
+func (x *Int32) Add(delta int32) (new int32) { return AddInt32(&x.v, delta) }
+#+end_results
+
+- CPUのアトミックインクリメントは、競合を回避するために設計された操作。同じ変数を同時にインクリメントしようとしても正確にインクリメントできる。CPUの命令セットで用意されているため安全かつコストを少なく操作できる
+- アトミックカウンタのコードを書くとLOCK命令が発行されることを確認できる
+- コンパイラはCPUネイティブの命令がサポートされてないときは、フォールバックしてピュアGoコードの操作を使う
+
+* 関連
+- [[id:20231014T125935][KDOC 45: プログラミング言語の内部的な違いをアセンブリから調べる]]。発行する命令を確認する方法は正しそう
