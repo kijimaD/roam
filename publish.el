@@ -66,6 +66,7 @@
 
 (setq make-backup-files nil)
 (setq org-export-with-smart-quotes t)
+(setq org-html-checkbox-type 'html)
 
 ;; View
 (setq dw/site-title   "Insomnia")
