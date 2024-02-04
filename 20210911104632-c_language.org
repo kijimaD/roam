@@ -482,56 +482,6 @@ struct tcphdr {
 } UNALIGNED;
 #+end_results
 
-構造体にメソッドやプロパティに相当する定義をすることで、オブジェクト風に使える。
-
-#+caption: オブジェクト指向的に使う
-#+begin_src git-permalink
-https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/sys/sys/domain.h#L55-L93
-#+end_src
-
-#+RESULTS:
-#+begin_results C
-struct	domain {
-	int	dom_family;		/* AF_xxx */
-	const char *dom_name;
-	void	(*dom_init)		/* initialize domain data structures */
-			(void);
-	int	(*dom_externalize)	/* externalize access rights */
-			(struct mbuf *, struct lwp *, int);
-	void	(*dom_dispose)		/* dispose of internalized rights */
-			(struct mbuf *);
-	const struct protosw *dom_protosw, *dom_protoswNPROTOSW;
-	int	(*dom_rtattach)		/* initialize routing table */
-			(rtbl_t **, int);
-	int	dom_rtoffset;		/* an arg to rtattach, in bits */
-	int	dom_maxrtkey;		/* for routing layer */
-	void	(*dom_if_up)		/* ifnet brought up */
-			(struct ifnet *);
-	void	(*dom_if_down)		/* ifnet brought down */
-			(struct ifnet *);
-	void	*(*dom_ifattach)	/* attach af-dependent data on ifnet */
-			(struct ifnet *);
-	void	(*dom_ifdetach)		/* detach af-dependent data on ifnet */
-			(struct ifnet *, void *);
-	void	(*dom_if_link_state_change)
-			(struct ifnet *, int);
-	const void *(*dom_sockaddr_const_addr)(const struct sockaddr *,
-					       socklen_t *);
-	void	*(*dom_sockaddr_addr)(struct sockaddr *, socklen_t *);
-	int	(*dom_sockaddr_cmp)(const struct sockaddr *,
-	                            const struct sockaddr *);
-	struct sockaddr *(*dom_sockaddr_externalize)(struct sockaddr *,
-	                                             socklen_t,
-						     const struct sockaddr *);
-	const struct sockaddr *dom_sa_any;
-	struct ifqueue *dom_ifqueues[2]; /* ifqueue for domain */
-	STAILQ_ENTRY(domain) dom_link;
-	struct	mowner dom_mowner;
-	uint_fast8_t	dom_sa_cmpofs;
-	uint_fast8_t	dom_sa_cmplen;
-};
-#+end_results
-
 ** strlenの実装
 #+begin_src git-permalink
 https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/common/lib/libc/string/strlen.c#L49-L56
