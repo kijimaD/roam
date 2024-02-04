@@ -24,11 +24,3 @@ docker run --detach --name release ghcr.io/kijimad/roam_release:latest && \
 docker cp release:/roam/public . && \
 sudo chown -R $USER:$USER ./public
 ```
-
-## git hooks
-settings for conventional commit
-
-```shell
-git config --local core.hooksPath .githooks
-git config --local commit.template .githooks/commit_msg.txt
-```
