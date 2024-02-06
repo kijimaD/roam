@@ -1,0 +1,2229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rails</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Rails</h1>
+<div id="outline-container-orgb070e01" class="outline-2">
+<h2 id="orgb070e01"><a href="#orgb070e01">概要</a></h2>
+<div class="outline-text-2" id="text-orgb070e01">
+<p>
+Railsは<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>でWEBサイトを作るためのフレームワーク。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd5963ad" class="outline-2">
+<h2 id="orgd5963ad"><a href="#orgd5963ad">Memo</a></h2>
+<div class="outline-text-2" id="text-orgd5963ad">
+</div>
+<div id="outline-container-org6bd2e57" class="outline-3">
+<h3 id="org6bd2e57"><a href="#org6bd2e57">集計時のN+1回避</a></h3>
+<div class="outline-text-3" id="text-org6bd2e57">
+<p>
+異なる条件の複数の件数を表示したいとき。たとえば↓レコードで、Receiptsに載っているproductの数ごとに集計したい。
+</p>
+
+<ul class="org-ul">
+<li>最終型</li>
+</ul>
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">products.name</td>
+<td class="org-right">count</td>
+</tr>
+
+<tr>
+<td class="org-left">おにぎり</td>
+<td class="org-right">2</td>
+</tr>
+
+<tr>
+<td class="org-left">お茶</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+
+
+<ul class="org-ul">
+<li>Receipts</li>
+</ul>
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">id</td>
+<td class="org-right">product_id</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">1</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-right">2</td>
+<td class="org-right">1</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-right">3</td>
+<td class="org-right">2</td>
+<td class="org-left">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+<ul class="org-ul">
+<li>Products</li>
+</ul>
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">id</td>
+<td class="org-left">name</td>
+</tr>
+
+<tr>
+<td class="org-right">1</td>
+<td class="org-left">おにぎり</td>
+</tr>
+
+<tr>
+<td class="org-right">2</td>
+<td class="org-left">お茶</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+こうやって書くと明らかにSQLのgroup関数を使おう、となる。が、実際のコードでは気づかずに条件を変えてeachで繰り返す…としてN+1にしてしまうことがある。こうする。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-type">Receipt</span>.group(<span class="org-type">Product</span>.arel_table[<span class="org-constant">:id</span>]).count
+</pre>
+</div>
+
+<p>
+このようなハッシュテーブルを返す。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-json">// product_id =&gt; count
+{
+  1=&gt;2,
+  2=&gt;1
+}
+</pre>
+</div>
+
+<p>
+product_idがわかっているので、あとはProductをfindして名前を引けばいい。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0ba8157" class="outline-3">
+<h3 id="org0ba8157"><a href="#org0ba8157">エラー表示</a></h3>
+<div class="outline-text-3" id="text-org0ba8157">
+<p>
+ブラウザでのエラー表示は、configで設定できる。
+デフォルトのproduction, sandbox, stagingではfalseになっていて、エラーは表示されない。
+これらの環境で表示するには、↓を加える。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">config.consider_all_requests_local = true
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orga40e77a" class="outline-3">
+<h3 id="orga40e77a"><a href="#orga40e77a">viewでcontrollerクラスの情報を得る</a></h3>
+<div class="outline-text-3" id="text-orga40e77a">
+<p>
+たまに必要なことがある。
+controllerオブジェクトが柔軟な感じ。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>viewファイル</label><pre class="src src-ruby">controller.class <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; #&lt;Admin::UserController&gt;</span>
+controller_name <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; users</span>
+controller_path <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; admin/users</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>controllerが特定のmoduleをincludeしているか判定</label><pre class="src src-ruby">controller.class.included_modules.include?(<span class="org-type">User</span>::concern)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9f74c9b" class="outline-3">
+<h3 id="org9f74c9b"><a href="#org9f74c9b">定義ジャンプ</a></h3>
+<div class="outline-text-3" id="text-org9f74c9b">
+<p>
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>から定義ジャンプしたい。
+ほかの言語やフレームワークだと<a href="20220305121848-lsp.html#ID-eb807577-cd69-478c-8f82-264243c67354">LSP</a>だのを使えばいいが、Railsではどうするのかよくわからない。
+TAGSファイルを生成して使う。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">gem install ripper-tags
+ripper-tags -e -R -f TAGS
+</pre>
+</div>
+
+<p>
+あとは、C-. で生成したタグを指定すればOK。
+</p>
+
+<p>
+gemも定義ジャンプ対象にしたい場合、作業ディレクトリ内にgemのソースコードを置けばよい。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">bundle install --path vendor/bundle
+</pre>
+</div>
+
+<p>
+<a href="https://qiita.com/arakaji/items/0cdfa843a0e0233df153">Railsアプリ内をEmacsで自由にタグジャンプ! - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org42f7b88" class="outline-3">
+<h3 id="org42f7b88"><a href="#org42f7b88">mailerはキューにためられるので、Serializationできない値は渡すとエラーになる</a></h3>
+<div class="outline-text-3" id="text-org42f7b88">
+<p>
+SerializationErrorになる。
+メーラーに対して、シリアライゼーションできないオブジェクトは渡すことができない。
+Railsから<a href="20220420225811-redis.html#ID-48b99bce-05ce-49af-921d-1e321e5a4f8b">Redis</a>に渡されるが、<a href="20220420225811-redis.html#ID-48b99bce-05ce-49af-921d-1e321e5a4f8b">Redis</a>はkey-value storeの形でないと保存できないから。
+<a href="https://github.com/rails/rails/issues/18519">Mail and deliver_later doesn&rsquo;t work with date argument · Issue #18519 · rails/rails</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org9a72168" class="outline-3">
+<h3 id="org9a72168"><a href="#org9a72168">join先のテーブルでwhere</a></h3>
+<div class="outline-text-3" id="text-org9a72168">
+<p>
+A -&lt; B -&lt; C -&lt; D みたいな関係。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>mergeで関連テーブル先で条件を絞れる</label><pre class="src src-ruby">a = <span class="org-type">A</span>.joins(<span class="org-constant">b:</span> [<span class="org-constant">c:</span> <span class="org-constant">:d</span>])
+      .where(<span class="org-constant">a:</span> { <span class="org-constant">flag_a:</span> <span class="org-constant">true</span> })
+      .merge(<span class="org-type">D</span>.where(<span class="org-constant">flag_d:</span> <span class="org-constant">true</span>))
+</pre>
+</div>
+
+<p>
+同じ意味のダサい書き方。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">a = a.joins(<span class="org-constant">b:</span> [<span class="org-constant">c:</span> <span class="org-constant">:d</span>])
+      .where(<span class="org-constant">a:</span> { <span class="org-constant">flag_a:</span> <span class="org-constant">true</span> })
+      .where(<span class="org-constant">d:</span> { <span class="org-constant">flag_d:</span> <span class="org-constant">true</span> })
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf1e7a07" class="outline-3">
+<h3 id="orgf1e7a07"><a href="#orgf1e7a07"><a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>サンプル</a></h3>
+<div class="outline-text-3" id="text-orgf1e7a07">
+<p>
+開発用環境のサンプル。サクっと起動したい用。
+プロジェクトのあちこちで使ってるので、どこかにまとめたほうがよさそうだな。
+</p>
+
+<pre class="example">
+FROM phusion/passenger-ruby27:latest
+
+WORKDIR /tmp
+
+ADD Gemfile /tmp/
+ADD Gemfile.lock /tmp/
+RUN gem update --system
+RUN bundle install
+
+COPY . /home/app/webapp
+RUN usermod -u 1000 app
+RUN chown -R app:app /home/app/webapp
+WORKDIR /home/app/webapp
+
+RUN apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+</pre>
+
+<p>
+かぶり防止のため3001番ポートの方を変えてブラウザアクセスする。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>docker-compose.yml</label><pre class="src src-yaml">version: '3'
+
+services:
+  rails:
+    container_name: rails
+    build: .
+    command: bash -c 'rm -f tmp/pids/server.pid &amp;&amp; bundle exec rails s -b 0.0.0.0'
+    volumes:
+      - .:/home/app/webapp
+    ports:
+      - "3001:3000"
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org707f0bc" class="outline-3">
+<h3 id="org707f0bc"><a href="#org707f0bc">依存関係一切なくrails newする</a></h3>
+<div class="outline-text-3" id="text-org707f0bc">
+<p>
+公式のrailsコンテナ内でrails newすればよい。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>依存がない作成方法。user周りは権限問題のため⚠一行</label><pre class="src src-shell">docker run -it --rm --user <span class="org-string">"$(id -u):$(id -g)"</span> -v <span class="org-string">"$PWD"</span>:/usr/src/app -w /usr/src/app rails rails new --skip-bundle --api --database postgresql .
+</pre>
+</div>
+
+<p>
+依存がないbundle install。
+ruby:2.7.5イメージで走らせる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker run --rm -v <span class="org-string">"$PWD"</span>:/usr/src/app -w /usr/src/app ruby:2.7.5 bundle install
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1d36823" class="outline-3">
+<h3 id="org1d36823"><a href="#org1d36823">factoryがないモデルを検知するタスク</a></h3>
+<div class="outline-text-3" id="text-org1d36823">
+<p>
+factoryはテストで使うので、fixtureほど忘れることはない。作り忘れたり、過去もので漏れているものがたまにあるので検知する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>rakeタスクファイルにて</label><pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">"factory_bot_rails"</span>
+<span class="org-builtin">include</span> <span class="org-type">FactoryBot</span>::<span class="org-type">Syntax</span>::<span class="org-type">Methods</span>
+<span class="org-builtin">include</span> <span class="org-type">ActionDispatch</span>::<span class="org-type">TestProcess</span> <span class="org-comment-delimiter">#  </span><span class="org-comment"># fixture_file_upload&#12513;&#12477;&#12483;&#12489;&#12391;&#12456;&#12521;&#12540;&#12395;&#12394;&#12427;&#12383;&#12417;&#24517;&#35201;&#12290;</span>
+
+task <span class="org-constant">factory:</span> <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+    msg = []
+    errors = []
+
+    <span class="org-type">Rails</span>.application.eager_load!
+    <span class="org-type">ApplicationRecord</span>.subclasses.each <span class="org-keyword">do</span> |model|
+      <span class="org-keyword">begin</span>
+        create(model.name.underscore.gsub(<span class="org-string">%r{/}</span>, <span class="org-string">'_'</span>)) <span class="org-comment-delimiter"># </span><span class="org-comment">factory&#12398;&#12513;&#12477;&#12483;&#12489;</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">UserPayment -&gt; user_payment</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">admin/user_payment -&gt; admin_user_payment</span>
+      <span class="org-keyword">rescue</span> =&gt; e
+        errors &lt;&lt; e <span class="org-keyword">if</span> e.class == <span class="org-type">KeyError</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+
+    <span class="org-builtin">puts</span> errors
+
+    <span class="org-builtin">raise</span> <span class="org-string">'&#30331;&#37682;&#12373;&#12428;&#12390;&#12394;&#12356;factory&#12364;&#12354;&#12426;&#12414;&#12377;'</span> <span class="org-keyword">if</span> errors
+  <span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8fa436a" class="outline-3">
+<h3 id="org8fa436a"><a href="#org8fa436a">レコードがないテーブルを検知するタスク</a></h3>
+<div class="outline-text-3" id="text-org8fa436a">
+<p>
+fixtureの作り忘れなどよくあるので、seedを実行したあとにチェックするタスクを走らせるとよい。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>rakeタスクファイルにて</label><pre class="src src-ruby">task <span class="org-constant">lint:</span> <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+  msg = []
+  invalid = <span class="org-constant">false</span>
+
+  <span class="org-type">Rails</span>.application.eager_load!
+  <span class="org-type">ApplicationRecord</span>.subclasses.each <span class="org-keyword">do</span> |model|
+    msg &lt;&lt; <span class="org-string">"</span><span class="org-variable-name">#{model.name}</span><span class="org-string"> =&gt; </span><span class="org-variable-name">#{model.count}</span><span class="org-string">"</span>
+    invalid = <span class="org-constant">true</span> <span class="org-keyword">if</span> model.count.zero?
+  <span class="org-keyword">end</span>
+
+  <span class="org-builtin">puts</span> msg
+
+  <span class="org-builtin">raise</span> <span class="org-string">'&#12524;&#12467;&#12540;&#12489;&#12364;&#12394;&#12356;&#12486;&#12540;&#12502;&#12523;&#12364;&#12354;&#12426;&#12414;&#12377;'</span> <span class="org-keyword">if</span> invalid
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7c6b2b4" class="outline-3">
+<h3 id="org7c6b2b4"><a href="#org7c6b2b4">seed_fu内でfactory botを使う</a></h3>
+<div class="outline-text-3" id="text-org7c6b2b4">
+<p>
+SeedFu.seedを実行するコンテキストでrequire, includeしておけばメソッドが使える。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>rakeタスクファイル</label><pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">"factory_bot_rails"</span>
+<span class="org-builtin">include</span> <span class="org-type">FactoryBot</span>::<span class="org-type">Syntax</span>::<span class="org-type">Methods</span>
+<span class="org-builtin">include</span> <span class="org-type">ActionDispatch</span>::<span class="org-type">TestProcess</span>
+<span class="org-type">SeedFu</span>.quiet = <span class="org-constant">true</span>
+
+task <span class="org-constant">lint:</span> <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+  <span class="org-type">SeedFu</span>.seed(<span class="org-string">"db/fixtures/</span><span class="org-variable-name">#{env}</span><span class="org-string">"</span>)
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4f7daa7" class="outline-3">
+<h3 id="org4f7daa7"><a href="#org4f7daa7">rakeタスク</a></h3>
+<div class="outline-text-3" id="text-org4f7daa7">
+<p>
+rakeタスクは、普通ターミナルから実行するが、ほかから実行したいときがある(テストとか)。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>rails_helper.rbにて</label><pre class="src src-ruby">config.before(<span class="org-constant">:each</span>) <span class="org-keyword">do</span>
+  <span class="org-type">Rake</span>.application.tasks.each(&amp;<span class="org-constant">:reenable</span>)
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>テスト上にて実行する</label><pre class="src src-ruby"><span class="org-type">Rake</span>.application[<span class="org-string">'namespace:command'</span>].invoke
+</pre>
+</div>
+
+<p>
+のようにして、実行できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org6f156aa" class="outline-3">
+<h3 id="org6f156aa"><a href="#org6f156aa">非同期処理</a></h3>
+<div class="outline-text-3" id="text-org6f156aa">
+<p>
+Webにおける非同期処理はメールとか、外部とのAPI連携とか、比較的時間のかかる処理で用いられている。
+とりあえず画面を返し、待たせないようにする。
+</p>
+
+<p>
+sidekiqは非同期タスクワーカー。
+<a href="20220420225811-redis.html#ID-48b99bce-05ce-49af-921d-1e321e5a4f8b">Redis</a>はインメモリデータベース。
+</p>
+
+<p>
+たとえばRails上でメールを送る処理が走るとき、railsはそのタスクをredisに送り、保持する(キューする)。sidekiqは、キューされたタスクを順次処理していく。
+クラウドサービスの<a href="20220420225811-redis.html#ID-48b99bce-05ce-49af-921d-1e321e5a4f8b">Redis</a>を用いることで、ダウンしても未処理のジョブを失わない。
+</p>
+</div>
+</div>
+<div id="outline-container-org80f2f83" class="outline-3">
+<h3 id="org80f2f83"><a href="#org80f2f83">preload, eager_load, includes</a></h3>
+<div class="outline-text-3" id="text-org80f2f83">
+<p>
+ややこしいがパフォーマンスを考えるうえで必要なので理解しておく。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://tech.stmn.co.jp/entry/2020/11/30/145159">preload、eager_load、includesの挙動を理解して使い分ける - stmn tech blog</a></li>
+</ul>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">メソッド</th>
+<th scope="col" class="org-left">キャッシュ</th>
+<th scope="col" class="org-left">クエリ</th>
+<th scope="col" class="org-left">用途</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">joins</td>
+<td class="org-left">しない</td>
+<td class="org-left">単数</td>
+<td class="org-left">絞り込み</td>
+</tr>
+
+<tr>
+<td class="org-left">eager_load</td>
+<td class="org-left">する</td>
+<td class="org-left">単数</td>
+<td class="org-left">キャッシュと絞り込み</td>
+</tr>
+
+<tr>
+<td class="org-left">preload</td>
+<td class="org-left">する</td>
+<td class="org-left">複数</td>
+<td class="org-left">キャッシュ</td>
+</tr>
+
+<tr>
+<td class="org-left">includes</td>
+<td class="org-left">する</td>
+<td class="org-left">場合による</td>
+<td class="org-left">キャッシュ、必要なら絞り込み</td>
+</tr>
+</tbody>
+</table>
+
+<blockquote>
+<p>
+そのテーブルとのJOINを禁止したいケースではpreloadを指定し、JOINしても問題なくてとりあえずeager loadingしたい場合はincludesを使い、必ずJOINしたい場合はeager_loadを使いましょう。
+</p>
+</blockquote>
+
+<ul class="org-ul">
+<li><a href="https://qiita.com/ryosuketter/items/097556841ec8e1b2940f">ActiveRecordのincludesは使わずにpreloadとeager_loadを使い分ける理由 - Qiita</a></li>
+</ul>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">メソッド</th>
+<th scope="col" class="org-left">SQL(クエリ)</th>
+<th scope="col" class="org-left">キャッシュ</th>
+<th scope="col" class="org-left">アソシエーション先のデータ参照</th>
+<th scope="col" class="org-left">デメリット</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">joins</td>
+<td class="org-left">INNER JOIN</td>
+<td class="org-left">しない</td>
+<td class="org-left">できる</td>
+<td class="org-left">N+1問題</td>
+</tr>
+
+<tr>
+<td class="org-left">preload</td>
+<td class="org-left">JOINせずそれぞれSELECT</td>
+<td class="org-left">する</td>
+<td class="org-left">できない</td>
+<td class="org-left">IN句大きくなりがち</td>
+</tr>
+
+<tr>
+<td class="org-left">eager_load</td>
+<td class="org-left">LEFT JOIN</td>
+<td class="org-left">する</td>
+<td class="org-left">できる</td>
+<td class="org-left">LEFT JOINなので、相手が存在しなくても全部ロードしてしまう</td>
+</tr>
+
+<tr>
+<td class="org-left">includes</td>
+<td class="org-left">場合による</td>
+<td class="org-left">する</td>
+<td class="org-left">できる</td>
+<td class="org-left">ただしく理解してないと挙動がコントロールできない</td>
+</tr>
+</tbody>
+</table>
+
+<ul class="org-ul">
+<li>preload
+<ul class="org-ul">
+<li>多対多のアソシエーションの場合
+<ul class="org-ul">
+<li><a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>を分割して取得するため、レスポンスタイムが早くなるため</li>
+</ul></li>
+<li>アソシエーション先のデータ参照ができない</li>
+<li>データ量が大きいと、メモリを圧迫する可能性がある</li>
+</ul></li>
+
+<li>eager_load
+<ul class="org-ul">
+<li>1対1あるいはN対1のアソシエーションをJOINする場合</li>
+<li>JOIN先のテーブルを参照したい場合</li>
+</ul></li>
+
+<li>joins
+<ul class="org-ul">
+<li>メモリの使用量を必要最低限に抑えたい場合</li>
+<li>JOINした先のデータを参照せず、絞り込み結果だけが必要な場合</li>
+</ul></li>
+
+<li>includes
+<ul class="org-ul">
+<li>なるべく使わないほうがいい</li>
+<li>条件によってpreloadとeager_loadを振り分ける</li>
+</ul></li>
+
+<li><a href="https://qiita.com/k0kubun/items/80c5a5494f53bb88dc58">ActiveRecordのjoinsとpreloadとincludesとeager_loadの違い - Qiita</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org623c9aa" class="outline-3">
+<h3 id="org623c9aa"><a href="#org623c9aa">Railsの<a href="20210926150327-oss.html#ID-bb71747d-8599-4aee-b747-13cb44c05773">OSS</a></a></h3>
+<div class="outline-text-3" id="text-org623c9aa">
+<p>
+Railsをどう書くかの参考になりそうなリポジトリ。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/gitlabhq/gitlabhq">gitlabhq/gitlabhq: GitLab CE Mirror | Please open new issues in our issue tracker on GitLab.com</a></li>
+<li><a href="https://github.com/rubygems/rubygems.org">rubygems/rubygems.org: The Ruby community&rsquo;s gem hosting service.</a></li>
+<li><a href="https://github.com/discourse/discourse">discourse/discourse: A platform for community discussion. Free, open, simple.</a></li>
+<li><a href="https://github.com/mastodon/mastodon">mastodon/mastodon: Your self-hosted, globally interconnected microblogging community</a></li>
+<li><a href="https://github.com/diaspora/diaspora">diaspora/diaspora: A privacy-aware, distributed, open source social network.</a></li>
+<li><a href="https://github.com/forem/forem">forem/forem: For empowering community 🌱</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3762b70" class="outline-3">
+<h3 id="org3762b70"><a href="#org3762b70">ルーティングのファイルと名前空間を切り出す</a></h3>
+<div class="outline-text-3" id="text-org3762b70">
+<p>
+<a href="https://qiita.com/sibakenY/items/973fbe635a7f91ae105c">Railsのルーティングをdrawを使ってまとめる - Qiita</a>
+</p>
+
+<p>
+ファイル読み込みでルーティングのDSLを評価するメソッドを作る。
+これによって、ファイルで名前空間を分割できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>config/initializers/draw_routes.rb</label><pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">DrawRoute</span>
+  <span class="org-type">RoutesNotFound</span> = <span class="org-type">Class</span>.new(<span class="org-type">StandardError</span>)
+
+  <span class="org-keyword">def</span> <span class="org-function-name">draw</span>(routes_name)
+    drawn_any = draw_route(routes_name)
+
+    drawn_any || <span class="org-builtin">raise</span>(<span class="org-type">RoutesNotFound</span>, <span class="org-string">"Cannot find </span><span class="org-variable-name">#{routes_name}</span><span class="org-string">"</span>)
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">route_path</span>(routes_name)
+    <span class="org-type">Rails</span>.root.join(routes_name)
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">draw_route</span>(routes_name)
+    path = route_path(<span class="org-string">"config/routes/</span><span class="org-variable-name">#{routes_name}</span><span class="org-string">.rb"</span>)
+    <span class="org-keyword">if</span> <span class="org-type">File</span>.exist?(path)
+      instance_eval(<span class="org-type">File</span>.read(path))
+      <span class="org-constant">true</span>
+    <span class="org-keyword">else</span>
+      <span class="org-constant">false</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-type">ActionDispatch</span>::<span class="org-type">Routing</span>::<span class="org-type">Mapper</span>.prepend <span class="org-type">DrawRoute</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>config/routes/admin.rb</label><pre class="src src-ruby">namespace <span class="org-constant">:admin</span> <span class="org-keyword">do</span>
+  resources <span class="org-constant">:users</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>routes.rb</label><pre class="src src-ruby"><span class="org-type">Rails</span>.application.routes.draw <span class="org-keyword">do</span>
+  draw <span class="org-constant">:admin</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgec98a76" class="outline-3">
+<h3 id="orgec98a76"><a href="#orgec98a76">時間関係</a></h3>
+<div class="outline-text-3" id="text-orgec98a76">
+<p>
+<a href="https://qiita.com/jnchito/items/cae89ee43c30f5d6fa2c">RubyとRailsにおけるTime, Date, DateTime, TimeWithZoneの違い - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgd64cdaa" class="outline-3">
+<h3 id="orgd64cdaa"><a href="#orgd64cdaa">ネストしたトランザクション</a></h3>
+<div class="outline-text-3" id="text-orgd64cdaa">
+<p>
+ネストしたトランザクションでは内側のロールバックが、無視されるケースがある。
+トランザクションを再利用するため。
+なので、トランザクションを再利用しないように明示すればよい。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-type">ActiveRecord</span>::<span class="org-type">Base</span>.transaction(<span class="org-constant">joinable:</span> <span class="org-constant">false</span>, <span class="org-constant">requires_new:</span> <span class="org-constant">true</span>) <span class="org-keyword">do</span>
+  <span class="org-comment-delimiter"># </span><span class="org-comment">inner code</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+<a href="https://qiita.com/jnchito/items/930575c18679a5dbe1a0">【翻訳】ActiveRecordにおける、ネストしたトランザクションの落とし穴 - Qiita</a>
+<a href="https://api.rubyonrails.org/classes/ActiveRecord/Transactions/ClassMethods.html">ActiveRecord::Transactions::ClassMethods</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgf7587f5" class="outline-3">
+<h3 id="orgf7587f5"><a href="#orgf7587f5">Fakerでboolean生成</a></h3>
+<div class="outline-text-3" id="text-orgf7587f5">
+<p>
+↓以下2つは同じ意味。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>fakerで</label><pre class="src src-rb">Faker::Boolean.boolean
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>sampleで</label><pre class="src src-ruby">[<span class="org-constant">true</span>, <span class="org-constant">false</span>].sample
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org11a3818" class="outline-3">
+<h3 id="org11a3818"><a href="#org11a3818">マイグレーションでカラムの型を変える</a></h3>
+<div class="outline-text-3" id="text-org11a3818">
+<p>
+usersのdeleted_atカラムをinteger型 から datetime型に変える例。
+</p>
+
+<ol class="org-ol">
+<li>一時カラムを作ってそこで値を作成する</li>
+<li>旧カラムを削除する</li>
+<li>一時カラムの名前を変えて新カラムにする</li>
+</ol>
+
+<p>
+<code>ActiveRecord::Base.connection.execute(sql)</code> を使うと生の<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>を実行できる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">up</span>
+  connection.execute <span class="org-string">'ALTER TABLE users ADD deleted_at_tmp datetime'</span>
+  connection.execute <span class="org-string">'UPDATE users SET deleted_at_tmp = FROM_UNIXTIME(deleted_at)'</span>
+  connection.execute <span class="org-string">'ALTER TABLE users DROP COLUMN deleted_at'</span>
+  connection.execute <span class="org-string">'ALTER TABLE users CHANGE deleted_at_tmp deleted_at datetime'</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd9125a3" class="outline-3">
+<h3 id="orgd9125a3"><a href="#orgd9125a3">便利なデバッガweb-console</a></h3>
+<div class="outline-text-3" id="text-orgd9125a3">
+<p>
+view内でブレークポイントを設定し、ブラウザ上でコンソールを立ち上げることができるライブラリ。
+Railsにデフォルトで入っている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>任意のview, controllerに追加する</label><pre class="src src-html">&lt;% console %&gt;
+</pre>
+</div>
+
+<p>
+あとは該当箇所にブラウザでアクセスするとコンソールが立ち上がる。
+再実行性がないので、テストでやるのが一番だとは感じる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfc9eaa6" class="outline-3">
+<h3 id="orgfc9eaa6"><a href="#orgfc9eaa6">update_atを更新しない</a></h3>
+<div class="outline-text-3" id="text-orgfc9eaa6">
+<p>
+バッチ処理でいじった場合は更新するとよくないことがある。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://ohbarye.hatenablog.jp/entry/2016/08/02/213444">更新時に updated_at, created_at を更新しない - valid,invalid</a></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-comment-delimiter"># </span><span class="org-comment">Active Record &#12524;&#12505;&#12523;</span>
+<span class="org-type">ActiveRecord</span>::<span class="org-type">Base</span>.record_timestamps = <span class="org-constant">false</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12514;&#12487;&#12523;&#12398;&#12415;</span>
+<span class="org-type">User</span>.record_timestamps = <span class="org-constant">false</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12452;&#12531;&#12473;&#12479;&#12531;&#12473;&#12398;&#12415;</span>
+user.record_timestamps = <span class="org-constant">false</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org046841c" class="outline-3">
+<h3 id="org046841c"><a href="#org046841c">save(validate: false)</a></h3>
+<div class="outline-text-3" id="text-org046841c">
+<p>
+バリデーションが不要なとき、 <code>user.save!(validate: false)</code> とすると無効化できる。
+データを不整合を直したいけどほかのバリデーションにかかる、ようなときに使う。
+</p>
+
+<p>
+あるいは <code>assign_attribute</code> でもよい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbd9e194" class="outline-3">
+<h3 id="orgbd9e194"><a href="#orgbd9e194">presence: trueなのにnilがあるレコードを検知する</a></h3>
+<div class="outline-text-3" id="text-orgbd9e194">
+<p>
+モデルバリデーションがかかっていても、既存のレコードはnilを含む可能性がある。
+モデルバリデーションは入出力のみ監視する。だから既存レコードに残っている可能性がある。
+この場合、編集できなくて不便。検知してテーブルにも制約をかけると安全になる。DBバリデーションは、既存レコードにも入ってないことを保証できる。
+</p>
+
+<p>
+直にテーブルの制約を辿る方法がわからないのでレコードを探索する感じになった。レコードがたくさんある環境で実行すると検知できる。全部辿るのでクソ重い。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">msgs = {}
+
+<span class="org-type">Rails</span>.application.eager_load!
+<span class="org-type">ApplicationRecord</span>.subclasses.each <span class="org-keyword">do</span> |model|
+  presence_validates = model.validators.select { |v| v.class.to_s.include?(<span class="org-string">'ActiveRecord::Validations::PresenceValidator'</span>) }
+  presence_validates.each <span class="org-keyword">do</span> |presence_validate|
+    model.all.find_each <span class="org-keyword">do</span> |record|
+      msgs[<span class="org-string">"</span><span class="org-variable-name">#{record.class}</span><span class="org-string"> </span><span class="org-variable-name">#{presence_validate.attributes.first}</span><span class="org-string">"</span>] = <span class="org-string">'&#10060; presence: true&#12354;&#12427;&#12398;&#12395;nil&#12524;&#12467;&#12540;&#12489;&#12364;&#12354;&#12427;&gt;&lt;'</span> <span class="org-keyword">unless</span> record.send(presence_validate.attributes.first)
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+pp msgs.sort <span class="org-comment-delimiter">#  </span><span class="org-comment">[["User name", "&#10060; presence: true&#12354;&#12427;&#12398;&#12395;nil&#12524;&#12467;&#12540;&#12489;&#12364;&#12354;&#12427;&gt;&lt;"]]</span>
+</pre>
+</div>
+
+<p>
+まずnilをなくす。それからテーブルのバリデーションを追加する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf874990" class="outline-3">
+<h3 id="orgf874990"><a href="#orgf874990">バックエンドエンジニアというときの正確なスコープ</a></h3>
+<div class="outline-text-3" id="text-orgf874990">
+<p>
+APIサーバとしての利用、バックとフロントの分割が主流になっている。
+採用者がRailsのバックエンド開発者を探している、というときはAPI開発経験がある人材を探しているといえる。
+</p>
+</div>
+</div>
+<div id="outline-container-org466c2a5" class="outline-3">
+<h3 id="org466c2a5"><a href="#org466c2a5">テストによるスマートな画像確認</a></h3>
+<div class="outline-text-3" id="text-org466c2a5">
+<p>
+system specでスクショをとって確認する。
+わざわざ用意して確認しない。
+</p>
+
+<p>
+TDDを徹底し、一切ブラウザ確認せずにプロダクトを開発した、という偉人もいる。
+</p>
+</div>
+</div>
+<div id="outline-container-org8748801" class="outline-3">
+<h3 id="org8748801"><a href="#org8748801">オートロードするgem: zeitwerk</a></h3>
+<div class="outline-text-3" id="text-org8748801">
+<p>
+zeitwerkはオートロードするgem。Rails 6で使われている。
+Railsでrequireしなくていいのはこれを使っているから。
+<a href="https://github.com/fxn/zeitwerk">fxn/zeitwerk: Efficient and thread-safe code loader for Ruby</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgfed2213" class="outline-3">
+<h3 id="orgfed2213"><a href="#orgfed2213">デフォルトスコープを無視できるreorder</a></h3>
+<div class="outline-text-3" id="text-orgfed2213">
+<p>
+デフォルトスコープを無視できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>updated_atをソートに使う</label><pre class="src src-ruby"><span class="org-type">User</span>.order(<span class="org-constant">:id</span>).reorder(<span class="org-constant">:updated_at</span>)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org937e177" class="outline-3">
+<h3 id="org937e177"><a href="#org937e177">開発用データの用意</a></h3>
+<div class="outline-text-3" id="text-org937e177">
+<p>
+開発用データにはいくつかの方法がある。
+</p>
+
+<ul class="org-ul">
+<li>seedデータで用意する。毎回必要なときにresetして開発する
+<ul class="org-ul">
+<li>クリーンな環境で再現性が高い開発を行える。</li>
+<li>早い</li>
+</ul></li>
+
+<li>本番データに近いデータで行う
+<ul class="org-ul">
+<li>デザインや性能の問題に気づきやすい</li>
+<li>ユースケースがイメージしやすい</li>
+<li>データの準備が楽</li>
+<li>整合性のメンテナンスが必要</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9354491" class="outline-3">
+<h3 id="org9354491"><a href="#org9354491">ALTER TABLEは重い</a></h3>
+<div class="outline-text-3" id="text-org9354491">
+<p>
+テーブルのコピーを作るので重い。
+bulk: trueをつけるとALTER TABLEをまとめるので高速になる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">up</span>
+  change_table <span class="org-constant">:legal_engine_forms</span>, <span class="org-constant">bulk:</span> <span class="org-constant">true</span> <span class="org-keyword">do</span> |t|
+    ...
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd6a1333" class="outline-3">
+<h3 id="orgd6a1333"><a href="#orgd6a1333">テーブル名にプレフィクスを設定する</a></h3>
+<div class="outline-text-3" id="text-orgd6a1333">
+<p>
+特定の機能に対して、関係したテーブルを複数つくるとき、プレフィクスのような形でモデル名やテーブル名を決めることがある。
+admin_user、admin_page、admin_permissionとか。
+こうすることの問題点: 衝突を避けるためにmodel名とテーブル名が長くなる。ディレクトリも見にくくなる。一語だとまだいいのだが、複数名になるとつらくなる。
+</p>
+
+<p>
+解決のためには、moduleを定義し、内部でtable_name_prefixを設定するといい。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>modelにて</label><pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Admin</span>
+  <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">table_name_prefix</span>
+    <span class="org-string">'admin_'</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">module</span> <span class="org-type">Admin</span>
+  <span class="org-keyword">class</span> <span class="org-type">User</span> &lt; <span class="org-type">ApplicationRecord</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+こうするとモデル名はAdmin::Userで、テーブル名はadmin_usersになりわかりやすい。
+</p>
+</div>
+</div>
+<div id="outline-container-org0b8182c" class="outline-3">
+<h3 id="org0b8182c"><a href="#org0b8182c">Rails環境でバッチ処理する</a></h3>
+<div class="outline-text-3" id="text-org0b8182c">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>Rails環境でのクラスを実行できる</label><pre class="src src-ruby">rails runner <span class="org-string">"User.first"</span>
+rails r <span class="org-string">"User.first"</span>
+</pre>
+</div>
+
+<p>
+サービスクラス化したコマンドを実行するときに使える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc7b9da3" class="outline-3">
+<h3 id="orgc7b9da3"><a href="#orgc7b9da3">routesの制約</a></h3>
+<div class="outline-text-3" id="text-orgc7b9da3">
+<div class="org-src-container">
+<pre class="src src-ruby">constraints(-&gt; (req) { req.env[<span class="org-string">"HTTP_USER_AGENT"</span>] =~ <span class="org-string">/iPhone/</span> }) <span class="org-keyword">do</span>
+  resources <span class="org-constant">:iphones</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+<a href="https://api.rubyonrails.org/v6.0.2/classes/ActionDispatch/Routing/Mapper/Scoping.html#method-i-constraints-label-Dynamic+request+matching">ActionDispatch::Routing::Mapper::Scoping</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orga150882" class="outline-3">
+<h3 id="orga150882"><a href="#orga150882">大量のroutes変更を楽に確認する</a></h3>
+<div class="outline-text-3" id="text-orga150882">
+<p>
+redirect設定やリファクタリングでroutesを大量に変更して、挙動の変更を追いたい場合。
+rails routesの結果のdiffを取れば、楽に確認できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org7d432f6" class="outline-3">
+<h3 id="org7d432f6"><a href="#org7d432f6">create_or_find_by</a></h3>
+<div class="outline-text-3" id="text-org7d432f6">
+<p>
+データベースのユニーク制約を使って作成、できなければ初めの1件を取得する。
+find_or_create_byでは作成されるまでに別プロセスによって作成されている可能性があったので、その問題を解決した処理。
+<code>create_or_find_by!</code> はエラーの時に例外が発生する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>データベースのユニーク制約を使って作成、できなければ初めの1件を取得</label><pre class="src src-ruby"><span class="org-type">User</span>.create_or_find_by(<span class="org-constant">name:</span> <span class="org-string">'aaa'</span>)
+</pre>
+</div>
+
+<p>
+<a href="https://railsdoc.com/page/create_or_find_by">create_or_find_by | Railsドキュメント</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgfc09131" class="outline-3">
+<h3 id="orgfc09131"><a href="#orgfc09131">使われてないファイルを検索する</a></h3>
+<div class="outline-text-3" id="text-orgfc09131">
+<p>
+assetsは相対パスが利用されないので絶対パスで検索してヒットしなければ未使用と判断できる、とのこと。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 23: </span>検査タスクの例</label><pre class="src src-ruby">namespace <span class="org-constant">:assets</span> <span class="org-keyword">do</span>
+  desc <span class="org-string">'prune needless image file'</span>
+  task <span class="org-string">'prune:images'</span> =&gt; <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+    base = <span class="org-type">Rails</span>.root.join(<span class="org-string">'app/assets/images/'</span>)
+
+    <span class="org-type">Dir</span>[<span class="org-type">Rails</span>.root.join(<span class="org-string">'app/assets/images/**/*.{jpg,jpeg,gif,png,svg}'</span>)].each <span class="org-keyword">do</span> |path|
+      target_path = path.to_s.gsub(<span class="org-string">/</span><span class="org-variable-name">#{base}</span><span class="org-string">/</span>, <span class="org-string">''</span>)
+      <span class="org-builtin">puts</span> <span class="org-string">"execute: git grep '</span><span class="org-variable-name">#{target_path}</span><span class="org-string">'"</span>
+      res = <span class="org-string">`git grep '</span><span class="org-variable-name">#{target_path}</span><span class="org-string">'`</span>
+
+      <span class="org-keyword">if</span> res.empty?
+        <span class="org-builtin">puts</span> <span class="org-string">"execute: rm </span><span class="org-variable-name">#{path}</span><span class="org-string">"</span>
+        <span class="org-type">FileUtils</span>.rm path
+        <span class="org-builtin">puts</span> <span class="org-string">'=&gt; removed'</span>
+      <span class="org-keyword">else</span>
+        <span class="org-builtin">puts</span> <span class="org-string">'=&gt; used somewhere'</span>
+      <span class="org-keyword">end</span>
+
+      puts
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org39d9afe" class="outline-3">
+<h3 id="org39d9afe"><a href="#org39d9afe"><a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>バージョンアップデート</a></h3>
+<div class="outline-text-3" id="text-org39d9afe">
+<p>
+超強い人が言っていたメモ。
+コマンドを組み合わせて一気に置換して検討していく。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 24: </span>2.6.5 -&gt; 2.7.1に全体を置換する</label><pre class="src src-shell">git grep -l <span class="org-string">'2\.6\.5'</span> | xargs sed -i <span class="org-string">'s/2\.6\.5/2.7.1/g'</span>
+</pre>
+</div>
+<p>
+vendor/bundle を削除して、bundle install。
+マイナーバージョンを変更した場合は .rubocop.yml の RUBY_VERSION を修正(parser gemの指定)。
+</p>
+</div>
+</div>
+<div id="outline-container-org3c05311" class="outline-3">
+<h3 id="org3c05311"><a href="#org3c05311">新規作成時はform表示しない</a></h3>
+<div class="outline-text-3" id="text-org3c05311">
+<p>
+formを共通化しているようなとき。
+このカラムはedit時のみ出したい、というようなことがある。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 25: </span>new時persistされてないので表示されない</label><pre class="src src-ruby">form_for <span class="org-keyword">do</span> |f|
+  f.number_field <span class="org-constant">:position</span> <span class="org-keyword">if</span> <span class="org-variable-name">@content_category</span>.persisted?
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6d8b7a7" class="outline-3">
+<h3 id="org6d8b7a7"><a href="#org6d8b7a7">一部アクションだけvalidation</a></h3>
+<div class="outline-text-3" id="text-org6d8b7a7">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 26: </span>onでアクションを指定できる。</label><pre class="src src-ruby">validates <span class="org-constant">:user_id</span>, <span class="org-constant">presence:</span> <span class="org-constant">true</span>, <span class="org-constant">:on</span> =&gt; <span class="org-constant">:create</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0ad9984" class="outline-3">
+<h3 id="org0ad9984"><a href="#org0ad9984">便利な日付操作</a></h3>
+<div class="outline-text-3" id="text-org0ad9984">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 27: </span>Time.zone</label><pre class="src src-ruby"><span class="org-type">Time</span>.zone.yesterday
+<span class="org-type">Time</span>.zone.today.ago(7.days)
+</pre>
+</div>
+
+<p>
+<a href="https://qiita.com/mmmm/items/efda48f1ac0267c95c29">Railsでの日付操作でよく使うものまとめ - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org787f357" class="outline-3">
+<h3 id="org787f357"><a href="#org787f357">安全に関連カラムを追加する</a></h3>
+<div class="outline-text-3" id="text-org787f357">
+<p>
+Blogにuser_idを後から追加したい、みたいなとき。User -&lt; Blog。
+最初にnullableで外部キーを作成する。
+</p>
+
+<p>
+次に、新規作成時にmodelでvalidationをかける。
+すると既存レコードの外部キーはnull、新しくできるレコードは外部キーありという状態になる。
+外部キーなしが増えることはない。移行をする。
+nullのレコードがゼロになってから外部キー制約をつけて関連カラム追加完了。
+</p>
+</div>
+</div>
+<div id="outline-container-orgff9de33" class="outline-3">
+<h3 id="orgff9de33"><a href="#orgff9de33">関連カラムを安全に変更する</a></h3>
+<div class="outline-text-3" id="text-orgff9de33">
+<p>
+レコードがすでに入っているテーブルの関連を変更する場合。
+たとえば、blogs &gt;- somethings &gt;- users を blogs &gt;- users というような。somethingsテーブルは何もしてないので削除したい、とする。
+何も考えずにやると、一気にすべてを切り替えることになりがち。
+</p>
+
+<p>
+悪い例を示す。
+</p>
+<ol class="org-ol">
+<li><p>
+最初に関連カラムを変更する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 28: </span>modelファイルで関連変更</label><pre class="src src-ruby">belongs_to <span class="org-constant">:user</span> <span class="org-comment-delimiter"># </span><span class="org-comment">&#26087; belongs_to :something</span>
+</pre>
+</div></li>
+<li>旧関連を使ってたアプリケーション側をすべて変更する。MVCすべて。</li>
+<li>新しい関連カラムは空で、旧データを移行しないといけない。移行は↑のデプロイと同時にしないと不整合になる。デプロイと移行スクリプトの間の変更は無視されるから。</li>
+<li>1~3をまとめて一気にリリースする</li>
+</ol>
+
+<p>
+ということで、大量な複数層の変更をぶっつけ本番でしないといけなくなる。途中で嫌になるだろうし、運が悪ければミスって大変なことになる。
+</p>
+
+<p>
+ではどうするか。根本的なアイデアは、2つの関連を同時に保持しておくことだ。
+同時に持っておけば、大丈夫なことを確認してから関連を変更するだけでいい。そうやって遅延させることで、一気にいろいろな変更をしなくてよくなる。
+</p>
+
+<p>
+具体的にどうやるか。良い例。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 29: </span>modelのbefore_saveでオンデマンドコピー</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Blog</span> &lt; <span class="org-type">ApplicationRecord</span>
+  before_save <span class="org-keyword">do</span>
+    <span class="org-keyword">self</span>.user_id ||= something.user_id
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+としておくと、保存時にblog.user_idとblog.something.user_idの両方に関連がコピーされる。somethingsを経由しないでよくなる。
+</p>
+
+<p>
+既存データについても処理を追加しておく。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 30: </span>modelにメソッドを作っておく</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">User</span> &lt; <span class="org-type">ApplicationRecord</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">migrate</span>
+    <span class="org-keyword">self</span>.user_id ||= something.user_id
+    save!
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+そして、全Userでmigrateを実行すれば既存データにも新しいカラムが入る。
+</p>
+
+<p>
+既存データと新しく作成されるレコードをおさえたので、新旧2つの関連カラムは完全に同等になる。
+ここまででマージ、リリースする。
+問題ないことを確認したあとで、新旧カラムが使える状態を活かしてアプリケーション側の変更…実際の関連の変更をやる(一番の目的の箇所)。
+ここまででマージ、リリースする。
+</p>
+
+<p>
+その後、移行処理とカラムを削除して片付ければ完了。(あるいは移行処理は前の時点で消す)
+関連カラムだけでなく、何かカラムを移すときにはすべて同様にできる。
+</p>
+
+<p>
+実際のタスクでは、migration処理をする箇所は複数になるので前もって調査が必要。
+</p>
+</div>
+</div>
+<div id="outline-container-org463afda" class="outline-3">
+<h3 id="org463afda"><a href="#org463afda">カラム名を安全に変更する</a></h3>
+<div class="outline-text-3" id="text-org463afda">
+<p>
+カラム名変更とアプリケーション側の変更を分け、変更範囲を狭める。
+alias_attributeを追加する。すると、新しいカラム名でもアクセスできるようになる。
+依存しているほかのアプリケーションの変更をする(new_user_idに書き換える)。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 31: </span>modelファイルにて、追加</label><pre class="src src-ruby">alias_attribute <span class="org-constant">:new_user_id</span>, <span class="org-constant">:typo_user_id</span>
+</pre>
+</div>
+
+<p>
+それらを書き換えたらマージ、リリースする。
+その後、カラム名を書き換えるマイグレーションを作成する。使っている箇所はないので安全に変更できる。
+マイグレーション後、alias_attributeを削除する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf04d9ff" class="outline-3">
+<h3 id="orgf04d9ff"><a href="#orgf04d9ff">テーブル名を安全に変更する</a></h3>
+<div class="outline-text-3" id="text-orgf04d9ff">
+<p>
+最初にmodel クラス名を変更し、テーブルの参照先に変更前のものを設定する。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Blog_After</span> &lt; <span class="org-type">ApplicationRecord</span>
+  <span class="org-keyword">self</span>.table_name = <span class="org-constant">:blog_before</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+すると、アプリケーション側だけの変更で、DBの変更はない状態で動作上の変更はなくなる。
+次にアプリケーションの、ほかの依存している箇所を修正する。
+ここまで1つのPRにする。
+</p>
+
+<p>
+テストが通ったりリリースできたら、テーブル名変更のマイグレーションを作成し、modelでのtable_name設定を削除するPRをつくる。
+安全に変更が完了する。
+テーブルの変更と、アプリケーションの変更を同時にやらないと安全だし分割できてすっきりする。
+</p>
+</div>
+</div>
+<div id="outline-container-org2d78851" class="outline-3">
+<h3 id="org2d78851"><a href="#org2d78851">modelのログを保持する</a></h3>
+<div class="outline-text-3" id="text-org2d78851">
+<p>
+<a href="https://github.com/paper-trail-gem/paper_trail">paper-trail-gem/paper_trail: Track changes to your rails models</a>
+変更や差分、変更時の何らかの情報(つまり、作業者とか)を保存、閲覧できる。
+</p>
+
+<p>
+<a href="https://github.com/ankit1910/paper_trail-globalid">ankit1910/paper_trail-globalid: An extension to paper_trail, using this you can fetch actual object who was responsible for this change</a>
+paper_trailの拡張。変更したか取得できるようになる。
+</p>
+</div>
+</div>
+<div id="outline-container-org82c9462" class="outline-3">
+<h3 id="org82c9462"><a href="#org82c9462">サロゲートキー</a></h3>
+<div class="outline-text-3" id="text-org82c9462">
+<p>
+Railsでいうところの <code>id</code> のこと。Rails5 からはbigintで設定されている。
+主キーとして使う人工的な値、というのがポイント。
+</p>
+
+<p>
+<a href="https://e-words.jp/w/%E3%82%B5%E3%83%AD%E3%82%B2%E3%83%BC%E3%83%88%E3%82%AD%E3%83%BC.html">サロゲートキー（surrogate key）とは - IT用語辞典 e-Words</a>
+</p>
+<blockquote>
+<p>
+サロゲートキーとは、データベースのテーブルの主キーとして、自動割り当ての連続した通し番号のように、利用者や記録する対象とは直接関係のない人工的な値を用いること。また、そのために設けられたカラムのこと。
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orge4b1ea6" class="outline-3">
+<h3 id="orge4b1ea6"><a href="#orge4b1ea6">ロールバックできないマイグレーションであることを明示する</a></h3>
+<div class="outline-text-3" id="text-orge4b1ea6">
+<p>
+たいていの場合はコメントでロールバックできないなどと書けばよいが、rollbackが破壊的な動作になる場合があるのでdownに書く。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 32: </span>ActiveRecord::IrreversibleMigration</label><pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">down</span>
+  <span class="org-builtin">raise</span> <span class="org-type">ActiveRecord</span>::<span class="org-type">IrreversibleMigration</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org15950a7" class="outline-3">
+<h3 id="org15950a7"><a href="#org15950a7">null制約を追加しつつdefault設定</a></h3>
+<div class="outline-text-3" id="text-org15950a7">
+<p>
+<a href="https://qiita.com/akinov/items/852fe789fe98a44350a9">Railsのmigrationで後からNULL制約を設定する - Qiita</a>
+</p>
+
+<p>
+null制約追加には、 <code>change_column_null</code> を使う。
+null制約だけ追加すると変更前にnullだったレコードでエラーになってしまうので、同時にdefaultを設定するとよい。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 33: </span>null制約 + default設定</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">ChangePointColumnOnPost</span> &lt; <span class="org-type">ActiveRecord</span>::<span class="org-type">Migration</span>[5.2]
+  <span class="org-keyword">def</span> <span class="org-function-name">change</span>
+    change_column_null <span class="org-constant">:posts</span>, <span class="org-constant">:point</span>, <span class="org-constant">false</span>, 0
+    change_column_default <span class="org-constant">:posts</span>, <span class="org-constant">:point</span>, <span class="org-constant">from:</span> <span class="org-constant">nil</span>, <span class="org-constant">to:</span> 0
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 34: </span>↑falseはnullオプション</label><pre class="src src-ruby">change_column_null(table_name, column_name, null, default = <span class="org-constant">nil</span>)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3d0f2a6" class="outline-3">
+<h3 id="org3d0f2a6"><a href="#org3d0f2a6">migrationファイルによる不整合解消タスク</a></h3>
+<div class="outline-text-3" id="text-org3d0f2a6">
+<p>
+migrationファイルは一部DSLが扱われるだけで普通のrubyファイルと変わらない。
+データベースの不整合を解消することにも使える。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">up</span>
+  <span class="org-type">Blog</span>.unscoped.where(<span class="org-constant">user_id:</span> <span class="org-constant">nil</span>).delete_all
+<span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+というように。
+環境別にconsoleでコマンドを実行する必要がないので便利。
+</p>
+</div>
+</div>
+<div id="outline-container-org6c9f208" class="outline-3">
+<h3 id="org6c9f208"><a href="#org6c9f208">unscopedでdefault_scopeを無効化</a></h3>
+<div class="outline-text-3" id="text-org6c9f208">
+<p>
+<code>unscoped</code> はdefault_scopeを無効化する。
+<a href="https://apidock.com/rails/ActiveRecord/Base/unscoped/class">unscoped (ActiveRecord::Base) - APIdock</a>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 36: </span>自動でpublishedの条件が発行されていることがわかる</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Post</span> &lt; <span class="org-type">ActiveRecord</span>::<span class="org-type">Base</span>
+  <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">default_scope</span>
+    where <span class="org-constant">:published</span> =&gt; <span class="org-constant">true</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-type">Post</span>.all          <span class="org-comment-delimiter"># </span><span class="org-comment">Fires "SELECT * FROM posts WHERE published = true"</span>
+<span class="org-type">Post</span>.unscoped.all <span class="org-comment-delimiter"># </span><span class="org-comment">Fires "SELECT * FROM posts"</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 37: </span>default_scopeの条件がなくなる</label><pre class="src src-ruby"><span class="org-type">Post</span>.unscoped {
+  <span class="org-type">Post</span>.limit(10) <span class="org-comment-delimiter"># </span><span class="org-comment">Fires "SELECT * FROM posts LIMIT 10"</span>
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcdb1faf" class="outline-3">
+<h3 id="orgcdb1faf"><a href="#orgcdb1faf">inverse_ofで双方向の不整合を防ぐ</a></h3>
+<div class="outline-text-3" id="text-orgcdb1faf">
+<p>
+<a href="https://qiita.com/itp926/items/9cac175d3b35945b8f7e">inverse_of について - Qiita</a>
+</p>
+
+<p>
+双方向の関連付けの不整合を防ぐ関連オプション。belongs_to, has_many等ではデフォルトでオンになっているよう。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Category</span>
+  has_many <span class="org-constant">:blog</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Order</span>
+  belongs_to <span class="org-constant">:category</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 39: </span>不整合</label><pre class="src src-ruby">c = <span class="org-type">Category</span>.first
+b = c.orders.first
+
+c.title = <span class="org-string">"change"</span>
+c.title == b.category.title <span class="org-comment-delimiter">#</span><span class="org-comment">=&gt; false &#20516;&#12399;&#30064;&#12394;&#12427;</span>
+c.equal? b.category <span class="org-comment-delimiter">#</span><span class="org-comment">=&gt; false &#21516;&#12376;&#12458;&#12502;&#12472;&#12455;&#12463;&#12488;&#12391;&#12394;&#12356;</span>
+</pre>
+</div>
+<p>
+inverse_ofを使うと同じオブジェクトを使うようになる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgde99d69" class="outline-3">
+<h3 id="orgde99d69"><a href="#orgde99d69">リレーションの不整合を検知する</a></h3>
+<div class="outline-text-3" id="text-orgde99d69">
+<p>
+よくわからない。
+全部辿る方法は色々応用が効きそう。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 40: </span>不整合検知タスク</label><pre class="src src-ruby">desc <span class="org-string">'&#22806;&#37096;&#12461;&#12540;&#12398;&#25972;&#21512;&#24615;&#12434;&#26908;&#35388;&#12377;&#12427;'</span>
+task <span class="org-constant">extract_mismatch_records:</span> <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+  <span class="org-type">Rails</span>.application.eager_load!
+
+  <span class="org-type">ApplicationRecord</span>.subclasses.each <span class="org-keyword">do</span> |model|
+    model.reflections.select { |_, reflection| reflection.is_a?(<span class="org-type">ActiveRecord</span>::<span class="org-type">Reflection</span>::<span class="org-type">BelongsToReflection</span>) }.each <span class="org-keyword">do</span> |name, reflection|
+      model_name = model.model_name.human
+      foreign_key = reflection.options[<span class="org-constant">:foreign_key</span>] || <span class="org-string">"</span><span class="org-variable-name">#{name}</span><span class="org-string">_id"</span>
+
+      <span class="org-keyword">unless</span> model.columns.any? { |column| column.name == foreign_key.to_s }
+        <span class="org-builtin">puts</span> <span class="org-string">"&#128162; </span><span class="org-variable-name">#{model_name}</span><span class="org-string"> &#12395;&#12399; </span><span class="org-variable-name">#{foreign_key}</span><span class="org-string"> &#12501;&#12451;&#12540;&#12523;&#12489;&#12364;&#12354;&#12426;&#12414;&#12379;&#12435;"</span>
+        <span class="org-keyword">next</span>
+      <span class="org-keyword">end</span>
+
+      parent_model_class_name = reflection.options[<span class="org-constant">:class_name</span>] || reflection.name.to_s.classify
+      parent_model = parent_model_class_name.safe_constantize
+
+      <span class="org-keyword">unless</span> parent_model
+        <span class="org-builtin">puts</span> <span class="org-string">"&#128162; </span><span class="org-variable-name">#{model_name}</span><span class="org-string"> &#12364;&#20381;&#23384;&#12375;&#12390;&#12356;&#12427; </span><span class="org-variable-name">#{parent_model_class_name}</span><span class="org-string"> &#12399;&#21442;&#29031;&#12391;&#12365;&#12414;&#12379;&#12435;"</span>
+        <span class="org-keyword">next</span>
+      <span class="org-keyword">end</span>
+
+      parent_model_name = parent_model.model_name.human
+
+      <span class="org-keyword">begin</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">NOTE: &#35242;&#12486;&#12540;&#12502;&#12523;&#12398;ID&#12392;&#12375;&#12390;&#23384;&#22312;&#12375;&#12394;&#12356;&#22806;&#37096;&#12461;&#12540;&#12398;&#25968;&#12434;&#29031;&#20250;</span>
+        relation = model.unscoped.where.not(foreign_key =&gt; parent_model.unscoped.select(<span class="org-constant">:id</span>)).where.not(foreign_key =&gt; <span class="org-constant">nil</span>)
+        sql = relation.to_sql
+        count = relation.count
+
+        <span class="org-keyword">if</span> count.zero?
+          <span class="org-builtin">puts</span> <span class="org-string">"&#128161; </span><span class="org-variable-name">#{model_name}</span><span class="org-string"> &#12398; </span><span class="org-variable-name">#{parent_model_name}</span><span class="org-string"> &#12398;&#22806;&#37096;&#12461;&#12540;&#12399;&#25972;&#21512;&#24615;&#12364;&#20445;&#35388;&#12373;&#12428;&#12390;&#12356;&#12414;&#12377;"</span> <span class="org-keyword">unless</span> <span class="org-type">ENV</span>[<span class="org-string">'ONLY_FAILURE'</span>]
+        <span class="org-keyword">else</span>
+          <span class="org-builtin">puts</span> <span class="org-string">"&#128163; </span><span class="org-variable-name">#{model_name}</span><span class="org-string"> &#12398; </span><span class="org-variable-name">#{parent_model_name}</span><span class="org-string"> &#12398;&#22806;&#37096;&#12461;&#12540;&#12391;&#19981;&#27491;&#12394;&#12461;&#12540;&#12364; </span><span class="org-variable-name">#{count}</span><span class="org-string"> &#20214; &#35373;&#23450;&#12373;&#12428;&#12390;&#12356;&#12414;&#12377;"</span>
+        <span class="org-keyword">end</span>
+
+        <span class="org-keyword">if</span> <span class="org-type">ENV</span>[<span class="org-string">'DEBUG'</span>]
+          <span class="org-builtin">puts</span> <span class="org-string">"=&gt; </span><span class="org-variable-name">#{sql}</span><span class="org-string">\n"</span>
+          puts
+        <span class="org-keyword">end</span>
+      <span class="org-keyword">rescue</span> <span class="org-type">StandardError</span>
+        <span class="org-comment-delimiter"># </span><span class="org-comment">NOTE: &#12510;&#12473;&#12479;&#12487;&#12540;&#12479;&#12398;&#22580;&#21512;&#12399;&#12473;&#12461;&#12483;&#12503;</span>
+        <span class="org-builtin">puts</span> <span class="org-string">"&#127539; </span><span class="org-variable-name">#{model_name}</span><span class="org-string"> &#12398; </span><span class="org-variable-name">#{parent_model_name}</span><span class="org-string"> &#12398;&#25972;&#21512;&#24615;&#12398;&#26908;&#35388;&#12434;&#12473;&#12461;&#12483;&#12503;&#12375;&#12414;&#12375;&#12383;"</span> <span class="org-keyword">unless</span> <span class="org-type">ENV</span>[<span class="org-string">'ONLY_FAILURE'</span>]
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+Reflectionクラスはアソシエーション関係のmoduleのよう。
+<a href="https://github.com/kd-collective/rails/blob/f132be462b957ea4cd8b72bf9e7be77a184a887b/activerecord/lib/active_record/reflection.rb#L49">https://github.com/kd-collective/rails/blob/f132be462b957ea4cd8b72bf9e7be77a184a887b/activerecord/lib/active_record/reflection.rb#L49</a>
+</p>
+
+<blockquote>
+<p>
+Reflection enables the ability to examine the associations and aggregations of Active Record classes and objects. This information, for example, can be used in a form builder that takes an Active Record object and creates input fields for all of the attributes depending on their type and displays the associations to other objects.
+</p>
+
+<p>
+Reflectionを使用すると、Active Recordのクラスやオブジェクトの関連付けや集計を調べることができます。この情報は、例えば、Active Recordオブジェクトを受け取り、その型に応じてすべての属性の入力フィールドを作成します。他のオブジェクトとの関連を表示するフォームビルダーで使用できます。
+</p>
+</blockquote>
+
+<p>
+Reflectionに関する記事。
+<a href="https://qiita.com/kkyouhei/items/067d5bb8d79c71f1646b">Railsのコードを読む アソシエーションについて - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org705d3cc" class="outline-3">
+<h3 id="org705d3cc"><a href="#org705d3cc">クエリ高速化</a></h3>
+<div class="outline-text-3" id="text-org705d3cc">
+<p>
+ネストしてクエリを発行してるときは何かがおかしい。
+</p>
+
+<ul class="org-ul">
+<li>parent_category -&gt; category -&gt; blog のような構造</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 41: </span>ひどいクエリメソッド</label><pre class="src src-ruby">parent_categories.each <span class="org-keyword">do</span> |parent_category|
+  parent_category.categories.each <span class="org-keyword">do</span> |category|
+    category.blogs.each <span class="org-keyword">do</span> |blog|
+      <span class="org-variable-name">@content</span> &lt;&lt; blog.content
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>parent_category -&gt; category -&gt; blog</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 42: </span>joins</label><pre class="src src-ruby"><span class="org-type">Blog</span>.joins(<span class="org-constant">categories:</span> category)
+  .merge(<span class="org-type">Category</span>.where(<span class="org-constant">parent_category:</span> parent_large_categories))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5fdf050" class="outline-3">
+<h3 id="org5fdf050"><a href="#org5fdf050">Migrationファイルをまとめて高速化する</a></h3>
+<div class="outline-text-3" id="text-org5fdf050">
+<p>
+Migrationファイルは変更しないのが基本だが、数が多い場合、 <code>rails migrate:reset</code> に時間がかかる。
+</p>
+
+<p>
+db/schema.rbの内容を、最新のタイムスタンプのマイグレーションにコピーする。
+</p>
+
+<ul class="org-ul">
+<li>つまり現在のDB状況が、そのまま1つのmigrationとなる。DSLが同じなので問題ない。</li>
+<li>migrationのタイムスタンプはすでに実行済みのため、動作に影響しない。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2b6f274" class="outline-3">
+<h3 id="org2b6f274"><a href="#org2b6f274">Gemfileで環境指定する</a></h3>
+<div class="outline-text-3" id="text-org2b6f274">
+<p>
+Gemfileのgroupキーワードは、指定環境でしかインストールしないことを示す。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 43: </span>developmentでしかインストールされない</label><pre class="src src-ruby">group <span class="org-constant">:development</span> <span class="org-keyword">do</span>
+  gem <span class="org-string">'annotate'</span>, <span class="org-builtin">require</span>: <span class="org-constant">false</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+なので環境を指定せずにテストを実行したとき、gem not foundが出る。実行されたのがdevelopment環境で、テストのgemが読み込まれてないから。 <code>RAILS_ENV=test</code> がついているか確認する。
+</p>
+</div>
+</div>
+<div id="outline-container-org4753188" class="outline-3">
+<h3 id="org4753188"><a href="#org4753188">論理削除と物理削除</a></h3>
+<div class="outline-text-3" id="text-org4753188">
+<p>
+論理削除は削除したときレコードを削除するのではなく、フラグをトグルするもの。
+逆に物理削除はレコードから削除すること。
+</p>
+
+<p>
+論理削除のメリットは、データが戻せること。
+</p>
+
+<p>
+が、データベースの運用的に、後から問題となることの方が多い。
+</p>
+
+<ul class="org-ul">
+<li>削除フラグを付け忘れると事故になる。削除したはずなのに表示したり、計算に入れたりしてしまう</li>
+<li>データが多くなるためパフォーマンスが悪くなる</li>
+</ul>
+
+<p>
+Railsではgem act_as_paranoidを使って簡単に論理削除処理を追加できる。deleted_atカラムを論理削除を管理するフラグとして用いる。
+</p>
+</div>
+</div>
+<div id="outline-container-org21c6d5d" class="outline-3">
+<h3 id="org21c6d5d"><a href="#org21c6d5d">find、find_by、whereの違い</a></h3>
+<div class="outline-text-3" id="text-org21c6d5d">
+<p>
+<a href="https://qiita.com/tsuchinoko_run/items/f3926caaec461cfa1ca3">find、find_by、whereの違い - Qiita</a>
+</p>
+
+<dl class="org-dl">
+<dt>find</dt><dd>各モデルのidを検索キーとしてデータを取得するメソッド。モデルインスタンスが返る</dd>
+<dt>find_by</dt><dd>id以外をキーとして検索。複数あった場合は最初だけ取る。モデルインスタンスが返る。</dd>
+<dt>where</dt><dd>id以外をキーとして検索。モデルインスタンスの入った配列が返る。</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org04d3c30" class="outline-3">
+<h3 id="org04d3c30"><a href="#org04d3c30">acts_as_list</a></h3>
+<div class="outline-text-3" id="text-org04d3c30">
+<p>
+acts_as_listは順番を管理するgem。
+<a href="https://github.com/brendon/acts_as_list">brendon/acts_as_list: An ActiveRecord plugin for managing lists.</a>
+</p>
+
+<p>
+順番の生成と、操作を可能にする。
+modelに順番カラムを指定すると、create時に自動で番号が格納される。
+逆にフォームで番号格納しているとそれが優先して入るため自動採番されない。
+new時には番号フォームを表示しないなどが必要。
+</p>
+</div>
+</div>
+<div id="outline-container-org6a1333c" class="outline-3">
+<h3 id="org6a1333c"><a href="#org6a1333c">テーブル名と名前空間</a></h3>
+</div>
+<div id="outline-container-org2ad33ce" class="outline-3">
+<h3 id="org2ad33ce"><a href="#org2ad33ce">pluck</a></h3>
+<div class="outline-text-3" id="text-org2ad33ce">
+<p>
+<code>pluck</code> は、各レコードを丸ごとオブジェクトとしてとってくるのではなく、引数で指定したカラムのみの <b>配列</b> で返すメソッド。
+<a href="https://railsdoc.com/page/model_pluck">pluck | Railsドキュメント</a>
+</p>
+
+<p>
+<code>select</code> はカラム指定というところは同じだがオブジェクトを返す。
+</p>
+</div>
+</div>
+<div id="outline-container-org358822b" class="outline-3">
+<h3 id="org358822b"><a href="#org358822b">まとめて処理して高速化</a></h3>
+<div class="outline-text-3" id="text-org358822b">
+<p>
+1つ1つ処理するのではなくて、同時に複数のレコードを処理することで高速化する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgeb0f0a7" class="outline-3">
+<h3 id="orgeb0f0a7"><a href="#orgeb0f0a7">該当レコード数が莫大な場合</a></h3>
+<div class="outline-text-3" id="text-orgeb0f0a7">
+<p>
+メモリに全体を展開するのでなく、ある数ずつ展開してメモリ消費を抑える。
+</p>
+
+<p>
+<a href="https://railsdoc.com/page/find_each">find_each | Railsドキュメント</a> &#x2026; 1件ずつ処理。
+<a href="https://railsdoc.com/page/find_in_batches">find_in_batches | Railsドキュメント</a> &#x2026; 配列で処理。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org6e6019a" class="outline-3">
+<h3 id="org6e6019a"><a href="#org6e6019a">並列処理の例</a></h3>
+<div class="outline-text-3" id="text-org6e6019a">
+<p>
+parallel gemによって。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 44: </span>例</label><pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">'parallel'</span>
+result = <span class="org-type">Parallel</span>.each(1..10) <span class="org-keyword">do</span> |item|
+    item ** 2
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org903358d" class="outline-3">
+<h3 id="org903358d"><a href="#org903358d">開発に便利なページ</a></h3>
+<div class="outline-text-3" id="text-org903358d">
+<ul class="org-ul">
+<li>/rails/info/routes
+routes一覧。</li>
+<li>/letter_opener(自分で設定する)
+送信したメール一覧を見られる。
+gemが入ってる場合。
+<a href="https://github.com/ryanb/letter_opener">ryanb/letter_opener: Preview mail in the browser instead of sending.</a></li>
+<li>rails/mailers/
+Action Mailerのプレビューを見られる。
+previewを準備しておくといちいち送信せずとも、ローカルでダミーが入った文面を確認できる。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge179a66" class="outline-3">
+<h3 id="orge179a66"><a href="#orge179a66">開発環境でしか使えないメソッドが存在する</a></h3>
+<div class="outline-text-3" id="text-orge179a66">
+<p>
+<code>class_name</code> は開発環境でしか使えない。
+gemによってはそういうパターンで使えないことがあることに注意しておく。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://stackoverflow.com/questions/38776080/method-class-name-undefined-for-class-object-in-rails">https://stackoverflow.com/questions/38776080/method-class-name-undefined-for-class-object-in-rails</a></li>
+</ul>
+<blockquote>
+<p>
+class_name method is defined by yard gem. it works only development env.
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org15fb5fc" class="outline-3">
+<h3 id="org15fb5fc"><a href="#org15fb5fc">rails console -s</a></h3>
+<div class="outline-text-3" id="text-org15fb5fc">
+<p>
+<code>rails console -s</code> としてconsole起動すると、sandbox-modeになりコンソール内のDB操作が終了時にリセットされる。
+便利。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaf6b995" class="outline-3">
+<h3 id="orgaf6b995"><a href="#orgaf6b995">rails cできないとき</a></h3>
+<div class="outline-text-3" id="text-orgaf6b995">
+<p>
+springはキャッシュを保存して次のコマンド実行を早くするgem。
+テストも高速化できるので便利だが、たまに壊れて反映しなくなったりする。
+</p>
+
+<p>
+まずspringを止めて確認する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">bundle exec spring stop
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7fd0626" class="outline-3">
+<h3 id="org7fd0626"><a href="#org7fd0626">system specでTCP error がでるとき</a></h3>
+<div class="outline-text-3" id="text-org7fd0626">
+<p>
+テストがある程度の長さを超えると、メモリの量が足りなくなってエラーを出す。
+特にMacだと起こるよう。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">ulimit</span> -n 1024
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdcaa5f7" class="outline-3">
+<h3 id="orgdcaa5f7"><a href="#orgdcaa5f7">seed_fuのlint</a></h3>
+<div class="outline-text-3" id="text-orgdcaa5f7">
+<p>
+走らせてエラーがないかチェックする。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">namespace <span class="org-constant">:db</span> <span class="org-keyword">do</span>
+  namespace <span class="org-constant">:seed_fu</span> <span class="org-keyword">do</span>
+    desc <span class="org-string">'Verify that all fixtures are valid'</span>
+    task <span class="org-constant">lint:</span> <span class="org-constant">:environment</span> <span class="org-keyword">do</span>
+      <span class="org-keyword">if</span> <span class="org-type">Rails</span>.env.test?
+        conn = <span class="org-type">ActiveRecord</span>::<span class="org-type">Base</span>.connection
+
+        <span class="org-string">%w[development test production]</span>.each <span class="org-keyword">do</span> |env|
+          conn.transaction <span class="org-keyword">do</span>
+            <span class="org-type">SeedFu</span>.seed(<span class="org-string">"db/fixtures/</span><span class="org-variable-name">#{env}</span><span class="org-string">"</span>)
+            <span class="org-builtin">raise</span> <span class="org-type">ActiveRecord</span>::<span class="org-type">Rollback</span>
+          <span class="org-keyword">end</span>
+        <span class="org-keyword">end</span>
+      <span class="org-keyword">else</span>
+        <span class="org-builtin">system</span>(<span class="org-string">"bundle exec rails db:seed_fu:lint RAILS_ENV='test'"</span>)
+        <span class="org-builtin">raise</span> <span class="org-keyword">if</span> <span class="org-builtin">$CHILD_STATUS</span>.exitstatus.nonzero?
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org291a9f8" class="outline-3">
+<h3 id="org291a9f8"><a href="#org291a9f8">どのメソッドか調べる</a></h3>
+<div class="outline-text-3" id="text-org291a9f8">
+<p>
+どのgemのメソッドかわからないときに <code>source_location</code> が便利。
+<a href="https://docs.ruby-lang.org/ja/latest/method/Method/i/source_location.html">https://docs.ruby-lang.org/ja/latest/method/Method/i/source_location.html</a>
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">character.method(<span class="org-constant">:draw</span>).source_location
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orga38b0de" class="outline-3">
+<h3 id="orga38b0de"><a href="#orga38b0de">DBリセット</a></h3>
+<div class="outline-text-3" id="text-orga38b0de">
+<p>
+環境を指定して、リセットを行う。
+データの初期化にseed_fu gemを使っている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">bundle exec rails db:migrate:reset &amp;&amp; rails db:seed_fu
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgebf5114" class="outline-3">
+<h3 id="orgebf5114"><a href="#orgebf5114">デイリーでやること</a></h3>
+<div class="outline-text-3" id="text-orgebf5114">
+<p>
+gemのupdateやマイグレーションが起きたときにやる。
+どこかで定型化して一気に実行するようにする。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">git checkout develop &amp;&amp; bundle install &amp;&amp; bundle exec rails db:migrate
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org030cb5b" class="outline-3">
+<h3 id="org030cb5b"><a href="#org030cb5b">scope</a></h3>
+<div class="outline-text-3" id="text-org030cb5b">
+<p>
+scopeはクラスメソッド的なやつ。
+インスタンスには使えない。 <code>User.scope...</code>
+<a href="https://railsguides.jp/active_record_querying.html#%E3%82%B9%E3%82%B3%E3%83%BC%E3%83%97">Active Record クエリインターフェイス - Railsガイド</a>
+</p>
+
+<blockquote>
+<p>
+スコープを設定することで、関連オブジェクトやモデルへのメソッド呼び出しとして参照される、よく使用されるクエリを指定することができます。
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgaceb1fe" class="outline-3">
+<h3 id="orgaceb1fe"><a href="#orgaceb1fe">validation</a></h3>
+<div class="outline-text-3" id="text-orgaceb1fe">
+<p>
+<code>valid?</code> はAction Modelのバリデーションメソッド。
+<a href="https://devdocs.io/rails~6.1/activemodel/validations#method-i-valid-3F">Ruby on Rails 6.1 / ActiveModel::Validations#valid? — DevDocs</a>
+引っかかってたらfalseになる。
+オーバーライドしてしまいそうになるメソッド名なのに注意。
+</p>
+</div>
+</div>
+<div id="outline-container-org8c9a021" class="outline-3">
+<h3 id="org8c9a021"><a href="#org8c9a021">ネストしたvalidateは反応しない</a></h3>
+<div class="outline-text-3" id="text-org8c9a021">
+<p>
+特定の条件だけで発動するvalidation + 条件。`with_options: if`内で`if`を使うと、中のif条件が優先して実行されるため、こう書く必要がある。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">validates <span class="org-constant">:term_date</span>, <span class="org-constant">date:</span> { <span class="org-constant">after:</span> <span class="org-builtin">proc</span> { <span class="org-type">Time</span>.zone.now } }, <span class="org-keyword">if</span>: <span class="org-builtin">proc</span> { |p| p.term_date? &amp;&amp; p.sellable?  }
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfcba1bc" class="outline-3">
+<h3 id="orgfcba1bc"><a href="#orgfcba1bc">N+1問題</a></h3>
+<div class="outline-text-3" id="text-orgfcba1bc">
+<p>
+<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>がたくさん実行されて遅くなること。ループしているとレコードの数だけSQLが発行され、一気に遅くなる。
+includesを使うと少ないSQLにまとめられる。
+<a href="https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327">https://qiita.com/hirotakasasaki/items/e0be0b3fd7b0eb350327</a>
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 45: </span>includesで関連テーブルをまとめて取得する</label><pre class="src src-ruby"><span class="org-type">Page</span>.includes(<span class="org-constant">:category</span>)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org79c2584" class="outline-3">
+<h3 id="org79c2584"><a href="#org79c2584">子のデータが存在するとき関連削除しないようにする</a></h3>
+<div class="outline-text-3" id="text-org79c2584">
+<p>
+<code>dependent: destroy</code> だと子のデータもすべて破壊して整合性を保つ。
+それでは具合が悪いときもあるので、消さないようにする。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">has_many <span class="org-constant">:contents</span>, <span class="org-constant">dependent:</span> <span class="org-constant">:restrict_with_error</span>
+</pre>
+</div>
+
+<p>
+あるいは、外部キーをnull更新する方法もある(nullableであれば)。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">has_many <span class="org-constant">:contents</span>, <span class="org-constant">dependent:</span> <span class="org-constant">:nullify</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org462fabf" class="outline-3">
+<h3 id="org462fabf"><a href="#org462fabf">文字列で返ってくる真偽値をbooleanオブジェクトに変換する</a></h3>
+<div class="outline-text-3" id="text-org462fabf">
+<p>
+文字列で返ってくる真偽値を、booleanオブジェクトとして扱いとき。ActiveModelのmoduleを使用する。
+言われてみるとDBでは文字列かをあまり意識せずに使える。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-type">ActiveModel</span>::<span class="org-type">Type</span>::<span class="org-type">Boolean</span>.new.cast(value) == <span class="org-constant">true</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc1310f7" class="outline-3">
+<h3 id="orgc1310f7"><a href="#orgc1310f7">slimで条件分岐</a></h3>
+<div class="outline-text-3" id="text-orgc1310f7">
+<p>
+<a href="https://qiita.com/mishiwata1015/items/407e924263d698ddeaae">【Rails】Slimで入れ子になっている要素の親タグのみを分岐させる - Qiita</a>
+閉じタグがないため階層の上だけ条件分岐するためには特殊な書き方が必要になる。
+</p>
+- unless request.variant.present? && request.variant.include?(:phone)
+  / PCでのみサイドバーに
+  - args = [:section, class: 'sidebar']
+- else
+  / スマホではメインコンテンツに入れる
+  - args = [:section]
+= content_tag(*args)
+</div>
+</div>
+<div id="outline-container-org580367a" class="outline-3">
+<h3 id="org580367a"><a href="#org580367a">migration例</a></h3>
+<div class="outline-text-3" id="text-org580367a">
+<div class="org-src-container">
+<pre class="src src-shell">$ rails g migration ChangeProductPrice
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">ChangeProductsPrice</span> &lt; <span class="org-type">ActiveRecord</span>::<span class="org-type">Migration</span>[7.0]
+  <span class="org-keyword">def</span> <span class="org-function-name">up</span>
+    change_table <span class="org-constant">:products</span> <span class="org-keyword">do</span> |t|
+      t.change <span class="org-constant">:price</span>, <span class="org-constant">:string</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">down</span>
+    change_table <span class="org-constant">:products</span> <span class="org-keyword">do</span> |t|
+      t.change <span class="org-constant">:price</span>, <span class="org-constant">:integer</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">$ rails g migration AddNotNullOnBooks
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">AddNotNullOnBooks</span> &lt; <span class="org-type">ActiveRecord</span>::<span class="org-type">Migration</span>[6.0]
+  <span class="org-keyword">def</span> <span class="org-function-name">up</span>
+    change_column_null <span class="org-constant">:books</span>, <span class="org-constant">:user_id</span>, <span class="org-constant">false</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">down</span>
+    change_column_null <span class="org-constant">:books</span>, <span class="org-constant">:user_id</span>, <span class="org-constant">true</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org139c9f6" class="outline-2">
+<h2 id="org139c9f6"><a href="#org139c9f6">Tasks</a></h2>
+<div class="outline-text-2" id="text-org139c9f6">
+</div>
+<div id="outline-container-org4890379" class="outline-3">
+<h3 id="org4890379"><a href="#org4890379"><span class="todo TODO">TODO</span> マイグレーションはどうやっているか&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org4890379">
+<p>
+マイグレーションを実行したとき、データベースに何が起こっているか。
+</p>
+</div>
+</div>
+<div id="outline-container-org6a9a5eb" class="outline-3">
+<h3 id="org6a9a5eb"><a href="#org6a9a5eb"><span class="todo TODO">TODO</span> Railsは起動時に何をしているか&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org6a9a5eb">
+<p>
+Rails s とは実際何なのか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcf1c3ae" class="outline-3">
+<h3 id="orgcf1c3ae"><a href="#orgcf1c3ae"><span class="todo TODO">TODO</span> ECRデプロイ</a></h3>
+<div class="outline-text-3" id="text-orgcf1c3ae">
+</div>
+</div>
+<div id="outline-container-org876ff54" class="outline-3">
+<h3 id="org876ff54"><a href="#org876ff54"><span class="todo TODO">TODO</span> 実行時のwaringをエラーとして検出させるオプションを見つける</a></h3>
+</div>
+<div id="outline-container-orgcf41366" class="outline-3">
+<h3 id="orgcf41366"><a href="#orgcf41366"><span class="todo TODO">TODO</span> <a href="https://egghead.io/blog/rails-graphql-typescript-react-apollo">Rails + GraphQL + TypeScript + React + Apollo | egghead.io</a></a></h3>
+</div>
+<div id="outline-container-orgb3c2d25" class="outline-3">
+<h3 id="orgb3c2d25"><a href="#orgb3c2d25"><span class="todo TODO">TODO</span> <a href="https://www.amazon.com/Advanced-Rails-Recipes-Mike-Clark/dp/0978739221">Advanced Rails Recipes</a></a></h3>
+</div>
+<div id="outline-container-orga36e3b5" class="outline-3">
+<h3 id="orga36e3b5"><a href="#orga36e3b5"><span class="todo TODO">TODO</span> <a href="https://dxd2021.cto-a.org/program/time-table/b-3">クソコード動画「Userクラス」で考える技術的負債解消の観点/DXD2021</a></a></h3>
+<div class="outline-text-3" id="text-orga36e3b5">
+<p>
+クソコードから学ぶ。
+</p>
+</div>
+</div>
+<div id="outline-container-org0b58d76" class="outline-3">
+<h3 id="org0b58d76"><a href="#org0b58d76"><span class="todo TODO">TODO</span> <a href="https://railsguides.jp/">Ruby on Rails ガイド：体系的に Rails を学ぼう</a></a></h3>
+<div class="outline-text-3" id="text-org0b58d76">
+<p>
+Rails のドキュメント。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd27fe41" class="outline-3">
+<h3 id="orgd27fe41"><a href="#orgd27fe41"><span class="todo TODO">TODO</span> <a href="https://www.codewithjason.com/understanding-factory-bot-syntax-coding-factory-bot/">Understanding Factory Bot syntax by coding your own Factory Bot - Code with Jason</a></a></h3>
+<div class="outline-text-3" id="text-orgd27fe41">
+<p>
+Factory Botの作り方。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc26b3a3" class="outline-3">
+<h3 id="orgc26b3a3"><a href="#orgc26b3a3"><span class="todo TODO">TODO</span> Tips文書化</a></h3>
+<div class="outline-text-3" id="text-orgc26b3a3">
+<ul class="org-ul">
+<li>5730</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb9a4147" class="outline-2">
+<h2 id="orgb9a4147"><a href="#orgb9a4147">Archives</a></h2>
+<div class="outline-text-2" id="text-orgb9a4147">
+</div>
+<div id="outline-container-orgce36e84" class="outline-3">
+<h3 id="orgce36e84"><a href="#orgce36e84"><span class="done DONE">DONE</span> 誤字</a></h3>
+<div class="outline-text-3" id="text-orgce36e84">
+<p>
+<a href="https://github.com/carrierwaveuploader/carrierwave/blob/a3ffc5381e70a4014b61b27b35540aa3b945910d/README.md#retry-option-for-douwload-from-remote-location">https://github.com/carrierwaveuploader/carrierwave/blob/a3ffc5381e70a4014b61b27b35540aa3b945910d/README.md#retry-option-for-douwload-from-remote-location</a>
+</p>
+
+<p>
+PR送信完了。一字だけ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgad39acc" class="outline-3">
+<h3 id="orgad39acc"><a href="#orgad39acc"><span class="done DONE">DONE</span> <a href="https://zenn.dev/prune/books/0d7d6e3c5f0496">Rails+React（SPA）TODOアプリチュートリアル【0から学ぶ】</a></a></h3>
+<div class="outline-text-3" id="text-orgad39acc">
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>  + <a href="20210902220546-react.html#ID-dc50d818-d7d1-48a8-ad76-62ead617c670">React</a>の本。
+</p>
+
+<p>
+ホットリロードができない。
+</p>
+</div>
+</div>
+<div id="outline-container-org64bb59b" class="outline-3">
+<h3 id="org64bb59b"><a href="#org64bb59b"><span class="done CLOSE">CLOSE</span> loggerを自動オン</a></h3>
+<div class="outline-text-3" id="text-org64bb59b">
+<p>
+Rails console。ENVで分岐すれば本番コンソールでログレベルを上げる、ということができるはず。
+</p>
+</div>
+</div>
+<div id="outline-container-orgab541de" class="outline-3">
+<h3 id="orgab541de"><a href="#orgab541de"><span class="done DONE">DONE</span> <a href="https://qiita.com/k-penguin-sato/items/07fef2f26fd6339e0e69">【Rails】graphql-rubyでAPIを作成 - Qiita</a> -実行</a></h3>
+<div class="outline-text-3" id="text-orgab541de">
+<p>
+<a href="20211030122204-graphql.html#ID-b4f456cf-d250-4877-ac4c-4b03144392f0">GraphQL</a>をrailsでやるチュートリアル。
+</p>
+</div>
+</div>
+<div id="outline-container-org19a21e5" class="outline-3">
+<h3 id="org19a21e5"><a href="#org19a21e5"><span class="done CLOSE">CLOSE</span> <a href="https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&amp;btkr=1">Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books</a></a></h3>
+<div class="outline-text-3" id="text-org19a21e5">
+<ul class="org-ul">
+<li>24, 51</li>
+</ul>
+
+<p>
+KubernetesでRails deployまでやる本。
+AWSデプロイコマンドの挙動が違い、バージョンを合わせても動かずよくわからなかったので断念。こういうのは新しい本を買うべきだな。ローカル環境minikubeでの動作は確認できた。
+</p>
+</div>
+</div>
+<div id="outline-container-org6779b5c" class="outline-3">
+<h3 id="org6779b5c"><a href="#org6779b5c"><span class="done DONE">DONE</span> RailsとPumaの関係性&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org6779b5c">
+<p>
+2つの違いは何で、実際どのように、どの境界で処理しているのか。
+</p>
+
+<ul class="org-ul">
+<li>rails: アプリケーション(ソースコード)</li>
+<li>puma: アプリケーションサーバ。アプリケーションを動かしているもの</li>
+</ul>
+
+<blockquote>
+<p>
+まず、webリクエストはwebサーバーが受け取ります。そのリクエストがRailsで処理できるものであれば、webサーバーはリクエストに簡単な処理を加えてアプリケーションサーバーに渡します。アプリケーションサーバーはRackを使ってRailsアプリケーションに話しかけます。Railsアプリケーションがリクエストの処理を終えると、Railsはレスポンスをアプリケーションサーバーに返します。そして、webサーバーはあなたのアプリケーションを使っているユーザーにレスポンスを返します。
+</p>
+</blockquote>
+
+<ul class="org-ul">
+<li><a href="https://qiita.com/jnchito/items/3884f9a2ccc057f8f3a3">Rails開発におけるwebサーバーとアプリケーションサーバーの違い（翻訳） - Qiita</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org0c49411" class="outline-2">
+<h2 id="org0c49411"><a href="#org0c49411">References</a></h2>
+<div class="outline-text-2" id="text-org0c49411">
+</div>
+<div id="outline-container-org1030387" class="outline-3">
+<h3 id="org1030387"><a href="#org1030387"><a href="https://github.com/thoughtbot/ruby-science">thoughtbot/ruby-science: The reference for writing fantastic Rails applications</a></a></h3>
+<div class="outline-text-3" id="text-org1030387">
+<p>
+ruby, railsのより良い書き方のガイド。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd2d68bb" class="outline-3">
+<h3 id="orgd2d68bb"><a href="#orgd2d68bb"><a href="https://qiita.com/takahiro1127/items/fcb81753eaf381b4b33c">なぜrailsの本番環境ではUnicorn,Nginxを使うのか? 　~ Rack,Unicorn,Nginxの連携について ~【Ruby On Railsでwebサービス運営】 - Qiita</a></a></h3>
+</div>
+<div id="outline-container-org3ba8524" class="outline-3">
+<h3 id="org3ba8524"><a href="#org3ba8524"><a href="https://stackoverflow.com/questions/61413196/how-to-run-capybara-tests-using-selenium-chrome-in-a-dockerised-rails-environm">docker - How to run Capybara tests using Selenium &amp; Chrome in a Dockerised Rails environment on a Mac - Stack Overflow</a></a></h3>
+<div class="outline-text-3" id="text-org3ba8524">
+<p>
+dockerのseleniumで動かす方法。
+</p>
+</div>
+</div>
+<div id="outline-container-orge32d2ea" class="outline-3">
+<h3 id="orge32d2ea"><a href="#orge32d2ea"><a href="https://railsguides.jp/active_model_basics.html">Active Model の基礎 - Railsガイド</a></a></h3>
+<div class="outline-text-3" id="text-orge32d2ea">
+<p>
+モデルの説明。
+</p>
+</div>
+</div>
+<div id="outline-container-org1646d44" class="outline-3">
+<h3 id="org1646d44"><a href="#org1646d44"><a href="https://qiita.com/jnchito/items/0ee47108972a0e302caf">永久保存版！？伊藤さん式・Railsアプリのアップグレード手順 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org1646d44">
+<p>
+アップデートの流れ。
+</p>
+</div>
+</div>
+<div id="outline-container-org517b368" class="outline-3">
+<h3 id="org517b368"><a href="#org517b368"><a href="https://tech.kitchhike.com/entry/2017/03/07/190739">DHH流のルーティングで得られるメリットと、取り入れる上でのポイント - KitchHike Tech Blog</a></a></h3>
+<div class="outline-text-3" id="text-org517b368">
+<p>
+ルーティングをどうするかの指針。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdac7cdd" class="outline-3">
+<h3 id="orgdac7cdd"><a href="#orgdac7cdd"><a href="https://github.com/ankane/strong_migrations">ankane/strong_migrations: Catch unsafe migrations in development</a></a></h3>
+<div class="outline-text-3" id="text-orgdac7cdd">
+<p>
+READMEに安全なマイグレーションの説明がある。
+</p>
+</div>
+</div>
+<div id="outline-container-org3b8095f" class="outline-3">
+<h3 id="org3b8095f"><a href="#org3b8095f"><a href="https://tech.speee.jp/entry/2020/06/30/110000">reg-suit によるビジュアルリグレッションテストで Rails アプリの CSS 改善サイクルが回り始めた話 - Speee DEVELOPER BLOG</a></a></h3>
+<div class="outline-text-3" id="text-org3b8095f">
+<p>
+ビジュアルリグレッションテストの運用方法。
+</p>
+</div>
+</div>
+<div id="outline-container-org53426ab" class="outline-3">
+<h3 id="org53426ab"><a href="#org53426ab"><a href="https://zenn.dev/yukito0616/articles/d3b7032e9f1e90">Only My Rails Way</a></a></h3>
+<div class="outline-text-3" id="text-org53426ab">
+<p>
+Rails Wayの定義について。
+</p>
+</div>
+</div>
+<div id="outline-container-org395738b" class="outline-3">
+<h3 id="org395738b"><a href="#org395738b"><a href="https://discuss.rubyonrails.org/">Ruby on Rails Discussions - Ruby on Rails Discussions</a></a></h3>
+<div class="outline-text-3" id="text-org395738b">
+<p>
+Rails開発のディスカッション。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdd2635b" class="outline-3">
+<h3 id="orgdd2635b"><a href="#orgdd2635b"><a href="https://www.slideshare.net/ockeghem/ruby-on-rails-security-142250872">Railsエンジニアのためのウェブセキュリティ入門</a></a></h3>
+<div class="outline-text-3" id="text-orgdd2635b">
+<p>
+わかりやすいスライド。
+</p>
+</div>
+</div>
+<div id="outline-container-org53b573a" class="outline-3">
+<h3 id="org53b573a"><a href="#org53b573a"><a href="https://techracho.bpsinc.jp/hachi8833/2020_05_13/91211">Rails開発者が採用面接で聞かれる想定Q&amp;A 53問（翻訳）｜TechRacho by BPS株式会社</a></a></h3>
+<div class="outline-text-3" id="text-org53b573a">
+<p>
+ちゃんとRailsガイドを読まないときついな。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

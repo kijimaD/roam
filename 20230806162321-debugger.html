@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debugger</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Debugger</h1>
+<div id="outline-container-orgb8f38ae" class="outline-2">
+<h2 id="orgb8f38ae"><a href="#orgb8f38ae">概要</a></h2>
+<div class="outline-text-2" id="text-orgb8f38ae">
+<p>
+デバッガは、デバッグ作業を支援するコンピュータプログラムのこと。
+</p>
+</div>
+</div>
+<div id="outline-container-org0695822" class="outline-2">
+<h2 id="org0695822"><a href="#org0695822">gdb</a></h2>
+<div class="outline-text-2" id="text-org0695822">
+<p>
+add.cファイルの、main関数のデバッグをするときを考える。
+</p>
+</div>
+<div id="outline-container-org426d4a6" class="outline-3">
+<h3 id="org426d4a6"><a href="#org426d4a6">.gdbinitファイル</a></h3>
+<div class="outline-text-3" id="text-org426d4a6">
+<p>
+カレントディレクトリに <code>.gdbinit</code> ファイルを作成しておくと、定点観測しやすくなる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>.gdbinit</label><pre class="src src-shell"><span class="org-keyword">break</span> *main
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">/x&#12399;16&#36914;&#25968;&#34920;&#31034;&#12377;&#12427;</span>
+display /x $<span class="org-variable-name">eax</span>
+display /x $<span class="org-variable-name">ebx</span>
+display /x $<span class="org-variable-name">esi</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">/4i&#12399;&#27425;&#12398;4&#21629;&#20196;&#12434;&#34920;&#31034;&#12377;&#12427;</span>
+display /4i $<span class="org-variable-name">pc</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>-qオプションは起動時のメッセージ抑制する</label><pre class="src src-shell">gdb -q add
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org909632d" class="outline-3">
+<h3 id="org909632d"><a href="#org909632d">実行する</a></h3>
+<div class="outline-text-3" id="text-org909632d">
+<p>
+gdbコンソールでrunを実行する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>gdbコマンド実行後の対話環境内</label><pre class="src src-shell">Reading symbols from add...
+(No debugging symbols found<span class="org-keyword"> in</span> add)
+Breakpoint 1 at 0x1129
+
+(gdb) r
+Starting program: /home/orange/Project/my_asm/dokusyu/ch4/add
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library <span class="org-string">"/lib/x86_64-linux-gnu/libthread_db.so.1"</span>.
+
+Breakpoint 1, 0x0000555555555129<span class="org-keyword"> in</span> main ()
+1: /x $<span class="org-variable-name">eax</span> = 0x55555129
+2: /x $<span class="org-variable-name">ebx</span> = 0x0
+3: /x $<span class="org-variable-name">esi</span> = 0xffffdb48
+4: x/4i $<span class="org-variable-name">pc</span>
+=&gt; 0x555555555129 &lt;main&gt;:       endbr64
+   0x55555555512d &lt;main+4&gt;:     push   %rbp
+   0x55555555512e &lt;main+5&gt;:     push   %rbx
+   0x55555555512f &lt;main+6&gt;:     mov    $<span class="org-variable-name">0</span>x7b,%ebp
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>スタックの上位32バイトを16進数でダンプする</label><pre class="src src-shell">(gdb) x/ 32b $<span class="org-variable-name">esp</span>
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org5a68896" class="outline-3">
+<h3 id="org5a68896"><a href="#org5a68896">ステップイン</a></h3>
+<div class="outline-text-3" id="text-org5a68896">
+<p>
+<code>si</code> で進める。
+</p>
+
+<pre class="example">
+(gdb) si
+0x000055555555512f in main ()
+1: /x $eax = 0x55555129
+2: /x $ebx = 0x0
+3: /x $esi = 0xffffdb18
+4: x/4i $pc
+=&gt; 0x55555555512f &lt;main+6&gt;:     mov    $0x7b,%ebp
+   0x555555555134 &lt;main+11&gt;:    add    $0x1,%ebp
+   0x555555555137 &lt;main+14&gt;:    mov    $0x1c8,%ebx
+   0x55555555513c &lt;main+19&gt;:    add    %ebp,%ebx
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org12f3802" class="outline-3">
+<h3 id="org12f3802"><a href="#org12f3802">TUIモード</a></h3>
+<div class="outline-text-3" id="text-org12f3802">
+<p>
+TextUserInterfaceの略。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">gdb -tui add
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>逆アセンブル結果を表示する</label><pre class="src src-shell">layout asm
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>レジスタを表示する</label><pre class="src src-shell">layout regs
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org56f654d" class="outline-2">
+<h2 id="org56f654d"><a href="#org56f654d">Memo</a></h2>
+</div>
+<div id="outline-container-org18f5399" class="outline-2">
+<h2 id="org18f5399"><a href="#org18f5399">Tasks</a></h2>
+</div>
+<div id="outline-container-org072bc4a" class="outline-2">
+<h2 id="org072bc4a"><a href="#org072bc4a">Reference</a></h2>
+<div class="outline-text-2" id="text-org072bc4a">
+<ul class="org-ul">
+<li><a href="https://ja.wikipedia.org/wiki/%E3%83%87%E3%83%90%E3%83%83%E3%82%AC">デバッガ - Wikipedia</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4a8c605" class="outline-2">
+<h2 id="org4a8c605"><a href="#org4a8c605">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

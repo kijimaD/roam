@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>create-link</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">create-link</h1>
+<div id="outline-container-orgc0d9cba" class="outline-2">
+<h2 id="orgc0d9cba"><a href="#orgc0d9cba">概要</a></h2>
+<div class="outline-text-2" id="text-orgc0d9cba">
+<p>
+create-linkは簡単にリンクを各形式に変換する、自作<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a> package。<a href="20210509122633-emacs_lisp.html#ID-c7e81fac-9f8b-4538-9851-21d4ff3c2b08">Emacs Lisp</a>で書かれている。元ネタはChromeアドオンの<a href="https://chrome.google.com/webstore/detail/create-link/gcmghdmnkfdbncmnmlkkglmnnhagajbm?hl=ja">Create Link</a>。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd3a385c" class="outline-2">
+<h2 id="orgd3a385c"><a href="#orgd3a385c">Memo</a></h2>
+<div class="outline-text-2" id="text-orgd3a385c">
+</div>
+<div id="outline-container-org13164ae" class="outline-3">
+<h3 id="org13164ae"><a href="#org13164ae">アクセスを待つ必要がある</a></h3>
+<div class="outline-text-3" id="text-org13164ae">
+<p>
+ブラウザでのテストは、(sit-for) で待つ必要がある。
+ewwでは待たなくてもOK、w3mでは待つ必要がある、というのは同期、非同期が違うからか。
+</p>
+</div>
+</div>
+<div id="outline-container-org9734984" class="outline-3">
+<h3 id="org9734984"><a href="#org9734984">letで抜けられない</a></h3>
+<div class="outline-text-3" id="text-org9734984">
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">let</span> (result)
+  (request
+    <span class="org-builtin">:success</span> (function*
+      (<span class="org-keyword">progn</span>
+        (<span class="org-keyword">setq</span> result <span class="org-string">"aaaa"</span>))))
+result) <span class="org-comment-delimiter">; </span><span class="org-comment">nil</span>
+</pre>
+</div>
+<p>
+みたいなとき、返り値resultがnilになる。
+ほかの普通の関数だとOKだが、requestの特殊な形で、ちょっと違う。
+</p>
+</div>
+</div>
+<div id="outline-container-org1924bb7" class="outline-3">
+<h3 id="org1924bb7"><a href="#org1924bb7">CI</a></h3>
+<div class="outline-text-3" id="text-org1924bb7">
+<p>
+依存パッケージを読みこむ必要がある。
+Emacs package以外にも、たとえばw3mは外部プログラムが必要なのでapt-getするなど。
+</p>
+</div>
+</div>
+<div id="outline-container-org4850bd7" class="outline-3">
+<h3 id="org4850bd7"><a href="#org4850bd7">CIやバッチテストでcl-libが読み込まれない</a></h3>
+<div class="outline-text-3" id="text-org4850bd7">
+<p>
+caskに書いてもインストールされない。
+最初から入っているようだ。ただし、(require &rsquo;cl-lib)しないといけない。
+また、function* はcl-functionのaliasだと書かれているが、CIやEmacsバッチモードだと認識しなかった。何か別のパッケージな可能性。
+</p>
+</div>
+</div>
+<div id="outline-container-org6419ce6" class="outline-3">
+<h3 id="org6419ce6"><a href="#org6419ce6">依存パッケージ</a></h3>
+<div class="outline-text-3" id="text-org6419ce6">
+<p>
+elisp-checkでの依存パッケージの読み込み方がわからない。
+テストだけはcaskで別にやっている。
+</p>
+</div>
+</div>
+<div id="outline-container-org85c56a1" class="outline-3">
+<h3 id="org85c56a1"><a href="#org85c56a1">冗長なcustom</a></h3>
+<div class="outline-text-3" id="text-org85c56a1">
+<p>
+冗長なcustomをうまく指定するように。
+customを設定するときにbm.elが参考になった。
+</p>
+</div>
+</div>
+<div id="outline-container-orge1701d2" class="outline-3">
+<h3 id="orge1701d2"><a href="#orge1701d2">helmソースの定義</a></h3>
+<div class="outline-text-3" id="text-orge1701d2">
+<p>
+最小構成ぽいhelm-miscが参考になった。
+</p>
+</div>
+</div>
+<div id="outline-container-org95a16d2" class="outline-3">
+<h3 id="org95a16d2"><a href="#org95a16d2">completion</a></h3>
+<div class="outline-text-3" id="text-org95a16d2">
+<p>
+デフォルトのcompletionもすぐできた。
+要するにリストを渡せば選択肢になる。で、出てきた値は文字列なのでinternすれば良い。
+</p>
+</div>
+</div>
+<div id="outline-container-org81f1630" class="outline-3">
+<h3 id="org81f1630"><a href="#org81f1630">ヘルパー作らないとやばい</a></h3>
+</div>
+<div id="outline-container-orgc47857a" class="outline-3">
+<h3 id="orgc47857a"><a href="#orgc47857a">mapcarを使って書き直せないか</a></h3>
+<div class="outline-text-3" id="text-orgc47857a">
+<p>
+あとクロージャとかも。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">test1</span> (default)
+  `(<span class="org-keyword">lambda</span> (optional) (<span class="org-keyword">if</span> optional optional ,default)))
+
+(funcall (test1 create-link-default-format) <span class="org-string">"aaa"</span>)
+(<span class="org-keyword">setq</span> test2 (test1 <span class="org-string">"aaa"</span>))
+test2
+(funcall test2 create-link-default-format)
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">make-adder</span> (n)
+  `(<span class="org-keyword">lambda</span> (x) (+ x ,n)))
+(<span class="org-keyword">setq</span> add2 (make-adder 2))
+(funcall add2 5)
+
+(funcall (<span class="org-keyword">lambda</span> (a b c) (+ a b c))
+         1 2 3)
+
+(funcall (<span class="org-keyword">lambda</span> (n) (1+ n))        <span class="org-comment-delimiter">; </span><span class="org-comment">One required:</span>
+         1)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org78a8637" class="outline-3">
+<h3 id="org78a8637"><a href="#org78a8637">モード別に分岐する関数の参考になる</a></h3>
+<div class="outline-text-3" id="text-org78a8637">
+<p>
+ace-link.el は参考になるな。
+buffer-nameで判別してたが、modeのほうがよさそう。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">cond</span> ((eq major-mode 'Info-mode)
+       (ace-link-info))
+      ((member major-mode '(help-mode
+                            package-menu-mode geiser-doc-mode elbank-report-mode
+                            elbank-overview-mode slime-trace-dialog-mode helpful-mode))
+       (ace-link-help))
+      ((eq major-mode 'Man-mode)
+       (ace-link-man))
+      ((eq major-mode 'woman-mode)
+       (ace-link-woman))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgee7f25b" class="outline-3">
+<h3 id="orgee7f25b"><a href="#orgee7f25b">ace-linkを参考に</a></h3>
+<div class="outline-text-3" id="text-orgee7f25b">
+<p>
+info用とか、custom用のリンク抽出も考えられる。
+ファイルでなくて、関数の集合体を生成できないか。
+</p>
+
+<p>
+たとえばinfoの特定のページを開くのを実行するリストを生成する。
+(info &ldquo;ivy&rdquo;)する。みたいな。
+ファイルだと依存するからな。Emacsで実行するのが前提のを生成するというわけだ。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">npm install date-fns @types/date-fns
+</pre>
+</div>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org417a43f" class="outline-2">
+<h2 id="org417a43f"><a href="#org417a43f">Tasks</a></h2>
+<div class="outline-text-2" id="text-org417a43f">
+</div>
+<div id="outline-container-org6d799a5" class="outline-3">
+<h3 id="org6d799a5"><a href="#org6d799a5"><span class="todo TODO">TODO</span> シェルだったらカレントディレクトリを取る</a></h3>
+<div class="outline-text-3" id="text-org6d799a5">
+<p>
+ブラウザみたく、変数が用意されてはない模様。まあこれについてはあまりいらないか。
+パスを取得したいときはあるけど、それをhtmlリンクにしたいってあまりないしな。
+</p>
+
+<p>
+パスはdefault-directoryで取れる。
+</p>
+</div>
+</div>
+<div id="outline-container-org6f31522" class="outline-3">
+<h3 id="org6f31522"><a href="#org6f31522"><span class="todo TODO">TODO</span> タイトルはないときバージョンを作るか</a></h3>
+<div class="outline-text-3" id="text-org6f31522">
+<p>
+つまりパスだけ。
+主題とはずれる気がする。シェルとかだとタイトルの取りようがないのでこれを追加するのが必要。
+</p>
+</div>
+</div>
+<div id="outline-container-org75f1e32" class="outline-3">
+<h3 id="org75f1e32"><a href="#org75f1e32"><span class="todo TODO">TODO</span> Gitリポジトリのときは、相対ディレクトリを取得するオプション</a></h3>
+<div class="outline-text-3" id="text-org75f1e32">
+<p>
+リポジトリからリンクを辿れるようになる。でも<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>上でどうなんだろう。
+辿れないけど、人にディレクトリを示すときには使える。今は絶対パスで取って前のを削除している。めんど
+い。
+うむむ。リモートリポジトリのURLがわかるなら意味はありそう。git-linkとあまり変わらないけどな。
+git-linkのコードを見てるけど、まだあまりよくわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-org1131505" class="outline-3">
+<h3 id="org1131505"><a href="#org1131505"><span class="todo TODO">TODO</span> ホームディレクトリを~で出すようにする</a></h3>
+<div class="outline-text-3" id="text-org1131505">
+<p>
+今は <code>/home/kijima...</code> で出てるからな。汎用性があまりよくない。あとで絶対変わるし、ほかで使えない。
+</p>
+</div>
+</div>
+<div id="outline-container-orge0b0fce" class="outline-3">
+<h3 id="orge0b0fce"><a href="#orge0b0fce"><span class="todo TODO">TODO</span> 実行関数を出力</a></h3>
+<div class="outline-text-3" id="text-orge0b0fce">
+<p>
+たとえばivyのinfoページにいたとする。(info &ldquo;ivy&rdquo;) を出力する。
+これを実行するとivyに飛べるので、リンクといえそう。環境も関係ない。
+</p>
+
+<p>
+infoバッファからの検索キーワードの割り出し方…
+実行ディレクトリをdefault-directoryか何かで取る。(.*).infoというファイルがあるはずなのでそのファイル名をinfoの引数に渡す。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf642562" class="outline-2">
+<h2 id="orgf642562"><a href="#orgf642562">Archives</a></h2>
+<div class="outline-text-2" id="text-orgf642562">
+</div>
+<div id="outline-container-org42197fb" class="outline-3">
+<h3 id="org42197fb"><a href="#org42197fb"><span class="done DONE">DONE</span> フックを追加…たとえばリンク生成 → {フック} → コピー前としておく。</a></h3>
+<div class="outline-text-3" id="text-org42197fb">
+<p>
+フックでは式が使えるのでなんでもできる。動的にタイムスタンプを加えたり、連番を振ったりとか。単なる文字列フィルターよりはるかに強力。誰かがもっと便利な使い方を編み出してくれる。
+</p>
+
+<p>
+make-formatと、message+killの前にフックを差し込むか。
+でも、文字列を受け取れないからあまり意味ない気がしてきた。
+フックはその処理に追加するというより、別の処理を差し込むためのものだ(ある関数を実行すると、別の全く関係ない)モードをオンにするとか。その意味でいうと、フックする処理はまったく思いつかない。
+</p>
+</div>
+</div>
+<div id="outline-container-org7d6b2c7" class="outline-3">
+<h3 id="org7d6b2c7"><a href="#org7d6b2c7"><span class="done DONE">DONE</span> リンク変換</a></h3>
+<div class="outline-text-3" id="text-org7d6b2c7">
+<p>
+別のフォーマットに変換するのもあっていいな。
+すでに書式があるから、そこからURL, Titleを取り出せればいい。
+</p>
+<ul class="org-ul">
+<li>判定関数</li>
+</ul>
+<p>
+thing-at-pointの拡張だな。フォーマットリンク上にカーソルがある場合、タイトルとURLを取得して変換…。
+どのフォーマットか判定できれば、タイトルとURLを取れる。
+markdown-mode.elの(markdown-kill-thing-at-point)が参考になりそう。
+</p>
+
+<p>
+別に独自実装しなくても、各modeのregexpを使えばいいかな。いや、フル装備でめちゃくちゃ複雑だし、いろんな依存(5つも増えるのはさすがに…)があるので独自でやろう。
+<a href="https://ayatakesi.github.io/emacs/25.1/Regexps.html">https://ayatakesi.github.io/emacs/25.1/Regexps.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org4221b85" class="outline-3">
+<h3 id="org4221b85"><a href="#org4221b85"><span class="done DONE">DONE</span> フォーマットごとの特殊ルールを追加する</a></h3>
+<div class="outline-text-3" id="text-org4221b85">
+<p>
+たとえばlatexの場合、ファイルリンクにはプレフィクスrun:がつくらしい。
+今のコードだとファイルリンクだという検知はget-informationでしかできないのでそこに書くしかない。
+一般的関数に特定のファイルフォーマットの処理が挟まれると非常に醜い。
+なので、最終的な個別変換を分離する。そうするとhtmlがついてないときはrunをつけるとか、好きに追加できるだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-org9d21c87" class="outline-3">
+<h3 id="org9d21c87"><a href="#org9d21c87"><span class="done DONE">DONE</span> テキスト選択中だと、タイトルに選択したところを入れる</a></h3>
+<div class="outline-text-3" id="text-org9d21c87">
+</div>
+</div>
+<div id="outline-container-orgfb0fa68" class="outline-3">
+<h3 id="orgfb0fa68"><a href="#orgfb0fa68"><span class="done DONE">DONE</span> 選択URLにアクセスして、Titleをスクレイピング。リンクを完成させる</a></h3>
+<div class="outline-text-3" id="text-orgfb0fa68">
+</div>
+</div>
+<div id="outline-container-org63365b6" class="outline-3">
+<h3 id="org63365b6"><a href="#org63365b6"><span class="done DONE">DONE</span> 手動で形式選択できるように</a></h3>
+<div class="outline-text-3" id="text-org63365b6">
+<p>
+helmから選べたらベスト。選択をどうやってやればいいのかよくわからない
+org-roamのファイル選択で出てくるhelmなど参考になりそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org3eea3d5" class="outline-3">
+<h3 id="org3eea3d5"><a href="#org3eea3d5"><span class="done DONE">DONE</span> とりあえず標準のcompletionだけ追加</a></h3>
+<div class="outline-text-3" id="text-org3eea3d5">
+</div>
+</div>
+<div id="outline-container-orgd9475bf" class="outline-3">
+<h3 id="orgd9475bf"><a href="#orgd9475bf"><span class="done DONE">DONE</span> checkdocをCIで走らせるようにする</a></h3>
+<div class="outline-text-3" id="text-orgd9475bf">
+<p>
+elisp-checkはcask環境のためうまくできない。
+なので、elisp-check.elを直に読み込んで実行するようにすればよさそう。
+</p>
+
+<p>
+elisp-lintというパッケージに同梱されてたのでそれで一気にできるようになった。
+</p>
+</div>
+</div>
+<div id="outline-container-org759cf40" class="outline-3">
+<h3 id="org759cf40"><a href="#org759cf40"><span class="done DONE">DONE</span> テスト追加 + CI</a></h3>
+<div class="outline-text-3" id="text-org759cf40">
+</div>
+</div>
+<div id="outline-container-org7ae5e52" class="outline-3">
+<h3 id="org7ae5e52"><a href="#org7ae5e52"><span class="done DONE">DONE</span> エクスポート形式増加 HTML,LaTeX,Markdown,MediaWiki,Org-mode</a></h3>
+<div class="outline-text-3" id="text-org7ae5e52">
+</div>
+</div>
+<div id="outline-container-orgd420298" class="outline-3">
+<h3 id="orgd420298"><a href="#orgd420298"><span class="done DONE">DONE</span> ユーザ定義のフィルター … chromeの拡張の方にはある</a></h3>
+<div class="outline-text-3" id="text-orgd420298">
+</div>
+</div>
+<div id="outline-container-org788308c" class="outline-3">
+<h3 id="org788308c"><a href="#org788308c"><span class="done DONE">DONE</span> PDF(ページを取ることはできそう。リンクでページ番号を表現できるか)</a></h3>
+<div class="outline-text-3" id="text-org788308c">
+<p>
+やらない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbac90b9" class="outline-3">
+<h3 id="orgbac90b9"><a href="#orgbac90b9"><span class="done DONE">DONE</span> magit-status-modeのPR/Issueへのリンクを取得</a></h3>
+<div class="outline-text-3" id="text-orgbac90b9">
+</div>
+</div>
+<div id="outline-container-org9a7af79" class="outline-3">
+<h3 id="org9a7af79"><a href="#org9a7af79"><span class="done DONE">DONE</span> Magit(Gitクライアント)の場合。</a></h3>
+<div class="outline-text-3" id="text-org9a7af79">
+<p>
+<code>git-link</code> の整形バージョン。
+そこまではちょっとやりすぎ感。依存が増えすぎるのも微妙な感じか。でも欲しいよな…。
+各PRまではいいけど、少なくともリポジトリのホームページくらいならいいかな。
+</p>
+
+<p>
+これができるとメモるとき便利なんだよな。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docker</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Docker</h1>
+
+<div id="outline-container-orgca03577" class="outline-2">
+<h2 id="orgca03577"><a href="#orgca03577">概要</a></h2>
+<div class="outline-text-2" id="text-orgca03577">
+<p>
+Dockerはパフォーマンスに優れた仮想環境を作るプログラム。
+得られる可搬性によって、作成したイメージを開発における各ステージ(テスト、ビルド、リリース…)で適用できるようになる。
+その意味で<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>, <a href="20220212141243-cd.html#ID-2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764">CD</a>の基礎的な技術となっている。
+</p>
+</div>
+</div>
+<div id="outline-container-org40a2df5" class="outline-2">
+<h2 id="org40a2df5"><a href="#org40a2df5">Memo</a></h2>
+<div class="outline-text-2" id="text-org40a2df5">
+</div>
+<div id="outline-container-org8d33056" class="outline-3">
+<h3 id="org8d33056"><a href="#org8d33056">バインドマウント先を削除した場合の挙動</a></h3>
+<div class="outline-text-3" id="text-org8d33056">
+<p>
+バインドマウントしているディレクトリをまるごと削除すると、後からそこにディレクトリをおいても中身がバインドされないことに気づいた。
+</p>
+
+<pre class="example">
+- ワーキングディレクトリ
+  - aaa(ディレクトリ)
+    - test1(ファイル)
+    - test2(ファイル)
+  - bbb(ディレクトリ)
+    - test1(ファイル)
+    - test2(ファイル)
+</pre>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>検証用のコンテナを起動する</label><pre class="src src-shell">docker run -d -it --name devtest --mount <span class="org-variable-name">type</span>=bind,<span class="org-variable-name">source</span>=<span class="org-string">"$(pwd)"</span>/aaa,<span class="org-variable-name">target</span>=/aaa nginx:latest
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>検証方法</label><pre class="src src-shell">docker inspect devtest
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>コンテナに入って見えることを確認する</label><pre class="src src-shell">  $ docker exec -it devtest /bin/sh
+
+  &gt; cd /app
+  &gt; ls
+test1 test2
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>バインドマウントしているディレクトリをホストマシンから削除する</label><pre class="src src-shell">$ rm -rf /tmp/aaa
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>ホストマシンから消したので、コンテナからも見えない</label><pre class="src src-shell">  $ docker exec -it devtest /bin/sh
+
+  &gt; cd /app
+  &gt; ls
+(&#20309;&#12418;&#20986;&#12394;&#12356;)
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>削除したディレクトリと中身を復活させる</label><pre class="src src-shell">$ cp -r /tmp/bbb /tmp/aaa
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>ホストマシンには復活しているが、コンテナ内には戻らない</label><pre class="src src-shell">  $ docker exec -it devtest /bin/sh
+
+  &gt; cd /ap
+  &gt; ls
+(&#20309;&#12418;&#20986;&#12394;&#12356;)
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>inspect結果は削除前と変わらない</label><pre class="src src-shell">docker inspect devtest
+</pre>
+</div>
+
+<p>
+-<a href="https://github.com/moby/moby/issues/15793#issuecomment-135411504"> File mount does not update with changes from host · Issue #15793 · moby/moby</a>
+</p>
+
+<p>
+バインドマウントはinodeで一致しているかで同期を管理しているという。新しく作る場合はinodeが変わるので同期されなくなる。
+</p>
+
+<ul class="org-ul">
+<li>mvだとinodeが変わらない。のでバインドマウントをし続けられる。そのシェルセッションで何もしていなくても、別で名前を変えても追従し、ワーキングディレクトリは変わることがある</li>
+<li>cpだとinodeが変わる。のでバインドマウントの同期が切れ、同じ名前のディレクトリを配置しても同期はされない</li>
+</ul>
+
+<p>
+<code>docker-compose restart</code> するとまたバインドマウントされるようになった。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org0262d91" class="outline-3">
+<h3 id="org0262d91"><a href="#org0262d91">サービス名をつけると管理が便利</a></h3>
+<div class="outline-text-3" id="text-org0262d91">
+<p>
+サービス名をつけて起動すると、名前を指定して止めることもできるようになる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>サービスに名前をつけて起動する</label><pre class="src src-shell">docker run -d -p 80:80 --name webserver nginx
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>名前を指定して止める</label><pre class="src src-shell">docker stop webserver
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9c36f81" class="outline-3">
+<h3 id="org9c36f81"><a href="#org9c36f81">Docker本体のビルド方法</a></h3>
+<div class="outline-text-3" id="text-org9c36f81">
+<ul class="org-ul">
+<li><a href="https://github.com/moby/moby">moby/moby: Moby Project</a></li>
+<li>手元にcloneしている前提</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>生成</label><pre class="src src-shell">sudo make build <span class="org-comment-delimiter"># </span><span class="org-comment">environment</span>
+sudo make binary <span class="org-comment-delimiter"># </span><span class="org-comment">binary</span>
+sudo chown -R $<span class="org-variable-name">USER</span>:$<span class="org-variable-name">USER</span> . <span class="org-comment-delimiter"># </span><span class="org-comment">&#12394;&#12367;&#12390;&#12418;&#12356;&#12356;</span>
+</pre>
+</div>
+
+<p>
+すると、bundles化に実行ファイルが生成される。あとはビルドしたものでデーモンを起動する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo service docker stop <span class="org-comment-delimiter"># </span><span class="org-comment">&#29694;&#29366;&#12487;&#12540;&#12514;&#12531;&#20572;&#27490;</span>
+sudo ./bundles/binary-daemon/dockerd
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org1965ddc" class="outline-3">
+<h3 id="org1965ddc"><a href="#org1965ddc">docker buildのデバッグ</a></h3>
+<div class="outline-text-3" id="text-org1965ddc">
+<p>
+buildでどこまで成功しているかを確かめるために、コマンドを仕込みたいことがある。デフォルトでは出力されないので、オプションが必要。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>&#x2013;progress plainを使う。キャッシュがあると実行されない</label><pre class="src src-shell">docker build . --progress plain --no-cache -t test
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org9f59544" class="outline-3">
+<h3 id="org9f59544"><a href="#org9f59544">ログを追従させる</a></h3>
+<div class="outline-text-3" id="text-org9f59544">
+<div class="org-src-container">
+<pre class="src src-shell">docker-compose logs -f
+</pre>
+</div>
+
+<p>
+-dオプションはログが出ないので使ってこなかった。これによって卒業できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org909bce9" class="outline-3">
+<h3 id="org909bce9"><a href="#org909bce9">ボリュームとマウントの違い</a></h3>
+<div class="outline-text-3" id="text-org909bce9">
+<dl class="org-dl">
+<dt>ボリューム</dt><dd>データを永続化できる場所のこと</dd>
+<dt>マウント</dt><dd>コンテナにホストのディレクトリをマウントすること</dd>
+</dl>
+
+<p>
+ボリュームはマウントしないと、使えるようにはならない。docker-composeのvolumesではボリュームといいつつ書き方によってマウントしてくれる。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://qiita.com/gounx2/items/23b0dc8b8b95cc629f32">Docker、ボリューム(Volume)について真面目に調べた - Qiita</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd950cd4" class="outline-3">
+<h3 id="orgd950cd4"><a href="#orgd950cd4">コンテナからホストのポートにアクセスできるようにする</a></h3>
+<div class="outline-text-3" id="text-orgd950cd4">
+<p>
+docker-composeでコンテナ側からホストのポートへアクセスできるようにする方法。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-yaml">container:
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+</pre>
+</div>
+
+<p>
+あとはコンテナ内のコード側で、 <code>host.docker.internal:{ホストのポート番号}</code> とすることでホストのポートへアクセスできるようになる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orged3fe03" class="outline-3">
+<h3 id="orged3fe03"><a href="#orged3fe03">dockerネットワークの仕組み&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-orged3fe03">
+<ul class="org-ul">
+<li><a href="https://www.youtube.com/watch?v=bKFMS5C4CG0">Docker networking is CRAZY!! (you NEED to learn it) - YouTube</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2b09b90" class="outline-3">
+<h3 id="org2b09b90"><a href="#org2b09b90">Got permission deniedエラー</a></h3>
+<div class="outline-text-3" id="text-org2b09b90">
+<p>
+dockerがsudo権限以外で実行できなくなるときがある。
+</p>
+
+<blockquote>
+<p>
+$ docker ps
+Got permission denied while trying to connect to the Docker daemon socket
+</p>
+</blockquote>
+
+<p>
+これはログイン中のユーザがdocker権限を持っていないから。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>ログイン中のユーザにdocker権限をセットする</label><pre class="src src-shell">sudo gpasswd -a $(whoami) docker
+id $(whoami) <span class="org-comment-delimiter"># </span><span class="org-comment">docker&#12364;&#36861;&#21152;&#12373;&#12428;&#12383;&#12398;&#12434;&#30906;&#35469;&#12377;&#12427;</span>
+</pre>
+</div>
+
+<p>
+コマンドを実行したあと、ログアウトする。sudoなしでdockerコマンドを打てるようになっている。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://tech.librastudio.co.jp/entry/index.php/2018/07/14/post-1924/">dockerコマンド実行時の「Got permission denied while trying to connect to the Docker daemon socket」 - Libra Studio Log</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org8db762d" class="outline-3">
+<h3 id="org8db762d"><a href="#org8db762d"><a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>でビルドする</a></h3>
+<div class="outline-text-3" id="text-org8db762d">
+<p>
+<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>によるコンテナビルドには、&#x2013;cache-from を使って、レジストリに送信したイメージから各ステージのキャッシュを取得していく方法と、CIのキャッシュ機能を使う方法の2つがある。
+</p>
+
+<p>
+レジストリからキャッシュを取る方法には弱点がある。
+</p>
+
+<ul class="org-ul">
+<li>キャッシュが登録イメージの1つしかない。たとえば異なるブランチでキャッシュが更新されると、キャッシュが失われる</li>
+<li>&#x2013;mount=type=&#x2026;のcacheが、pushイメージには含まれない</li>
+<li>ステージごとにキャッシュ通信(取得+送信)をするが、オーバーヘッドが大きい</li>
+<li>イメージに含めることができるキャッシュ(inline cache)には、minモードしか適用できない。つまりキャッシュに制限がある<a href="https://github.com/moby/buildkit#--export-cache-options">moby/buildkit: concurrent, cache-efficient, and Dockerfile-agnostic builder toolkit</a></li>
+</ul>
+
+<p>
+のため、CIのキャッシュ機能を使うのが現実的か。複数のキャッシュ…ブランチごと、Gemfileのハッシュ値ごとでハッシュを保持できるためキャッシュがヒットしやすい。キャッシュはひとまとめで保存され、レジストリへの送信イメージは利用イメージだけになる。
+</p>
+</div>
+</div>
+<div id="outline-container-org391a002" class="outline-3">
+<h3 id="org391a002"><a href="#org391a002">RUN &#x2013;mount=type=&#x2026;オプション</a></h3>
+<div class="outline-text-3" id="text-org391a002">
+<p>
+ビルド時にだけアクセスできる、cacheマウントを利用できる。マウントと言うが、ホストマシンとは関係ない。マウントディレクトリはビルド後削除されるため、イメージサイズにも優しい。
+<a href="https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md">https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/syntax.md</a>
+</p>
+
+<pre class="example">
+RUN --mount=type=cache,target=/root/.cache/go-build go build
+</pre>
+
+<p>
+たとえばpackage.jsonに変更があったときも途中から再開できる。ビルドキャッシュがヒットする/しないのゼロイチでなくなる。
+</p>
+</div>
+</div>
+<div id="outline-container-org263877a" class="outline-3">
+<h3 id="org263877a"><a href="#org263877a">rake assets:precompile高速化</a></h3>
+<div class="outline-text-3" id="text-org263877a">
+<ul class="org-ul">
+<li>public/assets</li>
+<li>tmp/cache/assets</li>
+</ul>
+
+<p>
+をキャッシュしておくことで高速化できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org0c1b2b4" class="outline-3">
+<h3 id="org0c1b2b4"><a href="#org0c1b2b4">ビルドキャッシュをレジストリに保存し、CI環境でキャッシュを使ってビルドする</a></h3>
+<div class="outline-text-3" id="text-org0c1b2b4">
+<p>
+レジストリのキャッシュを利用してビルドできる。これによって、キャッシュがローカル環境に保持されない<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>環境などでもキャッシュを利用して高速にビルドできる。
+</p>
+
+<p>
+ポイントは&#x2013;build-argと&#x2013;cache-from。
+&#x2013;build-argでメタ情報を含めてビルドする。このイメージをpushしておくことで、次回からキャッシュを利用できる。
+&#x2013;cache-fromによってレジストリにある指定イメージからキャッシュを取得してビルドする。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>&#x2013;cache-from と &#x2013;build-arg BUILDKIT_INLINE_CACHE=1</label><pre class="src src-shell">docker build --target build -t ghcr.io/kijimad/roam-build:master --cache-from ghcr.io/kijimad/roam-build:master --build-arg <span class="org-variable-name">BUILDKIT_INLINE_CACHE</span>=1 .
+docker push ghcr.io/kijimad/roam-build:master
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org73c54b9" class="outline-3">
+<h3 id="org73c54b9"><a href="#org73c54b9">本番用yarn buildの例</a></h3>
+<div class="outline-text-3" id="text-org73c54b9">
+<p>
+本番用にコンパクトにビルドする場合の例。
+node_modulesはいらなくて、ビルド成果物だけあればよい。
+ステージを分けることで、意味が明確になり、サイズも小さくできる(高速化)。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-dockerfile">COPY package.json $HOME/
+COPY front/ $HOME/front/ # front にはビルド対象のjs, tsファイルが配置されている想定。サブモジュールを導入している場合、package.jsonは階層上に複数あるため、COPYしておく必要がある
+
+RUN npm install
+
+COPY babel.config.js $HOME/
+COPY tsconfig.json $HOME/
+COPY webpack.config.js $HOME/
+
+RUN yarn run build
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>ビルド成果物だけを配置</label><pre class="src src-dockerfile">COPY --from=rails-yarn-build $HOME/public/webpack/ $HOME/public/webpack/
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org02535cb" class="outline-3">
+<h3 id="org02535cb"><a href="#org02535cb">Rails開発のMy docker-compose</a></h3>
+<div class="outline-text-3" id="text-org02535cb">
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>開発をすべてdockerでやる想定。
+一発ですべてが準備され、クリーンな環境を構築する。bundle install やyarn install など、立ち上げ続ける前提でないコマンドも含まれる。そのコマンドだけ再度実行したいときは <code>docker-compose restart bundle</code> などとする。
+</p>
+
+<p>
+元ネタ: foremのdocker-compose.yml。
+</p>
+<ul class="org-ul">
+<li><a href="https://github.com/forem/forem">https://github.com/forem/forem</a></li>
+</ul>
+
+<p>
+↓あとはdockerizeを設定すれば完璧か。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>docker-compose.yml</label><pre class="src src-yaml"># 共通のimage名: app
+# imageのワーキングディレクトリ: /app
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql:latest
+    ports:
+      - '${MYSQL_PORT:-3306}:3306'
+    environment:
+      # DBクライアントでの接続時に必要なので明示する
+      MYSQL_DATABASE: develop
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    volumes:
+      - 'mysql-data:/var/lib/mysql'
+
+  redis:
+    image: redis:latest
+    ports:
+      - '${REDIS_PORT:-6379}:6379'
+
+  memcached:
+    image: memcached:latest
+    ports:
+      - '${MEMCACHED_PORT:-11212}:11211'
+
+  rails:
+    image: app
+    environment:
+      RAILS_ENV: development
+      REDIS_URL: 'redis://redis:6379'
+      MEMCACHED: 'memcached:11211'
+      DATABASE_URL: 'mysql2://root@mysql:3306'
+    depends_on:
+      - mysql
+      - redis
+      - memcached
+      - bundle
+      - yarn
+      - seed
+    command: bash -c 'bundle exec rails s -b 0.0.0.0'
+    volumes:
+      - .:/app:delegated # delegatedで高速化
+      - gem_data:/usr/local/bundle:delegated # package系は永続化して最初からinstallにならないようにする
+      - node_modules:/app/node_modules:delegated
+    ports:
+      - '3000:3000'
+
+  webpack:
+    image: app
+    environment:
+      NODE_ENV: development
+      WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+    command: bash -c 'yarn watch'
+    volumes:
+      - .:/app:delegated
+      - node_modules:/app/node_modules:delegated
+    ports:
+      - 8080:8080
+
+  sidekiq:
+    image: app
+    command: bash -c 'bundle exec sidekiq -C config/sidekiq.yml'
+    environment:
+      REDIS_URL: 'redis://redis:6379'
+      DATABASE_URL: 'mysql2://root@mysql:3306'
+    volumes:
+      - .:/app:delegated
+      - gem_data:/usr/local/bundle:delegated
+    links:
+      - mysql
+      - redis
+
+  bundle:
+    image: app
+    environment:
+      RAILS_ENV: development
+    volumes:
+      - .:/app:delegated
+      - gem_data:/usr/local/bundle:delegated
+    command: bash -c "bundle install --jobs 8" # マシンがいくつ並列処理できるかは`$ getconf _NPROCESSORS_ONLN` で調べられる
+
+  yarn:
+    image: app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - .:/app:delegated
+      - node_modules:/app/node_modules:delegated
+    command: bash -c "yarn install"
+
+  seed:
+    image: app
+    environment:
+      DATABASE_URL: 'mysql2://root@mysql:3306'
+    volumes:
+      - .:/app:delegated
+      - gem_data:/usr/local/bundle:delegated
+    command: bash -c "rake db:seed_fu"
+
+volumes:
+  gem_data:
+  node_modules:
+  mysql_data:
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>entrypoint.sh</label><pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">! /bin/</span><span class="org-keyword">bash</span>
+
+<span class="org-builtin">set</span> -e
+
+<span class="org-keyword">if</span> [ -f tmp/pids/server.pid ]; <span class="org-keyword">then</span>
+  rm -f tmp/pids/server.pid
+<span class="org-keyword">fi</span>
+
+cat &lt;&lt; EOF
+
+<span class="org-sh-heredoc">  &#9617;&#9617;&#9604;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9604;&#9616;&#9608;&#9604;&#9604;&#9604;&#9604;&#9608;&#9612;&#9617;</span>
+<span class="org-sh-heredoc">  &#9617;&#9617;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9612;&#9600;&#9600;&#9608;&#9608;&#9600;&#9600;&#9617;&#9617;</span>
+<span class="org-sh-heredoc">  &#9617;&#9617;&#9608;&#9608;&#9608;&#9608;&#9604;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9604;&#9604;&#9608;&#9612;&#9617;&#9617;&#9617;&#9617;</span>
+<span class="org-sh-heredoc">  &#9617;&#9617;&#9604;&#9604;&#9604;&#9604;&#9604;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9608;&#9600; &#9617;&#9617;&#9617;&#9617;</span>
+
+<span class="org-sh-heredoc">EOF</span>
+
+<span class="org-keyword">exec</span> <span class="org-string">"$@"</span>
+
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4c40d45" class="outline-3">
+<h3 id="org4c40d45"><a href="#org4c40d45">docker service再起動</a></h3>
+<div class="outline-text-3" id="text-org4c40d45">
+<p>
+おかしくなったときの再起動。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo service docker restart
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8ebc655" class="outline-3">
+<h3 id="org8ebc655"><a href="#org8ebc655">コンテナ掃除関係</a></h3>
+<div class="outline-text-3" id="text-org8ebc655">
+<p>
+<a href="https://qiita.com/shisama/items/48e2eaf1dc356568b0d7">コマンドでDockerコンテナを停止・削除、イメージの削除をする - Qiita</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">docker stop $(docker ps -q) <span class="org-comment-delimiter"># </span><span class="org-comment">&#20840;&#12467;&#12531;&#12486;&#12490;&#20572;&#27490;</span>
+docker rm $(docker ps -q -a) <span class="org-comment-delimiter"># </span><span class="org-comment">&#20840;&#12467;&#12531;&#12486;&#12490;&#21066;&#38500;</span>
+docker rmi $(docker images -q) <span class="org-comment-delimiter"># </span><span class="org-comment">&#20840;&#12452;&#12513;&#12540;&#12472;&#21066;&#38500;:</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7eb4aae" class="outline-3">
+<h3 id="org7eb4aae"><a href="#org7eb4aae">ディスク使用率がとんでもないことになっていたとき</a></h3>
+<div class="outline-text-3" id="text-org7eb4aae">
+<p>
+ディスク使用率がほぼ100％になっていた。占めているほとんどはDocker関係のようだった。
+イメージは削除するようにしてたが、ほかにも色々あるよう。
+</p>
+
+<p>
+専用のページがある。
+<a href="https://docs.docker.com/config/pruning/">https://docs.docker.com/config/pruning/</a>
+</p>
+
+<p>
+非常に多くのゴミがありそうだったので、多少再pullに時間がかかることを許容してすべて削除することにした。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>手っ取り早くすべて消す。警告が出る</label><pre class="src src-shell">docker system prune
+</pre>
+</div>
+
+<p>
+ゴリゴリbuildして試しているときは、気をつけたほうがよさそう。
+</p>
+
+<p>
+キャッシュ削除だけ行う。この場合が多そう。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker builder prune
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org721fe53" class="outline-3">
+<h3 id="org721fe53"><a href="#org721fe53">entrypoint.sh</a></h3>
+<div class="outline-text-3" id="text-org721fe53">
+<p>
+公式Docker Imageでよく用いられる、コンテナ起動時に実行するスクリプト。
+公式のイメージのままで、初回起動時に実行したいフックとして記述できる。
+</p>
+
+<p>
+例(Dockerfile): <a href="https://github.com/tzumby/rails-on-kubernetes/blob/master/Dockerfile">rails-on-kubernetes/Dockerfile at master · tzumby/rails-on-kubernetes</a>
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>Dockerfileの末尾で取り込む</label><pre class="src src-shell">ADD . /myapp
+
+COPY docker-entrypoint.sh /usr/local/bin
+
+ENTRYPOINT [<span class="org-string">"docker-entrypoint.sh"</span>]
+</pre>
+</div>
+
+<p>
+例(entrypoint.sh): <a href="https://github.com/tzumby/rails-on-kubernetes/blob/master/docker-entrypoint.sh">rails-on-kubernetes/docker-entrypoint.sh at master · tzumby/rails-on-kubernetes</a>
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>entrypoint.sh $@は引数</label><pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">!/bin/</span><span class="org-keyword">sh</span>
+
+<span class="org-builtin">set</span> -e
+
+<span class="org-keyword">if</span> [ -f tmp/pids/server.pid ]; <span class="org-keyword">then</span>
+  rm tmp/pids/server.pid
+<span class="org-keyword">fi</span>
+
+<span class="org-builtin">echo</span> <span class="org-string">"Waiting for Postgres to start..."</span>
+<span class="org-keyword">while</span> <span class="org-negation-char">!</span> nc -z postgres 5432; <span class="org-keyword">do</span> sleep 0.1; <span class="org-keyword">done</span>
+<span class="org-builtin">echo</span> <span class="org-string">"Postgres is up"</span>
+
+<span class="org-builtin">echo</span> <span class="org-string">"Waiting for Redis to start..."</span>
+<span class="org-keyword">while</span> <span class="org-negation-char">!</span> nc -z redis 6379; <span class="org-keyword">do</span> sleep 0.1; <span class="org-keyword">done</span>
+<span class="org-builtin">echo</span> <span class="org-string">"Redis is up - execuring command"</span>
+
+<span class="org-keyword">exec</span> bundle exec <span class="org-string">"$@"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf1bd056" class="outline-3">
+<h3 id="orgf1bd056"><a href="#orgf1bd056">docker-composeとdocker</a></h3>
+<div class="outline-text-3" id="text-orgf1bd056">
+<p>
+docker-composeは自動でタグ名をつけてくれたり、マウントしてくれたり、dockerコマンドよりややこしくなりにくい。
+単に開発環境として使っているだけでは、ほとんどdocker-composeで事足りる。
+が、docker-composeへ依存しているということで、docker-compose関係ない別の文脈で使おうとすると途端に動かなくなる。本質的にdocker-composeはコンテナ間の関係性を記述しているだけで、コンテナ自体を表現しているわけではない。
+</p>
+
+<p>
+本当にdockerコンテナとしての正しい使い方をしているかテストするには、コンテナを複数のデプロイやCIで利用してみるのがよい。同じ流れで簡単にできたのなら正しい。簡単にできないなら何かが間違っている。
+</p>
+</div>
+</div>
+<div id="outline-container-org3a2f142" class="outline-3">
+<h3 id="org3a2f142"><a href="#org3a2f142">よく使うdockerオプション</a></h3>
+<div class="outline-text-3" id="text-org3a2f142">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>例</label><pre class="src src-shell">docker run --rm -v <span class="org-string">"$PWD/"</span>:/roam -w /roam ghcr.io/kijimad/roam:master sh deploy.sh
+</pre>
+</div>
+
+<p>
+<code>--rm</code> : コマンド実行後にコンテナを削除する
+<code>-v</code>: ホストマシンにマウントする。左がホストマシン、右がコンテナ内。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 23: </span>-itの意味: 対話モード</label><pre class="src src-shell">docker run --rm -it ghcr.io/kijimad/roam:master
+</pre>
+</div>
+<p>
+-it はttyオプション。インタラクティブなシェルを作成する。つけないと、一瞬で消える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdfdd965" class="outline-3">
+<h3 id="orgdfdd965"><a href="#orgdfdd965">buildkitをオンにする</a></h3>
+<div class="outline-text-3" id="text-orgdfdd965">
+<p>
+環境変数をオンにすることで、新しい機能が使えるようになる。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 24: </span>shell</label><pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">COMPOSE_DOCKER_CLI_BUILD</span>=1
+<span class="org-builtin">export</span> <span class="org-variable-name">DOCKER_BUILDKIT</span>=1
+docker build .
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org366f32d" class="outline-3">
+<h3 id="org366f32d"><a href="#org366f32d">docker-composeでマウントしたときにnode_modulesが消える問題</a></h3>
+<div class="outline-text-3" id="text-org366f32d">
+<ol class="org-ol">
+<li>npm install するコンテナを作成</li>
+<li>コンテナをマウント</li>
+<li>ホストマシンにないnode_modulesは消える</li>
+<li>エラー</li>
+</ol>
+
+<p>
+なので、node_modulesもマウントする。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 25: </span>dockerコマンドの場合。-v を2つで指定する</label><pre class="src src-shell">docker run --rm -v <span class="org-string">"$PWD"</span>:/roam -v /roam/node_modules ghcr.io/kijimad/roam_lint:master make textlint
+</pre>
+</div>
+
+<p>
+<a href="https://rara-world.com/dockerfile-node-modules/">https://rara-world.com/dockerfile-node-modules/</a> に書いてあった。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaba8b54" class="outline-3">
+<h3 id="orgaba8b54"><a href="#orgaba8b54">dockleでセキュリティチェック</a></h3>
+<div class="outline-text-3" id="text-orgaba8b54">
+<p>
+dockleというツールでイメージをチェックできる。
+<a href="https://github.com/goodwithtech/dockle">goodwithtech/dockle: Container Image Linter for Security, Helping build the Best-Practice Docker Image, Easy to start</a>
+</p>
+
+<p>
+自前のイメージにかけるとたくさん見つかった。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 26: </span>実行してみた</label><pre class="src src-shell">$ dockle ghcr.io/kijimad/roam:4f3296b
+FATAL   - DKL-DI-0001: Avoid sudo command
+        * Avoid sudo<span class="org-keyword"> in</span> container : /bin/sh -c yum -y update &amp;&amp;     yum -y install         yum-utils
+      gcc         gcc-c++         make         openssl-devel         openssh-server         readline
+nuplot
+WARN    - CIS-DI-0001: Create a user for the container
+        * Last user should not be root
+INFO    - CIS-DI-0005: Enable Content trust for Docker
+        * export <span class="org-variable-name">DOCKER_CONTENT_TRUST</span>=1 before docker pull/build
+INFO    - CIS-DI-0006: Add HEALTHCHECK instruction to the container image
+        * not found HEALTHCHECK statement
+INFO    - CIS-DI-0008: Confirm safety of setuid/setgid files
+        * setgid file: g--x--x--x usr/libexec/openssh/ssh-keysign
+        * setuid file: urwxr-xr-x usr/sbin/pam_timestamp_check
+        * setuid file: urwxr-xr-x usr/bin/mount
+        * setgid file: grwx--x--x usr/libexec/utempter/utempter
+        * setuid file: urwxr-xr-x usr/bin/chage
+        * setuid file: urwxr-xr-x usr/bin/su
+        * setuid file: urwxr-x--- usr/libexec/dbus-1/dbus-daemon-launch-helper
+        * setuid file: urwxr-xr-x usr/sbin/unix_chkpwd
+        * setuid file: u--x--x--x usr/bin/sudo
+        * setgid file: g--x--x--x usr/bin/ssh-agent
+        * setuid file: urwxr-xr-x usr/bin/umount
+        * setuid file: urwxr-xr-x usr/bin/gpasswd
+        * setuid file: urwxr-xr-x usr/bin/newgrp
+        * setgid file: grwxr-xr-x usr/bin/write
+INFO    - DKL-LI-0003: Only put necessary files
+        * Suspicious directory : roam/.git
+        * Suspicious directory : usr/local/plugins/ruby-build/.git
+        * Suspicious directory : usr/local/plugins/ruby-build/test/tmp
+        * Suspicious directory : tmp
+        * unnecessary file : roam/docker-compose.yml
+        * unnecessary file : roam/Dockerfile
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org545b263" class="outline-3">
+<h3 id="org545b263"><a href="#org545b263">pushスクリプト</a></h3>
+<div class="outline-text-3" id="text-org545b263">
+<p>
+<a href="https://www.amazon.co.jp/dp/B01N0SS6NF/ref=dp-kindle-redirect?_encoding=UTF8&amp;btkr=1">Amazon.co.jp: Deploying Rails with Docker, Kubernetes and ECS (English Edition) eBook : Acuña, Pablo: Foreign Language Books</a>に載ってたスクリプト。書いてリポジトリに入れておくとスムーズにビルドやプッシュができる。
+レジストリ・ユーザ名・リポジトリを適宜変える。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">!/bin/</span><span class="org-keyword">sh</span>
+
+<span class="org-variable-name">LC</span>=$(git rev-parse --short HEAD)
+docker build -t ghcr.io/kijimad/webapp:${<span class="org-variable-name">LC</span>} .
+docker push ghcr.io/kijimad/webapp:${<span class="org-variable-name">LC</span>}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8fee281" class="outline-3">
+<h3 id="org8fee281"><a href="#org8fee281">実行後にコンテナ削除</a></h3>
+<div class="outline-text-3" id="text-org8fee281">
+<p>
+docker run するとコンテナ内に入れるが、作ったコンテナはそのままになる。
+実行後に削除して欲しい場合は、 <code>docker --rm webapp /bin/sh</code> などrmオプションを使う。
+</p>
+</div>
+</div>
+<div id="outline-container-org5f250d0" class="outline-3">
+<h3 id="org5f250d0"><a href="#org5f250d0">コンテナ間の接続はサービス名を用いる</a></h3>
+<div class="outline-text-3" id="text-org5f250d0">
+<p>
+コンテナ間の接続をしようとして、このようなエラーが出た。
+</p>
+<blockquote>
+<p>
+Error connecting to Redis on 127.0.0.1:6379 (Errno::ECONNREFUSED)
+</p>
+</blockquote>
+
+<p>
+127.0&#x2026;とあることから、コンテナ内のアドレスを見に行ってる。
+コンテナ間での通信には、サービス名のアドレスを追加する必要がある。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfaaadde" class="outline-3">
+<h3 id="orgfaaadde"><a href="#orgfaaadde">rootユーザでファイル作成しないようにする</a></h3>
+<div class="outline-text-3" id="text-orgfaaadde">
+<p>
+Dockerコンテナ内でファイルを作成すると、ownerがrootになり編集や削除ができず面倒。
+Dockerの内部ではユーザid(uid)やグループid(gid)がホストと異なる。idがホストマシンと合わないためrootとして実行されたことになる、よう。
+</p>
+
+<p>
+安易な解決策としては、権限をホストユーザに変更すれば問題ない。
+とはいえ、コンテナ内のサービスが新しくファイルを作るたび(たとえばマイグレーションファイル生成)に実行するのは面倒。
+<a href="https://docs.docker.com/samples/rails/">If you are running Docker on Linux, the files rails new created are owned by root.</a>
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 27: </span>権限変更</label><pre class="src src-shell">sudo chown -R $<span class="org-variable-name">USER</span>:$<span class="org-variable-name">USER</span> .
+</pre>
+</div>
+
+<p>
+解決策としてはいくつか種類があるようなのだが、とりあえずできた。
+サービスのvolumesにユーザ情報をマウントする。:roは読み取り専用(read onlyか)。
+これでidの照合元がホストと同じになる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 28: </span>docker-compose.yml</label><pre class="src src-yaml">volumes:
+  - /etc/passwd:/etc/passwd:ro
+  - /etc/group:/etc/group:ro
+</pre>
+</div>
+
+<p>
+あとはidを環境変数経由で渡せば、コンテナ内でもホストのユーザが実行したことになる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo docker run -u <span class="org-string">"$(id -u $USER):$(id -g $USER)"</span> rails /bin/sh
+sudo docker-compose run -u <span class="org-string">"$(id -u $USER):$(id -g $USER)"</span> rails /bin/sh
+</pre>
+</div>
+
+<p>
+overrideがある場合、このようになる(長すぎ)。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run -u <span class="org-string">"$(id -u $USER):$(id -g $USER)"</span> rails /bin/sh
+</pre>
+</div>
+
+<p>
+<a href="https://blog.amedama.jp/entry/docker-container-host-same-user">Docker コンテナ内で Docker ホストと同じユーザを使う - CUBE SUGAR CONTAINER</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org048ae1d" class="outline-3">
+<h3 id="org048ae1d"><a href="#org048ae1d">Docker Hub</a></h3>
+<div class="outline-text-3" id="text-org048ae1d">
+<p>
+Dockerイメージをインターネット上にアップロードできるスペース。
+個別にビルドしなくてよくなるためDocker関連の全工程が高速化する。テスト、ローカル、デプロイ…。
+</p>
+</div>
+</div>
+<div id="outline-container-org142dc76" class="outline-3">
+<h3 id="org142dc76"><a href="#org142dc76">マルチステージビルドとは</a></h3>
+<div class="outline-text-3" id="text-org142dc76">
+<p>
+サイトをDockerデプロイにしたり、CIをDockerで行うとき。
+複数の環境が関係する場合、マルチステージビルドを行うとキャッシュが効くため高速化できる。
+</p>
+
+<ul class="org-ul">
+<li>Linux関連のイメージ</li>
+<li><a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>関連のイメージ</li>
+<li>node関連のイメージ</li>
+<li><a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>アプリのイメージ</li>
+</ul>
+
+<p>
+のように。
+Linux → <a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a> + node → <a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>という依存関係になる。
+</p>
+</div>
+</div>
+<div id="outline-container-org8112a80" class="outline-3">
+<h3 id="org8112a80"><a href="#org8112a80">Dockerfileは何か</a></h3>
+<div class="outline-text-3" id="text-org8112a80">
+<p>
+Dockrfileはイメージを作る。(image build)
+docker-compose upは↑で作られたイメージを元にコンテナを作り起動までする。そのなかアプリケーションを走らせて開発する。
+</p>
+
+<p>
+image構築 → コンテナ構築 → コンテナ起動 という流れ。
+</p>
+
+<p>
+コンテナの作り方には2種類ある。
+</p>
+<ul class="org-ul">
+<li>自作する必要があるものは↑Dockerfileで作る</li>
+<li>既存コンテナ(<a href="20210829232020-mysql.html#ID-7dab097c-60ba-43b9-949f-c58bf3151aa8">MySQL</a>とか)はイメージをダウンロードする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8d42e9e" class="outline-3">
+<h3 id="org8d42e9e"><a href="#org8d42e9e">コンテナ内でコマンド実行する</a></h3>
+<div class="outline-text-3" id="text-org8d42e9e">
+<p>
+コンテナ内部で実行したいコマンドがあるときにやりたいこと、たとえば<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>だと、gemfileが新しくなったときにbundle installしたい。
+</p>
+
+<p>
+runは新しくコンテナを作成し、内部でコマンドを実行する。サービス名はdocker-compose.ymlから取っている。つまり立ち上がっているコンテナ名は関係ないのに注意。何も指定してない場合、docker-compose.ymlからサービス名を決定する。ほかのファイルの場合には-fオプションが必要。外部で永続化される…volumeが指定されてるような処理(bundle install)とか、データベース関係はいいのだが、その他は永続化されないので注意。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 29: </span>run</label><pre class="src src-shell">docker-compose run {&#12469;&#12540;&#12499;&#12473;&#21517;} {shell&#12467;&#12510;&#12531;&#12489;}
+</pre>
+</div>
+
+<p>
+execはコンテナを再利用してコマンドを実行する。高速。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 30: </span>exec</label><pre class="src src-shell">docker-compose exec {&#12469;&#12540;&#12499;&#12473;&#21517;} {shell&#12467;&#12510;&#12531;&#12489;}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9a46146" class="outline-3">
+<h3 id="org9a46146"><a href="#org9a46146">キャッシュを使わずにbuildする</a></h3>
+<div class="outline-text-3" id="text-org9a46146">
+<div class="org-src-container">
+<pre class="src src-shell">docker-compose build --no-cache
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org07dc3a8" class="outline-3">
+<h3 id="org07dc3a8"><a href="#org07dc3a8">立ち上げと停止</a></h3>
+<div class="outline-text-3" id="text-org07dc3a8">
+<div class="org-src-container">
+<pre class="src src-shell">docker-compose up --build -d <span class="org-comment-delimiter"># </span><span class="org-comment">&#12467;&#12531;&#12486;&#12490;&#20316;&#25104;&#12377;&#12427;</span>
+docker-compose down
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5387d9f" class="outline-3">
+<h3 id="org5387d9f"><a href="#org5387d9f">docker外に公開する</a></h3>
+<div class="outline-text-3" id="text-org5387d9f">
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>
+Dockerfileで。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">CMD bundle exec rails server -b 0.0.0.0
+</pre>
+</div>
+
+<p>
+などと書いておくと、外部(Docker外)からアクセスできるようになる。-b 0.0.0.0 がないと別のネットワークからアクセスが不可。コンテナを超えると別のネットワーク扱いになるのでこの記述が必要。
+</p>
+</div>
+</div>
+<div id="outline-container-org1c85e65" class="outline-3">
+<h3 id="org1c85e65"><a href="#org1c85e65">ポート指定する</a></h3>
+<div class="outline-text-3" id="text-org1c85e65">
+<p>
+どっちだったか忘れる。
+左が公開、右がコンテナ内。だからブラウザでポート8000アクセスできるようになる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker run -p 8000:3000 -it bdd92ace66ec
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org17007f4" class="outline-3">
+<h3 id="org17007f4"><a href="#org17007f4">ログを確認する</a></h3>
+<div class="outline-text-3" id="text-org17007f4">
+<div class="org-src-container">
+<pre class="src src-shell">docker ps -a <span class="org-comment-delimiter"># </span><span class="org-comment">id&#30906;&#35469;</span>
+docker logs 1111... <span class="org-comment-delimiter"># </span><span class="org-comment">id&#12434;&#20837;&#12428;&#12427;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8d8bfdb" class="outline-3">
+<h3 id="org8d8bfdb"><a href="#org8d8bfdb">イメージを削除する</a></h3>
+<div class="outline-text-3" id="text-org8d8bfdb">
+<p>
+使ってないイメージを削除する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker images prone
+</pre>
+</div>
+
+<p>
+一気に全部削除する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker stop $(docker ps -q)
+docker rm $(docker ps -aq)
+docker rmi $(docker images -q)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8dc99aa" class="outline-3">
+<h3 id="org8dc99aa"><a href="#org8dc99aa">コンテナの大まかな仕組み</a></h3>
+<div class="outline-text-3" id="text-org8dc99aa">
+<p>
+仮想化をどうやっているか、なぜ独立した環境にできるのか知らない。
+</p>
+
+<p>
+解説は↓にある。非常にわかりやすい。<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>のミニマル実装もある。
+</p>
+<ul class="org-ul">
+<li><a href="https://kaminashi-developer.hatenablog.jp/entry/dive-into-swamp-container-scratch">【Go言語】自作コンテナ沼。スクラッチでミニDockerを作ろう - カミナシ エンジニアブログ</a></li>
+</ul>
+
+<p>
+dockerの構成。
+</p>
+
+<ul class="org-ul">
+<li>Docker Host
+<ul class="org-ul">
+<li>Docker Daemon</li>
+<li>Container</li>
+<li>Images</li>
+<li>Network</li>
+</ul></li>
+<li>Docker client
+<ul class="org-ul">
+<li>build, pull, runとか</li>
+</ul></li>
+</ul>
+
+<p>
+network, container, image, volumesはCli経由でDocker daemonの機能を呼び出す。
+コンテナを一言で言うと「 システムから分離されたプロセス 」。Linux上でunshareコマンドを打つことにより、最速でコンテナを作成できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 31: </span>最低限のコンテナ。この立ち上がったプロセスがコンテナ</label><pre class="src src-shell">$ sudo unshare -u /bin/bash
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12518;&#12540;&#12470;&#12364;root&#12395;&#12394;&#12387;&#12383;</span>
+$ hostname newhost &amp;&amp; hostname
+-&gt; newhost
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12507;&#12473;&#12488;&#21517;&#12434;&#22793;&#26356;&#12375;&#12383;</span>
+$ which emacs
+-&gt; /usr/bin/emacs <span class="org-comment-delimiter"># </span><span class="org-comment">unshare&#12375;&#12390;&#12394;&#12356;&#29366;&#24907;&#12384;&#12392;Emacs&#12399;guix&#12487;&#12451;&#12524;&#12463;&#12488;&#12522;&#21270;&#12395;&#20837;&#12387;&#12390;&#12356;&#12427;&#12398;&#12391;&#12289;&#30906;&#12363;&#12395;&#29872;&#22659;&#12364;&#21029;&#12395;&#12394;&#12387;&#12390;&#12356;&#12427;</span>
+</pre>
+</div>
+
+<p>
+コンテナに必要な<a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>の機能3つ。
+</p>
+
+<ul class="org-ul">
+<li>Namespace
+<ul class="org-ul">
+<li>プロセスはそれぞれでNamespaceを持っている。unshareはプロセスを分離させNamespaceを作成した</li>
+</ul></li>
+<li>Control Group
+<ul class="org-ul">
+<li>アプリケーションを特定のリソースセットに制限する。メモリの最大利用数や、プロセス最大実行数を制限できる</li>
+<li><code>cat /sys/fs/cgroup/cpuset/cpuset.cpus</code></li>
+</ul></li>
+<li>File System
+<ul class="org-ul">
+<li>親からマウントされたFile Systemに関するデータのコピーを取得し、親と同じデータ構造へのポインタを取得して変更できるようにする</li>
+<li>cat <code>/proc/mounts</code></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org82ed534" class="outline-3">
+<h3 id="org82ed534"><a href="#org82ed534">コンテナからホストにコピーする</a></h3>
+<div class="outline-text-3" id="text-org82ed534">
+<p>
+docker-compose cp が使える。dockerコマンドと違って、コンテナIDを指定する必要がない。
+</p>
+
+<p>
+コンテナ → ホストでも、ホスト → コンテナでも、入れ替えて使える。当然、コンテナは前もって起動しておく必要がある。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 32: </span>docker compose cp [service]:[コピー元path] [コピー先path]</label><pre class="src src-shell">docker compose cp doc:/usr/share/nginx/html ./
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org5e8a578" class="outline-2">
+<h2 id="org5e8a578"><a href="#org5e8a578">Tasks</a></h2>
+<div class="outline-text-2" id="text-org5e8a578">
+</div>
+<div id="outline-container-org7a9de6a" class="outline-3">
+<h3 id="org7a9de6a"><a href="#org7a9de6a"><span class="todo TODO">TODO</span> 誤字修正</a></h3>
+<div class="outline-text-3" id="text-org7a9de6a">
+<ul class="org-ul">
+<li><a href="https://github.com/zembutsu/docs.docker.jp/blob/main/compose/reference/restart.rst">https://github.com/zembutsu/docs.docker.jp/blob/main/compose/reference/restart.rst</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org79b9cc7" class="outline-3">
+<h3 id="org79b9cc7"><a href="#org79b9cc7"><span class="todo TODO">TODO</span> <a href="https://github.com/gitpod-io/workspace-images">gitpod-io/workspace-images: Ready to use docker images for Gitpod workspaces</a></a></h3>
+<div class="outline-text-3" id="text-org79b9cc7">
+<p>
+コンテナまわりが参考になる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc19e322" class="outline-3">
+<h3 id="orgc19e322"><a href="#orgc19e322"><span class="todo TODO">TODO</span> <a href="https://tatsu-zine.com/books/container-security">コンテナセキュリティ コンテナ化されたアプリケーションを保護する要素技術【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-orgc19e322">
+<p>
+コンテナの本。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdbf646b" class="outline-3">
+<h3 id="orgdbf646b"><a href="#orgdbf646b"><span class="todo TODO">TODO</span> <a href="https://github.com/compose-spec/compose-go/pull/416">introduce require to load sub-compose projects as dependencies by ndeloof · Pull Request #416 · compose-spec/compose-go</a></a></h3>
+<div class="outline-text-3" id="text-orgdbf646b">
+<p>
+気になる機能追加。-fオプションの上書きは、わかりづらい。
+</p>
+</div>
+</div>
+<div id="outline-container-org72fbb34" class="outline-3">
+<h3 id="org72fbb34"><a href="#org72fbb34"><span class="todo TODO">TODO</span> <a href="https://knowledge.sakura.ad.jp/23899/">Docker Compose入門 (3) ～ネットワークの理解を深める～ | さくらのナレッジ</a></a></h3>
+<div class="outline-text-3" id="text-org72fbb34">
+<p>
+docker networkの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-org0d1a101" class="outline-3">
+<h3 id="org0d1a101"><a href="#org0d1a101"><span class="todo TODO">TODO</span> Docker Networkはどういう仕組みか&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org0d1a101">
+<p>
+downがしたときに、特定のクライアントからpingが通らなくなる問題に直面した。その場合はdownしたあとにiptableの問題でupができなくなる。Docker Daemonを再起動すると、upできるようにあり、SSHもできるようになる。
+</p>
+
+<p>
+これを調べるために、ベースになる動きを理解したい。
+</p>
+</div>
+</div>
+<div id="outline-container-org3e7f711" class="outline-3">
+<h3 id="org3e7f711"><a href="#org3e7f711"><span class="todo TODO">TODO</span> <a href="https://qiita.com/Surgo/items/709a07d68c6eafbad267">Docker と LXC - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org3e7f711">
+<p>
+コンテナのLXCとはなにかを解説。
+</p>
+</div>
+</div>
+<div id="outline-container-org9699099" class="outline-3">
+<h3 id="org9699099"><a href="#org9699099"><span class="todo TODO">TODO</span> <a href="https://kayanaka.hatenablog.com/entry/2019/10/31/233902">Dockerコンテナの/var/lib/docker/overlay配下の容量が大きくなって起動できない事象に遭遇したので周辺知識を調べた。 - 蚊帳の中の日記</a></a></h3>
+<div class="outline-text-3" id="text-org9699099">
+<p>
+overlayのわかりやすい説明。事象を理解するためには、仕組みを理解していなければいけない。
+</p>
+</div>
+</div>
+<div id="outline-container-org157cc75" class="outline-3">
+<h3 id="org157cc75"><a href="#org157cc75"><span class="todo TODO">TODO</span> docker ignoreの仕組み&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org157cc75">
+<p>
+どうやってignoreしているのだろうか。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/buildkit/blob/37d54ebc592a54db8764911eb320d02d2260c5e6/frontend/dockerfile/dockerignore/dockerignore.go#L13
+</pre>
+</div>
+
+<div class="results" id="org3a94ad4">
+<p>
+// ReadAll reads a .dockerignore file and returns the list of file patterns
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>ファイルを読み込み、パスのスライスを出しているだけ</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org45b6f48" class="outline-3">
+<h3 id="org45b6f48"><a href="#org45b6f48"><span class="todo TODO">TODO</span> Dockerfileのパーサ部分を読む&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org45b6f48">
+<p>
+どうやってファイルから読み込んでいるか調べる。
+</p>
+
+<p>
+このへん。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/moby/blob/924edb948c2731df3b77697a8fcc85da3f6eef57/builder/dockerfile/copy.go#L1
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9b78236" class="outline-3">
+<h3 id="org9b78236"><a href="#org9b78236"><span class="todo TODO">TODO</span> <a href="https://www.youtube.com/watch?v=HPuvDm8IC-4">Golang UK Conf. 2016 - Liz Rice - What is a container, really? Let&rsquo;s write one in Go from scratch - YouTube</a></a></h3>
+<div class="outline-text-3" id="text-org9b78236">
+<p>
+コンテナランタイムを使わずに<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>でコンテナを作ることで、コンテナとは何かを学ぶ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcdee888" class="outline-3">
+<h3 id="orgcdee888"><a href="#orgcdee888"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/book/2020/978-4-297-11837-2">イラストでわかる DockerとKubernetes：書籍案内｜技術評論社</a></a></h3>
+<div class="outline-text-3" id="text-orgcdee888">
+<p>
+仕組みの説明。
+</p>
+</div>
+</div>
+<div id="outline-container-orgadd64f8" class="outline-3">
+<h3 id="orgadd64f8"><a href="#orgadd64f8"><span class="todo TODO">TODO</span> <a href="https://dev.classmethod.jp/articles/container-journey/">「コンテナジャーニー」〜明日から速攻始めるAWSでのコンテナ導入運用〜 #cmdevio2018 | DevelopersIO</a></a></h3>
+<div class="outline-text-3" id="text-orgadd64f8">
+<p>
+現実的な導入ステップ。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org310fd65" class="outline-2">
+<h2 id="org310fd65"><a href="#org310fd65">Archives</a></h2>
+<div class="outline-text-2" id="text-org310fd65">
+</div>
+<div id="outline-container-orgd3da071" class="outline-3">
+<h3 id="orgd3da071"><a href="#orgd3da071"><span class="done DONE">DONE</span> <a href="https://qiita.com/Brutus/items/b3dfe5957294caa82669">Docker Swarmで学ぶサービスメッシュ - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgd3da071">
+<p>
+swarmを学ぶ。
+</p>
+</div>
+</div>
+<div id="outline-container-org66543be" class="outline-3">
+<h3 id="org66543be"><a href="#org66543be"><span class="done DONE">DONE</span> タスクを簡単に実行する方法を調べる</a></h3>
+<div class="outline-text-3" id="text-org66543be">
+<p>
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>拡張あるいは、Makefile的なのにまとめる。
+</p>
+
+<p>
+ありがちなbundle-installなどはdocker-composeにワンショットのコマンドを書くことで、定形コマンドを実行することが少なくなった。自動で動かしたいやつはこれでOK。コマンドはdockerだから特殊ということはなく、ローカルと同じようにやれば良い。
+</p>
+</div>
+</div>
+<div id="outline-container-org111b46c" class="outline-3">
+<h3 id="org111b46c"><a href="#org111b46c"><span class="done DONE">DONE</span> Dockerドキュメントのタイポ修正</a></h3>
+<div class="outline-text-3" id="text-org111b46c">
+<ul class="org-ul">
+<li><a href="https://github.com/zembutsu/docs.docker.jp/pull/402">https://github.com/zembutsu/docs.docker.jp/pull/402</a></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org4b817cb" class="outline-3">
+<h3 id="org4b817cb"><a href="#org4b817cb"><span class="done DONE">DONE</span> 誤字を修正する</a></h3>
+<div class="outline-text-3" id="text-org4b817cb">
+<p>
+<a href="https://docs.docker.jp/glossary.html">用語集 — Docker-docs-ja 20.10 ドキュメント</a> PRを送る。
+</p>
+
+<ul class="org-ul">
+<li>なお、オリジナルのドキュメントは群は</li>
+<li>ビルド（build）とは、 を使って Docker イメージを構築する工程です。</li>
+<li>イメージ構築に必要なディレクトリに置いてあるファイル群です</li>
+<li>ために、 コピーオンライト 技術と を使います</li>
+<li>ベストな解決作です。</li>
+<li>ENTRYPOINT` に /bin/sh ま</li>
+<li>ユニオン・ファイル・システムで結語するために 技術を使い</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge89472f" class="outline-3">
+<h3 id="orge89472f"><a href="#orge89472f"><span class="done DONE">DONE</span> ゴミファイルができないようにする</a></h3>
+<div class="outline-text-3" id="text-orge89472f">
+<p>
+とりあえず、👇でよい。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo chown -R $<span class="org-variable-name">USER</span>:$<span class="org-variable-name">USER</span> .
+</pre>
+</div>
+
+<p>
+キャッシュや履歴関係がroot権限でできるので、削除が面倒＋コンテナを作るのが邪魔される。
+</p>
+
+<ul class="org-ul">
+<li>できないようにする</li>
+<li>自動削除するようにする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2f70d67" class="outline-3">
+<h3 id="org2f70d67"><a href="#org2f70d67"><span class="done DONE">DONE</span> Rails開発 Docker環境化<code>[9/9]</code></a></h3>
+<div class="outline-text-3" id="text-org2f70d67">
+<p>
+仕事をLinuxで行えるようにする。基本的なところはカバーしたが、一部できないものがある状態。
+</p>
+</div>
+
+<div id="outline-container-orgab92000" class="outline-4">
+<h4 id="orgab92000"><a href="#orgab92000"><span class="done CLOSE">CLOSE</span> rails c内で日本語が含まれると失敗する</a></h4>
+<div class="outline-text-4" id="text-orgab92000">
+<p>
+何かおかしくなる。
+</p>
+</div>
+</div>
+<div id="outline-container-org54463ea" class="outline-4">
+<h4 id="org54463ea"><a href="#org54463ea"><span class="done CLOSE">CLOSE</span> CapybaraでJavascriptをオンにしたときsystem specが失敗する</a></h4>
+<div class="outline-text-4" id="text-org54463ea">
+<p>
+js: trueのときだけ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf58e2ab" class="outline-4">
+<h4 id="orgf58e2ab"><a href="#orgf58e2ab"><span class="done DONE">DONE</span> migration時にschemaに変な差分が出る</a></h4>
+<div class="outline-text-4" id="text-orgf58e2ab">
+<p>
+DB設定がおかしいようだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org255d46a" class="outline-4">
+<h4 id="org255d46a"><a href="#org255d46a"><span class="done DONE">DONE</span> 非同期処理の動作確認</a></h4>
+<div class="outline-text-4" id="text-org255d46a">
+<p>
+redis, sidekiqが本当に動いてるかわからない。
+letter openerを見る限り、できてない。
+</p>
+
+<p>
+追加した。
+</p>
+</div>
+</div>
+<div id="outline-container-orgebe6d13" class="outline-4">
+<h4 id="orgebe6d13"><a href="#orgebe6d13"><span class="done DONE">DONE</span> dockerがrootユーザでファイルを生成する問題</a></h4>
+<div class="outline-text-4" id="text-orgebe6d13">
+<p>
+生成したファイルがroot権限になってしまう。
+だからbundle installを実行すると、その後は通常ユーザでは編集できなくなる。
+面倒だし、migrationとか明らかにダメな気がする。
+</p>
+
+<p>
+簡単な解決策と環境変数によって解決する方法を調べた。
+</p>
+</div>
+</div>
+<div id="outline-container-org251224b" class="outline-4">
+<h4 id="org251224b"><a href="#org251224b"><span class="done DONE">DONE</span> 基本コマンド</a></h4>
+<div class="outline-text-4" id="text-org251224b">
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>部分をDocker化する。表示はまったく問題なさそう。
+リロードするとちゃんとローカルの変更が反映される。
+</p>
+
+<p>
+最初にルートファイルのdockerfileでベースイメージをビルドして、名前を付ける。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker build . -t app
+</pre>
+</div>
+
+<p>
+各コンテナでは↑で作成したベースイメージappを用いる。
+イメージを使う代わりに <code>build .</code> でも可能だが、各コンテナがイメージをビルドする(中身は同じ)ので遅くごちゃつく。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 33: </span>docker-compose.yml</label><pre class="src src-yaml">rails:
+  image: app
+  environment:
+    RAILS_ENV: development
+    REDIS_URL: redis://redis:6379
+    MEMCACHED_URL: memcached://memcached:11211
+    SKIP_RECAPTCHA: "true"
+    MEMCACHED_HOST: memcached
+    MEMCACHED: memcached:11211
+    WEBPACKER_DEV_SERVER_HOST: webpack
+    CHROME_HOST_NAME: http://selenium_chrome:4444/wd/hub
+  ports:
+    - 3000:3000
+  stdin_open: true
+  tty: true
+  command: bash -c "rm -f tmp/pids/server.pid &amp;&amp; bundle exec rails s -b '0.0.0.0'"
+  volumes:
+    - .:/rails
+    - /etc/passwd:/etc/passwd:ro # Linux用
+    - /etc/group:/etc/group:ro # Linux用
+  depends_on:
+    - mysql
+
+sidekiq:
+  image: app
+  command: bundle exec sidekiq
+  links:
+    - mysql
+    - redis
+
+webpack:
+  image: app
+  environment:
+    NODE_ENV: development
+    RAILS_ENV: development
+    WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+  command: yarn watch
+  volumes:
+    - .:/rails
+    - /etc/passwd:/etc/passwd:ro # Linux用
+    - /etc/group:/etc/group:ro # Linux用
+  ports:
+    - 8080:8080
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 34: </span>コンテナ作成 + 立ち上げ</label><pre class="src src-shell">sudo docker-compose up --build
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 35: </span>再起動</label><pre class="src src-shell">docker-compose {service} restart
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 36: </span>railsはサービス名。以下を好きなコマンドに変える</label><pre class="src src-shell">docker-compose run rails bundle exec rails c
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 37: </span>bundle install</label><pre class="src src-shell">docker-compose run rails bundle install
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 38: </span>テストを実行する</label><pre class="src src-shell">docker-compose run rails bundle exec bin/rspec spec/requests/top/top_spec.rb
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 39: </span>コンテナ内のshellに入ってみる</label><pre class="src src-shell">docker-compose run rails /bin/bash
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org731a060" class="outline-4">
+<h4 id="org731a060"><a href="#org731a060"><span class="done DONE">DONE</span> docker-compose.ymlのオーバーライド</a></h4>
+<div class="outline-text-4" id="text-org731a060">
+<p>
+個人で微妙に設定が異なることもある。
+Dockerでやるのはミドルウェアだけとか、<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>もすべてやる、といったような。
+そのときはgitignoreを指定したymlを指定して起動する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 40: </span>後から読み込まれた設定ファイルで上書きされる</label><pre class="src src-shell">docker-compose -f docker-compose.yml -f docker-compose-app.override.yml up
+</pre>
+</div>
+
+<p>
+もちろん一般性があるならgit管理にするのがベストだが、人によって構成が異なるので仕方ない。とくにMacだと速度に問題あるため、<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>は<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>で立ち上げないのが多数派。
+</p>
+
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>サービスをoverride.ymlに、それ以外のミドルウェアサービスをdocker-compose.ymlに書いてる場合は、明示する必要がある。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 41: </span>overrideしたときのbundle install。-f指定が必要。</label><pre class="src src-shell">docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run rails bundle install
+</pre>
+</div>
+
+<p>
+docker-compose runする場合も-fオプションが必要。
+runはコンテナを新しく作る…つまりymlを見てるので、指定が必要なのである。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 42: </span>model specを実行する</label><pre class="src src-shell">docker-compose -f docker-compose.yml -f docker-compose-app.override.yml exec rails bundle exec rspec --options ./.rspec ./spec/models/user_spec.rb
+</pre>
+</div>
+
+<p>
+↑いちいちクソ長いコマンドを打つのは苦痛なので、shellに入って作業すると楽。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 43: </span>shellに入る</label><pre class="src src-shell">sudo docker-compose -f docker-compose.yml -f docker-compose-app.override.yml run rails /bin/sh
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4ef43fc" class="outline-4">
+<h4 id="org4ef43fc"><a href="#org4ef43fc"><span class="done DONE">DONE</span> DBのGUIツールとの接続</a></h4>
+<div class="outline-text-4" id="text-org4ef43fc">
+<p>
+Linux用のsqlectronがよさそう。が、上手く<a href="20210829232020-mysql.html#ID-7dab097c-60ba-43b9-949f-c58bf3151aa8">MySQL</a>と接続できない
+docker-compose.ymlで <code>MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'</code> を追加すると入れるように。
+パスワードを指定してるとログインできない。
+</p>
+
+<p>
+だがこのsqlectron、表示テーブルでの編集ができないので値を書き換えるのに非常に不便。
+別のを使ったほうがいいだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-org2918ea0" class="outline-4">
+<h4 id="org2918ea0"><a href="#org2918ea0"><span class="done DONE">DONE</span> yarnができてない</a></h4>
+<div class="outline-text-4" id="text-org2918ea0">
+<ul class="org-ul">
+<li>ポートを合わせる</li>
+<li>webpack.config.jsにhostを加える</li>
+</ul>
+
+<p>
+が必要。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 44: </span>docker-compose.yml</label><pre class="src src-yaml">webpack:
+  build: .
+  environment:
+    NODE_ENV: development
+    RAILS_ENV: development
+    WEBPACKER_DEV_SERVER_HOST: 0.0.0.0
+  command: yarn watch
+  volumes:
+    - .:/rails
+  ports:
+    - 8080:8080
+  depends_on:
+    - rails
+</pre>
+</div>
+
+<p>
+ホットリロードできるのを確認。
+hostを加える必要があった。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 45: </span>webpack.config.js</label><pre class="src src-json">devServer: {
+  contentBase: path.join(__dirname, 'app/assets/javascripts'),
+  allowedHosts: ['.lvh.me'],
+  host: '0.0.0.0',
+},
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org1a1cc6f" class="outline-3">
+<h3 id="org1a1cc6f"><a href="#org1a1cc6f"><span class="done DONE">DONE</span> <a href="https://tatsu-zine.com/books/linux-container-book">Linux Container Book【委託】 - 達人出版会</a></a></h3>
+<div class="outline-text-3" id="text-org1a1cc6f">
+<p>
+コンテナの解説。後半は理解できてない。また必要なときに読む。
+</p>
+
+<ul class="org-ul">
+<li><code>$ sudo mount --bind dir1 dir2</code> みたいに、バインドマウントするコマンドが存在する</li>
+<li>Namespace(名前空間)はプロセスをグループ化して、コンテナの隔離された空間を作り出す。独立させたいリソースによっていくつかの機能がある</li>
+<li>Dockerの初期はコンテナ内でコマンドを実行できなかった</li>
+<li>カーネルでsetnsがすべてのNamespaceに対して動作するようになってから、docker execコマンドが実行できるようになった</li>
+<li>Mount Namespaceは<a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>カーネルに最初に実装されたNamespace(2002年)
+<ul class="org-ul">
+<li>あるNamespaceごとに異なるマウントポイントの一覧を持てる</li>
+<li>コンテナ内でマウント操作を行った場合でも、そのマウントはホストOSや他のコンテナから見えないようにできる</li>
+<li><code>$ cat /proc/self/mounts</code> でマウント状況を確認できる</li>
+<li>マウントプロパゲーション
+<ul class="org-ul">
+<li>マウントがほかのディレクトリで反映されるか、反映されないか</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-orgcad17a3" class="outline-2">
+<h2 id="orgcad17a3"><a href="#orgcad17a3">References</a></h2>
+<div class="outline-text-2" id="text-orgcad17a3">
+</div>
+<div id="outline-container-orgc32424a" class="outline-3">
+<h3 id="orgc32424a"><a href="#orgc32424a"><a href="https://tech.anti-pattern.co.jp/docker-compose/">複数のdocker-compose間で通信する</a></a></h3>
+<div class="outline-text-3" id="text-orgc32424a">
+<p>
+docker networkを作り、コンテナを同じnetworkに所属させると、サービス名解決ができる。
+</p>
+</div>
+</div>
+<div id="outline-container-org1716aa6" class="outline-3">
+<h3 id="org1716aa6"><a href="#org1716aa6"><a href="https://github.com/docker-library/buildpack-deps">docker-library/buildpack-deps</a></a></h3>
+<div class="outline-text-3" id="text-org1716aa6">
+<p>
+Dockerの公式イメージ集。
+</p>
+</div>
+</div>
+<div id="outline-container-orga980036" class="outline-3">
+<h3 id="orga980036"><a href="#orga980036"><a href="https://github.com/moby/moby/pull/40894">Add health start interval by cpuguy83 · Pull Request #40894 · moby/moby</a></a></h3>
+<div class="outline-text-3" id="text-orga980036">
+<p>
+ヘルスチェックのスタートを指定するオプションを追加するプルリク。
+</p>
+</div>
+</div>
+<div id="outline-container-orga68feed" class="outline-3">
+<h3 id="orga68feed"><a href="#orga68feed"><a href="https://github.com/moby/buildkit/issues/1472">Improved debugging support · Issue #1472 · moby/buildkit</a></a></h3>
+<div class="outline-text-3" id="text-orga68feed">
+<p>
+デバッガーモードの提案。気になる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd701aa9" class="outline-3">
+<h3 id="orgd701aa9"><a href="#orgd701aa9"><a href="https://github.com/docker/compose/issues/3729">allow removing something in docker-compose.override.yml · Issue #3729 · docker/compose</a></a></h3>
+<div class="outline-text-3" id="text-orgd701aa9">
+<p>
+-fオプションで起動するとき、要素によっては上書きされない問題がある。例えばポートをoverride.ymlに書くと上書きはされず、2つともポート公開されてしまう。その仕様の変更が7年かかって仕様に組み込まれた。
+</p>
+</div>
+</div>
+<div id="outline-container-org86982d8" class="outline-3">
+<h3 id="org86982d8"><a href="#org86982d8"><a href="https://github.com/compose-spec/compose-spec/pull/364">introduce remove to configure runtime autoremove for service containers by ndeloof · Pull Request #364 · compose-spec/compose-spec</a></a></h3>
+<div class="outline-text-3" id="text-org86982d8">
+<p>
+removeキーワードの導入。
+</p>
+</div>
+</div>
+<div id="outline-container-orge4c2246" class="outline-3">
+<h3 id="orge4c2246"><a href="#orge4c2246"><a href="https://docs.docker.com/engine/api/v1.42/">Docker Engine API v1.42 Reference</a></a></h3>
+<div class="outline-text-3" id="text-orge4c2246">
+<p>
+Docker EngineのAPIリファレンス。
+</p>
+</div>
+</div>
+<div id="outline-container-org4c299f9" class="outline-3">
+<h3 id="org4c299f9"><a href="#org4c299f9"><a href="https://qiita.com/hichika/items/9b96634d471246359e66">個人的docker composeおすすめtips6選 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org4c299f9">
+<p>
+tips。
+</p>
+
+<ul class="org-ul">
+<li>ヘルスチェック</li>
+<li>サービスをグループ化</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf470196" class="outline-3">
+<h3 id="orgf470196"><a href="#orgf470196"><a href="https://sunday-morning.app/posts/2020-05-06-extension-fields-docker-compose">Extension fieldsを使ってdocker-composeのコンテナ設定を共通化する</a></a></h3>
+<div class="outline-text-3" id="text-orgf470196">
+<p>
+共通化設定。
+</p>
+
+<ul class="org-ul">
+<li><code>x-</code> をサービス名につけると無視される</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgb3615fe" class="outline-3">
+<h3 id="orgb3615fe"><a href="#orgb3615fe"><a href="https://techracho.bpsinc.jp/hachi8833/2020_02_07/87447">docker-compose.ymlの中で値を使い回す方法｜TechRacho by BPS株式会社</a></a></h3>
+<div class="outline-text-3" id="text-orgb3615fe">
+<p>
+エイリアスの使い方。
+</p>
+</div>
+</div>
+<div id="outline-container-org7844c7c" class="outline-3">
+<h3 id="org7844c7c"><a href="#org7844c7c"><a href="https://aton-kish.github.io/blog/post/2020/10/04/docker-compose-rm/">Docker Composeの一部のサービスだけUp/Downする | Nota</a></a></h3>
+<div class="outline-text-3" id="text-org7844c7c">
+<p>
+方法。
+</p>
+</div>
+</div>
+<div id="outline-container-org6d92d89" class="outline-3">
+<h3 id="org6d92d89"><a href="#org6d92d89"><a href="https://github.com/Haxxnet/Compose-Examples">Haxxnet/Compose-Examples: Various Docker Compose examples of selfhosted FOSS and proprietary projects.</a></a></h3>
+<div class="outline-text-3" id="text-org6d92d89">
+<p>
+docker-compose集。
+</p>
+</div>
+</div>
+<div id="outline-container-org2c3f60d" class="outline-3">
+<h3 id="org2c3f60d"><a href="#org2c3f60d"><a href="https://qiita.com/okdyy75/items/a707989bd6bdd7bdb490">GitHub Actionを使って自前Docker内で自動テスト - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org2c3f60d">
+<p>
+github actionsでdocker-composeを使う例。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb0620f7" class="outline-3">
+<h3 id="orgb0620f7"><a href="#orgb0620f7"><a href="https://containers.gitbook.io/build-containers-the-hard-way/">Build Containers the Hard Way (WIP) - Build Containers the Hard Way</a></a></h3>
+<div class="outline-text-3" id="text-orgb0620f7">
+<p>
+コンテナ技術の低レイヤーの仕組み。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf9b8bb9" class="outline-3">
+<h3 id="orgf9b8bb9"><a href="#orgf9b8bb9"><a href="https://github.com/docker-slim/docker-slim">docker-slim/docker-slim: DockerSlim (docker-slim): Don&rsquo;t change anything in your Docker container image and minify it by up to 30x (and for compiled languages even more) making it secure too! (free and open source)</a></a></h3>
+<div class="outline-text-3" id="text-orgf9b8bb9">
+<p>
+dockerイメージを分析してスリムにするツール。
+</p>
+</div>
+</div>
+<div id="outline-container-org0e4cd60" class="outline-3">
+<h3 id="org0e4cd60"><a href="#org0e4cd60"><a href="https://github.com/wagoodman/dive">wagoodman/dive: A tool for exploring each layer in a docker image</a></a></h3>
+<div class="outline-text-3" id="text-org0e4cd60">
+<p>
+dockerのレイヤーごとにイメージを調査できるツール。
+</p>
+</div>
+</div>
+<div id="outline-container-org6336e88" class="outline-3">
+<h3 id="org6336e88"><a href="#org6336e88"><a href="https://www.redhat.com/ja/topics/containers/what-is-docker">Docker とは - 解説、メリット、できること | Red Hat</a></a></h3>
+<div class="outline-text-3" id="text-org6336e88">
+<p>
+わかりやすい概要。
+</p>
+</div>
+</div>
+<div id="outline-container-org0e174e6" class="outline-3">
+<h3 id="org0e174e6"><a href="#org0e174e6"><a href="https://ja.wikipedia.org/wiki/Docker">Docker - Wikipedia</a></a></h3>
+<div class="outline-text-3" id="text-org0e174e6">
+<p>
+ソフトウェアのわかりやすい説明。
+</p>
+</div>
+</div>
+<div id="outline-container-org80ccecb" class="outline-3">
+<h3 id="org80ccecb"><a href="#org80ccecb"><a href="https://github.com/phusion/passenger-docker">phusion/passenger-docker: Docker base images for Ruby, Python, Node.js and Meteor web apps</a></a></h3>
+<div class="outline-text-3" id="text-org80ccecb">
+<p>
+Web開発用の扱いやすいDockerイメージ。
+</p>
+</div>
+</div>
+<div id="outline-container-org4f25e1b" class="outline-3">
+<h3 id="org4f25e1b"><a href="#org4f25e1b"><a href="https://12factor.net/">The Twelve-Factor App</a></a></h3>
+<div class="outline-text-3" id="text-org4f25e1b">
+<p>
+SaaS開発の方法論。
+日本語訳もあった。<a href="https://12factor.net/ja/">The Twelve-Factor App （日本語訳）</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgabe9726" class="outline-3">
+<h3 id="orgabe9726"><a href="#orgabe9726"><a href="https://docs.docker.jp/pdf-download.html">Docker ドキュメント日本語版 PDF ダウンロード — Docker-docs-ja 19.03 ドキュメント</a></a></h3>
+<div class="outline-text-3" id="text-orgabe9726">
+<p>
+Dockerのドキュメント。
+</p>
+</div>
+</div>
+<div id="outline-container-org7a899c2" class="outline-3">
+<h3 id="org7a899c2"><a href="#org7a899c2"><a href="https://kotaroooo0-dev.hatenablog.com/entry/2020/08/06/012316">キャッシュのためにDockerビルドで中間イメージをタグ付けしレジストリにPushする - 🤖</a></a></h3>
+<div class="outline-text-3" id="text-org7a899c2">
+<p>
+キャッシュの書き方。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb14f6fe" class="outline-3">
+<h3 id="orgb14f6fe"><a href="#orgb14f6fe"><a href="https://www.forcia.com/blog/002273.html">社内pのDockerfileのベストプラクティスを公開します│FORCIA CUBE│フォルシア株式会社</a></a></h3>
+<div class="outline-text-3" id="text-orgb14f6fe">
+<p>
+非常に詳しい情報。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb7619cc" class="outline-3">
+<h3 id="orgb7619cc"><a href="#orgb7619cc"><a href="https://qiita.com/tatsurou313/items/ad86da1bb9e8e570b6fa">BuildKitによりDockerとDocker Composeで外部キャッシュを使った効率的なビルドをする方法 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgb7619cc">
+<p>
+BuildKitの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-org642ae84" class="outline-3">
+<h3 id="org642ae84"><a href="#org642ae84"><a href="https://www.slideshare.net/zembutsu/dockerfile-bestpractices-19-and-advice">Dockerfileを改善するためのBest Practice 2019年版</a></a></h3>
+<div class="outline-text-3" id="text-org642ae84">
+<p>
+ベストプラクティス。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

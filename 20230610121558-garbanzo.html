@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>garbanzo</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">garbanzo</h1>
+
+<div id="outline-container-orgb89b205" class="outline-2">
+<h2 id="orgb89b205"><a href="#orgb89b205">概要</a></h2>
+<div class="outline-text-2" id="text-orgb89b205">
+<p>
+garbanzoは通知ビューワを自作するプロジェクト。
+</p>
+
+<p>
+<a href="https://efcl.info/2014/0430/res3872/">Githubのタイムラインや通知を見るアプリをnode-webkitで作った | Web Scratch</a>的なことをやりたい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfabca53" class="outline-2">
+<h2 id="orgfabca53"><a href="#orgfabca53">Memo</a></h2>
+<div class="outline-text-2" id="text-orgfabca53">
+</div>
+<div id="outline-container-org957b1c1" class="outline-3">
+<h3 id="org957b1c1"><a href="#org957b1c1">制約</a></h3>
+<div class="outline-text-3" id="text-org957b1c1">
+<ul class="org-ul">
+<li>iframe内で他ホストの絶対リンクを開けない
+<ul class="org-ul">
+<li>ブラウザの制約のため</li>
+</ul></li>
+<li>iframe内で相対リンクを開けない
+<ul class="org-ul">
+<li>リンクは暗黙的に、プロキシサーバがホストになる。つまりlocalhost。そうすると元のホストが消えるため、辿れない</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcab0391" class="outline-2">
+<h2 id="orgcab0391"><a href="#orgcab0391">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgcab0391">
+</div>
+<div id="outline-container-orgfe6909c" class="outline-3">
+<h3 id="orgfe6909c"><a href="#orgfe6909c"><span class="todo TODO">TODO</span> 受け取れる環境変数の一覧を表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-orgfe6909c">
+<p>
+READMEに書いておくのだと忘れるし面倒なので、コマンドで一覧表示できるとよい。
+</p>
+</div>
+</div>
+<div id="outline-container-org1fbd56e" class="outline-3">
+<h3 id="org1fbd56e"><a href="#org1fbd56e"><span class="todo TODO">TODO</span> オフラインにすると止まる</a></h3>
+<div class="outline-text-3" id="text-org1fbd56e">
+<p>
+サーバごと止まる。取得できないとキャンセルしないといけない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb8c91c0" class="outline-3">
+<h3 id="orgb8c91c0"><a href="#orgb8c91c0"><span class="todo TODO">TODO</span> 2回既読リストに入る可能性がある</a></h3>
+<div class="outline-text-3" id="text-orgb8c91c0">
+<p>
+チェックをするか、重複を許さないようにハッシュに読み込むなどする。
+</p>
+</div>
+</div>
+<div id="outline-container-org0aed3fc" class="outline-3">
+<h3 id="org0aed3fc"><a href="#org0aed3fc"><span class="todo TODO">TODO</span> サイドバーを可変にする</a></h3>
+<div class="outline-text-3" id="text-org0aed3fc">
+<p>
+ページによって横幅でデザイン崩れが発生する。例えばdev community。
+</p>
+</div>
+</div>
+<div id="outline-container-org4b0f4b6" class="outline-3">
+<h3 id="org4b0f4b6"><a href="#org4b0f4b6"><span class="todo TODO">TODO</span> 既読エンドポイントを普通のエンドポイントにする</a></h3>
+<div class="outline-text-3" id="text-org4b0f4b6">
+<p>
+クライアント→サーバをwebsocketでやってるけど、別にそうでなくていい。
+</p>
+</div>
+</div>
+<div id="outline-container-org1f9c9a2" class="outline-3">
+<h3 id="org1f9c9a2"><a href="#org1f9c9a2"><span class="todo TODO">TODO</span> コピペ用にiframe内のリンクを表示する</a></h3>
+<div class="outline-text-3" id="text-org1f9c9a2">
+<p>
+どこにいるかわかりにくいというのもある。カンタンだけど、表示する場所がないな。
+</p>
+</div>
+</div>
+<div id="outline-container-org05eb268" class="outline-3">
+<h3 id="org05eb268"><a href="#org05eb268"><span class="todo TODO">TODO</span> カテゴリの色を設定できるようにする</a></h3>
+<div class="outline-text-3" id="text-org05eb268">
+<p>
+よりわかりやすくする。
+</p>
+</div>
+</div>
+<div id="outline-container-org782d7ba" class="outline-3">
+<h3 id="org782d7ba"><a href="#org782d7ba"><span class="todo TODO">TODO</span> デスクトップUIを作成する</a></h3>
+<div class="outline-text-3" id="text-org782d7ba">
+<ul class="org-ul">
+<li>iframeだと制約が大きい
+<ul class="org-ul">
+<li>リンクが辿れない</li>
+<li>ホストを変えられない</li>
+</ul></li>
+</ul>
+
+<p>
+ただ、iframe制約を回避するためのプロキシによってキャッシュを保持し、高速遷移できている側面もある。
+</p>
+
+<ul class="org-ul">
+<li>feed遷移と、あとでリンクを辿るのを区別する必要がある。feed遷移したあとにホストがプロキシサーバにならなければいい。読み込んだあとに変えることはできそうな</li>
+<li>つまり、iframe制約を超えられれば可能性がある</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgbfc780f" class="outline-3">
+<h3 id="orgbfc780f"><a href="#orgbfc780f"><span class="todo TODO">TODO</span> リポジトリごとに分けて表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-orgbfc780f">
+<p>
+一見同じなので混ざって読みにくい。
+</p>
+
+<p>
+jQueryだけだと厳しいか。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org759e187" class="outline-3">
+<h3 id="org759e187"><a href="#org759e187"><span class="todo TODO">TODO</span> キャッシュを更新できるようにする</a></h3>
+<div class="outline-text-3" id="text-org759e187">
+<p>
+iframe内の更新ボタンみたいなのを作成する。キャッシュ時刻を保持してもよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org88d1a11" class="outline-3">
+<h3 id="org88d1a11"><a href="#org88d1a11"><span class="todo TODO">TODO</span> iframeでGitHub以外も開きたい</a></h3>
+<div class="outline-text-3" id="text-org88d1a11">
+<p>
+ちょっとしたときに、不便。見てる途中で開きたいことはけっこうある。
+</p>
+
+<p>
+ブラウザでやる限り厳しい可能性が高い。デスクトップアプリにするか、ブラウザを埋め込むか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd703d6a" class="outline-3">
+<h3 id="orgd703d6a"><a href="#orgd703d6a"><span class="todo TODO">TODO</span> 実行チェックのCIを追加する</a></h3>
+<div class="outline-text-3" id="text-orgd703d6a">
+<p>
+5分くらい立ち上げるだけのチェック。ないよりはマシか。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb07b68f" class="outline-2">
+<h2 id="orgb07b68f"><a href="#orgb07b68f">Reference</a></h2>
+</div>
+<div id="outline-container-org3423016" class="outline-2">
+<h2 id="org3423016"><a href="#org3423016">Archives</a></h2>
+<div class="outline-text-2" id="text-org3423016">
+</div>
+<div id="outline-container-org3e72be1" class="outline-3">
+<h3 id="org3e72be1"><a href="#org3e72be1"><span class="done DONE">DONE</span> オフラインになっても止まらないようにする</a></h3>
+<div class="outline-text-3" id="text-org3e72be1">
+<p>
+今はフェッチに失敗すると止まる。別にサーバに影響を与えなくていい。
+</p>
+
+<p>
+timeout cancelさせればいいのか。
+</p>
+</div>
+</div>
+<div id="outline-container-org02ed78d" class="outline-3">
+<h3 id="org02ed78d"><a href="#org02ed78d"><span class="done CLOSE">CLOSE</span> 直近にクリックした項目を色をつける</a></h3>
+<div class="outline-text-3" id="text-org02ed78d">
+<p>
+どこまでたどったかわからなくなるので。削除したときに最新の画面を開くなったので、別にいらなくなった。
+</p>
+</div>
+</div>
+<div id="outline-container-orga1008a5" class="outline-3">
+<h3 id="orga1008a5"><a href="#orga1008a5"><span class="done DONE">DONE</span> 開いたときのiframe内に表示するページとして、Garbanzoの静的ページを用意する</a></h3>
+<div class="outline-text-3" id="text-orga1008a5">
+<p>
+ツールのウェルカムページとしていい感じのページにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orgae99c26" class="outline-3">
+<h3 id="orgae99c26"><a href="#orgae99c26"><span class="done DONE">DONE</span> 削除したとき、先頭の項目でiframeを切り替えたい</a></h3>
+<div class="outline-text-3" id="text-orgae99c26">
+<p>
+そのままチェックボタンを押すだけで、次のやつを見たい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb86d1a7" class="outline-3">
+<h3 id="orgb86d1a7"><a href="#orgb86d1a7"><span class="done DONE">DONE</span> 既読にできるようにする</a></h3>
+<div class="outline-text-3" id="text-orgb86d1a7">
+<p>
+表示やデータからの削除と、既読リクエストをやる。
+</p>
+
+<p>
+受け渡しがうまくいかない。chanに送信はできるのだが、受信できてないよう。chanを初期化してないせいだった。
+</p>
+</div>
+</div>
+<div id="outline-container-org51aaf9c" class="outline-3">
+<h3 id="org51aaf9c"><a href="#org51aaf9c"><span class="done DONE">DONE</span> 長い本文は省略する</a></h3>
+<div class="outline-text-3" id="text-org51aaf9c">
+<p>
+どうせサイドバーだけから見ることはない。でもmarkdownからHTMLに変換をかけてるから切り出すのは難しそうな。
+本文非表示でいいか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb52b182" class="outline-3">
+<h3 id="orgb52b182"><a href="#orgb52b182"><span class="done DONE">DONE</span> 通知のアイコンや文章を調整する</a></h3>
+<div class="outline-text-3" id="text-orgb52b182">
+<p>
+いい感じにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org0ed2cdc" class="outline-3">
+<h3 id="org0ed2cdc"><a href="#org0ed2cdc"><span class="done CLOSE">CLOSE</span> issueイベントにはオープンの場合とクローズの場合がある</a></h3>
+<div class="outline-text-3" id="text-org0ed2cdc">
+<p>
+区別はできないようだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org3739836" class="outline-3">
+<h3 id="org3739836"><a href="#org3739836"><span class="done DONE">DONE</span> DiscussionとReleaseイベントに対応する</a></h3>
+<div class="outline-text-3" id="text-org3739836">
+<p>
+対応できてない。
+</p>
+
+<p>
+discussionは、APIの不具合でURLが取れないので不可能。スルーする。
+</p>
+</div>
+</div>
+<div id="outline-container-org93436da" class="outline-3">
+<h3 id="org93436da"><a href="#org93436da"><span class="done DONE">DONE</span> PRオープンの通知が来てない</a></h3>
+<div class="outline-text-3" id="text-org93436da">
+<p>
+PRイベントをスルーしてたので直した。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb31ea4d" class="outline-3">
+<h3 id="orgb31ea4d"><a href="#orgb31ea4d"><span class="done DONE">DONE</span> デスクトップ通知</a></h3>
+<div class="outline-text-3" id="text-orgb31ea4d">
+<p>
+push.jsでやればよいというが。
+</p>
+
+<p>
+簡単にできた。ただ初回実行で通知が多すぎるので無視したい。
+</p>
+
+<ul class="org-ul">
+<li>通知したいかどうかはクライアントによって変わる。最新のリロードしたてのクライアントでは通知は出ないが、開きっぱなしにしていたクライアントでは出る</li>
+<li>初回読み込みからそれ以後に受信された場合は通知したい</li>
+<li>初回リロード時は通知しない</li>
+<li>最初にサーバを立ち上げたときは、徐々に追加していくので、初回リロードのロジックだけでは不足する</li>
+<li>単純に更新が3分以内だったら、とかでもよさそうな</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org86cea06" class="outline-3">
+<h3 id="org86cea06"><a href="#org86cea06"><span class="done DONE">DONE</span> 上から新しい順に並ばせる</a></h3>
+<div class="outline-text-3" id="text-org86cea06">
+<p>
+今はmapから取り出してランダムで見にくい。
+</p>
+
+<p>
+map型のroom.eventsで一覧を持っている。これはかぶりを防ぐためmap型にしている。eventsから、各クライアントのdoneにないものをwebsocketに書き込む。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbde4ad7" class="outline-3">
+<h3 id="orgbde4ad7"><a href="#orgbde4ad7"><span class="done DONE">DONE</span> commentとissue openの処理を共通化する</a></h3>
+<div class="outline-text-3" id="text-orgbde4ad7">
+<p>
+できるところが多くある。
+</p>
+</div>
+</div>
+<div id="outline-container-org9cd2fe3" class="outline-3">
+<h3 id="org9cd2fe3"><a href="#org9cd2fe3"><span class="done DONE">DONE</span> eventにタイプフィールドを追加する</a></h3>
+<div class="outline-text-3" id="text-org9cd2fe3">
+<p>
+パッと見でわかりやすい。
+</p>
+<p>
+タイプというか、タグ的な使い方か。
+</p>
+</div>
+</div>
+<div id="outline-container-org49e22d7" class="outline-3">
+<h3 id="org49e22d7"><a href="#org49e22d7"><span class="done DONE">DONE</span> 競合する</a></h3>
+<div class="outline-text-3" id="text-org49e22d7">
+<p>
+まだpanicすることがある。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbdd7517" class="outline-3">
+<h3 id="orgbdd7517"><a href="#orgbdd7517"><span class="done DONE">DONE</span> クライアントが増えると競合する</a></h3>
+<div class="outline-text-3" id="text-orgbdd7517">
+<p>
+消えたクライアントは消す。
+</p>
+
+<p>
+コネクションの切断をサーバ側で見て、終了させる。切断とはつまり、websocketへの書き込みが失敗したとき。そのときハンドラのコネクションキープの無限ループを終了させ、deferで削除チャンネルに追加する、という処理。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcf5880f" class="outline-3">
+<h3 id="orgcf5880f"><a href="#orgcf5880f"><span class="done DONE">DONE</span> 無限ループで通知取得する</a></h3>
+<div class="outline-text-3" id="text-orgcf5880f">
+<p>
+リアルタイムに通知を取得できるようにする。今は起動時にやってるだけ。
+</p>
+
+<p>
+やるためには、無駄にリクエストしないロジックが必要になる。ストアに存在していれば、リクエストしないというような。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcb6899b" class="outline-3">
+<h3 id="orgcb6899b"><a href="#orgcb6899b"><span class="done DONE">DONE</span> 無限ループでキャッシュ取得する</a></h3>
+<div class="outline-text-3" id="text-orgcb6899b">
+<p>
+通知取得と同様に。
+</p>
+</div>
+</div>
+<div id="outline-container-org9c0050d" class="outline-3">
+<h3 id="org9c0050d"><a href="#org9c0050d"><span class="done DONE">DONE</span> 通知が少ないことがある</a></h3>
+<div class="outline-text-3" id="text-org9c0050d">
+<p>
+競合かと思いきや、dereference失敗だ。タイトルか本文を持たないことがあるのか。
+ループのどこかでreturnしているように見える。
+</p>
+
+<p>
+<code>crypto/internal/bigmod: switch to saturated limbs</code> のissueが来ると止まる。
+</p>
+
+<p>
+コミットに対するコメントだと止まるのか。
+</p>
+</div>
+</div>
+<div id="outline-container-org6fa3885" class="outline-3">
+<h3 id="org6fa3885"><a href="#org6fa3885"><span class="done DONE">DONE</span> 現在のURLを表示する</a></h3>
+<div class="outline-text-3" id="text-org6fa3885">
+<p>
+遷移する方法もほしい。
+</p>
+
+<p>
+iframeの中のURLを別タブで開けるようにする。
+</p>
+
+<p>
+ボタンをリンクすればよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb48a3cb" class="outline-3">
+<h3 id="orgb48a3cb"><a href="#orgb48a3cb"><span class="done DONE">DONE</span> favicon追加する</a></h3>
+<div class="outline-text-3" id="text-orgb48a3cb">
+<p>
+blob書き込みとしてできた。ファイルだろうとほかの、HTMLなどと同じように扱えるのに感動。
+</p>
+</div>
+</div>
+<div id="outline-container-org2bc1e22" class="outline-3">
+<h3 id="org2bc1e22"><a href="#org2bc1e22"><span class="done DONE">DONE</span> テキストをマークダウン化する</a></h3>
+<div class="outline-text-3" id="text-org2bc1e22">
+<p>
+ライブラリで簡単にできた。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd341d1e" class="outline-3">
+<h3 id="orgd341d1e"><a href="#orgd341d1e"><span class="done DONE">DONE</span> 通知が多い場合の対応</a></h3>
+<div class="outline-text-3" id="text-orgd341d1e">
+<p>
+たくさんリクエストしてしまう。インメモリも無尽蔵に増えてしまう。
+</p>
+
+<p>
+1リクエストで50のよう。まあいい。
+</p>
+
+<ul class="org-ul">
+<li>50個を最大にして、なくなったら取得が走るようにする
+<ul class="org-ul">
+<li>削除ロジックはどうするか。現状、重複を避けるためにマップにしているが、順番がないのでやりにくい</li>
+</ul></li>
+</ul>
+
+<p>
+すでにあるリソースにリクエストを絶対飛ばないことがわかれば、とりあえず全部保存すればよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgae350a6" class="outline-3">
+<h3 id="orgae350a6"><a href="#orgae350a6"><span class="done DONE">DONE</span> 通知にdiscussionがあるときにバグる</a></h3>
+<div class="outline-text-3" id="text-orgae350a6">
+<p>
+subjectのURLがないよう。
+</p>
+
+<p>
+スルーする処理を追加した。
+</p>
+</div>
+</div>
+<div id="outline-container-org7dc151c" class="outline-3">
+<h3 id="org7dc151c"><a href="#org7dc151c"><span class="done DONE">DONE</span> 時刻表示</a></h3>
+<div class="outline-text-3" id="text-org7dc151c">
+<p>
+GitHubから取ってきた時刻を入れる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgee51ffd" class="outline-3">
+<h3 id="orgee51ffd"><a href="#orgee51ffd"><span class="done DONE">DONE</span> リポジトリを制限しない</a></h3>
+<div class="outline-text-3" id="text-orgee51ffd">
+<p>
+今はテストのため固定になっている。リポジトリ関わらず取得するようにする。ただ数がとんでもないことになりそうなので、あらかじめ数対応をしておきたい。
+</p>
+</div>
+</div>
+<div id="outline-container-org440dbb7" class="outline-3">
+<h3 id="org440dbb7"><a href="#org440dbb7"><span class="done DONE">DONE</span> イメージを用意する</a></h3>
+<div class="outline-text-3" id="text-org440dbb7">
+<p>
+軽量イメージを使っていい感じになった。
+</p>
+</div>
+</div>
+<div id="outline-container-org41fdda6" class="outline-3">
+<h3 id="org41fdda6"><a href="#org41fdda6"><span class="done DONE">DONE</span> 初回起動時に配信されない</a></h3>
+<div class="outline-text-3" id="text-org41fdda6">
+<p>
+起動直後に読み込むと、ウェブソケットの内容を受け取れない。clientにjoinはしているのだが、送信されてないようだ。
+</p>
+
+<p>
+eventsを用意できてないと、forwardイベントが作成されないため、実行されない。起動後に無限ループ実行できれば解決する。
+</p>
+
+<p>
+今のコードだと、forwardとroom.eventsを同期させようとすると全部追加で送ってしまうので、スタックしてしまう。重複もとんでもないことになる。クライアントごとに、どれが未送なのか判定できないといけない。
+</p>
+
+<p>
+クライアント側にすでに送信したnotificationIDのmapを持たせておくことにした。
+</p>
+</div>
+</div>
+<div id="outline-container-orge647438" class="outline-3">
+<h3 id="orge647438"><a href="#orge647438"><span class="done DONE">DONE</span> CPU使用率が高い</a></h3>
+<div class="outline-text-3" id="text-orge647438">
+<p>
+送信しまくってるからな。
+</p>
+</div>
+</div>
+<div id="outline-container-org1d261e0" class="outline-3">
+<h3 id="org1d261e0"><a href="#org1d261e0"><span class="done DONE">DONE</span> latest comment URL を event から消す</a></h3>
+<div class="outline-text-3" id="text-org1d261e0">
+<p>
+使ってないな。
+CLOSED: <span class="timestamp-wrapper"><span class="timestamp">[2023-05-30 火 23:19]</span></span>
+</p>
+</div>
+</div>
+<div id="outline-container-org69d63fd" class="outline-3">
+<h3 id="org69d63fd"><a href="#org69d63fd"><span class="done DONE">DONE</span> サイドバーの固定</a></h3>
+<div class="outline-text-3" id="text-org69d63fd">
+<p>
+通知がたくさんあるとページが下に伸びる。
+</p>
+</div>
+</div>
+<div id="outline-container-org1bf5159" class="outline-3">
+<h3 id="org1bf5159"><a href="#org1bf5159"><span class="done DONE">DONE</span> コメント種別によってエラーになる</a></h3>
+<div class="outline-text-3" id="text-org1bf5159">
+<p>
+まだ特定してない。
+</p>
+
+<p>
+issueが開かれたときの通知だな。
+</p>
+</div>
+</div>
+<div id="outline-container-org521b706" class="outline-3">
+<h3 id="org521b706"><a href="#org521b706"><span class="done DONE">DONE</span> event内にリポジトリ情報を入れる</a></h3>
+<div class="outline-text-3" id="text-org521b706">
+<p>
+リポジトリ名を入れる。
+</p>
+</div>
+</div>
+<div id="outline-container-org910ef39" class="outline-3">
+<h3 id="org910ef39"><a href="#org910ef39"><span class="done DONE">DONE</span> プロキシを図に描く</a></h3>
+<div class="outline-text-3" id="text-org910ef39">
+<p>
+頭がこんがらがるので整理する。
+</p>
+</div>
+</div>
+<div id="outline-container-org3b75228" class="outline-3">
+<h3 id="org3b75228"><a href="#org3b75228"><span class="done DONE">DONE</span> ステータスを表示するページ</a></h3>
+<div class="outline-text-3" id="text-org3b75228">
+<p>
+どこまでフェッチが終わったかを示す。
+</p>
+
+<p>
+今はwebsocketでeventしか送ってないが、別の情報を送るのはどうするか。
+</p>
+
+<ul class="org-ul">
+<li>送信すると止まるな。受信元が用意できてないとか。
+<ul class="org-ul">
+<li>同じゴルーチン上で送信と受信してるから、capが1以上でないとブロックして止まるようになっていた</li>
+</ul></li>
+<li>今はsendにあるごとに、jsonにwriteしてる。すでにある場合は無視してる。</li>
+<li>イベントを送るときと、統計を送るときは明らかに、タイミングと送るjsonが異なる
+<ul class="org-ul">
+<li>今はjsonが同じなのが問題だ。event用しか送れない</li>
+<li>websocketごと分けるとコードの重複が増えるのと、接続を管理する手間が増える</li>
+</ul></li>
+<li>case文にdefaultがないと、ループして先に進まない</li>
+<li>2回読み込みできなくなった</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org864a393" class="outline-3">
+<h3 id="org864a393"><a href="#org864a393"><span class="done DONE">DONE</span> プロキシをGitHub以外に対応する</a></h3>
+<div class="outline-text-3" id="text-org864a393">
+<p>
+ホストが何でもできるようにする。できたが、相変わらずその画面から別のリンクを開くことはできない。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org8beecd2" class="outline-3">
+<h3 id="org8beecd2"><a href="#org8beecd2"><span class="done DONE">DONE</span> たまに何も出なくなる</a></h3>
+<div class="outline-text-3" id="text-org8beecd2">
+<ul class="org-ul">
+<li>統計の数字がすべて0になる</li>
+<li>エラーとかは出てない</li>
+</ul>
+
+<p>
+ロック関係か。途中でなることもある。その場合は既読が増えない。メインのselect文が止まるってことか。既読ボタンを連打するとなるぽい。時間のかかるリクエストを非同期にした。
+</p>
+</div>
+</div>
+<div id="outline-container-orge73240d" class="outline-3">
+<h3 id="orge73240d"><a href="#orge73240d"><span class="done DONE">DONE</span> RSSを既読記録できるようにする</a></h3>
+<div class="outline-text-3" id="text-orge73240d">
+<p>
+既読の場合は非表示にしたい。
+</p>
+
+<ul class="org-ul">
+<li>既読をどうやって記録するか
+<ul class="org-ul">
+<li>CSVファイルに保存する</li>
+<li>既読したときにリンクを書き込む</li>
+<li>読み込むときにリンクリストを見て、ないときにeventに追加する</li>
+</ul></li>
+<li>設定ディレクトリを生成する(.garbanzo)</li>
+<li>ファイルを生成する(history)</li>
+<li>読み込まないパターン
+<ul class="org-ul">
+<li>ファイルにあるとき</li>
+<li>メモリにあるとき</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4eb46ac" class="outline-3">
+<h3 id="org4eb46ac"><a href="#org4eb46ac"><span class="done DONE">DONE</span> RSS対応する</a></h3>
+<div class="outline-text-3" id="text-org4eb46ac">
+<p>
+いちおう表示はできるようになった。
+</p>
+</div>
+</div>
+<div id="outline-container-org1634b8a" class="outline-3">
+<h3 id="org1634b8a"><a href="#org1634b8a"><span class="done DONE">DONE</span> フィードURLを設定ファイルから取り込むようにする</a></h3>
+<div class="outline-text-3" id="text-org1634b8a">
+<p>
+先に既読対応しないと、取りまくってしまう。
+</p>
+</div>
+</div>
+<div id="outline-container-org7edb330" class="outline-3">
+<h3 id="org7edb330"><a href="#org7edb330"><span class="done DONE">DONE</span> フィード設定ファイルがない場合の対応</a></h3>
+<div class="outline-text-3" id="text-org7edb330">
+<p>
+ファイルがない場合は作成する。起動したときに、いくつかのファイルについて作成を走らせる。
+</p>
+</div>
+</div>
+<div id="outline-container-org092779f" class="outline-3">
+<h3 id="org092779f"><a href="#org092779f"><span class="done DONE">DONE</span> フィード表示を整える</a></h3>
+<div class="outline-text-3" id="text-org092779f">
+<ul class="org-ul">
+<li>アイコン</li>
+<li>リンク</li>
+<li>作成日時</li>
+</ul>
+
+<p>
+などを入れる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf439f12" class="outline-3">
+<h3 id="orgf439f12"><a href="#orgf439f12"><span class="done DONE">DONE</span> 統計表示を表にする</a></h3>
+<div class="outline-text-3" id="text-orgf439f12">
+<p>
+もうちょっときれいに表示する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf6f01a2" class="outline-3">
+<h3 id="orgf6f01a2"><a href="#orgf6f01a2"><span class="done DONE">DONE</span> RSSのdescriptionにHTMLタグが入っているので消す</a></h3>
+<div class="outline-text-3" id="text-orgf6f01a2">
+<p>
+文字を切り取るので、HTMLタグにしてるとうまくいかない。
+</p>
+</div>
+</div>
+<div id="outline-container-org7ce78a8" class="outline-3">
+<h3 id="org7ce78a8"><a href="#org7ce78a8"><span class="done DONE">DONE</span> 設定ファイルのテンプレートを用意する</a></h3>
+<div class="outline-text-3" id="text-org7ce78a8">
+<p>
+空白のファイルができるだけでわかりづらい。
+</p>
+</div>
+</div>
+<div id="outline-container-org6243036" class="outline-3">
+<h3 id="org6243036"><a href="#org6243036"><span class="done DONE">DONE</span> フィードのドキュメントを作成する</a></h3>
+<div class="outline-text-3" id="text-org6243036">
+<p>
+書く。
+</p>
+
+<ul class="org-ul">
+<li>設定ymlのエントリの例を作成する</li>
+<li>今の設定をトップページに表示する</li>
+<li>ないときは自動作成する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org654349f" class="outline-3">
+<h3 id="org654349f"><a href="#org654349f"><span class="done DONE">DONE</span> ymlのタイトルを何かに使う</a></h3>
+<div class="outline-text-3" id="text-org654349f">
+<p>
+あるいは設定ファイルからタイトルを消す。今はイベントと分離して使えない。できればカテゴリにしたいが…。
+</p>
+
+<p>
+フィードリストの説明を表示するために、増やした。タイトルではなくdescriptionとした。
+</p>
+</div>
+</div>
+<div id="outline-container-org08121ed" class="outline-3">
+<h3 id="org08121ed"><a href="#org08121ed"><span class="done DONE">DONE</span> RSSの取得情報をいい感じにする</a></h3>
+<div class="outline-text-3" id="text-org08121ed">
+<p>
+アイコンがブランクになることが多い。どうにかできないか。
+</p>
+
+<p>
+とりあえず一括でRSSアイコンにした。
+</p>
+</div>
+</div>
+<div id="outline-container-org51c1856" class="outline-3">
+<h3 id="org51c1856"><a href="#org51c1856"><span class="done CLOSE">CLOSE</span> 起動直後にリロードするとクライアントの分だけfetchが走るような</a></h3>
+<div class="outline-text-3" id="text-org51c1856">
+<p>
+ログを仕込んだときに2つ出てくるときがある。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdcf9cfd" class="outline-3">
+<h3 id="orgdcf9cfd"><a href="#orgdcf9cfd"><span class="done CLOSE">CLOSE</span> トークンをトップページから入れられるようにする</a></h3>
+<div class="outline-text-3" id="text-orgdcf9cfd">
+<p>
+別にファイルを直にいじってできればいいので、スルー。
+</p>
+
+<p>
+入れて、設定ファイルに保存して次回以降使う。iframe内でやると、POSTできない可能性がある。
+</p>
+</div>
+</div>
+<div id="outline-container-org137440c" class="outline-3">
+<h3 id="org137440c"><a href="#org137440c"><span class="done DONE">DONE</span> トークンを設定ファイルから読み込めるようにする</a></h3>
+<div class="outline-text-3" id="text-org137440c">
+<p>
+環境変数では面倒だ。
+</p>
+</div>
+</div>
+<div id="outline-container-org89e0548" class="outline-3">
+<h3 id="org89e0548"><a href="#org89e0548"><span class="done DONE">DONE</span> 構造体まわりのリファクタ</a></h3>
+<div class="outline-text-3" id="text-org89e0548">
+<ul class="org-ul">
+<li>場所がわかりづらい</li>
+<li>関数がでかい</li>
+<li>設定がまとまってない</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga17c5e1" class="outline-3">
+<h3 id="orga17c5e1"><a href="#orga17c5e1"><span class="done DONE">DONE</span> テンプレートに構造体を渡す</a></h3>
+<div class="outline-text-3" id="text-orga17c5e1">
+</div>
+</div>
+<div id="outline-container-org56af9d4" class="outline-3">
+<h3 id="org56af9d4"><a href="#org56af9d4"><span class="done DONE">DONE</span> 定数化する</a></h3>
+<div class="outline-text-3" id="text-org56af9d4">
+<p>
+リファクタ。
+</p>
+</div>
+</div>
+<div id="outline-container-org23bbddd" class="outline-3">
+<h3 id="org23bbddd"><a href="#org23bbddd"><span class="done DONE">DONE</span> トークンがないとき実行すると止まる</a></h3>
+<div class="outline-text-3" id="text-org23bbddd">
+<p>
+いつのまにか。
+</p>
+
+<p>
+トークンがないときか。
+</p>
+</div>
+</div>
+<div id="outline-container-org41d5daf" class="outline-3">
+<h3 id="org41d5daf"><a href="#org41d5daf"><span class="done DONE">DONE</span> brew installに対応する</a></h3>
+<div class="outline-text-3" id="text-org41d5daf">
+<p>
+気軽にMacでもインストールできるようにする。
+</p>
+
+<ul class="org-ul">
+<li>Go installはGoが入っているか限らない</li>
+<li>dockerは使い方に慣れてない可能性がある</li>
+</ul>
+
+<p>
+動作確認するのが面倒だな。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

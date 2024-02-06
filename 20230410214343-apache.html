@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Apache</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Apache</h1>
+<div id="outline-container-org2f3fc55" class="outline-2">
+<h2 id="org2f3fc55"><a href="#org2f3fc55">概要</a></h2>
+<div class="outline-text-2" id="text-org2f3fc55">
+<p>
+Apacheは<a href="20220806100036-web_server.html#ID-59d0554c-f2fa-4ca1-8c7a-774c68bdb036">Web Server</a>の1つ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf31b8db" class="outline-2">
+<h2 id="orgf31b8db"><a href="#orgf31b8db">Memo</a></h2>
+<div class="outline-text-2" id="text-orgf31b8db">
+</div>
+<div id="outline-container-org427eca2" class="outline-3">
+<h3 id="org427eca2"><a href="#org427eca2">高速化</a></h3>
+<div class="outline-text-3" id="text-org427eca2">
+<p>
+いくつかの高速化の方法がある。
+</p>
+
+<p>
+gzip圧縮して送信する方法。転送サイズが小さくなり高速化する。CPU負荷は上がる。有効にするとレスポンスヘッダに <code>Content-Encoding: gzip</code> などがつく。
+</p>
+
+<pre class="example">
+LoadModule deflate_module modules/mod_deflate.so
+
+&lt;IfModule mod_deflate.c&gt;
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/wasm
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+&lt;/IfModule&gt;
+</pre>
+
+<p>
+ブラウザにキャッシュして、読み込みを減らす方法。サーバとの通信が発生しなくなり高速化する。更新を反映しなくなる可能性があるので、更新の少ない画像などに向いている。
+</p>
+
+<pre class="example">
+&lt;ifModule mod_expires.c&gt;
+    ExpiresActive On
+    ExpiresDefault "access plus 1 seconds"
+    ExpiresByType image/jpg "access plus 1 days"
+    ExpiresByType image/jpeg "access plus 1 days"
+    ExpiresByType image/png "access plus 1 days"
+    ExpiresByType image/gif "access plus 1 days"
+    ExpiresByType application/wasm "access plus 1 days"
+    ExpiresByType application/javascript "access plus 1 days"
+    ExpiresByType application/x-javascript "access plus 1 days"
+&lt;/ifModule&gt;
+</pre>
+
+<p>
+確立したコネクションを使いまわして、高速化する設定。普通に1リクエストごとに接続するが、接続にはコストがかかる。複数リクエストでつないだままにして高速化する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>keep alive</label><pre class="src src-shell">KeepAlive On
+MaxKeepAliveRequests 1000 <span class="org-comment-delimiter"># </span><span class="org-comment">1000&#12522;&#12463;&#12456;&#12473;&#12488;&#12372;&#12392;&#12395;&#12467;&#12493;&#12463;&#12471;&#12519;&#12531;&#12434;&#20351;&#12356;&#12414;&#12431;&#12377;</span>
+KeepAliveTimeout 5 <span class="org-comment-delimiter"># </span><span class="org-comment">5&#31186;&#36890;&#20449;&#12364;&#12394;&#12356;&#12392;&#12289;&#12467;&#12493;&#12463;&#12471;&#12519;&#12531;&#12434;&#20999;&#12427;</span>
+</pre>
+</div>
+
+<p>
+リクエストを見ていると、あまり知られてないファイル形式のファイルサイズが大きいが、圧縮やキャッシュが適用されていなかった。これらに独自のContent-Typeを与え、高速化を適用する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>独自のContent-Typeを設定する</label><pre class="src src-shell">AddType application/original .tif
+
+AddOutputFilterByType DEFLATE application/original
+ExpiresByType application/original <span class="org-string">"access plus 1 days"</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org3a471a7" class="outline-2">
+<h2 id="org3a471a7"><a href="#org3a471a7">Tasks</a></h2>
+</div>
+<div id="outline-container-org33be160" class="outline-2">
+<h2 id="org33be160"><a href="#org33be160">Reference</a></h2>
+</div>
+<div id="outline-container-org666015f" class="outline-2">
+<h2 id="org666015f"><a href="#org666015f">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

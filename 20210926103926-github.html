@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GitHub</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">GitHub</h1>
+<div id="outline-container-org8997d98" class="outline-2">
+<h2 id="org8997d98"><a href="#org8997d98">概要</a></h2>
+<div class="outline-text-2" id="text-org8997d98">
+<p>
+GitHubは<a href="20210901104129-git.html#ID-90c6b715-9324-46ce-a354-63d09403b066">Git</a>のコードホスティングサービス。
+</p>
+</div>
+</div>
+<div id="outline-container-org9c2c1f5" class="outline-2">
+<h2 id="org9c2c1f5"><a href="#org9c2c1f5">Memo</a></h2>
+<div class="outline-text-2" id="text-org9c2c1f5">
+</div>
+<div id="outline-container-org06dca71" class="outline-3">
+<h3 id="org06dca71"><a href="#org06dca71">一括でリポジトリのwatch状態を変更する</a></h3>
+<div class="outline-text-3" id="text-org06dca71">
+<p>
+フォーク用のorganizationアカウントを使っている。最近自動fetchをするようにしたところ、GitHub Actionsの失敗通知が非常にうるさい。トークンなどが入ってないとエラーになるジョブが多くあるようだ。並列 + 長時間でいくつも実行するので、数が多い。1つのリポジトリを1日放置で200件くらい来る。
+</p>
+
+<p>
+メールは設定項目があるし無視すればいいのだが、自作した通知ツールの動作が阻害されてしまうのが問題だった。workflowの失敗もnotificationなので、それだけでページを埋め尽くしてしまう。そんなに大量のページをたどる設定になっていない。
+</p>
+
+<p>
+ユーザ所有のリポジトリについてはブラウザでリスト表示して設定できるようだ<sup><a id="fnr.1" class="footref" href="#fn.1">1</a></sup>。しかしorganizationのリポジトリは一覧設定に出てこない。設定がないようだ。1件1件開いて、watchingをignoreにするしかない。なので、コマンドでやることにした。
+</p>
+
+<p>
+watching状態の変更エンドポイントの説明は<a href="https://docs.github.com/ja/rest/activity/watching?apiVersion=2022-11-28#set-a-repository-subscription">Watch中 - GitHub Docs</a>にある。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgab5bb7c" class="outline-3">
+<h3 id="orgab5bb7c"><a href="#orgab5bb7c">Readmeでの画像の揃え方</a></h3>
+<div class="outline-text-3" id="text-orgab5bb7c">
+<ul class="org-ul">
+<li><a href="https://gist.github.com/DavidWells/7d2e0e1bc78f4ac59a123ddf8b74932d">Guide to aligning images in github readme.md files.</a></li>
+</ul>
+
+<p>
+GitHub Readmeでの、画像の揃え方。理解しやすい。
+</p>
+</div>
+</div>
+<div id="outline-container-org691da18" class="outline-3">
+<h3 id="org691da18"><a href="#org691da18">CODEOWNERS</a></h3>
+<div class="outline-text-3" id="text-org691da18">
+<p>
+.github/CODEOWNERSファイルを配置すると、特定のパターンで特定の人にレビュー必須にできる。
+例えば.rbの変更が含まれていた場合は@backend-team、.tsの場合は@Aさん、など。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcdc11c2" class="outline-3">
+<h3 id="orgcdc11c2"><a href="#orgcdc11c2">コンテナレジストリ</a></h3>
+<div class="outline-text-3" id="text-orgcdc11c2">
+<p>
+DockerHubのように、<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>コンテナをホストするサービスとして利用できる。
+</p>
+
+<ul class="org-ul">
+<li>GitHubトークンを発行する</li>
+<li>シェル上でログインする</li>
+<li>タグをつけてビルドする</li>
+<li>pushする</li>
+</ul>
+
+<p>
+<a href="https://docs.github.com/ja/packages/working-with-a-github-packages-registry/working-with-the-container-registry">コンテナレジストリの利用 - GitHub Docs</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org7eec957" class="outline-3">
+<h3 id="org7eec957"><a href="#org7eec957">リポジトリで特定の言語をignoreするとき</a></h3>
+<div class="outline-text-3" id="text-org7eec957">
+<p>
+リポジトリ内にライブラリなどが入っていると、GitHub上で意図しない言語のリポジトリとみなされることがある。
+<code>.gitattributes</code> ファイルを作って↓のように入力すると、public内のファイルが言語統計から無視される。
+</p>
+<pre class="example">
+public/* linguist-vendored
+public/*/* linguist-vendored
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6ddfd7e" class="outline-2">
+<h2 id="org6ddfd7e"><a href="#org6ddfd7e">Tasks</a></h2>
+<div class="outline-text-2" id="text-org6ddfd7e">
+</div>
+<div id="outline-container-orgfd08998" class="outline-3">
+<h3 id="orgfd08998"><a href="#orgfd08998"><span class="todo TODO">TODO</span> <a href="https://www.oreilly.co.jp/books/9784873117959/">O&rsquo;Reilly Japan - GitHubツールビルディング</a></a></h3>
+<div class="outline-text-3" id="text-orgfd08998">
+<p>
+GitHubでのメタツールの作り方を解説している。
+</p>
+
+<ul class="org-ul">
+<li>条件付きリクエストはレートを消費しない。変更がない場合は何も返さない</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org48a3363" class="outline-2">
+<h2 id="org48a3363"><a href="#org48a3363">Reference</a></h2>
+<div class="outline-text-2" id="text-org48a3363">
+</div>
+<div id="outline-container-orgc4eeb7d" class="outline-3">
+<h3 id="orgc4eeb7d"><a href="#orgc4eeb7d"><a href="https://anvaka.github.io/map-of-github/#2/0/0">Map of GitHub</a></a></h3>
+<div class="outline-text-3" id="text-orgc4eeb7d">
+<p>
+有名なGitHubプロジェクトの可視化。
+</p>
+</div>
+</div>
+<div id="outline-container-org4f0d250" class="outline-3">
+<h3 id="org4f0d250"><a href="#org4f0d250"><a href="https://github.com/eggplants/ghcr-badge">eggplants/ghcr-badge: Generate ghcr.io (GitHub Container Registory) container&rsquo;s status badge</a></a></h3>
+<div class="outline-text-3" id="text-org4f0d250">
+<p>
+バッジの作り方を見る。
+</p>
+</div>
+</div>
+<div id="outline-container-org51b09ca" class="outline-3">
+<h3 id="org51b09ca"><a href="#org51b09ca"><a href="https://docs.github.com/ja">GitHub Documentation</a></a></h3>
+<div class="outline-text-3" id="text-org51b09ca">
+<p>
+GitHubのドキュメント。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd354f60" class="outline-2">
+<h2 id="orgd354f60"><a href="#orgd354f60">Archives</a></h2>
+<div class="outline-text-2" id="text-orgd354f60">
+</div>
+<div id="outline-container-orgbf3e26a" class="outline-3">
+<h3 id="orgbf3e26a"><a href="#orgbf3e26a"><span class="done DONE">DONE</span> フォークしたリポジトリを一括更新する</a></h3>
+<div class="outline-text-3" id="text-orgbf3e26a">
+<p>
+不便なので。
+</p>
+
+<p>
+<a href="https://zenn.dev/mtmatma/articles/893832750ad9a7">GitHub CLI で fork を最新にする</a>を参考にして作成した。
+</p>
+
+<p>
+フォークリポジトリはorganizationにまとめている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">gh auth refresh -s workflow <span class="org-comment-delimiter"># </span><span class="org-comment">workflow&#12398;&#22793;&#26356;&#12364;&#12354;&#12427;&#12392;&#12289;&#12371;&#12398;&#25805;&#20316;&#12364;&#24517;&#35201;&#12392;&#20986;&#12427;</span>
+gh repo list kd-collective --limit 1000 --fork --json nameWithOwner --jq <span class="org-string">'.[].nameWithOwner'</span> | xargs -n1 gh repo sync
+</pre>
+</div>
+
+<ul class="org-ul">
+<li><a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>で定期実行したい
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/ghfetcher">kijimaD/ghfetcher</a>で定期実行するようにした</li>
+</ul></li>
+<li>すべてのリポジトリをgit pullしたい
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/gclone">kijimaD/gclone</a>をpullに対応させた</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1">1</a></sup> <div class="footpara"><p class="footpara">
+それでも400件は大変だ。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>トークンやorganization名を入れる</label><pre class="src src-shell">curl -L <span class="org-sh-escaped-newline">\</span>
+  -H <span class="org-string">"Accept: application/vnd.github+json"</span> <span class="org-sh-escaped-newline">\</span>
+  -H <span class="org-string">"X-GitHub-Api-Version: 2022-11-28"</span> <span class="org-sh-escaped-newline">\</span>
+  <span class="org-string">"https://api.github.com/orgs/kd-collective/repos?per_page=100&amp;page=1"</span> | <span class="org-sh-escaped-newline">\</span>
+    jq .[].name | <span class="org-sh-escaped-newline">\</span>
+    xargs -i -n 1 curl -L -X PUT <span class="org-sh-escaped-newline">\</span>
+          -H <span class="org-string">"Accept: application/vnd.github+json"</span> <span class="org-sh-escaped-newline">\</span>
+          -H <span class="org-string">"Authorization: Bearer &lt;TOKEN&gt;"</span> <span class="org-sh-escaped-newline">\</span>
+          -H <span class="org-string">"X-GitHub-Api-Version: 2022-11-28"</span> <span class="org-sh-escaped-newline">\</span>
+          https://api.github.com/repos/kd-collective/{}/subscription <span class="org-sh-escaped-newline">\</span>
+          -d <span class="org-string">'{"subscribed":false,"ignored":true}'</span>
+</pre>
+</div>
+
+<p class="footpara">
+organizationのリポジトリを一覧してから、順にignoreを実行していく。
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>

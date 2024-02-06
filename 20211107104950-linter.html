@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-02-06 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Linter</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">Linter</h1>
+<div id="outline-container-org1e68c81" class="outline-2">
+<h2 id="org1e68c81"><a href="#org1e68c81">概要</a></h2>
+<div class="outline-text-2" id="text-org1e68c81">
+<p>
+Linterとは、静的にプログラムを解析するツール。プログラムにおける解析ツールの総称。実行はできるがエラーにつながる書き方をチェックしてくれたり、チームでの書き方を揃えるのに使う。
+</p>
+
+<p>
+一般的にはプログラム言語が対象だが、自然言語に対するlint(<a href="20210511013549-textlint.html#ID-d3394774-aba5-4167-bd18-f194eb2bd9ed">TextLint</a>)も存在する。プログラム言語それぞれでツールが存在する。
+</p>
+
+<dl class="org-dl">
+<dt>ESLint</dt><dd><a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>, <a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>におけるLint</dd>
+<dt>Rubocop</dt><dd><a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>におけるLint。</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-orgcd63ac1" class="outline-2">
+<h2 id="orgcd63ac1"><a href="#orgcd63ac1">Memo</a></h2>
+<div class="outline-text-2" id="text-orgcd63ac1">
+</div>
+<div id="outline-container-org0c24464" class="outline-3">
+<h3 id="org0c24464"><a href="#org0c24464">できることの方向性</a></h3>
+<div class="outline-text-3" id="text-org0c24464">
+<p>
+静的解析によってできることは多い。
+</p>
+
+<ul class="org-ul">
+<li>特定の書き方を検知する</li>
+<li>コードの数値化</li>
+<li>自動修正</li>
+<li>静的解析を助けるメタツール
+<ul class="org-ul">
+<li>より深い理解につながる</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org6600df7" class="outline-3">
+<h3 id="org6600df7"><a href="#org6600df7"><span class="todo TODO">TODO</span> <a href="https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168">14. 静的解析とコード生成 - Google Slides</a></a></h3>
+<div class="outline-text-3" id="text-org6600df7">
+<p>
+メモ。
+</p>
+
+<p>
+静的開発ツール開発の流れ。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-mermaid">flowchart LR
+
+開始 --&gt;|Goファイル| 字句解析
+字句解析 --&gt;|トークン| 構文解析
+構文解析 --&gt;|抽象構文木| 型チェック
+構文解析 --&gt;|抽象構文木| 自作部分
+型チェック --&gt;|型情報| 自作部分
+</pre>
+</div>
+
+
+<div id="orgf03c7ff" class="figure">
+<p><img src="images/20230226004543-H6jQpJeEsi.png" alt="20230226004543-H6jQpJeEsi.png">
+</p>
+</div>
+
+<p>
+<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>における静的解析のフェーズ。
+</p>
+
+<ol class="org-ol">
+<li>構文解析</li>
+<li>型チェック</li>
+<li><code>静的単一代入形式</code></li>
+<li>ポインタ解析</li>
+</ol>
+
+<p>
+言語仕様を読む。
+</p>
+
+<ul class="org-ul">
+<li>抽象構文木を扱うためにGoの構文に詳しくなる
+<ul class="org-ul">
+<li><a href="https://go.dev/ref/spec">言語仕様書</a></li>
+<li>EBNFを読む</li>
+<li>構文を深く理解すれば抽象構文木を自由に扱える
+<ul class="org-ul">
+<li>どういうノードで構成されているか</li>
+<li>どういう情報がどういうノードから取得できるか</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+使い方。
+</p>
+
+<ul class="org-ul">
+<li>Preorderはインターフェース型でフィルタできない</li>
+<li>ast.Walkは探索アルゴリズムを切り替えるときに使う
+<ul class="org-ul">
+<li>visitorインターフェースがアルゴリズム部分</li>
+</ul></li>
+<li>ノードの置換はApply</li>
+<li>スコープを取得できる</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org43c2d15" class="outline-3">
+<h3 id="org43c2d15"><a href="#org43c2d15">やること</a></h3>
+<div class="outline-text-3" id="text-org43c2d15">
+<p>
+静的解析で何ができる、の勘所がないのでいくつか作ってみる。ベースがあれば、何かやっているときにひらめくだろう。<a href="https://docs.google.com/presentation/d/1I4pHnzV2dFOMbRcpA-XD0TaLcX6PBKpls6WxGHoMjOg/edit#slide=id.g80ffbfd5e3_0_168">14. 静的解析とコード生成 - Google Slides</a>を参考にしている。
+</p>
+
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> プライベートだけどタグがついてるフィールドを探す</li>
+<li class="on"><input type='checkbox' checked='checked' /> 引数をカウント</li>
+<li class="off"><input type='checkbox' /> どこからも呼ばれてないパッケージ関数を見つける</li>
+<li>どこからも呼ばれてない識別子を見つける</li>
+<li>int型の式を見つける</li>
+<li>名前の短いパッケージ変数を探す</li>
+<li class="on"><input type='checkbox' checked='checked' /> コンテキストを構造体に保持しているのを探す</li>
+<li>サブテストでt.Parallel()を呼び出しているのに親テストで呼び出していないケースを探す</li>
+<li>knifeを使ってコード生成する</li>
+<li>構造体のフィールドのgetter, setterを作る
+<ul class="org-ul">
+<li>タグがつけられているものだけ</li>
+</ul></li>
+<li>GOSSAFUNCを指定してSSA形式を確認する</li>
+<li>godump ASTとSSAのダンプを行うCLIツール</li>
+<li>使われていない引数を探す</li>
+<li>自由変数の値を変更しているコードを見つける</li>
+<li>関数が呼び出されているか</li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org4b8709f" class="outline-2">
+<h2 id="org4b8709f"><a href="#org4b8709f">Tasks</a></h2>
+<div class="outline-text-2" id="text-org4b8709f">
+</div>
+<div id="outline-container-orge87a2fd" class="outline-3">
+<h3 id="orge87a2fd"><a href="#orge87a2fd"><span class="todo TODO">TODO</span> すべての式・文を使用しているかの判定ツール</a></h3>
+<div class="outline-text-3" id="text-orge87a2fd">
+<ul class="org-ul">
+<li>テストで生成する用。いろは歌的にすべてのnodeが登場しているのを確かめる。</li>
+<li>学ぶ用。すべてのnodeの例を自分で書いて確かめる用</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgdf9cce5" class="outline-3">
+<h3 id="orgdf9cce5"><a href="#orgdf9cce5"><span class="todo TODO">TODO</span> ast.goを読む</a></h3>
+<div class="outline-text-3" id="text-orgdf9cce5">
+<p>
+気づいたところを書く。
+</p>
+
+<ul class="org-ul">
+<li>interfaceのNodeは、Pos()とEnd()で構成されている。ファイルでの開始位置、終了位置</li>
+<li>Nodeには3種類ある
+<ul class="org-ul">
+<li>Stmt node 文</li>
+<li>Expr node 式</li>
+<li>Decl node 定義</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org8bf124e" class="outline-2">
+<h2 id="org8bf124e"><a href="#org8bf124e">Reference</a></h2>
+<div class="outline-text-2" id="text-org8bf124e">
+</div>
+<div id="outline-container-org2cde02e" class="outline-3">
+<h3 id="org2cde02e"><a href="#org2cde02e"><a href="https://github.com/dustinspecker/awesome-eslint">dustinspecker/awesome-eslint: A list of awesome ESLint plugins, configs, etc.</a></a></h3>
+<div class="outline-text-3" id="text-org2cde02e">
+<p>
+eslintのplugin集。
+種類が多い。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgc3b9c4c" class="outline-2">
+<h2 id="orgc3b9c4c"><a href="#orgc3b9c4c">Archives</a></h2>
+<div class="outline-text-2" id="text-orgc3b9c4c">
+</div>
+<div id="outline-container-orge92ad88" class="outline-3">
+<h3 id="orge92ad88"><a href="#orge92ad88"><span class="done DONE">DONE</span> オリジナルで作ったやつを複数走らせる方法がわからない</a></h3>
+<div class="outline-text-3" id="text-orge92ad88">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>だめな書き方</label><pre class="src src-go">unitchecker.Main(trashcomment.Analyzer)
+unitchecker.Main(gophersample.Analyzer)
+</pre>
+</div>
+
+<p>
+↑だと先に定義した1つ(つまりtrashcomment)しか実行できない。
+</p>
+
+<p>
+unitcheckerは引数に複数のAnalyzerを取って実行できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>正しい</label><pre class="src src-go">unitchecker.Main(trashcomment.Analyzer, gophersample.Analyzer)
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org7aef407" class="outline-3">
+<h3 id="org7aef407"><a href="#org7aef407"><span class="done DONE">DONE</span> 1つオリジナルで実装してみる</a></h3>
+<div class="outline-text-3" id="text-org7aef407">
+<p>
+無意味なコメントを検知してみる。
+</p>
+</div>
+</div>
+<div id="outline-container-org2516f03" class="outline-3">
+<h3 id="org2516f03"><a href="#org2516f03"><span class="done DONE">DONE</span> 引数をカウントする</a></h3>
+<div class="outline-text-3" id="text-org2516f03">
+<p>
+引数が超えると警告する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcfe9520" class="outline-3">
+<h3 id="orgcfe9520"><a href="#orgcfe9520"><span class="done DONE">DONE</span> 配信方法を考える</a></h3>
+<div class="outline-text-3" id="text-orgcfe9520">
+<p>
+オリジナルで作ったけど、それらをひとまとめにして簡単に利用できるようにする。1つにインポートしてまとめて、ビルドしてコンテナに入れればいい。
+</p>
+</div>
+</div>
+<div id="outline-container-org395e950" class="outline-3">
+<h3 id="org395e950"><a href="#org395e950"><span class="done DONE">DONE</span> ASTをダンプする方法を探す</a></h3>
+<div class="outline-text-3" id="text-org395e950">
+<p>
+よく使うのでツール化する。
+</p>
+</div>
+</div>
+<div id="outline-container-org75fc48e" class="outline-3">
+<h3 id="org75fc48e"><a href="#org75fc48e"><span class="done DONE">DONE</span> コンテキストを構造体に保持しているのを探す</a></h3>
+<div class="outline-text-3" id="text-org75fc48e">
+<p>
+コンテキストを探す。
+</p>
+
+<ol class="org-ol">
+<li>構造体である</li>
+<li>フィールドの型がそれぞれcontext.Contextでないか調べる</li>
+<li>エラーを出す</li>
+</ol>
+
+<p>
+インターフェースの場合は、型アサーションしないと個別の型にはアクセスできない。そりゃそう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf39a9d5" class="outline-3">
+<h3 id="orgf39a9d5"><a href="#orgf39a9d5"><span class="done DONE">DONE</span> どこからも呼ばれてない識別子を見つける</a></h3>
+<div class="outline-text-3" id="text-orgf39a9d5">
+<p>
+どうやってやるのだろう。unusedのコードを調べたが、完全に理解してはいない。識別子はあらゆるパターンで出てきて、それぞれを考慮するのが必要になる。大きく分けると定義か呼び出し。さらに基本型ごとにある。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org95b1810" class="outline-3">
+<h3 id="org95b1810"><a href="#org95b1810"><span class="done DONE">DONE</span> プライベートだけどタグがついてるフィールドを探す</a></h3>
+<div class="outline-text-3" id="text-org95b1810">
+<p>
+タグはパブリックでないと意味がない。
+</p>
+
+<ul class="org-ul">
+<li>タグは実行時に参照可能なメタ情報</li>
+<li>タグ情報はリフレクション経由で取得できる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgabf534b" class="outline-3">
+<h3 id="orgabf534b"><a href="#orgabf534b"><span class="done DONE">DONE</span> 式と文をASTで出力する</a></h3>
+<div class="outline-text-3" id="text-orgabf534b">
+<p>
+ひと目でわかるようにする。
+</p>
+
+<p>
+interfaceを実装している構造体を一覧で見られれば網羅できるが、調べ方を忘れた。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc720267" class="outline-3">
+<h3 id="orgc720267"><a href="#orgc720267"><span class="done DONE">DONE</span> context検知ツールの修正</a></h3>
+<div class="outline-text-3" id="text-orgc720267">
+<p>
+自作ツールの考慮にかなり漏れがあるようだ。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/gostaticanalysis/ctxfield">gostaticanalysis/ctxfield: Analyzer: reports context.Context which belongs to a struct as a field</a></li>
+</ul>
+
+<p>
+を参考に修正する。
+</p>
+
+<ul class="org-ul">
+<li>analysisutilの関数で一発でcontext.Contextを見つけている</li>
+<li>ResultOfの使い方。なぜident.Mapで型アサーションしているか</li>
+<li>グローバルに定義されてる場合、エクスポートされてる場合はスルー</li>
+<li>変数ではない・フィールドではない・無名関数の場合はスルー</li>
+<li>ポインタも確認</li>
+<li>インポートしたものをループで処理</li>
+</ul>
+
+<p>
+テストでの未考慮が多いところに問題がある。問題があるとわかれば、調べて解決できるだろう。
+</p>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
