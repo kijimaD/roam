@@ -230,6 +230,7 @@
   (let ((org-agenda-files '("./")))
     (find-file "index.org")
     (org-dblock-update t)
+    (org-babel-execute-buffer)
     (save-buffer)))
 
 (defun kd/publish ()
