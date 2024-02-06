@@ -21,7 +21,14 @@
 (setq package-user-dir (expand-file-name "./.packages"))
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
+                         ("elpa" . "https://elpa.gnu.org/packages/")
+                         ("org" . "http://orgmode.org/elpa/")))
+
+;; CIでNo org-babel-execute function for bash!と出るので
+(org-babel-do-load-languages 'org-babel-load-languages
+                             '((bash . t)
+                               (shell . t)
+                               (sql . t)))
 
 ;; Initialize the package system
 (package-initialize)
