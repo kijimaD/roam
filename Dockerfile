@@ -32,6 +32,7 @@ FROM amazonlinux:2 AS build
 # MEMO: localeを日本語にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
 ENV LANG ja_JP.UTF-8
 ENV LC_ALL ja_JP.UTF-8
+ENV TZ Asia/Tokyo
 
 RUN yum -y update && \
     yum -y install \
