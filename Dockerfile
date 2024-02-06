@@ -123,10 +123,6 @@ CMD /bin/bash
 # pandoc ================
 
 FROM ubuntu AS pandoc
-# MEMO: localeを日本にしないとファイルまわりで失敗する
-ENV LANG ja_JP.UTF-8
-ENV LC_ALL ja_JP.UTF-8
-ENV TZ Asia/Tokyo
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
@@ -138,3 +134,8 @@ RUN apt update && \
     texlive-luatex \
     librsvg2-bin \
     pdftk
+
+# MEMO: localeを日本にしないとファイルまわりで失敗する
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+ENV TZ Asia/Tokyo
