@@ -26,9 +26,8 @@
 
 ;; CIでNo org-babel-execute function for bash!と出るので
 (org-babel-do-load-languages 'org-babel-load-languages
-                             '((bash . t)
-                               (shell . t)
-                               (sql . t)))
+                             '((shell . t)
+                               ))
 
 ;; Initialize the package system
 (package-initialize)
