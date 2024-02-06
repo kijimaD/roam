@@ -10,4 +10,4 @@ cd ../
 
 mkdir -p pdf
 find ./ -name "*.org" -type f -exec sh -c 'echo ${0}; pandoc "${0}" -o "pdf/${0%.org}.pdf" --toc -N --pdf-engine=lualatex -V documentclass=ltjsarticle -V luatexjapresetoptions=morisawa && echo ok' {} \;
-pdftk pdf/*.pdf cat output pdf/merge.pdf
+pdftk pdf/*.pdf cat output pdf/insomnia.pdf
