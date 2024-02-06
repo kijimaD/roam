@@ -128,6 +128,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt update && \
     apt install \
     -y \
+    pandoc \
     texlive-lang-japanese \
     texlive-latex-extra \
     texlive-luatex \
