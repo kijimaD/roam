@@ -19,8 +19,7 @@ gen_pdf() {
 
     docker run \
            --rm \
-           -it \
-           -T \
+           -t \
            -v $PWD:/work \
            -w /work \
            roam-pandoc \
