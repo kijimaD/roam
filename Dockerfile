@@ -119,3 +119,17 @@ COPY dockle-installer.sh ./
 RUN sh dockle-installer.sh
 
 CMD /bin/bash
+
+# pandoc ================
+
+FROM ubuntu AS pandoc
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt update && \
+    apt install \
+    -y \
+    texlive-lang-japanese \
+    texlive-latex-extra \
+    texlive-luatex \
+    librsvg2-bin \
+    pdftk
