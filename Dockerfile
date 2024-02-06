@@ -134,8 +134,3 @@ RUN apt update && \
     texlive-luatex \
     librsvg2-bin \
     pdftk
-
-# MEMO: localeを日本にしないとファイルまわりで失敗する
-ENV LANG ja_JP.UTF-8
-ENV LC_ALL ja_JP.UTF-8
-ENV TZ Asia/Tokyo
