@@ -133,4 +133,5 @@ RUN apt update && \
     texlive-latex-extra \
     texlive-luatex \
     librsvg2-bin \
-    pdftk
+    pdftk \
+    language-pack-ja
