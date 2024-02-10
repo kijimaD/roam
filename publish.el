@@ -24,11 +24,6 @@
                          ("elpa" . "https://elpa.gnu.org/packages/")
                          ("org" . "http://orgmode.org/elpa/")))
 
-;; CIでNo org-babel-execute function for bash!と出るので
-(org-babel-do-load-languages 'org-babel-load-languages
-                             '((shell . t)
-                               ))
-
 ;; Initialize the package system
 (package-initialize)
 (unless package-archive-contents
@@ -73,6 +68,11 @@
 (setq make-backup-files nil)
 (setq org-export-with-smart-quotes t)
 (setq org-html-checkbox-type 'html)
+(setq org-babel-default-header-args '((:session . "none") (:results . "replace") (:exports . "code") (:cache . "no") (:noweb . "no") (:hlines . "no") (:tangle . "no")(:wrap . "src")))
+;; CIでNo org-babel-execute function for bash!と出るので
+(org-babel-do-load-languages 'org-babel-load-languages
+                             '((shell . t)
+                               ))
 
 ;; View
 (setq dw/site-title   "Insomnia")
