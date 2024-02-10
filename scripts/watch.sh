@@ -1,20 +1,23 @@
 #!/bin/bash
 set -eu
 
-#########
-# 自動更新
-#########
+#################
+# 自動ビルド + Lint
+#################
 
 cd `dirname $0`
 cd ..
 
+docker build . --target textlint -t roam_textlint
+
 inotifywait -m -e modify --format '%w%f' . | while read FILE; do
   if [[ $FILE =~ .*org$ ]]; then
       echo "File $FILE was modified..."
-      filename_without_extension="${FILE%.org}"
+
       emacs --batch -l ./publish.el \
             --eval "(require 'org)" \
             --eval "(find-file \"./$FILE\")" \
             --eval "(org-publish-current-file)"
+      docker run -v $PWD:/work -w /work --rm roam_textlint npx textlint -c ./.textlintrc $FILE
   fi
 done
