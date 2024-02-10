@@ -74,6 +74,10 @@ server: ## webサーバを起動する(Python2)
 server3: ## webサーバを起動する(Python3)
 	cd ./public; python3 -m http.server 8000
 
+.PHONY: watch
+watch: ## 自動更新する
+	./scripts/watch.sh
+
 .PHONY: prune
 prune: ## 不要なファイルを消す
 	sh ./tasks/prune.sh
