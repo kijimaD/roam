@@ -8,6 +8,8 @@ set -eu
 cd `dirname $0`
 cd ..
 
+ which inotifywait # 依存チェック
+
 docker build . --target textlint -t roam_textlint
 
 inotifywait -m -e modify --format '%w%f' . | while read FILE; do
