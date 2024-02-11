@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -u # 途中でエラーがあってもwatchを止めさせないためにeオプションはない
 
 #################
 # 自動ビルド + Lint
@@ -8,7 +8,7 @@ set -eu
 cd `dirname $0`
 cd ..
 
- which inotifywait # 依存チェック
+which inotifywait # 依存チェック
 
 docker build . --target textlint -t roam_textlint
 
@@ -20,6 +20,13 @@ inotifywait -m -e modify --format '%w%f' . | while read FILE; do
             --eval "(require 'org)" \
             --eval "(find-file \"./$FILE\")" \
             --eval "(org-publish-current-file)"
+      if [ $? -gt 0 ]; then
+          notify-send "Fail Build" ""
+      fi
+
       docker run -v $PWD:/work -w /work --rm roam_textlint npx textlint -c ./.textlintrc $FILE
+      if [ $? -gt 0 ]; then
+          notify-send "Fail Textlint" ""
+      fi
   fi
 done
