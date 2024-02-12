@@ -148,6 +148,18 @@
 #+HTML_HEAD: <style>.src { display: none; }</style>
 #+caption: 統計情報。ビルド時に実行される
 #+begin_src bash :results raw
+  file_changed_count_day() {
+      datestr_past=$1
+      datestr_future=$2
+
+      count=`git whatchanged --diff-filter=A --since="$datestr_past" --until="$datestr_future"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
+      printf "%s %s " `date --date "$datestr_past" "+%Y-%m-%d"` $count
+      for (( i = 0; i < $count; i++ )); do
+          printf "%s" "+"
+      done
+      echo
+  }
+
   echo ビルド時刻 `TZ=JST-9 date "+%F+%T"`
   echo .orgファイル数 `find . -maxdepth 1 -type f -name "*.org" | grep -c "\.org$"`
   echo .orgファイルサイズ `du -h -c ./*.org | tail -n 1 | sed 's/\ttotal//'`
@@ -211,13 +223,13 @@
   echo "1年間" `git whatchanged --diff-filter=A --since="1 year ago" --format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
   echo "1ヶ月間" `git whatchanged --diff-filter=A --since="1 month ago" --format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
   echo "1週間" `git whatchanged --diff-filter=A --since="1 week ago" --format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '1 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="1 days ago" --until="0 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '2 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="2 days ago" --until="1 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '3 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="3 days ago" --until="2 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '4 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="4 days ago" --until="3 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '5 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="5 days ago" --until="4 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '6 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="6 days ago" --until="5 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
-  echo `date --date '7 day ago' "+%Y-%m-%d"` `git whatchanged --diff-filter=A --since="7 days ago" --until="6 days ago"--format=oneline --name-only --pretty=format: | grep -e ".*org" | sort -u | wc -l`
+  file_changed_count_day "1 day ago" "0 day ago"
+  file_changed_count_day "2 days ago" "1 day ago"
+  file_changed_count_day "3 days ago" "2 days ago"
+  file_changed_count_day "4 days ago" "3 days ago"
+  file_changed_count_day "5 days ago" "4 days ago"
+  file_changed_count_day "6 days ago" "5 days ago"
+  file_changed_count_day "7 days ago" "6 days ago"
   echo
   echo "MDNの引用数" `grep -rohE 'https://developer\.mozilla\.org' ./*.org | wc -l`
   echo "RFCの引用数" `grep -rohE 'https://www.rfc-editor\.org' ./*.org | wc -l`
