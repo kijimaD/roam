@@ -1,0 +1,192 @@
+:properties:
+:ID: 20240213T235930
+:end:
+#+title:      KDOC 94: 2>&1の意味
+#+date:       [2024-02-13 Tue 23:59]
+#+filetags:   :draft:code:
+#+identifier: 20240213T235930
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (org-roam-tag-remove)
+# (org-roam-tag-add)
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-02-14 Wed 00:15]--[2024-02-14 Wed 00:40] =>  0:25
+:END:
+- 作成
+  - [X] 2024-02-14 貴島
+- レビュー
+  - [ ] 2024-mm-dd <署名> (progn (kill-line 0) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。(org-roam-tag-remove)。
+# すべてのコメントを削除した。
+* 概要
+[[id:585d3b5e-989d-4363-bcc3-894402fcfcf9][Shell]]に、標準出力と標準エラーをまとめる ~2>&1~ という書き方がある。よくコマンドの実行結果を保存するのに使う。標準出力と、標準エラー出力をまとめて取り出せるとデバッグに便利である。よくわからずに使っていたので、記法の意味を分解して理解する。
+
+* 動かしてみる
+
+まず使い方をまとめ、実行して分解を試みる。
+
+#+caption: 標準出力をファイルに出力できる
+#+begin_src shell :results output
+  result=`echo "hello" 2>&1`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+hello
+#+end_src
+
+#+caption: 標準エラーをファイルに出力できる
+#+begin_src shell :results output
+  result=`aaa 2>&1`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/bin/bash: line 1: aaa: command not found
+#+end_src
+
+#+caption: &がないと1というファイルができてしまう。ファイルディスクリプタではなくファイルとして認識する
+#+begin_src shell :results output
+  result=`aaa 2>1`
+  cat 1
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/bin/bash: line 1: aaa: command not found
+#+end_src
+
+#+caption: これでも書ける
+#+begin_src shell :results output
+  result=`aaa 2>& 1`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/bin/bash: line 1: aaa: command not found
+#+end_src
+
+#+caption: > の前後にスペースがあるとsyntax errorになる
+#+begin_src shell :results output
+  result=`aaa 2> &1`
+  echo $result
+#+end_src
+
+結論、 ~2>&~ はスペースを許容せずひと塊でないといけない。意味的にもひと塊になっているはずだが、意味のつながりがよくわからない。
+
+* 調べる
+:LOGBOOK:
+CLOCK: [2024-02-14 Wed 00:40]--[2024-02-14 Wed 01:05] =>  0:25
+:END:
+
+[[https://qiita.com/task4233/items/1f5ba68e8fed430f6f9f][Bashのリダイレクト(`>`と`>&`)とパイプ等についてのまとめ #Bash - Qiita]]を見てみよう。
+
+~>~ はリダイレクト記法である。空のファイルを生成して書き込む。書式は ~$ コマンド [元fd=1]> 先ファイル名~ となっている。ファイルディスクリプタ番号はデフォルトで1(標準出力)。
+
+#+caption: 等価な2つの書き方
+#+begin_src shell :results raw
+  echo "hello1" > test.log
+  cat test.log
+
+  echo "hello2" 1> test.log
+  cat test.log
+#+end_src
+
+#+RESULTS:
+#+begin_src
+hello1
+hello2
+#+end_src
+
+#+caption: 標準エラー出力してみる
+#+begin_src shell
+  aaa 2> error.log
+  cat error.log
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/bin/bash: line 1: aaa: command not found
+#+end_src
+
+~>&~ は他のファイルディスクリプタにリダイレクトする。 ~$コマンド [元FD]>&[先FD]~ 。&がないとファイル書き込みになってしまう。つまり ~2>&1~ は標準エラー出力を標準出力にリダイレクトする。結果、標準出力に標準出力と標準エラー出力が表示できる。
+
+#+caption: 標準出力できている
+#+begin_src shell
+  result=`echo hello 2>&1`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+hello
+#+end_src
+
+#+caption: 標準エラー出力できている
+#+begin_src shell
+  result=`aaa 2>&1`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/bin/bash: line 1: aaa: command not found
+#+end_src
+
+リダイレクトをさらにリダイレクトできる。
+
+#+caption: さらにaaa.logファイルに出力する
+#+begin_src shell
+  result=`echo hello 2>&1 > aaa.log`
+  cat aaa.log
+#+end_src
+
+#+RESULTS:
+#+begin_src
+hello
+#+end_src
+
+#+caption: 捨てる
+#+begin_src shell
+  result=`echo hello 2>&1 > /dev/null`
+  echo $result
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+以上より、 ~2>&~ がひと塊でないといけない理由。
+
+- ~2>~ の数字はリダイレクト元ファイルディスクリプタ指定。 ~>~ は ~1>~ が省略されているだけで、1以外には ~2>~ と省略せずに書く必要がある。そもそもスペースは入れない記法である
+- ~>&~ の ~&~ は続くリダイレクト先がファイルディスクリプタであることを示す。 ~>~ に続く識別子がファイル名でないのを区別するための記法なので、スペースを許容しないほうが意味が明確である。ファイル名は ~&~ がくる可能性があり、そのとき意味が不明瞭になる
+
+* 参考
+- [[https://qiita.com/task4233/items/1f5ba68e8fed430f6f9f][Bashのリダイレクト(`>`と`>&`)とパイプ等についてのまとめ #Bash - Qiita]]。わかりやすかった
+
+* 関連
+なし。
