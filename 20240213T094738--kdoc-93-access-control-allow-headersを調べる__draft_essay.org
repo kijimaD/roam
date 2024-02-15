@@ -1,0 +1,112 @@
+:properties:
+:ID: 20240213T094738
+:end:
+#+title:      KDOC 93: Access-Control-Allow-Headersを調べる
+#+date:       [2024-02-13 Tue 09:47]
+#+filetags:   :draft:essay:
+#+identifier: 20240213T094738
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (org-roam-tag-remove)
+# (org-roam-tag-add)
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+- 作成
+  - [X] 2024-02-15 貴島
+- レビュー
+  - [ ] 2024-mm-dd <署名> (progn (kill-line 0) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。(org-roam-tag-remove)。
+# すべてのコメントを削除した。
+* 概要
+POSTリクエストは成功するのに、GETリクエストがCORSエラーとなる状態になった。デベロッパーツールを見るとCORSエラーが出ていた。本当の原因は、ログインしてトークンをAuthorizationヘッダーにつけていたことだった。すぐAccess-Control-Allow-Headersを返すようにして解決したが、知らなかったので調べる。
+
+- [[https://developer.mozilla.org/ja/docs/Web/HTTP/Headers/Access-Control-Allow-Headers][Access-Control-Allow-Headers - HTTP | MDN]]
+
+* 何か
+Access-Control-Allow-Headersは、同一オリジンでないときに、実際のリクエスト(プリフライトリクエストと対置して)で使用できるヘッダーの種類を示すものだ。デフォルトではAccept, Accept-Language, Content-Language, Content-Typeだけが許可されていて、Authorizationヘッダーは含まれていない。
+
+Google Chromeの挙動を見る限り、同一オリジンでないときに許可してないヘッダーが含まれていた場合は、問答無用でCORSエラーになる。
+
+* 流れ
+
+プリフライトリクエストから一連の流れを見る。まず、ブラウザは実際のリクエスト前にOriginヘッダーが同一でないのを見て、CORSによってリソースに[[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]コードがアクセスできるか判断しようとする。検証するため、ブラウザは実際に行いたいリクエストを元にプリフライトリクエストを作成する。
+
+#+caption: プリフライトリクエストのイメージ
+#+begin_src shell :results raw
+  curl -v \
+       -H "Origin: nandemoii.com" \
+       -H "Access-Control-Request-Method: GET" \ 👈
+       -H "Access-Control-Request-Headers: Authorization" \ 👈
+       -H "Content-Type: application/json" \
+       -X OPTIONS \
+       'http://localhost/manage/manage/projects'
+#+end_src
+
+- 実際に行いたいリクエストのメソッドは Access-Control-Request-Method で表現する
+- 実際に行いたいリクエストのヘッダーは Access-Control-Allow-Headers で表現する
+- プリフライトリクエスト自体はOPTIONSメソッド
+
+#+caption: プリフライトリクエストに対するレスポンスヘッダー
+#+begin_src shell
+  < HTTP/1.1 200 OK
+  < Date: Thu, 15 Feb 2024 13:19:49 GMT
+  < Server: Apache
+  < access-control-allow-origin: *
+  < Content-Length: 0
+  < Content-Type: text/html; charset=UTF-8
+  < Cache-Control: max-age=1
+  < Expires: Thu, 15 Feb 2024 13:19:50 GMT
+  < Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE 👈
+  < Access-Control-Allow-Headers: Authorization 👈
+  <
+#+end_src
+
+↑ここで、Webサーバはリソースの共有方針をブラウザに教える。Webサーバは、5つのリクエストメソッドを許可し、リクエストヘッダーはAuthorizationを許可している。ここで、プリフライトリクエストに含まれていた使用予定のメソッド、ヘッダーがすべて含まれていることがわかる。これによって、Javascriptがリソースにアクセスできる権限が確認できたことになる。
+
+確認ののち、本番のリクエストを行う。
+
+#+begin_src shell :results raw
+  curl -v \
+       -H "Origin: nandemoii.com" \
+       -H "Content-Type: application/json" \
+       -H "Authorization: Bearer xxxx" \
+       'http://localhost/manage/manage/projects'
+#+end_src
+
+#+caption: ↑のレスポンスヘッダー
+#+begin_src shell
+  < HTTP/1.1 200 OK
+  < Date: Thu, 15 Feb 2024 13:23:15 GMT
+  < Server: Apache
+  < Content-Length: 460
+  < Content-Type: application/json; charset=UTF-8
+  < Vary: Accept-Encoding
+  < Cache-Control: max-age=1
+  < Expires: Thu, 15 Feb 2024 13:23:16 GMT
+  < Access-Control-Allow-Origin: *
+  < Access-Control-Allow-Methods: POST, GET, OPTIONS, PUT, DELETE
+  < Access-Control-Allow-Headers: Authorization
+#+end_src
+
+* 関連
+- [[id:20240212T234008][KDOC 91: 『世界一流エンジニアの思考法』を読んだ]]。を読んで考えた
+- [[id:20240209T111023][KDOC 83: CORSを確認する方法]]。CORSつながり
