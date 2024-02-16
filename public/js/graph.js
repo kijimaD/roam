@@ -75,6 +75,10 @@ d3.json("js/graph.json").then(function(data) {
             .filter('#' + CSS.escape(d.currentTarget.id))
             .style("font-size", "2em");
 
+        d3.selectAll("rect")
+            .filter('#' + CSS.escape(d.currentTarget.id))
+            .style("display", "block");
+
         d3.selectAll("line")
             .attr("stroke-width", 1);
 
@@ -92,6 +96,10 @@ d3.json("js/graph.json").then(function(data) {
         d3.selectAll("text")
             .filter('#' + CSS.escape(d.currentTarget.id))
             .style("font-size", "1em");
+
+        d3.selectAll("rect")
+            .filter('#' + CSS.escape(d.currentTarget.id))
+            .style("display", "none");
 
         d3.selectAll("line")
             .attr("stroke-width", 1);
@@ -150,7 +158,7 @@ d3.json("js/graph.json").then(function(data) {
           .on("mouseout", handleMouseOut)
           .call(drag(simulation));
 
-    node.append("title")
+    const title = node.append("title")
         .text(d => d.label.replace(/"/g, ''));
 
     // Nodes have a label that is visible on hover
@@ -159,21 +167,21 @@ d3.json("js/graph.json").then(function(data) {
           .selectAll("text")
           .data(nodes)
           .join("g");
-    const label_background = label.append("text")
-          .style("font-size", "45px")
-          .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -30)
+
+    const label_background = label.append("rect")
+          .attr("width",  d => String(d.label.length)+"em")
+          .attr("height", "2em")
+          .attr("fill", "white")
           .attr("id", d => d.id.toLowerCase())
-          .attr("class", "node_label")
-          .style("display", "none")
-          .style("pointer-events", "none")
-          .style("alignment-baseline", "middle")
-    // .attr("filter", "url(#solid)");
+          .attr('x', (d, i) => i * 50)
+          .attr('y', 0)
+          .style("display", "none");;
+
     const label_text = label.append("text")
           .style("fill", "#222")
           .style("font-size", "15px")
           .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -12)
+          .attr("dy", 22)
           .attr("id", d => d.id.toLowerCase())
           .attr("class", "node_label")
 
