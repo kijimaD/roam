@@ -20,18 +20,18 @@ d3.json("js/graph.json").then(function(data) {
     centersy = angleArr.map(x => Math.sin(Math.PI + x));
     // Color palette
     nodeColors = [
-      '#ff7f7f',
-      '#ff7fbf',
-      '#ff7fff',
-      '#bf7fff',
-      '#7f7fff',
-      '#7fbfff',
-      '#7fffff',
-      '#7fffbf',
-      '#7fff7f',
-      '#bfff7f',
-      '#ffff7f',
-      '#ffbf7f',
+        '#ff7f7f',
+        '#ff7fbf',
+        '#ff7fff',
+        '#bf7fff',
+        '#7f7fff',
+        '#7fbfff',
+        '#7fffff',
+        '#7fffbf',
+        '#7fff7f',
+        '#bfff7f',
+        '#ffff7f',
+        '#ffbf7f',
     ];
     // Color function just maps cluster to color palette
     nodeColor = d => {
@@ -69,32 +69,32 @@ d3.json("js/graph.json").then(function(data) {
     handleMouseOver = (d, i) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", "#999")
-           .attr("r", nde.attr("r") * 1.4);
+            .attr("r", nde.attr("r") * 1.4);
 
         d3.selectAll("text")
-          .filter('#' + CSS.escape(d.currentTarget.id))
-          .style("font-size", "2em");
+            .filter('#' + CSS.escape(d.currentTarget.id))
+            .style("font-size", "2em");
 
         d3.selectAll("line")
-          .attr("stroke-width", 1);
+            .attr("stroke-width", 1);
 
         d3.selectAll("line")
-          .filter((l, _) => {
-            return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
-          })
-          .attr("stroke-width", 8);
+            .filter((l, _) => {
+                return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
+            })
+            .attr("stroke-width", 8);
     };
     handleMouseOut = (d, _) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", nodeColor)
-           .attr("r", nde.attr("r") / 1.4);
+            .attr("r", nde.attr("r") / 1.4);
 
         d3.selectAll("text")
-          .filter('#' + CSS.escape(d.currentTarget.id))
-          .style("font-size", "1em");
+            .filter('#' + CSS.escape(d.currentTarget.id))
+            .style("font-size", "1em");
 
         d3.selectAll("line")
-          .attr("stroke-width", 1);
+            .attr("stroke-width", 1);
     };
 
     // Graph data
@@ -103,8 +103,8 @@ d3.json("js/graph.json").then(function(data) {
 
     // Force simulation for the graph
     simulation = d3.forceSimulation(nodes)
-    .alpha(0.9)
-    .velocityDecay(0.6)
+        .alpha(0.9)
+        .velocityDecay(0.6)
         .force("link", d3.forceLink(links).id(d => d.id).strength(.1))
         .force("charge", d3.forceManyBody()
                .strength(-500))
@@ -168,7 +168,7 @@ d3.json("js/graph.json").then(function(data) {
           .style("display", "none")
           .style("pointer-events", "none")
           .style("alignment-baseline", "middle")
-          // .attr("filter", "url(#solid)");
+    // .attr("filter", "url(#solid)");
     const label_text = label.append("text")
           .style("fill", "#222")
           .style("font-size", "15px")
