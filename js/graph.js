@@ -144,8 +144,6 @@ d3.json("js/graph.json").then(function(data) {
           .attr("id", d => d.id.toLowerCase())
           .attr("r", radius)
           .attr("fill", nodeColor)
-          .attr("stroke", "#000")
-          .attr("stroke-width", 1.3)
           .on("mouseover", handleMouseOver)
           .on("mouseout", handleMouseOut)
           .call(drag(simulation));
