@@ -1,12 +1,14 @@
 .DEFAULT_GOAL := help
 
-# build tasks ================
+# example ================
 
 greeting := holla
 greetings := ciao mhoro talofa
 
 $(greeting):
 	echo "greeting"
+
+# build tasks ================
 
 .PHONY: update-index
 update-index: ## indexページを更新する
@@ -80,7 +82,7 @@ watch: ## 自動更新する
 
 .PHONY: prune
 prune: ## 不要なファイルを消す
-	sh ./tasks/prune.sh
+	./scripts/prune.sh
 
 .PHONY: user
 user: ## ファイルの権限をすべてユーザ権限にする

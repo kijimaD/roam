@@ -62,7 +62,7 @@ RUN emacs --batch -l ./publish.el
 COPY .git/ ./.git/
 COPY . /roam
 
-RUN sh deploy.sh
+RUN ./scripts/deploy.sh
 
 CMD /bin/sh
 
@@ -115,7 +115,7 @@ COPY --from=node /roam/node_modules /roam/node_modules
 
 WORKDIR /roam
 
-COPY dockle-installer.sh ./
+COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
 RUN sh dockle-installer.sh
 
 CMD /bin/bash
