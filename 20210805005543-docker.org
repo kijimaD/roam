@@ -738,6 +738,204 @@ docker-compose cp が使える。dockerコマンドと違って、コンテナID
 docker compose cp doc:/usr/share/nginx/html ./
 #+end_src
 * Tasks
+** TODO [[https://www.youtube.com/watch?v=bKFMS5C4CG0][Docker networking is CRAZY!! (you NEED to learn it) - YouTube]]
+:LOGBOOK:
+CLOCK: [2024-03-02 Sat 15:02]--[2024-03-02 Sat 15:27] =>  0:25
+CLOCK: [2024-03-02 Sat 14:37]--[2024-03-02 Sat 15:02] =>  0:25
+CLOCK: [2024-03-02 Sat 14:12]--[2024-03-02 Sat 14:37] =>  0:25
+CLOCK: [2024-03-02 Sat 12:28]--[2024-03-02 Sat 12:53] =>  0:25
+:END:
+
+動かして学ぶ、Docker networkの解説動画。
+
+#+begin_src shell
+  docker network ls
+#+end_src
+
+#+RESULTS:
+#+begin_results
+NETWORK ID     NAME           DRIVER    SCOPE
+ce33ed323134   bridge         bridge    local
+bf0cec25fb71   docs_default   bridge    local
+13c040755115   host           host      local
+5482a9ce687b   none           null      local
+#+end_results
+
+#+caption: テストのコンテナを起動する
+#+begin_src shell
+  docker run -itd --rm --name test1 busybox
+  docker run -itd --rm --name test2 busybox
+#+end_src
+
+#+RESULTS:
+#+begin_results
+c1df10ea18c045e19832b6e5016f7c0b1b08742f38a6af1ad3222cf255165332
+89e1be2705a7e08e569cbd7a5fb9b51e2ffd9f26e3b3c4be3effbd09d39c7fc6
+#+end_results
+
+↑コマンドではネットワークまわりの設定はないが、自動で追加されている。確認する。
+
+↓ホストマシンから確認する。 ~veth*~ が増えている。
+
+#+begin_src shell
+  ip address show
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: wlp0s20f3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether a0:29:42:f6:35:97 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.0.135/24 brd 192.168.0.255 scope global dynamic noprefixroute wlp0s20f3
+       valid_lft 3956sec preferred_lft 3956sec
+    inet6 240b:10:91c1:d500:a535:6b03:37ab:c2a/64 scope global temporary dynamic
+       valid_lft 597967sec preferred_lft 79426sec
+    inet6 240b:10:91c1:d500:7c43:5116:5189:7920/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 2591770sec preferred_lft 604570sec
+    inet6 fe80::630:a649:296b:62a6/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+3: docker0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:92:8f:f5:2c brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+    inet6 fe80::42:92ff:fe8f:f52c/64 scope link
+       valid_lft forever preferred_lft forever
+4: br-bf0cec25fb71: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default
+    link/ether 02:42:68:39:3c:cb brd ff:ff:ff:ff:ff:ff
+    inet 172.19.0.1/16 brd 172.19.255.255 scope global br-bf0cec25fb71
+       valid_lft forever preferred_lft forever
+1164: vethbd4a2ba@if1163: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master # 👈 docker0 state UP group default
+    link/ether 3e:4a:f3:57:3c:f6 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+    inet6 fe80::3c4a:f3ff:fe57:3cf6/64 scope link
+       valid_lft forever preferred_lft forever
+1166: vethd4e3cec@if1165: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master # 👈 docker0 state UP group default
+    link/ether d2:1c:e5:39:4b:7a brd ff:ff:ff:ff:ff:ff link-netnsid 2
+    inet6 fe80::d01c:e5ff:fe39:4b7a/64 scope link
+       valid_lft forever preferred_lft forever
+#+end_results
+
+#+begin_src shell
+  bridge link
+#+end_src
+
+#+RESULTS:
+#+begin_results
+1164: vethbd4a2ba@if1163: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master docker0 state forwarding priority 32 cost 2 # 👈 docker0
+1166: vethd4e3cec@if1165: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 master docker0 state forwarding priority 32 cost 2 # 👈 docker0
+#+end_results
+
+ブリッジをさらに詳しく見る。
+
+#+caption: bridgeを見ると起動したものが追加されている
+#+begin_src shell
+  docker inspect bridge
+#+end_src
+
+#+RESULTS:
+#+begin_results
+[
+    {
+        "Name": "bridge",
+        "Id": "ce33ed32313474bcb0aa3f914152fd0c1df57c1e1fadc740a6fd16d6f91d4637",
+        "Created": "2024-02-28T00:10:39.317309307+09:00",
+        "Scope": "local",
+        "Driver": "bridge",
+        "EnableIPv6": false,
+        "IPAM": {
+            "Driver": "default",
+            "Options": null,
+            "Config": [
+                {
+                    "Subnet": "172.17.0.0/16",
+                    "Gateway": "172.17.0.1"
+                }
+            ]
+        },
+        "Internal": false,
+        "Attachable": false,
+        "Ingress": false,
+        "ConfigFrom": {
+            "Network": ""
+        },
+        "ConfigOnly": false,
+        "Containers": {
+            "89e1be2705a7e08e569cbd7a5fb9b51e2ffd9f26e3b3c4be3effbd09d39c7fc6": {
+                "Name": "test2",
+                "EndpointID": "7464bc9f1771de61da18e637390233e9146e2d8a0fdb7fd2822c4358534b8a96",
+                "MacAddress": "02:42:ac:11:00:04",
+                "IPv4Address": "172.17.0.4/16", # 👈
+                "IPv6Address": ""
+            },
+            "c1df10ea18c045e19832b6e5016f7c0b1b08742f38a6af1ad3222cf255165332": {
+                "Name": "test1",
+                "EndpointID": "87edd7c730152b05cc16931305b5178a1a26d6649c462d405b700a4071afbe38",
+                "MacAddress": "02:42:ac:11:00:03",
+                "IPv4Address": "172.17.0.3/16", # 👈
+                "IPv6Address": ""
+            }
+        },
+        "Options": {
+            "com.docker.network.bridge.default_bridge": "true",
+            "com.docker.network.bridge.enable_icc": "true",
+            "com.docker.network.bridge.enable_ip_masquerade": "true",
+            "com.docker.network.bridge.host_binding_ipv4": "0.0.0.0",
+            "com.docker.network.bridge.name": "docker0",
+            "com.docker.network.driver.mtu": "1500"
+        },
+        "Labels": {}
+    }
+]
+#+end_results
+
+↑ ~docker0~ ネットワーク内に追加されている。
+
+ホストネットワークで起動する。
+
+#+begin_src shell
+  docker run -itd --rm --network host --name test3 nginx
+#+end_src
+
+#+RESULTS:
+#+begin_results
+0574b61623240c3ce524c44bba37e85386a2052c64811a06bd96dd80ea9cc98a
+#+end_results
+
+ポートを公開することなく、ホストマシンからアクセスできる。ネットワークは隔離されない。
+
+#+begin_src shell
+  curl -I http://localhost
+  curl -I http://172.17.0.1
+#+end_src
+
+#+RESULTS:
+#+begin_results
+HTTP/1.1 200 OK
+Server: nginx/1.25.4
+Date: Sat, 02 Mar 2024 04:55:15 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Wed, 14 Feb 2024 16:03:00 GMT
+Connection: keep-alive
+ETag: "65cce434-267"
+Accept-Ranges: bytes
+
+HTTP/1.1 200 OK
+Server: nginx/1.25.4
+Date: Sat, 02 Mar 2024 04:55:15 GMT
+Content-Type: text/html
+Content-Length: 615
+Last-Modified: Wed, 14 Feb 2024 16:03:00 GMT
+Connection: keep-alive
+ETag: "65cce434-267"
+Accept-Ranges: bytes
+
+#+end_results
+
 ** dockerドキュメントのタイポ修正
 - [[https://docs.docker.jp/index.html][Docker ドキュメント日本語化プロジェクト — Docker-docs-ja 24.0 ドキュメント]]
 - 特定のユーザに割り当てられたほ場的なグループと共に実行されます
