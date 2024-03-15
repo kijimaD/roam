@@ -1,0 +1,77 @@
+:properties:
+:ID: 20240315T114639
+:end:
+#+title:      KDOC 123: HandleFuncとは何か
+#+date:       [2024-03-15 Fri 11:46]
+#+filetags:   :draft:code:
+#+identifier: 20240315T114639
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (org-roam-tag-remove)
+# (org-roam-tag-add)
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+- 作成
+  - [X] 2024-03-15 貴島
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* HandleFunc
+[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]でサーバを作るときによく登場するHandleFunc。何か調べる。
+
+↓HandleFuncは関数である。グローバル変数のDefaultServeMuxがあって、その変数にインスタンス化された構造体メソッドを呼び出している。これによって、われわれはServeMuxインスタンスを初期化せずに、パスと処理を紐付けられる。
+
+#+caption: HandleFunc関数
+#+begin_src go
+  func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+          DefaultServeMux.HandleFunc(pattern, handler)
+  }
+#+end_src
+
+↓グローバル変数に登録されている。
+
+#+caption: DefaultServeMuxの定義
+#+begin_src go
+  // DefaultServeMux is the default ServeMux used by Serve.
+  var DefaultServeMux = &defaultServeMux
+  var defaultServeMux ServeMux
+#+end_src
+
+↓ServeMux型のメソッドの定義。内部ではServeMux型のHandleメソッドを呼びだす。Handleメソッドの引数では、引数のhandlerをHandlerFunc型に型変換している。当然だがシグネチャが同じなので、変換できる。こう書くことで関数呼び出しでは一般性を保ちつつ、内部ではHandlerFunc型のメソッドを使える、ということか。
+
+#+caption: ServeMuxのメソッド
+#+begin_src go
+  func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
+          if handler == nil {
+                  panic("http: nil handler")
+          }
+          mux.Handle(pattern, HandlerFunc(handler))
+  }
+#+end_src
+
+#+caption: HandlerFunc型の定義
+#+begin_src go
+  type HandlerFunc func(ResponseWriter, *Request)
+#+end_src

@@ -187,6 +187,279 @@ sudo apt-get install xdotool
 xdotool key Caps_Lock
 #+end_src
 * Tasks
+** TODO [[https://gihyo.jp/dp/ebook/2013/978-4-7741-5517-3][はじめてのOSコードリーディング　――UNIX V6で学ぶカーネルのしくみ | Gihyo Digital Publishing … 技術評論社の電子書籍]]
+OSコードリーディングの本。
+
+コツ。
+
+- まずは最後まで読んで全体像を把握する
+- 仕様書やユーザーズマニュアルを読む
+  本書と併せて仕様書やユーザプログラマーズマニュアルを読むと理解が早まる。ソースコードから仕様を理解するのではなく、仕様を理解してからソースコードを読む。
+
+- 構造体をよく見る
+
+  プログラムはあるデータをいかに操作するか、というもの。処理対象の構造体やフラグを見ているだけでどのような処理が行われるのか想像がつくことは多い。
+
+** TODO [[https://www.amazon.co.jp/-/en/%E9%AB%98%E6%9E%97-%E5%93%B2/dp/4873112885][Amazon.co.jp: Binary Hacks ―ハッカー秘伝のテクニック100選 : 高林 哲, 鵜飼 文敏, 佐藤 祐介, 浜地 慎一郎, 首藤 一幸: 本]]
+:PROPERTIES:
+:Effort:   20:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-03-14 Thu 22:32]--[2024-03-14 Thu 22:57] =>  0:25
+CLOCK: [2024-03-14 Thu 22:03]--[2024-03-14 Thu 22:28] =>  0:25
+CLOCK: [2024-03-14 Thu 21:37]--[2024-03-14 Thu 22:02] =>  0:25
+:END:
+バイナリ本。
+
+#+caption: ELFヘッダを調べる
+#+begin_src shell
+readelf -h /bin/ls
+#+end_src
+
+#+RESULTS:
+#+begin_results
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              DYN (Position-Independent Executable file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+  Entry point address:               0x6ab0
+  Start of program headers:          64 (bytes into file)
+  Start of section headers:          136224 (bytes into file)
+  Flags:                             0x0
+  Size of this header:               64 (bytes)
+  Size of program headers:           56 (bytes)
+  Number of program headers:         13
+  Size of section headers:           64 (bytes)
+  Number of section headers:         31
+  Section header string table index: 30
+#+end_results
+
+#+caption: プログラムヘッダを表示する
+#+begin_src shell
+  readelf -l /bin/ls
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+Elf file type is DYN (Position-Independent Executable file)
+Entry point 0x6ab0
+There are 13 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset             VirtAddr           PhysAddr
+                 FileSiz            MemSiz              Flags  Align
+  PHDR           0x0000000000000040 0x0000000000000040 0x0000000000000040
+                 0x00000000000002d8 0x00000000000002d8  R      0x8
+  INTERP         0x0000000000000318 0x0000000000000318 0x0000000000000318
+                 0x000000000000001c 0x000000000000001c  R      0x1
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+  LOAD           0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000003428 0x0000000000003428  R      0x1000
+  LOAD           0x0000000000004000 0x0000000000004000 0x0000000000004000
+                 0x0000000000013146 0x0000000000013146  R E    0x1000
+  LOAD           0x0000000000018000 0x0000000000018000 0x0000000000018000
+                 0x0000000000007458 0x0000000000007458  R      0x1000
+  LOAD           0x0000000000020000 0x0000000000021000 0x0000000000021000
+                 0x0000000000001278 0x0000000000002540  RW     0x1000
+  DYNAMIC        0x0000000000020a98 0x0000000000021a98 0x0000000000021a98
+                 0x00000000000001c0 0x00000000000001c0  RW     0x8
+  NOTE           0x0000000000000338 0x0000000000000338 0x0000000000000338
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  NOTE           0x0000000000000368 0x0000000000000368 0x0000000000000368
+                 0x0000000000000044 0x0000000000000044  R      0x4
+  GNU_PROPERTY   0x0000000000000338 0x0000000000000338 0x0000000000000338
+                 0x0000000000000030 0x0000000000000030  R      0x8
+  GNU_EH_FRAME   0x000000000001cdcc 0x000000000001cdcc 0x000000000001cdcc
+                 0x000000000000056c 0x000000000000056c  R      0x4
+  GNU_STACK      0x0000000000000000 0x0000000000000000 0x0000000000000000
+                 0x0000000000000000 0x0000000000000000  RW     0x10
+  GNU_RELRO      0x0000000000020000 0x0000000000021000 0x0000000000021000
+                 0x0000000000001000 0x0000000000001000  R      0x1
+
+ Section to Segment mapping:
+  Segment Sections...
+   00
+   01     .interp
+   02     .interp .note.gnu.property .note.gnu.build-id .note.ABI-tag .gnu.hash .dynsym .dynstr .gnu.version .gnu.version_r .rela.dyn .rela.plt
+   03     .init .plt .plt.got .plt.sec .text .fini
+   04     .rodata .eh_frame_hdr .eh_frame
+   05     .ctors .dtors .data.rel.ro .dynamic .got .data .bss
+   06     .dynamic
+   07     .note.gnu.property
+   08     .note.gnu.build-id .note.ABI-tag
+   09     .note.gnu.property
+   10     .eh_frame_hdr
+   11
+   12     .ctors .dtors .data.rel.ro .dynamic .got
+#+end_results
+
+#+caption: セクションヘッダを見る
+#+begin_src shell
+  readelf -S /bin/ls
+#+end_src
+
+#+RESULTS:
+#+begin_results
+There are 31 section headers, starting at offset 0x21420:
+
+Section Headers:
+  [Nr] Name              Type             Address           Offset
+       Size              EntSize          Flags  Link  Info  Align
+  [ 0]                   NULL             0000000000000000  00000000
+       0000000000000000  0000000000000000           0     0     0
+  [ 1] .interp           PROGBITS         0000000000000318  00000318
+       000000000000001c  0000000000000000   A       0     0     1
+  [ 2] .note.gnu.pr[...] NOTE             0000000000000338  00000338
+       0000000000000030  0000000000000000   A       0     0     8
+  [ 3] .note.gnu.bu[...] NOTE             0000000000000368  00000368
+       0000000000000024  0000000000000000   A       0     0     4
+  [ 4] .note.ABI-tag     NOTE             000000000000038c  0000038c
+       0000000000000020  0000000000000000   A       0     0     4
+  [ 5] .gnu.hash         GNU_HASH         00000000000003b0  000003b0
+       000000000000004c  0000000000000000   A       6     0     8
+  [ 6] .dynsym           DYNSYM           0000000000000400  00000400
+       0000000000000b88  0000000000000018   A       7     1     8
+  [ 7] .dynstr           STRTAB           0000000000000f88  00000f88
+       00000000000005a6  0000000000000000   A       0     0     1
+  [ 8] .gnu.version      VERSYM           000000000000152e  0000152e
+       00000000000000f6  0000000000000002   A       6     0     2
+  [ 9] .gnu.version_r    VERNEED          0000000000001628  00001628
+       00000000000000c0  0000000000000000   A       7     2     8
+  [10] .rela.dyn         RELA             00000000000016e8  000016e8
+       00000000000013e0  0000000000000018   A       6     0     8
+  [11] .rela.plt         RELA             0000000000002ac8  00002ac8
+       0000000000000960  0000000000000018  AI       6    25     8
+  [12] .init             PROGBITS         0000000000004000  00004000
+       0000000000000025  0000000000000000  AX       0     0     4
+  [13] .plt              PROGBITS         0000000000004030  00004030
+       0000000000000650  0000000000000010  AX       0     0     16
+  [14] .plt.got          PROGBITS         0000000000004680  00004680
+       0000000000000030  0000000000000010  AX       0     0     16
+  [15] .plt.sec          PROGBITS         00000000000046b0  000046b0
+       0000000000000640  0000000000000010  AX       0     0     16
+  [16] .text             PROGBITS         0000000000004cf0  00004cf0
+       0000000000012441  0000000000000000  AX       0     0     16
+  [17] .fini             PROGBITS         0000000000017134  00017134
+       0000000000000012  0000000000000000  AX       0     0     4
+  [18] .rodata           PROGBITS         0000000000018000  00018000
+       0000000000004dcc  0000000000000000   A       0     0     32
+  [19] .eh_frame_hdr     PROGBITS         000000000001cdcc  0001cdcc
+       000000000000056c  0000000000000000   A       0     0     4
+  [20] .eh_frame         PROGBITS         000000000001d338  0001d338
+       0000000000002120  0000000000000000   A       0     0     8
+  [21] .ctors            PROGBITS         0000000000021000  00020000
+       0000000000000010  0000000000000000  WA       0     0     8
+  [22] .dtors            PROGBITS         0000000000021010  00020010
+       0000000000000010  0000000000000000  WA       0     0     8
+  [23] .data.rel.ro      PROGBITS         0000000000021020  00020020
+       0000000000000a78  0000000000000000  WA       0     0     32
+  [24] .dynamic          DYNAMIC          0000000000021a98  00020a98
+       00000000000001c0  0000000000000010  WA       7     0     8
+  [25] .got              PROGBITS         0000000000021c58  00020c58
+       00000000000003a0  0000000000000008  WA       0     0     8
+  [26] .data             PROGBITS         0000000000022000  00021000
+       0000000000000278  0000000000000000  WA       0     0     32
+  [27] .bss              NOBITS           0000000000022280  00021278
+       00000000000012c0  0000000000000000  WA       0     0     32
+  [28] .gnu_debugaltlink PROGBITS         0000000000000000  00021278
+       0000000000000049  0000000000000000           0     0     1
+  [29] .gnu_debuglink    PROGBITS         0000000000000000  000212c4
+       0000000000000034  0000000000000000           0     0     4
+  [30] .shstrtab         STRTAB           0000000000000000  000212f8
+       0000000000000125  0000000000000000           0     0     1
+Key to Flags:
+  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),
+  L (link order), O (extra OS processing required), G (group), T (TLS),
+  C (compressed), x (unknown), o (OS specific), E (exclude),
+  D (mbind), l (large), p (processor specific)
+#+end_results
+
+#+caption: 共有ライブラリが何かはELF動的セクションのNEEDEDに記録されている
+#+begin_src shell
+objdump -p /bin/ls
+#+end_src
+
+#+RESULTS:
+#+begin_results
+
+/bin/ls:     file format elf64-x86-64
+
+Program Header:
+    PHDR off    0x0000000000000040 vaddr 0x0000000000000040 paddr 0x0000000000000040 align 2**3
+         filesz 0x00000000000002d8 memsz 0x00000000000002d8 flags r--
+  INTERP off    0x0000000000000318 vaddr 0x0000000000000318 paddr 0x0000000000000318 align 2**0
+         filesz 0x000000000000001c memsz 0x000000000000001c flags r--
+    LOAD off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**12
+         filesz 0x0000000000003428 memsz 0x0000000000003428 flags r--
+    LOAD off    0x0000000000004000 vaddr 0x0000000000004000 paddr 0x0000000000004000 align 2**12
+         filesz 0x0000000000013146 memsz 0x0000000000013146 flags r-x
+    LOAD off    0x0000000000018000 vaddr 0x0000000000018000 paddr 0x0000000000018000 align 2**12
+         filesz 0x0000000000007458 memsz 0x0000000000007458 flags r--
+    LOAD off    0x0000000000020000 vaddr 0x0000000000021000 paddr 0x0000000000021000 align 2**12
+         filesz 0x0000000000001278 memsz 0x0000000000002540 flags rw-
+ DYNAMIC off    0x0000000000020a98 vaddr 0x0000000000021a98 paddr 0x0000000000021a98 align 2**3
+         filesz 0x00000000000001c0 memsz 0x00000000000001c0 flags rw-
+    NOTE off    0x0000000000000338 vaddr 0x0000000000000338 paddr 0x0000000000000338 align 2**3
+         filesz 0x0000000000000030 memsz 0x0000000000000030 flags r--
+    NOTE off    0x0000000000000368 vaddr 0x0000000000000368 paddr 0x0000000000000368 align 2**2
+         filesz 0x0000000000000044 memsz 0x0000000000000044 flags r--
+0x6474e553 off    0x0000000000000338 vaddr 0x0000000000000338 paddr 0x0000000000000338 align 2**3
+         filesz 0x0000000000000030 memsz 0x0000000000000030 flags r--
+EH_FRAME off    0x000000000001cdcc vaddr 0x000000000001cdcc paddr 0x000000000001cdcc align 2**2
+         filesz 0x000000000000056c memsz 0x000000000000056c flags r--
+   STACK off    0x0000000000000000 vaddr 0x0000000000000000 paddr 0x0000000000000000 align 2**4
+         filesz 0x0000000000000000 memsz 0x0000000000000000 flags rw-
+   RELRO off    0x0000000000020000 vaddr 0x0000000000021000 paddr 0x0000000000021000 align 2**0
+         filesz 0x0000000000001000 memsz 0x0000000000001000 flags r--
+
+Dynamic Section:
+  NEEDED               libselinux.so.1
+  NEEDED               libc.so.6
+  INIT                 0x0000000000004000
+  FINI                 0x0000000000017134
+  GNU_HASH             0x00000000000003b0
+  STRTAB               0x0000000000000f88
+  SYMTAB               0x0000000000000400
+  STRSZ                0x00000000000005a6
+  SYMENT               0x0000000000000018
+  DEBUG                0x0000000000000000
+  PLTGOT               0x0000000000021c58
+  PLTRELSZ             0x0000000000000960
+  PLTREL               0x0000000000000007
+  JMPREL               0x0000000000002ac8
+  RELA                 0x00000000000016e8
+  RELASZ               0x00000000000013e0
+  RELAENT              0x0000000000000018
+  FLAGS                0x0000000000000008
+  FLAGS_1              0x0000000008000001
+  VERNEED              0x0000000000001628
+  VERNEEDNUM           0x0000000000000002
+  VERSYM               0x000000000000152e
+  RELACOUNT            0x00000000000000c7
+
+Version References:
+  required from libselinux.so.1:
+    0x0edb87f0 0x00 08 LIBSELINUX_1.0
+  required from libc.so.6:
+    0x06969188 0x00 11 GLIBC_2.28
+    0x06969194 0x00 10 GLIBC_2.14
+    0x069691b3 0x00 09 GLIBC_2.33
+    0x06969197 0x00 07 GLIBC_2.17
+    0x0d696914 0x00 06 GLIBC_2.4
+    0x069691b4 0x00 05 GLIBC_2.34
+    0x09691974 0x00 04 GLIBC_2.3.4
+    0x09691a75 0x00 03 GLIBC_2.2.5
+    0x0d696913 0x00 02 GLIBC_2.3
+
+#+end_results
+
 ** TODO [[https://gihyo.jp/dp/ebook/2022/978-4-297-13149-4][Linuxのしくみ ―実験と図解で学ぶOS、仮想マシン、コンテナの基礎知識【増補改訂版】 | Gihyo Digital Publishing … 技術評論社の電子書籍]]
 :LOGBOOK:
 CLOCK: [2024-03-03 Sun 15:01]--[2024-03-03 Sun 15:26] =>  0:25
