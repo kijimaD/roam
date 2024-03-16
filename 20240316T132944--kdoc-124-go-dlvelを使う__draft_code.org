@@ -1,0 +1,77 @@
+:properties:
+:ID: 20240316T132944
+:end:
+#+title:      KDOC 124: go-dlv.elを使う
+#+date:       [2024-03-16 Sat 13:29]
+#+filetags:   :draft:code:
+#+identifier: 20240316T132944
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (org-roam-tag-remove)
+# (org-roam-tag-add)
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+- 作成
+  - [X] 2024-03-16 貴島
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* go-dlv.el
+[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]のデバッガでdelveをよく使う。
+
+Emacs上でこのdelveを扱いやすくするためのラッパーパッケージ[[https://github.com/benma/go-dlv.el/][go-dlv.el]]がある。 ~(dlv-current-func)~ を実行してカーソル上の関数をデバッグ実行できる。
+
+同じようなラッパーには ~dap-mode~ を使う方法もあるのだが、EmacsっぽくないUIなので、go-dlv.elの方が好み。
+
+#+caption: (dlv-current-func)を実行したカーソル箇所にブレークポイントを打って実行してくれる。さらに該当コードは別バッファに表示されている
+#+begin_src
+(dlv) Breakpoint 1 set at 0x78e853 for main.main() ./snippet.go:27
+(dlv) > main.main() ./snippet.go:27 (hits goroutine(1):1 total:1) (PC: 0x78e853)
+    22:		if err != nil {
+    23:			log.Fatal(err)
+    24:		}
+    25:	}
+    26:
+=>  27:	func main() {
+    28:		http.HandleFunc("/hello", helloHandler)
+    29:		fmt.Println("Server Start Up........")
+    30:		log.Fatal(http.ListenAndServe("localhost:8080", nil))
+    31:	}
+(dlv) n
+> main.main() ./snippet.go:28 (PC: 0x78e85a)
+    23:			log.Fatal(err)
+    24:		}
+    25:	}
+    26:
+    27:	func main() {
+=>  28:		http.HandleFunc("/hello", helloHandler)
+    29:		fmt.Println("Server Start Up........")
+    30:		log.Fatal(http.ListenAndServe("localhost:8080", nil))
+    31:	}
+(dlv)
+#+end_src
+
+* 関連
+# 関連するエントリ。なぜ関連させたか理由を書く。
