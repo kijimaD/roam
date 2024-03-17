@@ -34,10 +34,12 @@ modify() {
 }
 
 refresh() {
-    inotifywait -m -e create -e delete --format '%w%f' . | while read FILE; do
-        echo "File $FILE was create or delete or rename..."
-        # sitemapを更新する
-        make org2html
+    inotifywait -m -e create --format '%w%f' . | while read FILE; do
+        if [[ $FILE =~ .*org$ ]]; then
+            echo "File $FILE was create or delete or rename..."
+            # sitemapを更新する
+            make org2html
+        fi
     done
 }
 

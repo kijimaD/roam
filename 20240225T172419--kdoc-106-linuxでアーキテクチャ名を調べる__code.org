@@ -15,9 +15,15 @@
 * 概要
 [[id:7a81eb7c-8e2b-400a-b01a-8fa597ea527a][Linux]]でアーキテクチャ名を調べる方法。
 
+#+caption: アーキテクチャ名を調べる
+#+begin_src shell
   uname -i
+#+end_src
 
+#+RESULTS:
+#+begin_src
 x86_64
+#+end_src
 
 これはLinuxカーネルのビルド時に決まるとのこと[fn:1]。 ~UTS-MACHINE~ という定義でアーキテクチャの文字列が定義されるという。
 
@@ -30,8 +36,13 @@ x86_64
 
 実際の場所を調べる。straceで見ると、unameシステムコールが発行されている↓。ので、システムコールの定義を見ればよいと考えた。
 
+#+caption: nameシステムコールが発行されている。2>&1はorg-babel用
+#+begin_src shell :results raw
   strace uname -i 2>&1 | tail
+#+end_src
 
+#+RESULTS:
+#+begin_src
 mmap(NULL, 6784496, PROT_READ, MAP_PRIVATE, 3, 0) = 0x7f6e037af000
 close(3)                                = 0
 uname({sysname="Linux", nodename="orange-ThinkPad-X1-Carbon-Gen-10", ...}) = 0 👈
@@ -42,11 +53,17 @@ close(1)                                = 0
 close(2)                                = 0
 exit_group(0)                           = ?
 +++ exited with 0 +++
+#+end_src
 
 しかし、↓ソースコードを見てもよくわからない。別の関数まで辿らないといけない。uts_name()から返される構造体をコピーしているのか。uts_name()がどこで定義されているかわからない。
 
+#+caption: unameの定義
+#+begin_src git-permalink
 https://github.com/torvalds/linux/blob/1f874787ed9a2d78ed59cb21d0d90ac0178eceb0/kernel/sys.c#L1327-L1345
+#+end_src
 
+#+RESULTS:
+#+begin_src c
 SYSCALL_DEFINE1(uname, struct old_utsname __user *, name)
 {
 	struct old_utsname tmp;
@@ -66,6 +83,7 @@ SYSCALL_DEFINE1(uname, struct old_utsname __user *, name)
 		return -EFAULT;
 	return 0;
 }
+#+end_src
 
 動いているマシン上で、/proc/sys/kernel にunameで出るリリース日とか、アーキテクチャ名があるのを確認した。が、どう利用しているのかはわからない。/procはオンメモリ、動的なディレクトリなはずなのでそれを制御しているコードもどこかにあるはずだが。
 
