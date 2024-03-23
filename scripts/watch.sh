@@ -36,7 +36,7 @@ modify() {
 refresh() {
     inotifywait -m -e create --format '%w%f' . | while read FILE; do
         if [[ $FILE =~ .*org$ ]]; then
-            echo "File $FILE was create or delete or rename..."
+            echo "File $FILE was create ..."
             # sitemapを更新する
             make org2html
         fi
