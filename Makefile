@@ -14,6 +14,10 @@ $(greeting):
 update-index: ## indexページを更新する
 	emacs --batch -l ./publish.el --funcall kd/update-index-table
 
+.PHONY: update-dlinks
+update-dlinks: ## denote linksページを更新する(ローカルで実行する用)
+	emacs --batch -l ./publish.el --funcall kd/update-dlinks-table
+
 .PHONY: org2html
 org2html: ## org projectをhtmlに一括変換する
 	emacs --batch -l ./publish.el --funcall kd/publish

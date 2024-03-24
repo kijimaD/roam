@@ -238,6 +238,14 @@
     (org-babel-execute-buffer)
     (save-buffer)))
 
+(defun kd/update-dlinks-table ()
+  "update kdoc.org table"
+  (let ((org-agenda-files '("./")))
+    (find-file "dlinks.org")
+    (org-dblock-update t)
+    (org-babel-execute-buffer)
+    (save-buffer)))
+
 (defun kd/publish ()
   (org-publish-all t)
   ;; (org-agenda nil "Future") ;; test
