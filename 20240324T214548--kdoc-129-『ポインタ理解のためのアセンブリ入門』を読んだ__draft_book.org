@@ -1,0 +1,87 @@
+:properties:
+:ID: 20240324T214548
+:end:
+#+title:      KDOC 129: 『ポインタ理解のためのアセンブリ入門』を読んだ
+#+date:       [2024-03-24 Sun 21:45]
+#+filetags:   :draft:book:
+#+identifier: 20240324T214548
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
+# (flush-lines "^\\#\s.+?")
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+- 作成
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* 概要
+[[https://nextpublishing.jp/book/17419.html][RISC-Vから学ぶC言語 ポインタ理解のためのアセンブリ入門]]は、[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C言語]]をアセンブリで解説する本である。C言語やポインタといいつつ、紙幅のほとんどは前提知識となる命令セットやアセンブリの解説である。
+
+条件文、ポインタ、配列、構造体などのプリミティブのコードと生成アセンブリを比較する流れはとても良かった。解説はあっさりしているが、実際に比較してみて考えてみるとわかる。一度では腑に落ちなかったが、何度か行ったり来たりしたら理解できた。50ページほどしかないのはむしろよく、圧倒されなかった。
+
+例コードを[[https://godbolt.org/][Compiler Explorer]]に通して、アセンブリとコードを読んでみてから解説を読んでいった。対応部分が色分けされているのは本当にわかりやすい。
+
+* メモ
+
+- ~bne~ 命令。「等しくなければジャンプする」==「等しければジャンプしない」
+- *メモリの図は上にいくほど小さい* 。-60と-40では、-60が上にある
+- 流れ
+  1. 最初にスタックポインタ(sp)をマイナスにして確保する
+  2. スタックの下の方に、レジスタの値を退避させる。元の関数フレームの基準点など
+  3. spからもっとも離れたスタックの底をフレームポインタ(s0)とする
+  4. s0からのオフセットでメモリアクセスする
+  5. 本処理をいろいろやる
+  6. 関数呼び出しが終わったらメモリに退避させていた関数フレームの基準点をフレームポインタ(s0)に戻し、呼び出し先に戻る
+- a0は戻り値を格納するレジスタ
+
+↓条件文。
+
+#+begin_export html
+<iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:8,positionColumn:2,positionLineNumber:8,selectionStartColumn:2,selectionStartLineNumber:8,startColumn:2,startLineNumber:8),source:'%23include+%3Cstdio.h%3E%0Aint+main()+%7B%0A++++int+a+%3D+5%3B%0A++++if+(a+%3D%3D+5)+%7B%0A++++++++a+%3D+1%3B%0A++++%7D%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+↓配列。
+
+#+begin_export html
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:11,positionColumn:2,positionLineNumber:11,selectionStartColumn:2,selectionStartLineNumber:11,startColumn:2,startLineNumber:11),source:'%23include+%3Cstdio.h%3E%0Aint+main()+%7B%0A++++int+array1%5B5%5D+%3D+%7B10,+11,+12,+13,+14%7D%3B%0A++++int+array2%5B2%5D%5B3%5D+%3D+%7B%7B1,+2,+3%7D,+%7B4,+5,+6%7D%7D%3B%0A++++array1%5B0%5D+%3D+20%3B%0A++++array2%5B0%5D%5B0%5D+%3D+100%3B%0A++++array2%5B0%5D%5B1%5D+%3D+200%3B%0A++++array2%5B1%5D%5B0%5D+%3D+300%3B%0A++++array2%5B1%5D%5B1%5D+%3D+400%3B%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+↓ポインタ。
+
+#+begin_export html
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:4,positionColumn:2,positionLineNumber:4,selectionStartColumn:2,selectionStartLineNumber:4,startColumn:2,startLineNumber:4),source:'int+main()+%7B%0A++++int+a+%3D+1%3B%0A++++int+*b+%3D+%26a%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+↓構造体。
+
+#+begin_export html
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:16,positionColumn:2,positionLineNumber:16,selectionStartColumn:2,selectionStartLineNumber:16,startColumn:2,startLineNumber:16),source:'%23include+%3Cstdio.h%3E%0A%23include+%3Cstdlib.h%3E%0Atypedef+struct+student+student%3B%0Astruct+student+%7B%0A++++char+id%3B%0A++++short+age%3B%0A++++char+*name%3B%0A%7D+Student1,+Student2%3B%0Aint+main()+%7B%0A++++student+*s+%3D+(student+*)malloc(sizeof(student))%3B%0A++++s-%3Ename+%3D+%22reten%22%3B%0A++++s-%3Eid+%3D+10%3B%0A++++s-%3Eage+%3D+21%3B%0A++++Student1.id+%3D+11%3B%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+* 関連
+- [[id:20231014T125935][KDOC 45: プログラミング言語の内部的な違いをアセンブリから調べる]]。で触れたときはあやふやな理解のままだった
