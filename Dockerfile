@@ -29,7 +29,7 @@ RUN gem update --system
 
 FROM amazonlinux:2 AS build
 
-# MEMO: localeを日本語にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
+# MEMO: localeを日本にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
 ENV LANG ja_JP.UTF-8
 ENV LC_ALL ja_JP.UTF-8
 ENV TZ Asia/Tokyo
@@ -57,11 +57,12 @@ COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
 COPY publish.el ox-slimhtml.el ./
-RUN emacs --batch -l ./publish.el
+RUN emacs --batch -l ./publish.el # cache
 
 COPY .git/ ./.git/
 COPY . /roam
 
+RUN rm /roam/dlinks.org
 RUN ./scripts/deploy.sh
 
 CMD /bin/sh
