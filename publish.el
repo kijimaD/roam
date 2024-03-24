@@ -19,10 +19,10 @@
 ;; Set the package installation directory so that packages aren't stored in the
 ;; ~/.emacs.d/elpa path.
 (setq package-user-dir (expand-file-name "./.packages"))
-
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("elpa" . "https://elpa.gnu.org/packages/")
                          ("org" . "http://orgmode.org/elpa/")))
+(setq debug-on-error t)
 
 ;; Initialize the package system
 (package-initialize)
