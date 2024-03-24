@@ -61,18 +61,9 @@ COPY publish.el ox-slimhtml.el ./
 COPY .git/ ./.git/
 COPY . /roam
 
-RUN rm /roam/dlinks.org
 RUN ./scripts/deploy.sh
 
 CMD /bin/sh
-
-# Go builder ================
-FROM golang:1.20-buster AS gobuild
-
-WORKDIR /work/weight
-COPY . /work
-RUN go install github.com/kijimaD/wei@main
-RUN wei build
 
 # release ================
 # GitHub Pages(production)
