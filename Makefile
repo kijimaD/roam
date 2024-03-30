@@ -47,10 +47,16 @@ line-graph: ## 行数の統計情報をグラフ化する
 gen-file-table: ## ファイルの情報を書き込む
 	ruby ./file-count/table.rb >> ./index.org
 
-.PHONY: export-pdfs
-export-pdfs: ## drawio SVGたちをPDFにエクスポートする
+.PHONY: export-pdfs-dev
+export-pdfs-dev: ## drawio SVGたちをPDFにエクスポートする(ローカル用)
 	which drawio
 	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} drawio -f pdf -x {} --no-sandbox
+
+.PHONY: export-pdfs-headless
+export-pdfs-headless: ## drawio SVGたちをPDFにエクスポートする(ヘッドレス)
+	which drawio
+	which xvfb-run
+	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} xvfb-run drawio -f pdf -x {} --no-sandbox
 
 # development ================
 

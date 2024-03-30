@@ -47,7 +47,9 @@ RUN yum -y update && \
         python3 \
         gnuplot \
         glibc-langpack-ja \
-        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm
+        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm \
+        xorg-x11-server-Xvfb
+
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
 
@@ -65,6 +67,7 @@ COPY .git/ ./.git/
 COPY . /roam
 
 RUN ./scripts/deploy.sh
+RUN make export-pdfs-headless
 
 CMD /bin/sh
 
@@ -74,6 +77,7 @@ FROM amazonlinux:2 as release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
+COPY --from=build /roam/pdfs /roam/public/pdfs
 
 CMD /bin/sh
 
