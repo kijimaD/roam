@@ -53,12 +53,6 @@ export-pdfs-dev: ## drawio SVGたちをPDFにエクスポートする。ロー�
 	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} drawio -f pdf -x {} --no-sandbox
 	cp -r ./pdfs ./public/
 
-.PHONY: export-pdfs-headless
-export-pdfs-headless: ## drawio SVGたちをPDFにエクスポートする。ヘッドレス
-	which drawio
-	which xvfb-run
-	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} xvfb-run drawio -f pdf -x {} --no-sandbox
-
 # development ================
 
 .PHONY: lint-run
