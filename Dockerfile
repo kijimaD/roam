@@ -61,15 +61,14 @@ RUN gem install bundler && bundle install
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-COPY publish.el ox-slimhtml.el ./
-
-COPY .git/ ./.git/
-COPY . /roam
-
 CMD /bin/sh
 
 # build ================
 FROM amazonlinux:2 AS build
+
+COPY publish.el ox-slimhtml.el ./
+COPY .git/ ./.git/
+COPY . /roam
 
 RUN ./scripts/deploy.sh
 RUN make export-pdfs-headless
