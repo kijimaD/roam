@@ -37,6 +37,7 @@ ENV TZ Asia/Tokyo
 RUN yum -y update && \
     yum -y install \
         make \
+        which \
         gcc \
         git \
         sqlite-devel \
@@ -44,7 +45,8 @@ RUN yum -y update && \
         emacs \
         python3 \
         gnuplot \
-        glibc-langpack-ja
+        glibc-langpack-ja \
+        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
 
