@@ -64,7 +64,9 @@ RUN pip3 install -r requirements.txt
 CMD /bin/sh
 
 # build ================
-FROM amazonlinux:2 AS build
+FROM builder AS build
+
+WORKDIR /roam
 
 COPY publish.el ox-slimhtml.el ./
 COPY .git/ ./.git/
