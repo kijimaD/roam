@@ -21,7 +21,7 @@ update-dlinks: ## denote linksページを更新する(ローカルで実行す�
 .PHONY: org2html
 org2html: ## org projectをhtmlに一括変換する
 	emacs --batch -l ./publish.el --funcall kd/publish
-	cp -r images/. public/images/.
+	cp -r ./images ./public/
 
 .PHONY: node-graph
 node-graph: ## ファイルの関係性グラフを描画する
@@ -47,10 +47,11 @@ line-graph: ## 行数の統計情報をグラフ化する
 gen-file-table: ## ファイルの情報を書き込む
 	ruby ./file-count/table.rb >> ./index.org
 
-.PHONY: export-pdfs
-export-pdfs: ## drawio SVGたちをPDFにエクスポートする
+.PHONY: export-pdfs-dev
+export-pdfs-dev: ## drawio SVGたちをPDFにエクスポートする。ローカル用
 	which drawio
 	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} drawio -f pdf -x {} --no-sandbox
+	cp -r ./pdfs ./public/
 
 # development ================
 

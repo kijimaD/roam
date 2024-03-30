@@ -25,14 +25,15 @@ RUN git clone https://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-bu
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
 
-# build ================
+# builder ================
 
-FROM amazonlinux:2 AS build
+FROM amazonlinux:2 AS builder
 
 # MEMO: localeを日本にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
 ENV LANG ja_JP.UTF-8
 ENV LC_ALL ja_JP.UTF-8
 ENV TZ Asia/Tokyo
+ENV DISPLAY :0
 
 RUN yum -y update && \
     yum -y install \
@@ -46,7 +47,9 @@ RUN yum -y update && \
         python3 \
         gnuplot \
         glibc-langpack-ja \
-        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm
+        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm \
+        xorg-x11-server-Xvfb
+
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
 
@@ -58,12 +61,20 @@ RUN gem install bundler && bundle install
 COPY requirements.txt ./
 RUN pip3 install -r requirements.txt
 
-COPY publish.el ox-slimhtml.el ./
+CMD /bin/sh
 
+# build ================
+FROM builder AS build
+
+WORKDIR /roam
+
+COPY publish.el ox-slimhtml.el ./
 COPY .git/ ./.git/
 COPY . /roam
 
 RUN ./scripts/deploy.sh
+RUN which drawio && which xvfb-run # コマンドがあるか確認
+RUN cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} xvfb-run drawio -f pdf -x {} --no-sandbox
 
 CMD /bin/sh
 
@@ -73,6 +84,7 @@ FROM amazonlinux:2 as release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
+COPY --from=build /roam/pdfs /roam/public/pdfs
 
 CMD /bin/sh
 
