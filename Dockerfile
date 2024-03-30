@@ -47,7 +47,9 @@ RUN yum -y update && \
         gnuplot \
         glibc-langpack-ja \
         https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm \
-        xorg-x11-server-Xvfb
+        xorg-x11-server-Xvfb \
+        google-noto-sans-jp-fonts \
+        google-noto-serif-jp-fonts
 
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
