@@ -1,0 +1,173 @@
+<!-- 参考: https://keens.github.io/blog/2022/09/21/burogunipdfsuraidowotsuikashitahanashi/ -->
+<html>
+    <div id="article">
+    <div id="pdf-viewer-wrap" style="width: 100%">
+        <div>
+            <button id="pdf-viewer-prev">Prev</button>
+            <div style="display:inline"><input style="width:2.5em;text-align:right;" id="pdf-viewer-current-page">/<span id="page_count"></span></div>
+            <button id="pdf-viewer-next">Next</button>
+        </div>
+        <canvas id="pdf-viewer-canvas"></canvas>
+    </div>
+    </div>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js">
+    </script>
+    <script>
+
+     // header controls
+     /* let page_header = document.getElementById('page-header'); */
+     /* let article_header = document.getElementById('article-header'); */
+     /* let article = document.getElementById('article-container'); */
+
+     /* function displayHeader() {
+      *     article_header.style.display = 'block';
+      *     page_header.style.display = 'block';
+      *     let height = 'calc(100% - ' + page_header.clientHeight + 'px)';
+      *     article.style.height = height;
+      * } */
+
+     /* function hideHeader() {
+      *     article_header.style.display = 'none';
+      *     page_header.style.display = 'none';
+      *     article.style.height = '100%';
+      * } */
+
+     // PDF viewr
+     var pdfDoc = null,
+         pageNum = 1,
+         pageRendering = false,
+         pageNumPending = null,
+         scale = 1,
+         outputScale = window.devicePixelRatio || 1,
+         canvas = document.getElementById('pdf-viewer-canvas'),
+         wrap = document.getElementById("pdf-viewer-wrap"),
+         ctx = canvas.getContext('2d'),
+         current_page = document.getElementById('pdf-viewer-current-page');
+
+     function renderPage(num) {
+         pageRendering = true;
+         // Using promise to fetch the page
+         pdfDoc.getPage(num).then(function(page) {
+             /* if (num == 1) {
+              *     displayHeader()
+              * } else {
+              *     hideHeader()
+              * } */
+             current_page.value = num;
+             var viewport = page.getViewport({scale: 1});
+             scale = wrap.offsetWidth / (viewport.width * outputScale);
+             viewport = page.getViewport({scale: scale});
+             canvas.height = Math.floor(viewport.height * outputScale);
+             canvas.width = Math.floor(viewport.width * outputScale);
+
+             var transform = outputScale !== 1
+                           ? [outputScale, 0, 0, outputScale, 0, 0]
+                           : null;
+
+             // Render PDF page into canvas context
+             var renderContext = {
+                 canvasContext: ctx,
+                 viewport: viewport,
+                 transform: transform,
+             };
+             var renderTask = page.render(renderContext);
+
+             // Wait for rendering to finish
+             renderTask.promise.then(function() {
+                 pageRendering = false;
+                 if (pageNumPending !== null) {
+                     // New page rendering is pending
+                     renderPage(pageNumPending);
+                     pageNumPending = null;
+                 }
+             });
+         });
+     }
+
+     /**
+      * If another page rendering in progress, waits until the rendering is
+      * finised. Otherwise, executes rendering immediately.
+      */
+     function queueRenderPage(num) {
+         if (pageRendering) {
+             pageNumPending = num;
+         } else {
+             renderPage(num);
+         }
+     }
+
+     /**
+      * Displays the page specified by input.
+      */
+
+     function onInputPage() {
+         var num = Number(current_page.value)
+         if (num <= 1 || num >= pdfDoc.numPages) {
+             return
+         }
+         let url = new URL(window.location);
+         url.searchParams.set('page', num);
+         window.history.replaceState({}, '', url)
+         queueRenderPage(num);
+     }
+
+     /**
+      * Displays previous page.
+      */
+     function onPrevPage() {
+         if (pageNum <= 1) {
+             return;
+         }
+         pageNum--;
+         queueRenderPage(pageNum);
+     }
+
+     /**
+      * Displays next page.
+      */
+     function onNextPage() {
+         if (pageNum >= pdfDoc.numPages) {
+             return;
+         }
+         pageNum++;
+         queueRenderPage(pageNum);
+     }
+
+
+
+     /**
+      * Asynchronously downloads PDF.
+      */
+     pdfjsLib.getDocument('./20240530-slide.pdf.drawio.pdf').promise.then(function(pdfDoc_) {
+         pdfDoc = pdfDoc_;
+         document.getElementById('page_count').textContent = pdfDoc.numPages;
+
+         /**
+          * set current page by query parameter
+          */
+
+         let queryParams = new URLSearchParams(window.location.search);
+         current_page.value = queryParams.get('page') || 1;
+         var num = Number(current_page.value)
+         if (num < 1 || num > pdfDoc.numPages) {
+             num = 1;
+         }
+         // Initial/first page rendering
+         renderPage(num);
+     });
+
+     // set event listeners
+     document.getElementById('pdf-viewer-prev').addEventListener('click', onPrevPage);
+     document.getElementById('pdf-viewer-next').addEventListener('click', onNextPage);
+     window.addEventListener('resize', function() { queueRenderPage(pageNum) });
+     window.addEventListener('keydown', function(ev) {
+         if (ev.key == 'ArrowRight') {
+             onNextPage()
+         }
+         if (ev.key == 'ArrowLeft') {
+             onPrevPage()
+         }
+     });
+     current_page.addEventListener('change', onInputPage);
+    </script>
+</html>
