@@ -33,6 +33,7 @@ FROM amazonlinux:2 AS build
 ENV LANG ja_JP.UTF-8
 ENV LC_ALL ja_JP.UTF-8
 ENV TZ Asia/Tokyo
+ENV DISPLAY :0
 
 RUN yum -y update && \
     yum -y install \
