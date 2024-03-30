@@ -25,9 +25,9 @@ RUN git clone https://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-bu
 RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
 
-# build ================
+# builder ================
 
-FROM amazonlinux:2 AS build
+FROM amazonlinux:2 AS builder
 
 # MEMO: localeを日本にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
 ENV LANG ja_JP.UTF-8
@@ -65,6 +65,11 @@ COPY publish.el ox-slimhtml.el ./
 
 COPY .git/ ./.git/
 COPY . /roam
+
+CMD /bin/sh
+
+# build ================
+FROM amazonlinux:2 AS build
 
 RUN ./scripts/deploy.sh
 RUN make export-pdfs-headless
