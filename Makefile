@@ -50,7 +50,7 @@ gen-file-table: ## ファイルの情報を書き込む
 .PHONY: export-pdfs
 export-pdfs: ## drawio SVGたちをPDFにエクスポートする
 	which drawio
-	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs drawio -f pdf -x
+	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} drawio -f pdf -x {} --no-sandbox
 
 # development ================
 
