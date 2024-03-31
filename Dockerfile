@@ -29,11 +29,6 @@ RUN gem update --system
 
 FROM amazonlinux:2 AS builder
 
-# MEMO: localeを日本にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
-ENV LANG ja_JP.UTF-8
-ENV LC_ALL ja_JP.UTF-8
-ENV TZ Asia/Tokyo
-
 RUN yum -y update && \
     yum -y install \
         make \
@@ -66,6 +61,11 @@ CMD /bin/sh
 
 # build ================
 FROM builder AS build
+
+# MEMO: localeを日本にしないと、日本語ファイルが含まれるときにsqlite出力が失敗する
+ENV LANG ja_JP.UTF-8
+ENV LC_ALL ja_JP.UTF-8
+ENV TZ Asia/Tokyo
 
 WORKDIR /roam
 
