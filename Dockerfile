@@ -72,8 +72,6 @@ COPY .git/ ./.git/
 COPY . /roam
 
 RUN ./scripts/deploy.sh
-RUN which drawio && which xvfb-run # コマンドがあるか確認
-RUN cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} xvfb-run drawio -f pdf -x {} --no-sandbox
 
 CMD /bin/sh
 
