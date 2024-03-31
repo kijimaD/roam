@@ -46,8 +46,8 @@ RUN yum -y update && \
         google-noto-sans-jp-fonts \
         google-noto-serif-jp-fonts
 
-
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
+RUN fc-cache -r
 
 WORKDIR /roam
 
