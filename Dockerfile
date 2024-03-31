@@ -43,11 +43,9 @@ RUN yum -y update && \
         glibc-langpack-ja \
         https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm \
         xorg-x11-server-Xvfb \
-        google-noto-sans-jp-fonts \
-        google-noto-serif-jp-fonts
+        ipa-pgothic-fonts # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
 
 COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
-RUN fc-cache -r
 
 WORKDIR /roam
 
