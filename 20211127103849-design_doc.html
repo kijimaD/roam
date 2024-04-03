@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-04-02 -->
+<!-- 2024-04-03 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Design doc</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content">
 <h1 class="title">Design doc</h1>
-<div id="outline-container-org53f52c3" class="outline-2">
-<h2 id="org53f52c3"><a href="#org53f52c3">概要</a></h2>
-<div class="outline-text-2" id="text-org53f52c3">
+<div id="outline-container-org88534cd" class="outline-2">
+<h2 id="org88534cd"><a href="#org88534cd">概要</a></h2>
+<div class="outline-text-2" id="text-org88534cd">
 <p>
 Design doc はエンジニアの書く仕様書である。
 コードを書く前に書き、明確化したりチームのメンバーにプロジェクトの全体像を共有するために使う。
@@ -32,42 +32,131 @@ Design doc はエンジニアの書く仕様書である。
 </ul>
 </div>
 </div>
-<div id="outline-container-org5af7018" class="outline-2">
-<h2 id="org5af7018"><a href="#org5af7018">Memo</a></h2>
+<div id="outline-container-org4920956" class="outline-2">
+<h2 id="org4920956"><a href="#org4920956">Memo</a></h2>
 </div>
-<div id="outline-container-org1c4b207" class="outline-2">
-<h2 id="org1c4b207"><a href="#org1c4b207">Tasks</a></h2>
+<div id="outline-container-orgaf7bedd" class="outline-2">
+<h2 id="orgaf7bedd"><a href="#orgaf7bedd">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgaf7bedd">
 </div>
-<div id="outline-container-orgdd81638" class="outline-2">
-<h2 id="orgdd81638"><a href="#orgdd81638">Reference</a></h2>
-<div class="outline-text-2" id="text-orgdd81638">
+<div id="outline-container-org8a32a0c" class="outline-3">
+<h3 id="org8a32a0c"><a href="#org8a32a0c"><span class="todo TODO">TODO</span> <a href="https://www.shoeisha.co.jp/book/detail/9784798166834">ライティングソフトウェア（Juval Löwy 株式会社ロングテール　長尾高弘）｜翔泳社の本</a></a></h3>
+<div class="outline-text-3" id="text-org8a32a0c">
+<p>
+ソフトウェア、プロジェクトの設計本。
+</p>
+
+<ul class="org-ul">
+<li>機能別分解をしてはいけない。変更への対応が難しいから</li>
+<li>変動性に基づいて分解せよ
+<ul class="org-ul">
+<li>変更される可能性がある領域を明らかにし、その部分をサービスやシステムの部品としてカプセル化する</li>
+</ul></li>
+<li>分解の重要な基準、機能ではなく変化を探す</li>
+<li>要件分析の目的は、変動領域を見つけること</li>
+<li>変動性と可変性の違い</li>
+<li>変動性の軸が見つからないようなものはカプセル化してはならない。システム内とのコンポーネントとの関連を質問してはならない</li>
+<li>1人のユーザが同じコンポーネントを永遠に使っていられるだろうか。答えがノーなら、それはなぜか
+<ul class="org-ul">
+<li>時間の経過とともにその顧客が何かを変えたくなることがわかっている場合が多い。そして変えたくなる何かをカプセル化する</li>
+<li>すべての顧客が、↑で作ったシステムを使えるかどうかを自問自答する。答えがノーなら、顧客によって変えたくなる部分がどれかをはっきりさせ、それをカプセル化してさらにシステムを作る</li>
+<li>変動性の軸にひっかかるすべてのものがカプセル化されるまで、このような形でデザインを切り分けていく</li>
+</ul></li>
+<li>軸はほとんど必ず独立していなければならない。時間とともに1人のユーザで変わることは現時点のすべてのユーザで違っていることはないはずであり、逆も当てはまる</li>
+<li>自分の家を見て、時間とともに何が変わったかを観察する。家具のアレンジは変わり、一部は新しいものに置き換わっている。家具は家の中の変動領域だという結論が得られる。電化製品、家の住人は変動領域だ</li>
+<li>ほとんどの要求仕様には要件を装うソリューションが溢れかえっている。機能別分解は苦痛を最大限まで拡大する</li>
+<li>変動領域の可能性があるもののリストを作る</li>
+</ul>
+
+<p>
+トレーディングシステムの例
+</p>
+<ul class="org-ul">
+<li>フロント
+<ul class="org-ul">
+<li>Webポータル</li>
+<li>トレーダーアプリA</li>
+<li>トレーダーアプリB</li>
+</ul></li>
+<li>トレードワークフロー(ロケール)
+<ul class="org-ul">
+<li>取引の細部は変わりうる</li>
+<li>ワークフローの収納というオペレーションコンセプト</li>
+<li>取引対象ごとに別々の取引ワークフローを持てる</li>
+<li>ロケールごとに異なるワークフローを持てる</li>
+<li>複数のマシンとセッションにまたがって長時間実行されるワークフローをサポートできる</li>
+<li>接続されたシングルセッションの取引と長期に渡って実行される分散トレードが同じように扱われる。対象性と一貫性は望ましい性質である</li>
+</ul></li>
+<li>分析ワークフロー(ロケール)
+<ul class="org-ul">
+<li>市場データの形式上や値の変動性</li>
+</ul></li>
+<li>通知</li>
+<li>フィード受信
+<ul class="org-ul">
+<li>社内</li>
+<li>社外
+<ul class="org-ul">
+<li>A, B, C,&#x2026;</li>
+</ul></li>
+</ul></li>
+<li>トレードアクセス</li>
+<li>ワークフローアクセス</li>
+<li>顧客アクセス</li>
+<li>フィードアクセス</li>
+<li>トレードストレージ</li>
+<li>ワークフローストレージ</li>
+<li>顧客ストレージ</li>
+</ul>
+
+<p>
+ビジネスの本質は変動しない。ビジネスの本質が変わるなら、古いシステムを壊して最初からやり直すことが許容される。
+</p>
+
+<ul class="org-ul">
+<li>日常的によく使っているソフトウェアシステムで練習する</li>
+<li>自分が携わった過去のシステムを再検証する</li>
+<li>ユースケースの図による表現としてはアクティビティ図を推奨する</li>
+<li>アクティビティ図とユースケース図を混同しない
+<ul class="org-ul">
+<li>アクティビティ図は時間をシーケンスを表現できる</li>
+<li>ユースケース図はユーザ中心で時間やシーケンスを表現できない</li>
+</ul></li>
+</ul>
 </div>
-<div id="outline-container-orgc52fd62" class="outline-3">
-<h3 id="orgc52fd62"><a href="#orgc52fd62"><a href="https://note.com/simplearchitect/n/n931fc8020eca">Up front design の復権｜牛尾 剛｜note</a></a></h3>
-<div class="outline-text-3" id="text-orgc52fd62">
+</div>
+</div>
+
+<div id="outline-container-org189bbd1" class="outline-2">
+<h2 id="org189bbd1"><a href="#org189bbd1">Reference</a></h2>
+<div class="outline-text-2" id="text-org189bbd1">
+</div>
+<div id="outline-container-org2a8fa4f" class="outline-3">
+<h3 id="org2a8fa4f"><a href="#org2a8fa4f"><a href="https://note.com/simplearchitect/n/n931fc8020eca">Up front design の復権｜牛尾 剛｜note</a></a></h3>
+<div class="outline-text-3" id="text-org2a8fa4f">
 <p>
 できるプログラマはDesign documentを先に書くらしい。
 あとで書くのはつまらないし、頭の中が整理される。
 </p>
 </div>
 </div>
-<div id="outline-container-org7219bb6" class="outline-3">
-<h3 id="org7219bb6"><a href="#org7219bb6"><a href="https://cataclysmdda.org/design-doc/">CDDA Design Document</a></a></h3>
-<div class="outline-text-3" id="text-org7219bb6">
+<div id="outline-container-org3609048" class="outline-3">
+<h3 id="org3609048"><a href="#org3609048"><a href="https://cataclysmdda.org/design-doc/">CDDA Design Document</a></a></h3>
+<div class="outline-text-3" id="text-org3609048">
 <p>
 実際のOSSのゲームの例。
 </p>
 </div>
 </div>
-<div id="outline-container-org5741d93" class="outline-3">
-<h3 id="org5741d93"><a href="#org5741d93"><a href="http://www.chromium.org/developers/design-documents">Design Documents - The Chromium Projects</a></a></h3>
+<div id="outline-container-org90e3acf" class="outline-3">
+<h3 id="org90e3acf"><a href="#org90e3acf"><a href="http://www.chromium.org/developers/design-documents">Design Documents - The Chromium Projects</a></a></h3>
 </div>
-<div id="outline-container-org5c18c2a" class="outline-3">
-<h3 id="org5c18c2a"><a href="#org5c18c2a"><a href="https://www.flywheel.jp/topics/design-doc-of-design-doc/">デザインドックで学ぶデザインドック | フライウィール</a></a></h3>
+<div id="outline-container-org6f2db88" class="outline-3">
+<h3 id="org6f2db88"><a href="#org6f2db88"><a href="https://www.flywheel.jp/topics/design-doc-of-design-doc/">デザインドックで学ぶデザインドック | フライウィール</a></a></h3>
 </div>
 </div>
-<div id="outline-container-org3da795a" class="outline-2">
-<h2 id="org3da795a"><a href="#org3da795a">Archives</a></h2>
+<div id="outline-container-org4998437" class="outline-2">
+<h2 id="org4998437"><a href="#org4998437">Archives</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
