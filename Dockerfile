@@ -94,7 +94,7 @@ CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # textlint ================
 
-FROM node:17 AS textlint
+FROM node:21 AS textlint
 
 WORKDIR /roam
 
