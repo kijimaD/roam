@@ -96,12 +96,12 @@ CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 FROM node:21 AS textlint
 
-WORKDIR /roam
+WORKDIR /work
 
 COPY package.json ./
+COPY yarn.lock ./
+COPY .textlintrc ./
 RUN npm install
-
-CMD /bin/bash
 
 # ci ================
 
@@ -119,8 +119,6 @@ WORKDIR /roam
 
 COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
 RUN sh dockle-installer.sh
-
-CMD /bin/bash
 
 # pandoc ================
 

@@ -26,7 +26,7 @@ modify() {
             fi
             echo "✓ finish building"
 
-            docker run -v $PWD:/work -w /work --rm roam_textlint npx textlint -c ./.textlintrc $FILE
+            docker run -v $PWD:/work/roam -w /work --rm roam_textlint bash -c "npx textlint -c ./.textlintrc ./roam/$FILE"
             if [ $? -gt 0 ]; then
                 notify-send "Fail Textlint" ""
             fi
