@@ -43,10 +43,10 @@
 Goのプロファイラ、 ~pprof~ を使う手順を書く。
 
 * 背景
-[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]でゲーム開発する過程で、いつのまにかメモリリークしていたのを発見した。原因を探るために、プロファイラを使って原因箇所を特定できた。強力な調査方法なので、また使えるようにメモしておく。
+[[id:7cacbaa3-3995-41cf-8b72-58d6e07468b1][Go]]を使ってゲーム開発する過程で、いつのまにかメモリリークしていたのを発見した。原因を探るために、プロファイラを使って原因箇所を特定できた。強力な調査方法なので、また使えるようにメモしておく。
 
 * 手順
-~pprof~ の起動や取得方法にはいくつかの組み合わせがある。組み合わせる自由度が高いのがよいが、ややとっつきづらい。もっともシンプルに見える組み合わせだけを書く。
+~pprof~ の起動や取得方法にはいくつかの組み合わせがある。組み合わせる自由度が高いのはいいが、ややとっつきづらい。もっともシンプルに見える組み合わせだけを書く。
 
 ** 1. コードにプロファイラを埋め込む
 
@@ -66,35 +66,37 @@ Goのプロファイラ、 ~pprof~ を使う手順を書く。
 
 埋め込んだコードをコンパイルして実行すると、↓のようなパスにアクセスしてプロファイルを取得できるようになる。
 
-- http://localhost:6060/debug/pprof/
-  - http://localhost:6060/debug/pprof/allocs?debug=1
-  - http://localhost:6060/debug/pprof/block?debug=1
-  - http://localhost:6060/debug/pprof/cmdline?debug=1
-  - http://localhost:6060/debug/pprof/goroutine?debug=1
-  - http://localhost:6060/debug/pprof/heap?debug=1
-  - http://localhost:6060/debug/pprof/mutex?debug=1
-  - http://localhost:6060/debug/pprof/profile?debug=1
-  - http://localhost:6060/debug/pprof/threadcreate?debug=1
+#+begin_src shell
+  http://localhost:6060/debug/pprof/
+  http://localhost:6060/debug/pprof/allocs?debug=1
+  http://localhost:6060/debug/pprof/block?debug=1
+  http://localhost:6060/debug/pprof/cmdline?debug=1
+  http://localhost:6060/debug/pprof/goroutine?debug=1
+  http://localhost:6060/debug/pprof/heap?debug=1
+  http://localhost:6060/debug/pprof/mutex?debug=1
+  http://localhost:6060/debug/pprof/profile?debug=1
+  http://localhost:6060/debug/pprof/threadcreate?debug=1
+#+end_
 
-#+caption: /debug/pprof/allocsを見てみる
-#+begin_src
-heap profile: 51: 49689536 [177: 61751432] @ heap/8192
-4: 21135360 [4: 21135360] @ 0x76ba45 0x86a96f 0x8b24e5 0x8b1fa5 0x8b1e2f 0x8bbba8 0x8bf9d2 0x913465 0x7578fd 0x757b4e 0x75423b 0x9132b0 0x913294 0x913c8d 0x4423db 0x475481
-#	0x76ba44	image.NewAlpha+0x64								/usr/local/go/src/image/image.go:711
-#	0x86a96e	github.com/golang/freetype/truetype.NewFace+0x38e				/home/orange/go/pkg/mod/github.com/golang/freetype@v0.0.0-20170609003504-e2365dfdc4a0/truetype/face.go:206
-#	0x8b24e4	github.com/kijimaD/ruins/lib/engine/loader.processTextData+0x1a4		/home/orange/Project/ruins/lib/engine/loader/entity.go:231
-#	0x8b1fa4	github.com/kijimaD/ruins/lib/engine/loader.processComponentsListData+0x84	/home/orange/Project/ruins/lib/engine/loader/entity.go:110
-#	0x8b1e2e	github.com/kijimaD/ruins/lib/engine/loader.LoadEngineComponents+0x20e		/home/orange/Project/ruins/lib/engine/loader/entity.go:101
-#	0x8bbba7	github.com/kijimaD/ruins/lib/loader.PreloadEntities+0xe7			/home/orange/Project/ruins/lib/loader/loader.go:49
-#	0x8bf9d1	github.com/kijimaD/ruins/lib/game.InitWorld+0x471				/home/orange/Project/ruins/lib/game/game.go:97
-#	0x913464	github.com/kijimaD/ruins/lib/cmd.runPlay+0x124					/home/orange/Project/ruins/lib/cmd/play.go:43
-#	0x7578fc	github.com/urfave/cli/v2.(*Command).Run+0x9dc					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/command.go:279
-#	0x757b4d	github.com/urfave/cli/v2.(*Command).Run+0xc2d					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/command.go:272
-#	0x75423a	github.com/urfave/cli/v2.(*App).RunContext+0x5da				/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/app.go:337
-#	0x9132af	github.com/urfave/cli/v2.(*App).Run+0x2f					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/app.go:311
-#	0x913293	github.com/kijimaD/ruins/lib/cmd.RunMainApp+0x13				/home/orange/Project/ruins/lib/cmd/cmd.go:39
-#	0x913c8c	main.main+0x2c									/home/orange/Project/ruins/main.go:19
-#	0x4423da	runtime.main+0x2ba
+  ,#+caption: /debug/pprof/allocsを見てみる
+  ,#+begin_src
+  heap profile: 51: 49689536 [177: 61751432] @ heap/8192
+  4: 21135360 [4: 21135360] @ 0x76ba45 0x86a96f 0x8b24e5 0x8b1fa5 0x8b1e2f 0x8bbba8 0x8bf9d2 0x913465 0x7578fd 0x757b4e 0x75423b 0x9132b0 0x913294 0x913c8d 0x4423db 0x475481
+  #	0x76ba44	image.NewAlpha+0x64								/usr/local/go/src/image/image.go:711
+  #	0x86a96e	github.com/golang/freetype/truetype.NewFace+0x38e				/home/orange/go/pkg/mod/github.com/golang/freetype@v0.0.0-20170609003504-e2365dfdc4a0/truetype/face.go:206
+  #	0x8b24e4	github.com/kijimaD/ruins/lib/engine/loader.processTextData+0x1a4		/home/orange/Project/ruins/lib/engine/loader/entity.go:231
+  #	0x8b1fa4	github.com/kijimaD/ruins/lib/engine/loader.processComponentsListData+0x84	/home/orange/Project/ruins/lib/engine/loader/entity.go:110
+  #	0x8b1e2e	github.com/kijimaD/ruins/lib/engine/loader.LoadEngineComponents+0x20e		/home/orange/Project/ruins/lib/engine/loader/entity.go:101
+  #	0x8bbba7	github.com/kijimaD/ruins/lib/loader.PreloadEntities+0xe7			/home/orange/Project/ruins/lib/loader/loader.go:49
+  #	0x8bf9d1	github.com/kijimaD/ruins/lib/game.InitWorld+0x471				/home/orange/Project/ruins/lib/game/game.go:97
+  #	0x913464	github.com/kijimaD/ruins/lib/cmd.runPlay+0x124					/home/orange/Project/ruins/lib/cmd/play.go:43
+  #	0x7578fc	github.com/urfave/cli/v2.(*Command).Run+0x9dc					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/command.go:279
+  #	0x757b4d	github.com/urfave/cli/v2.(*Command).Run+0xc2d					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/command.go:272
+  #	0x75423a	github.com/urfave/cli/v2.(*App).RunContext+0x5da				/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/app.go:337
+  #	0x9132af	github.com/urfave/cli/v2.(*App).Run+0x2f					/home/orange/go/pkg/mod/github.com/urfave/cli/v2@v2.27.1/app.go:311
+  #	0x913293	github.com/kijimaD/ruins/lib/cmd.RunMainApp+0x13				/home/orange/Project/ruins/lib/cmd/cmd.go:39
+  #	0x913c8c	main.main+0x2c									/home/orange/Project/ruins/main.go:19
+  #	0x4423da	runtime.main+0x2ba
 #+end_src
 
 ** 3. プロファイルを収集する
@@ -123,7 +125,7 @@ heap profile: 51: 49689536 [177: 61751432] @ heap/8192
   (pprof) # 👈プロンプト
 #+end_src
 
-10秒間待って、 ~pprof~ のプロンプトが出れば成功。入力待ちになる。オプションによっては、ここでグラフ画像で表示できたりする。
+10秒間待って、 ~pprof~ のプロンプトが出れば成功。入力待ちになる。オプションによっては、ここでグラフ画像を表示できたりする。
 
 ** 4. プロファイルを見る
 
