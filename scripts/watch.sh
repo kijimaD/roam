@@ -16,7 +16,7 @@ modify() {
     inotifywait -m -e modify --format '%w%f' . | while read FILE; do
         if [[ $FILE =~ .*org$ ]]; then
             echo "File $FILE was modified..."
-
+            # 対象ページのビルド
             emacs --batch -l ./publish.el \
                   --eval "(require 'org)" \
                   --eval "(find-file \"./$FILE\")" \
@@ -41,9 +41,17 @@ dblock() {
     inotifywait -m -e moved_to --format '%w%f' . | while read FILE; do
         if [[ $FILE =~ .*org$ ]]; then
             echo "File $FILE was move ..."
+            # 対象ページのビルド
+            emacs --batch -l ./publish.el \
+                  --eval "(require 'org)" \
+                  --eval "(find-file \"./$FILE\")" \
+                  --eval "(org-publish-current-file)"
+
+            # 一覧ページ更新(org)
             make update-dlinks
             echo "✓ update dblock"
 
+            # 一覧ページのビルド(html)
             # 1ファイルの割に、このエクスポートは遅い。org-idのついたリンクのエクスポートはとても遅いようだ...
             emacs --batch -l ./publish.el \
                   --eval "(require 'org)" \
