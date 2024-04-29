@@ -64,7 +64,7 @@ lint-run: ## lintを実行する
 .PHONY: textlint
 textlint:
 	docker build . --target textlint -t roam_textlint
-	docker run -v $(PWD):/work/roam -w /work --rm roam_textlint bash -c "npx textlint -c ./.textlintrc ./roam/*.org"
+	docker run -v $(PWD):/work/roam -w /work --rm roam_textlint bash -c "npx textlint --fix -c ./.textlintrc ./roam/*.org"
 
 .PHONY: fix
 fix:
