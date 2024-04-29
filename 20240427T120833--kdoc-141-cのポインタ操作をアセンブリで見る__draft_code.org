@@ -1,0 +1,100 @@
+:properties:
+:ID: 20240427T120833
+:end:
+#+title:      KDOC 141: Cのポインタ操作をアセンブリで見る
+#+date:       [2024-04-27 Sat 12:08]
+#+filetags:   :draft:code:
+#+identifier: 20240427T120833
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
+# (flush-lines "^\\#\s.+?")
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 自分の考えを加える。
+# 構造を気にしない。
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+* この文書のステータス
+- 作成
+  - [X] 2024-04-29 貴島
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* 概要
+ポインタ型の引数に代入すると、関数をまたいで変更を反映できる(参照渡し)。[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]では返り値を複数返せないので、複数必要なときはこれを使う。
+
+#+caption: ポインタ型で反映する例
+#+begin_src C
+#include <stdio.h>
+
+void inc(int *a) { // アドレスを受け取る
+  *a = *a+1; // アドレスが参照する値を反映する
+}
+
+int main(void){
+  int a = 0;
+  inc(&a); // アドレスを渡す
+  inc(&a);
+  printf("%d",a); // 2
+}
+#+end_src
+
+何が起きているのか、生成されたアセンブリを見て確かめる。
+
+* アセンブリで見ると
+↓こうなっている。即値の代入とじつはあまり変わらない。スタックに入っている値を使うか、スタックのアドレスを使うかだけの違い。
+
+#+begin_export HTML
+<iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:10,endLineNumber:1,positionColumn:10,positionLineNumber:1,selectionStartColumn:10,selectionStartLineNumber:1,startColumn:10,startLineNumber:1),source:'void+main(void)+%7B%0A+int+val%3B%0A+int+*ptr+%3D+%26val%3B%0A+*ptr+%3D+41%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+#+caption: 説明
+#+begin_src asm
+  // ↓新しいスタック割当。sp -> スタックの底
+  addi sp,sp,-32
+  // ↓元々のレジスタの値をスタックに退避する
+  sw ra,28(sp)
+  sw s0,24(sp)
+  // ↓s0 -> スタックの一番上、開始アドレス
+  addi s0,sp,32
+
+  // ↓スタックポインタからのアドレスを求めて、値でなく**アドレスを**a5に格納
+  addi a5,s0,-24
+  // ↓a5(アドレスが入ってる)をスタックに保存。変数宣言してるからね
+  sw a5,-20(s0)
+  // ↓a5をスタックからロード
+  lw a5,-20(s0)
+  // ↓即値41をa4にロード
+  li a4,41
+  // ↓41をa5に保存したアドレス(参照先)に、保存
+  sw a4,0(a5)
+  nop
+
+  ;; レジスタを元に戻す
+  lw ra,28(sp)
+  lw s0,24(sp)
+  addi sp,sp,32
+  ;; 呼び出し先に戻る
+  jr ra
+#+end_src
+
+* 関連
+- [[id:20240427T113714][KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』を読んだ]]。出てきた内容を確かめた
