@@ -100,8 +100,10 @@ WORKDIR /work
 
 COPY package.json ./
 COPY yarn.lock ./
-COPY .textlintrc ./
 RUN npm install
+
+COPY .textlintrc ./
+COPY prh.yml ./
 
 # ci ================
 
