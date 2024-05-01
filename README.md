@@ -10,17 +10,11 @@
 + production: https://kijimad.github.io/roam/
 + staging: https://roam-staging.herokuapp.com/
 + monitor: https://kijimad.github.io/roam_upptime/
+- rich UI: https://github.com/kijimaD/roam-ui
 
 ## development
 
 ```shell
 make org2html
-make server
-```
-
-(optional) copy files
-```shell
-docker run --detach --name release ghcr.io/kijimad/roam_release:latest && \
-docker cp release:/roam/public . && \
-sudo chown -R $USER:$USER ./public
+make server3
 ```
