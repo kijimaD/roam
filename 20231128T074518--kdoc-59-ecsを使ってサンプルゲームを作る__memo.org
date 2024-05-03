@@ -21,8 +21,63 @@
 まずストーリー抜きで、RPGとしてゲームが成立するようにする。
 
 * Tasks
-** TODO 壁を通過できないようにする
+** TODO コンポーネントを移動する
+:PROPERTIES:
+:Effort:   3:00
+:END:
 :LOGBOOK:
+CLOCK: [2024-05-03 Fri 15:39]--[2024-05-03 Fri 16:04] =>  0:25
+CLOCK: [2024-05-03 Fri 15:14]--[2024-05-03 Fri 15:39] =>  0:25
+CLOCK: [2024-05-03 Fri 14:38]--[2024-05-03 Fri 15:03] =>  0:25
+CLOCK: [2024-05-03 Fri 13:14]--[2024-05-03 Fri 13:39] =>  0:25
+:END:
+移動する。
+
+** TODO フィールド描画をECS化する
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-03 Fri 11:41]--[2024-05-03 Fri 12:06] =>  0:25
+CLOCK: [2024-05-03 Fri 11:08]--[2024-05-03 Fri 11:33] =>  0:25
+CLOCK: [2024-05-03 Fri 10:43]--[2024-05-03 Fri 11:08] =>  0:25
+CLOCK: [2024-05-03 Fri 10:18]--[2024-05-03 Fri 10:43] =>  0:25
+:END:
+
+- まず影は置いておく
+- プレイヤー部分を色塗りできた
+- スプライトを表示するにはどうすればいいのだろう
+
+#+caption: https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367 ワープホールのsprite
+#+begin_src go
+func createWarpNextEntity(componentList *loader.EntityComponentList, gameSpriteSheet *ec.SpriteSheet, line, col int) {
+	componentList.Engine = append(componentList.Engine, loader.EngineComponentList{
+		SpriteRender: &ec.SpriteRender{SpriteSheet: gameSpriteSheet, SpriteNumber: warpNextSpriteNumber},
+		Transform:    &ec.Transform{},
+	})
+	componentList.Game = append(componentList.Game, GameComponentList{
+		Warp:        &gc.Warp{Mode: gc.WarpModeNext},
+		GridElement: &gc.GridElement{Line: line, Col: col},
+	})
+}
+#+end_src
+
+- spriteシートは、起動時にtomlがロードされResourceの構造体に入れられる。ステート名をキーにして別々になっている
+  - フィールドは "field" に、まとめて入っている
+
+** TODO 壁を通過できないようにする
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-03 Fri 01:22]--[2024-05-03 Fri 01:47] =>  0:25
+CLOCK: [2024-05-03 Fri 00:43]--[2024-05-03 Fri 01:08] =>  0:25
+CLOCK: [2024-05-02 Thu 23:22]--[2024-05-02 Thu 23:47] =>  0:25
+CLOCK: [2024-05-02 Thu 22:54]--[2024-05-02 Thu 23:19] =>  0:25
+CLOCK: [2024-05-02 Thu 22:29]--[2024-05-02 Thu 22:54] =>  0:25
+CLOCK: [2024-05-02 Thu 21:47]--[2024-05-02 Thu 22:12] =>  0:25
+CLOCK: [2024-05-02 Thu 21:17]--[2024-05-02 Thu 21:42] =>  0:25
+CLOCK: [2024-05-02 Thu 20:49]--[2024-05-02 Thu 21:14] =>  0:25
 CLOCK: [2024-05-02 Thu 01:01]--[2024-05-02 Thu 01:26] =>  0:25
 CLOCK: [2024-05-02 Thu 00:32]--[2024-05-02 Thu 00:57] =>  0:25
 :END:
@@ -30,8 +85,37 @@ CLOCK: [2024-05-02 Thu 00:32]--[2024-05-02 Thu 00:57] =>  0:25
 - 線として持っておく必要はなくて、点4つだけを持っていればいい
 - ただそれだとステージの壁を自動生成しづらくなるのだが...
 - 範囲内のオブジェクトに対して衝突判定する
+- すべてのフィールド上オブジェクトは、中心のx, yをもつ。その中心と合わせてスプライトを配置し、4つの点を衝突判定に使う
+  - この方式はキャラクターや敵、飾りオブジェクトには良いが、壁を配置するときには不適当だ。1点ではなくて、4点を指定したいだろう
+  - ピクセル単位で配置できなくてもよくて、50ピクセルごととかでよさそう。こうするとテキストファイルでマップを作成できる。壁は50ピクセル正方形で囲って表現する
+  - オブジェクト数が大変なことになりそうな懸念。視界をもつキャラごとにあるわけで。とはいえ、視界を限ればそんなでもなさそうな気も。オブジェクト数は多くなるが、そういうもんだろう。
+  - 2次元配列の問題に落とし込めることは重要に見える
+  - 壁は近傍8タイルで座標を変化させればいい。縦に並んでいれば横は細くするみたいな
+
+#+begin_src
+  spawnWall(1, 1) // (1, 1)に壁を生成
+  spawnPlayer(2, 2)
+  spawnObject("岩", 20, 20)
+  spawnObject("花", 30, 30)
+  spawnWarp(40, 50)
+#+end_src
+
+#+begin_src
+  ############
+  #          #
+  #          #
+  /          #
+  ############
+#+end_src
+
+- 現状のraycastの構造を、1点だけ保持するように修正しようとしているが、よくわからない
+- プレイヤーや壁の描画を先にやればよいのでは。影は一度忘れる
+
 ** TODO いったんクリアできるようにする
 戦闘抜きで、全体を作る。
+
+- ステージは手動で作っておき、それをランダムに選ぶ
+- 将来的に複数のステージ生成手法から選べるようにしておく
 ** TODO 階層移動できるようにする
 - 触れた判定できるようにする
 - 触れたときにイベントを発火する
