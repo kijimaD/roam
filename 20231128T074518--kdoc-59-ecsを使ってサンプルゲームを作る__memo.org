@@ -21,111 +21,62 @@
 まずストーリー抜きで、RPGとしてゲームが成立するようにする。
 
 * Tasks
+** TODO state名のフィールドという名前をリネームする
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 12:05]--[2024-05-06 Mon 12:30] =>  0:25
+:END:
+構造体のフィールドとかと同じになるので、あまりよくない命名に思えてきた。dungeonとかだろうか。
+** TODO 視覚影でスプライトが隠れているのを直す
+近くのライトで見られるようにしたが、微妙だ。
+
+- 壁の向こう側が見える
+  - 対策のため1マス分だけ照らすようにしたが、変だ
+- やはり、直接視界が当たった部分はフラグをもたせて表示するのがよさそう
+  - 個別のタイルごとにあるので、新しくコンポーネントを作ったほうがよさそう
+  - ~IsHide~ とか
+- ここに時間かけてもしょうがないから後回しか
+
+** TODO 旧フィールドまわりを消す
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 11:24]--[2024-05-06 Mon 11:49] =>  0:25
+:END:
+
+- componentsもいらないものがある
+- prefabもいらなくなる
+- levelまわりうつすのは、新しいものができてからでよさそう。参考になるからな
+
+** TODO 描画の優先順を指定できるようにする
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 10:32]--[2024-05-06 Mon 10:57] =>  0:25
+:END:
+ワープパッドとキャラでは、キャラを上に表示する。
+
+- キャラクター
+  - キャラクター同士は重ならない
+- ワープパッド
+  - 同士は重ならない
+- フィールドのアイテム
+  - 同士は重ならない
+- これは、SpriteRenderに設定してよさそうか。タイルの種別ごとに設定できれば問題ないよな
 ** TODO レイキャスト範囲を狭くする
 今後オブジェクトを増やすたびに重くなるので。
 
 ある程度狭い範囲に、不可視オブジェクトを配置するとどうだろう。今、ステージのまわりに配置しているやつ。
 
 - NPCを追加したときに、競合しないか。つまりほかの視界をもつオブジェクトとの兼ね合いをどうするかの問題はある
-  - それぞれのエンティティごとに競合しない形であれば、問題なさそうか
-
-** TODO 影描画をsystemでやる
-:PROPERTIES:
-:Effort:   3:00
-:END:
-:LOGBOOK:
-CLOCK: [2024-05-04 Sat 14:44]--[2024-05-04 Sat 15:09] =>  0:25
-CLOCK: [2024-05-04 Sat 12:59]--[2024-05-04 Sat 13:24] =>  0:25
-CLOCK: [2024-05-04 Sat 12:34]--[2024-05-04 Sat 12:59] =>  0:25
-CLOCK: [2024-05-04 Sat 11:38]--[2024-05-04 Sat 12:03] =>  0:25
-:END:
-元の仕組みとは異なるため、調整が必要。
-
-- 真っ黒になるな
-- レイも見えないので、間違ってるようだ
-- 視点と同じ位置にあるために、全部真っ暗になっている説
-- 外すと、いくつかのrayがおかしくなっていて失敗する
-  - 特定の点がおかしいようだ
+  - それぞれのエンティティごとに競合しない形であれば、よさそうか
 
 ** TODO engine コンポーネントを移す
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 10:57]--[2024-05-06 Mon 11:22] =>  0:25
+:END:
+
 分かれてるのがやりづらい。分け方が利用側からすると不明瞭。ただloaderまわりが大変そう。
-** TODO フィールド描画をECS化する
-:PROPERTIES:
-:Effort:   5:00
-:END:
-:LOGBOOK:
-CLOCK: [2024-05-03 Fri 11:41]--[2024-05-03 Fri 12:06] =>  0:25
-CLOCK: [2024-05-03 Fri 11:08]--[2024-05-03 Fri 11:33] =>  0:25
-CLOCK: [2024-05-03 Fri 10:43]--[2024-05-03 Fri 11:08] =>  0:25
-CLOCK: [2024-05-03 Fri 10:18]--[2024-05-03 Fri 10:43] =>  0:25
-:END:
 
-- まず影は置いておく
-- プレイヤー部分を色塗りできた
-- スプライトを表示するにはどうすればいいのだろう
-
-#+caption: https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367 ワープホールのsprite
-#+begin_src go
-func createWarpNextEntity(componentList *loader.EntityComponentList, gameSpriteSheet *ec.SpriteSheet, line, col int) {
-	componentList.Engine = append(componentList.Engine, loader.EngineComponentList{
-		SpriteRender: &ec.SpriteRender{SpriteSheet: gameSpriteSheet, SpriteNumber: warpNextSpriteNumber},
-		Transform:    &ec.Transform{},
-	})
-	componentList.Game = append(componentList.Game, GameComponentList{
-		Warp:        &gc.Warp{Mode: gc.WarpModeNext},
-		GridElement: &gc.GridElement{Line: line, Col: col},
-	})
-}
-#+end_src
-
-- スプライトシートは、起動時にtomlがロードされResourceの構造体に入れられる。ステート名をキーにして別々になっている
-  - フィールドは "field" に、まとめて入っている
-
-** TODO 壁を通過できないようにする
-:PROPERTIES:
-:Effort:   5:00
-:END:
-:LOGBOOK:
-CLOCK: [2024-05-03 Fri 01:22]--[2024-05-03 Fri 01:47] =>  0:25
-CLOCK: [2024-05-03 Fri 00:43]--[2024-05-03 Fri 01:08] =>  0:25
-CLOCK: [2024-05-02 Thu 23:22]--[2024-05-02 Thu 23:47] =>  0:25
-CLOCK: [2024-05-02 Thu 22:54]--[2024-05-02 Thu 23:19] =>  0:25
-CLOCK: [2024-05-02 Thu 22:29]--[2024-05-02 Thu 22:54] =>  0:25
-CLOCK: [2024-05-02 Thu 21:47]--[2024-05-02 Thu 22:12] =>  0:25
-CLOCK: [2024-05-02 Thu 21:17]--[2024-05-02 Thu 21:42] =>  0:25
-CLOCK: [2024-05-02 Thu 20:49]--[2024-05-02 Thu 21:14] =>  0:25
-CLOCK: [2024-05-02 Thu 01:01]--[2024-05-02 Thu 01:26] =>  0:25
-CLOCK: [2024-05-02 Thu 00:32]--[2024-05-02 Thu 00:57] =>  0:25
-:END:
-- rectの中に入れないようにする。
-- 線として持っておく必要はなくて、点4つだけを持っていればいい
-- ただそれだとステージの壁を自動生成しづらくなるのだが...
-- 範囲内のオブジェクトに対して衝突判定する
-- すべてのフィールド上オブジェクトは、中心のx, yをもつ。その中心と合わせてスプライトを配置し、4つの点を衝突判定に使う
-  - この方式はキャラクターや敵、飾りオブジェクトには良いが、壁を配置するときには不適当だ。1点ではなくて、4点を指定したいだろう
-  - ピクセル単位で配置できなくてもよくて、50ピクセルごととかでよさそう。こうするとテキストファイルでマップを作成できる。壁は50ピクセル正方形で囲って表現する
-  - オブジェクト数が大変なことになりそうな懸念。視界をもつキャラごとにあるわけで。とはいえ、視界を限ればそんなでもなさそうな気も。オブジェクト数は多くなるが、そういうもんだろう。
-  - 2次元配列の問題に落とし込めることは重要に見える
-  - 壁は近傍8タイルで座標を変化させればいい。縦に並んでいれば横は細くするみたいな
-
-#+begin_src
-  spawnWall(1, 1) // (1, 1)に壁を生成
-  spawnPlayer(2, 2)
-  spawnObject("岩", 20, 20)
-  spawnObject("花", 30, 30)
-  spawnWarp(40, 50)
-#+end_src
-
-#+begin_src
-  ############
-  #          #
-  #          #
-  /          #
-  ############
-#+end_src
-
-- 現状のraycastの構造を、1点だけ保持するように修正しようとしているが、よくわからない
-- プレイヤーや壁の描画を先にやればよいのでは。影は一度忘れる
+- うむむ、共通のものはengine部分にあったほうがよい感じもしてきた
+- 依存しないためにinterfaceになるが
+- SpriteSheet componentsは移せない。engineのResourceで定義されているから。依存してしまう
+  - resourceごと移動するか...
 
 ** TODO いったんクリアできるようにする
 戦闘抜きで、全体を作る。
@@ -133,6 +84,9 @@ CLOCK: [2024-05-02 Thu 00:32]--[2024-05-02 Thu 00:57] =>  0:25
 - ステージは手動で作っておき、それをランダムに選ぶ
 - 将来的に複数のステージ生成手法から選べるようにしておく
 ** TODO 階層移動できるようにする
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 10:06]--[2024-05-06 Mon 10:31] =>  0:25
+:END:
 - 触れた判定できるようにする
 - 触れたときにイベントを発火する
 ** TODO 階層設計
@@ -1534,3 +1488,171 @@ CLOCK: [2024-05-03 Fri 13:14]--[2024-05-03 Fri 13:39] =>  0:25
 - メニューを透過できないな。真っ暗になる。fieldだとできるのはなぜだろう
 - スプライトを表示できない。何も表示されない
   - geoMで位置を指定してないせいだった
+** DONE 影描画をsystemでやる
+CLOSED: [2024-05-05 Sun 11:31]
+:PROPERTIES:
+:Effort:   3:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-04 Sat 14:44]--[2024-05-04 Sat 15:09] =>  0:25
+CLOCK: [2024-05-04 Sat 12:59]--[2024-05-04 Sat 13:24] =>  0:25
+CLOCK: [2024-05-04 Sat 12:34]--[2024-05-04 Sat 12:59] =>  0:25
+CLOCK: [2024-05-04 Sat 11:38]--[2024-05-04 Sat 12:03] =>  0:25
+:END:
+元の仕組みとは異なるため、調整が必要。
+
+- 真っ黒になるな
+- レイも見えないので、間違ってるようだ
+- 視点と同じ位置にあるために、全部真っ暗になっている説
+- 外すと、いくつかのrayがおかしくなっていて失敗する
+  - 特定の点がおかしいようだ
+- 外周の壁がなくて、交点がないrayがあったせいだった
+** DONE フィールド描画をECS化する
+CLOSED: [2024-05-05 Sun 11:31]
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-03 Fri 11:41]--[2024-05-03 Fri 12:06] =>  0:25
+CLOCK: [2024-05-03 Fri 11:08]--[2024-05-03 Fri 11:33] =>  0:25
+CLOCK: [2024-05-03 Fri 10:43]--[2024-05-03 Fri 11:08] =>  0:25
+CLOCK: [2024-05-03 Fri 10:18]--[2024-05-03 Fri 10:43] =>  0:25
+:END:
+
+- まず影は置いておく
+- プレイヤー部分を色塗りできた
+- スプライトを表示するにはどうすればいいのだろう
+
+#+caption: https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367 ワープホールのsprite
+#+begin_src go
+func createWarpNextEntity(componentList *loader.EntityComponentList, gameSpriteSheet *ec.SpriteSheet, line, col int) {
+	componentList.Engine = append(componentList.Engine, loader.EngineComponentList{
+		SpriteRender: &ec.SpriteRender{SpriteSheet: gameSpriteSheet, SpriteNumber: warpNextSpriteNumber},
+		Transform:    &ec.Transform{},
+	})
+	componentList.Game = append(componentList.Game, GameComponentList{
+		Warp:        &gc.Warp{Mode: gc.WarpModeNext},
+		GridElement: &gc.GridElement{Line: line, Col: col},
+	})
+}
+#+end_src
+
+- スプライトシートは、起動時にtomlがロードされResourceの構造体に入れられる。ステート名をキーにして別々になっている
+  - フィールドは "field" に、まとめて入っている
+** DONE とりあえずの背景を設定する
+CLOSED: [2024-05-06 Mon 01:51]
+Menuをなくしたとき、非表示にしてた。戻す。
+** DONE 壁を通過できないようにする
+CLOSED: [2024-05-05 Sun 17:01]
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-05 Sun 16:33]--[2024-05-05 Sun 16:58] =>  0:25
+CLOCK: [2024-05-05 Sun 16:06]--[2024-05-05 Sun 16:31] =>  0:25
+CLOCK: [2024-05-05 Sun 11:31]--[2024-05-05 Sun 11:56] =>  0:25
+CLOCK: [2024-05-03 Fri 01:22]--[2024-05-03 Fri 01:47] =>  0:25
+CLOCK: [2024-05-03 Fri 00:43]--[2024-05-03 Fri 01:08] =>  0:25
+CLOCK: [2024-05-02 Thu 23:22]--[2024-05-02 Thu 23:47] =>  0:25
+CLOCK: [2024-05-02 Thu 22:54]--[2024-05-02 Thu 23:19] =>  0:25
+CLOCK: [2024-05-02 Thu 22:29]--[2024-05-02 Thu 22:54] =>  0:25
+CLOCK: [2024-05-02 Thu 21:47]--[2024-05-02 Thu 22:12] =>  0:25
+CLOCK: [2024-05-02 Thu 21:17]--[2024-05-02 Thu 21:42] =>  0:25
+CLOCK: [2024-05-02 Thu 20:49]--[2024-05-02 Thu 21:14] =>  0:25
+CLOCK: [2024-05-02 Thu 01:01]--[2024-05-02 Thu 01:26] =>  0:25
+CLOCK: [2024-05-02 Thu 00:32]--[2024-05-02 Thu 00:57] =>  0:25
+:END:
+- rectの中に入れないようにする。
+- 線として持っておく必要はなくて、点4つだけを持っていればいい
+- ただそれだとステージの壁を自動生成しづらくなるのだが...
+- 範囲内のオブジェクトに対して衝突判定する
+- すべてのフィールド上オブジェクトは、中心のx, yをもつ。その中心と合わせてスプライトを配置し、4つの点を衝突判定に使う
+  - この方式はキャラクターや敵、飾りオブジェクトには良いが、壁を配置するときには不適当だ。1点ではなくて、4点を指定したいだろう
+  - ピクセル単位で配置できなくてもよくて、50ピクセルごととかでよさそう。こうするとテキストファイルでマップを作成できる。壁は50ピクセル正方形で囲って表現する
+  - オブジェクト数が大変なことになりそうな懸念。視界をもつキャラごとにあるわけで。とはいえ、視界を限ればそんなでもなさそうな気も。オブジェクト数は多くなるが、そういうもんだろう。
+  - 2次元配列の問題に落とし込めることは重要に見える
+  - 壁は近傍8タイルで座標を変化させればいい。縦に並んでいれば横は細くするみたいな
+
+#+begin_src
+  spawnWall(1, 1) // (1, 1)に壁を生成
+  spawnPlayer(2, 2)
+  spawnObject("岩", 20, 20)
+  spawnObject("花", 30, 30)
+  spawnWarp(40, 50)
+#+end_src
+
+#+begin_src
+  ############
+  #          #
+  #          #
+  /          #
+  ############
+#+end_src
+
+- 現状のraycastの構造を、1点だけ保持するように修正しようとしているが、よくわからない
+- プレイヤーや壁の描画を先にやればよいのでは。影は一度忘れる
+** DONE 壁テクスチャが影で隠れないようにする
+CLOSED: [2024-05-06 Mon 10:02]
+:PROPERTIES:
+:Effort:   2:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-06 Mon 01:29]--[2024-05-06 Mon 01:54] =>  0:25
+CLOCK: [2024-05-06 Mon 00:50]--[2024-05-06 Mon 01:15] =>  0:25
+CLOCK: [2024-05-06 Mon 00:19]--[2024-05-06 Mon 00:44] =>  0:25
+CLOCK: [2024-05-05 Sun 23:53]--[2024-05-06 Mon 00:18] =>  0:25
+CLOCK: [2024-05-05 Sun 23:22]--[2024-05-05 Sun 23:47] =>  0:25
+CLOCK: [2024-05-05 Sun 20:36]--[2024-05-05 Sun 21:01] =>  0:25
+CLOCK: [2024-05-05 Sun 20:10]--[2024-05-05 Sun 20:35] =>  0:25
+CLOCK: [2024-05-05 Sun 19:45]--[2024-05-05 Sun 20:10] =>  0:25
+CLOCK: [2024-05-05 Sun 19:20]--[2024-05-05 Sun 19:45] =>  0:25
+CLOCK: [2024-05-05 Sun 18:55]--[2024-05-05 Sun 19:20] =>  0:25
+CLOCK: [2024-05-05 Sun 18:29]--[2024-05-05 Sun 18:54] =>  0:25
+CLOCK: [2024-05-05 Sun 18:04]--[2024-05-05 Sun 18:29] =>  0:25
+CLOCK: [2024-05-05 Sun 17:29]--[2024-05-05 Sun 17:54] =>  0:25
+CLOCK: [2024-05-05 Sun 17:01]--[2024-05-05 Sun 17:26] =>  0:25
+:END:
+今は影に隠されている。影側で表示しようとすると、影の中にあるときもテクスチャが表示されてしまって微妙。
+
+- 視界側でブレンドするとよさそう。いやでも、視界に入れば影になっていても見えてしまうのは同じか
+- テクスチャ 影 ほかのテクスチャ 影
+- テクスチャの描画優先度が距離によって変わればいいのかな。大変そうだ
+- rayブレンド時に、スプライトも追加してやればいいかな
+- ぐちゃぐちゃになったのでいったんもどす
+
+#+caption: memo(できてない)
+#+begin_src go
+		// rayが命中しているかで、分岐させないといけない
+		// raysのindex 2,3をrectに含んでいれば命中しているということになる
+		world.Manager.Join(
+			gameComponents.Position,
+			gameComponents.SpriteRender,
+			gameComponents.BlockView,
+		).Visit(ecs.Visit(func(entity ecs.Entity) {
+			oPos := gameComponents.Position.Get(entity).(*gc.Position)
+			oSprite := gameComponents.SpriteRender.Get(entity).(*ec.SpriteRender)
+			spriteWidth := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Width
+			spriteHeight := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Height
+
+			if !entity.HasComponent(gameComponents.Player) {
+				x1 := float64(oPos.X - spriteWidth/2)
+				x2 := float64(oPos.X + spriteWidth/2)
+				y1 := float64(oPos.Y - spriteHeight/2)
+				y2 := float64(oPos.Y + spriteHeight/2)
+				for _, r := range rays {
+					// x1 == r.X2
+					if (x1 < r.X2 && x2 < r.X2) || (y1 < r.Y2 && y2 < r.Y2) {
+						drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
+					}
+
+					// if x1 < r.X2 || x2 == r.X2 || y1 == r.Y2 || y2 == r.Y2 {
+					// drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
+					// }
+				}
+			}
+		}))
+#+end_src
+
+- rayを飛ばして判定しているところで、エンティティにフラグを立てればよさそう
+  - とすると、エンティティ単位でしか影を切り替えられなくなるな。ちょっと見えていてもテクスチャを全部表示するか、全部視界に入れないと表示しなくなる。微妙
+- 近づいた影を消せばよさそう
