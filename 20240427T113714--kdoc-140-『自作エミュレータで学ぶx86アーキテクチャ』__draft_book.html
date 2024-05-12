@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-05-11 -->
+<!-- 2024-05-12 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』</title>
@@ -16,21 +16,14 @@
 <div id="content">
 <h1 class="title">KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』</h1>
 
-<div id="outline-container-org54a2884" class="outline-2">
-<h2 id="org54a2884"><a href="#org54a2884">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org54a2884">
-<p>
-読んでる途中。
-</p>
-
+<div id="outline-container-org85071b9" class="outline-2">
+<h2 id="org85071b9"><a href="#org85071b9">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org85071b9">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-05-12 貴島</li>
 </ul></li>
-</ul>
-
-<ul class="org-ul">
 <li>レビュー
 <ul class="org-ul">
 <li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
@@ -38,18 +31,18 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org3b4a45f" class="outline-2">
-<h2 id="org3b4a45f"><a href="#org3b4a45f">概要</a></h2>
-<div class="outline-text-2" id="text-org3b4a45f">
+<div id="outline-container-org79633e9" class="outline-2">
+<h2 id="org79633e9"><a href="#org79633e9">概要</a></h2>
+<div class="outline-text-2" id="text-org79633e9">
 <p>
-<a href="https://tatsu-zine.com/books/my-emulator-x86-architecture">自作エミュレータで学ぶx86アーキテクチャ コンピュータが動く仕組みを徹底理解</a>は、CPUまわりを詳しく易しく説明する本。
+<a href="https://tatsu-zine.com/books/my-emulator-x86-architecture">自作エミュレータで学ぶx86アーキテクチャ コンピュータが動く仕組みを徹底理解</a>は、エミュレータを作りながらCPUまわりを詳しく易しく説明する本。
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgb780885" class="outline-2">
-<h2 id="orgb780885"><a href="#orgb780885">メモ</a></h2>
-<div class="outline-text-2" id="text-orgb780885">
+<div id="outline-container-org08a3df1" class="outline-2">
+<h2 id="org08a3df1"><a href="#org08a3df1">メモ</a></h2>
+<div class="outline-text-2" id="text-org08a3df1">
 <ul class="org-ul">
 <li>プログラマの視点では変数はレジスタではなくメモリに置かれることになっているが、コンパイラからするとどちらもある。最適化のためにレジスタに置くこともある</li>
 <li>カウンタ変数をレジスタに置くことでカウンタの更新が早くなり、ループの実行速度が改善する</li>
@@ -165,15 +158,40 @@
 <ul class="org-ul">
 <li>レジスタの由来が面白い(p82)</li>
 <li>CPUが命令を実行する流れ(p86)</li>
+<li>ModR/Mがよくわからない(p96)</li>
+<li>push,popのおさらい(p105)</li>
+<li>eipが関わる命令は専用の命令になっている場合が多い</li>
+<li>関数呼び出しの図(p109)</li>
+<li>ebpを基準にしてスタック上での変数の位置をさす(p121)</li>
+<li>スタックフレームを16バイトの倍数で確保しようとする。コンパイラはなるべくアラインメントを揃えるように調整した機械語を作り出そうとする。一気に読み込めて高速だから(p122)</li>
+<li>leave命令(p122)
+<ul class="org-ul">
+<li>1. mov esp, ebp &#x2026; espにebpを書き込む。スタックの先頭がスタックフレームの先頭まで巻き戻される</li>
+<li>2. pop ebp      &#x2026; 先頭に古いebpの値が積んである状態になる。ebpの値を復元する</li>
+</ul></li>
+<li>cmpはsubと同じ計算し、同じようにフラグを設定するが、オペランドを変更しない点がsubと違う。cmp条件分岐命令のためにオペランドの大小関係を比較する専用命令といえる(p124)</li>
+<li>for文をアセンブリで見る(p133)。まず条件式の処理にジャンプするのはコンパイラが繰り返しをアセンブリに変換するときによく使う。</li>
+<li>ifとgotoで書き直した例。ほぼ同じになる(p135)</li>
+<li>I/Oポートの読み書きで1文字の入出力をする周辺機器を作る(p145)</li>
+<li>io/out命令だけで、紙と鉛筆で文字が書けるように、すべての周辺機器を制御できる(p148)</li>
+<li><code>\x1b</code> は <code>0x1b</code> という1バイトを表す。これはC言語の機能で、 <code>\xYY</code> と書くと文字コードがYYであると1文字を表せる(p155)
+<ul class="org-ul">
+<li>なので、 <code>\x1b[32m</code> はデータ的には5文字で、それ以降の文字を緑にする</li>
+<li>戻すのは <code>\x1b[0m</code></li>
+<li><code>\x1b[輝度;色番号m文字コード\x1b[0m</code></li>
+</ul></li>
+<li>割り込み時に呼び出すサブルーチンの先頭番地を登録しておくための特別なメモリ領域、割り込みベクタテーブルがある(p160)</li>
+<li>int命令では割り込み番号さえわかればハンドラを呼び出せる。サブルーチンの名前や番地がわからなくてよい(p160)</li>
+<li>int命令の割り込み番号3はブレークポイントを設定するのに適した機能。デバッグ対象のプログラムを任意の場所で中断し、各レジスタの値やスタックを確認できる。割り込みで実現している(p162)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgd462c21" class="outline-2">
-<h2 id="orgd462c21"><a href="#orgd462c21">関連</a></h2>
-<div class="outline-text-2" id="text-orgd462c21">
+<div id="outline-container-org605f9f6" class="outline-2">
+<h2 id="org605f9f6"><a href="#org605f9f6">関連</a></h2>
+<div class="outline-text-2" id="text-org605f9f6">
 <ul class="org-ul">
-<li><a href="20231014T171444--kdoc-46-goの宣言構文がcと異なる理由__code.html#ID-20231014T171444">KDOC 46: Goの宣言構文がCと異なる理由</a>。関数ポインタつながり</li>
+<li><a href="20240324T214548--kdoc-129-『ポインタ理解のためのアセンブリ入門』__book.html#ID-20240324T214548">KDOC 129: 『ポインタ理解のためのアセンブリ入門』</a>。同じくアセンブリにふれる本</li>
 </ul>
 </div>
 </div>
