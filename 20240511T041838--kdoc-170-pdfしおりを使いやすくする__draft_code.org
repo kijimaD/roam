@@ -6,24 +6,6 @@
 #+filetags:   :draft:code:
 #+identifier: 20240511T041838
 
-#+caption: 最大値を求めるやつ。C-c C-cして出てくるS式を実行する
-#+begin_src shell :results raw
-  result=`ls | grep -oE 'kdoc-[0-9]+' | sed 's/kdoc-//' | sort -nr | head -n 1`
-  succ=$((result + 1))
-
-  echo $(cat <<EOF
-  (save-excursion
-    (while (re-search-backward "KDOC 170" nil t)
-      (replace-match "KDOC $succ")))
-  EOF
-  )
-#+end_src
-
-#+RESULTS:
-#+begin_src
-(save-excursion (while (re-search-backward "KDOC 170" nil t) (replace-match "KDOC 170")))
-#+end_src
-
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
 # (flush-lines "^\\#\s.+?")
@@ -57,8 +39,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-05-13 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -71,6 +52,18 @@
 # いらない見出しを削除した。
 # タグを適切にした。
 # すべてのコメントを削除した。
-* 概要
-# 本文(タイトルをつける)。
+* ブックマーク
+Chrome組み込みのPDFビューワや[[https://github.com/mozilla/pdf.js][pdf.js]]では、URLフラグメントで開くページを指定できる。リロードしても、前に指定していたページを開ける。現在ページをURLフラグメントに指定することで、しおり代わりにしている。
+
+URLにページを直入力していたのだが、ボタンでできるようにした。Chrome組み込みのPDFビューワはHTMl要素をいじれなかったので、pdf.jsにボタンを追加した。ブックマークレットでやるのもいいだろう。
+
+[[https://mozilla.github.io/pdf.js/web/viewer.html][pdf.js Online Demo]]でコンソールに入れて試せる。
+
+#+caption: URLフラグメントを現在ページで書き換える
+#+begin_src javascript
+  const page = PDFViewerApplication.pdfViewer.currentPageNumber;
+  window.location.hash = `page=${page}`;
+#+end_src
+
 * 関連
+- [[id:20240324T120408][KDOC 127: ChromeのPDFビューワでしおりを使う]]をボタンでできるようにした

@@ -1,23 +1,10 @@
 :properties:
 :ID: 20240511T103303
 :end:
-#+title:      KDOC n: PDF本棚を作る
+#+title:      KDOC 171: PDF本棚を作る
 #+date:       [2024-05-11 Sat 10:33]
 #+filetags:   :draft:code:
 #+identifier: 20240511T103303
-
-#+caption: 最大値を求めるやつ。C-c C-cして出てくるS式を実行する
-#+begin_src shell :results raw
-  result=`ls | grep -oE 'kdoc-[0-9]+' | sed 's/kdoc-//' | sort -nr | head -n 1`
-  succ=$((result + 1))
-
-  echo $(cat <<EOF
-  (save-excursion
-    (while (re-search-backward "KDOC n" nil t)
-      (replace-match "KDOC $succ")))
-  EOF
-  )
-#+end_src
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -52,8 +39,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-05-13 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -68,10 +54,10 @@
 # すべてのコメントを削除した。
 * 概要
 
-本はPDFで買うようにしている。いい感じに一覧表示するためのコードを書いた。
+本はPDFで買うようにしている。いい感じにブラウザでPDFを一覧表示して読み始めるためのコードを書いた。
 
 - リポジトリ: [[https://github.com/kijimaD/shelf][shelf]]
-- 実例: [[https://github.com/kijimaD/mypdfs][mypdfs]]
+- 設定の実例: [[https://github.com/kijimaD/mypdfs][mypdfs]]
 
 * 関連
 
@@ -113,3 +99,29 @@ CLOSED: [2024-05-11 Sat 11:04]
 viewに埋め込んでいるので、別環境だと動かなかったりする。
 
 - localhost じか埋め込みなので、アドレス指定でアクセスしたとき動かないなど
+** DONE ブックマークでズーム率を保持する
+CLOSED: [2024-05-13 Mon 22:50]
+上書きしてるのを直す。
+** DONE ページ量を可視化する
+CLOSED: [2024-05-13 Mon 22:50]
+:LOGBOOK:
+CLOCK: [2024-05-13 Mon 21:55]--[2024-05-13 Mon 22:20] =>  0:25
+CLOCK: [2024-05-13 Mon 21:18]--[2024-05-13 Mon 21:43] =>  0:25
+CLOCK: [2024-05-13 Mon 20:32]--[2024-05-13 Mon 20:57] =>  0:25
+CLOCK: [2024-05-13 Mon 20:07]--[2024-05-13 Mon 20:32] =>  0:25
+:END:
+ゲージを作る。
+
+更新が面倒。既存コードの複数ヶ所に埋め込むのが嫌だな。
+
+いいフックがあった。
+
+#+begin_src javascript
+  document.addEventListener("webviewerloaded", () => {
+      PDFViewerApplication.initializedPromise.then(() => {
+          PDFViewerApplication.eventBus.on("pagechanging", (e) => {
+              console.log('pagechanging, from ' + e.previous + ' to ' + e.pageNumber);
+          });
+      });
+  });
+#+end_src
