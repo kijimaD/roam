@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-05-19 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 173: 『ガベージコレクションのアルゴリズムと実装』</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 173: 『ガベージコレクションのアルゴリズムと実装』</h1>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>最大値を求めるやつ。C-c C-cして出てくるS式を実行する</label><pre class="src src-shell"><span class="org-variable-name">result</span>=<span class="org-sh-quoted-exec">`ls | grep -oE 'kdoc-[0-9]+' | sed 's/kdoc-//' | sort -nr | head -n 1`</span>
+<span class="org-variable-name">succ</span>=$((result + 1))
+
+<span class="org-builtin">echo</span> $(cat &lt;&lt;EOF
+<span class="org-sh-heredoc">(save-excursion</span>
+<span class="org-sh-heredoc">  (while (re-search-backward "KDOC 173" nil t)</span>
+<span class="org-sh-heredoc">    (replace-match "KDOC $succ")))</span>
+<span class="org-sh-heredoc">EOF</span>
+)
+</pre>
+</div>
+
+<pre class="example">
+(save-excursion (while (re-search-backward "KDOC 173" nil t) (replace-match "KDOC 173")))
+</pre>
+
+<div id="outline-container-orgff3224a" class="outline-2">
+<h2 id="orgff3224a"><a href="#orgff3224a">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgff3224a">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfa50b91" class="outline-2">
+<h2 id="orgfa50b91"><a href="#orgfa50b91">概要</a></h2>
+<div class="outline-text-2" id="text-orgfa50b91">
+</div>
+</div>
+<div id="outline-container-org4f6f09c" class="outline-2">
+<h2 id="org4f6f09c"><a href="#org4f6f09c">メモ</a></h2>
+<div class="outline-text-2" id="text-org4f6f09c">
+<ul class="org-ul">
+<li>GCを読むと、「言語処理系の理解が深まる」という副作用を得られる。言語処理系は数万行のコード群からなる巨大なプログラムだが、このように巨大なプログラムを読むときには明確な目標が1つなければ読み進めるのは難しい。穴を深く掘ろうとすれば自然とその穴の直径が広がっていくように、何か1点を深く理解していこうとすることが、全体を理解することにつながる、という(vi)</li>
+<li>GCにおけるオブジェクトの意味は、「アプリケーションによって利用されるデータのかたまり」、だという(p2)</li>
+<li>GCでは、ポインタが重要だという。オブジェクトが持つポインタをたどって別のオブジェクトを探すため。非ポインタに対して何もしない(p5)</li>
+<li>アロケーションとは、メモリ領域上にオブジェクトを配置すること。ミューテータは新たなオブジェクトが必要になった場合、オブジェクトとして必要なサイズをアロケータに要求する。アロケータはヒープ領域上の空き領域から要求を満たすものを探し、ミューテータに返す(p8)</li>
+<li>GCの世界におけるルートとは、オブジェクトのポインタをたどる際の起点となる場所、だという(p10)</li>
+<li>グローバル変数領域から直接、あるいは間接的に参照されているオブジェクトを、GCは生きていると考える、という(p11)</li>
+<li>GCにおいて、幅優先探索より深さ優先探索のほうがメモリ消費量を少なく抑えられる傾向があるので、マークフェーズで深さ優先探索がよく使われる(p214)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org01f683a" class="outline-2">
+<h2 id="org01f683a"><a href="#org01f683a">関連</a></h2>
+<div class="outline-text-2" id="text-org01f683a">
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
