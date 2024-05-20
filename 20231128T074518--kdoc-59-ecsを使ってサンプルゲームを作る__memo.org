@@ -33,9 +33,56 @@
 - https://www.pixilart.com/art/mayon-sr21881399e91aws3
   - 火山の背景
 * Tasks
-** TODO ランダムに部屋を生成する
+** TODO 生成を部屋化する
+:LOGBOOK:
+CLOCK: [2024-05-20 Mon 19:02]
+CLOCK: [2024-05-20 Mon 00:09]--[2024-05-20 Mon 00:34] =>  0:25
+CLOCK: [2024-05-19 Sun 22:31]--[2024-05-19 Sun 22:56] =>  0:25
+CLOCK: [2024-05-19 Sun 21:26]--[2024-05-19 Sun 21:51] =>  0:25
+CLOCK: [2024-05-19 Sun 20:59]--[2024-05-19 Sun 21:24] =>  0:25
+CLOCK: [2024-05-19 Sun 20:31]--[2024-05-19 Sun 20:57] =>  0:26
+:END:
+
+廊下、道に分けて作る。
+
+- 参考実装がどういう流れで使っているかよくわからないな
+
+#+caption: level_builderで階層によって使うbuilderを決めているな
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L290
+#+end_src
+
+#+RESULTS:
+#+begin_src
+pub fn level_builder(
+#+end_src
+
+#+caption: 決定したbuilderを呼び出している箇所
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/dungeon.rs#L33-L36
+#+end_src
+
+#+RESULTS:
+#+begin_src
+fn transition_to_new_map(ecs: &mut World, new_depth: i32) -> Vec<Map> {
+    let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
+    let mut builder = level_builder(new_depth, &mut rng, 80, 50);
+    builder.build_map(&mut rng);
+#+end_src
+
+** DONE ランダムに部屋を生成する
+CLOSED: [2024-05-19 Sun 20:31]
 :PROPERTIES:
 :Effort:   6:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-19 Sun 17:56]--[2024-05-19 Sun 18:21] =>  0:25
+CLOCK: [2024-05-19 Sun 17:24]--[2024-05-19 Sun 17:49] =>  0:25
+CLOCK: [2024-05-19 Sun 16:54]--[2024-05-19 Sun 17:19] =>  0:25
+CLOCK: [2024-05-19 Sun 14:50]--[2024-05-19 Sun 15:15] =>  0:25
+CLOCK: [2024-05-19 Sun 14:25]--[2024-05-19 Sun 14:50] =>  0:25
+CLOCK: [2024-05-19 Sun 12:50]--[2024-05-19 Sun 13:15] =>  0:25
+CLOCK: [2024-05-19 Sun 12:24]--[2024-05-19 Sun 12:49] =>  0:25
 :END:
 #+begin_src git-permalink
 https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/rect.rs#L4-L9
@@ -63,6 +110,65 @@ type Vec2d[T any] struct {
 	Data  []T
 }
 #+end_src
+
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/mod.rs#L14-L26
+#+end_src
+
+#+RESULTS:
+#+begin_src
+pub struct Map {
+    pub tiles: Vec<TileType>,
+    pub width: i32,
+    pub height: i32,
+    pub revealed_tiles: Vec<bool>,
+    pub visible_tiles: Vec<bool>,
+    pub depth: i32,
+    pub bloodstains: HashSet<usize>,
+    pub view_blocked: HashSet<usize>,
+    pub name: String,
+    pub outdoors: bool,
+    pub light: Vec<rltk::RGB>,
+}
+#+end_src
+
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L66-L75
+#+end_src
+
+#+RESULTS:
+#+begin_src
+pub struct BuilderMap {
+    pub spawn_list: Vec<(usize, String)>,
+    pub map: Map,
+    pub starting_position: Option<Position>,
+    pub rooms: Option<Vec<Rect>>,
+    pub corridors: Option<Vec<Vec<usize>>>,
+    pub history: Vec<Map>,
+    pub width: i32,
+    pub height: i32,
+}
+#+end_src
+
+- マップ生成時はタイルのスライスを保持する。したがってマップ生成は単にスライスをいじくる処理となる
+- 生成したタイルマップは、配置するときエンティティ化する
+  - 例: 壁タイルは BlockPass, SpriteRender, GridElement コンポーネントを持つEntityとなる
+
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L89-L93
+#+end_src
+
+#+RESULTS:
+#+begin_src
+pub struct BuilderChain {
+    starter: Option<Box<dyn InitialMapBuilder>>,
+    builders: Vec<Box<dyn MetaMapBuilder>>,
+    pub build_data: BuilderMap,
+}
+#+end_src
+
+- tileをエンティティ化しなくてもいいような気もしてきた
+- tileとして、まとめて判定したいのか、〜の性質、で部分で判定したいのかとちらか。タイル判定だとわかりにくいと感じるけどな
 
 ** TODO raycastを高速化する
 - もっとも近い壁を記憶することで、高速化できるという
@@ -1996,3 +2102,9 @@ CLOCK: [2024-05-18 Sat 17:37]--[2024-05-18 Sat 18:02] =>  0:25
 - 便利なのでResourceに保存しておきたい
 - いつ階数を初期化するか
   - 現状はstateのonstartで実行してるが、これだと移動したときに毎回リセットがかかる
+** DONE WASMローディング表示がほしい
+CLOSED: [2024-05-19 Sun 22:31]
+:LOGBOOK:
+CLOCK: [2024-05-19 Sun 21:51]--[2024-05-19 Sun 22:16] =>  0:25
+:END:
+3秒くらい真っ白画面になるのがよくない。
