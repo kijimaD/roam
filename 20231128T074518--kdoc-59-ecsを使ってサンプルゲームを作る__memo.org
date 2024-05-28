@@ -33,98 +33,12 @@
 - https://www.pixilart.com/art/mayon-sr21881399e91aws3
   - 火山の背景
 * Tasks
-** TODO 生成を部屋化する
+** TODO 廊下を追加する
 :PROPERTIES:
 :Effort:   5:00
 :END:
-:LOGBOOK:
-CLOCK: [2024-05-27 Mon 22:38]
-CLOCK: [2024-05-22 Wed 22:42]--[2024-05-22 Wed 23:07] =>  0:25
-CLOCK: [2024-05-22 Wed 00:22]--[2024-05-22 Wed 00:47] =>  0:25
-CLOCK: [2024-05-21 Tue 23:05]--[2024-05-21 Tue 23:30] =>  0:25
-CLOCK: [2024-05-21 Tue 22:29]--[2024-05-21 Tue 22:54] =>  0:25
-CLOCK: [2024-05-21 Tue 22:04]--[2024-05-21 Tue 22:29] =>  0:25
-CLOCK: [2024-05-21 Tue 21:38]--[2024-05-21 Tue 22:03] =>  0:25
-CLOCK: [2024-05-21 Tue 08:29]--[2024-05-21 Tue 08:54] =>  0:25
-CLOCK: [2024-05-21 Tue 08:04]--[2024-05-21 Tue 08:29] =>  0:25
-CLOCK: [2024-05-21 Tue 00:32]--[2024-05-21 Tue 00:57] =>  0:25
-CLOCK: [2024-05-20 Mon 23:48]--[2024-05-21 Tue 00:13] =>  0:25
-CLOCK: [2024-05-20 Mon 22:59]--[2024-05-20 Mon 23:24] =>  0:25
-CLOCK: [2024-05-20 Mon 22:34]--[2024-05-20 Mon 22:59] =>  0:25
-CLOCK: [2024-05-20 Mon 22:08]--[2024-05-20 Mon 22:33] =>  0:25
-CLOCK: [2024-05-20 Mon 21:02]--[2024-05-20 Mon 21:27] =>  0:25
-CLOCK: [2024-05-20 Mon 19:27]--[2024-05-20 Mon 19:52] =>  0:25
-CLOCK: [2024-05-20 Mon 19:02]--[2024-05-20 Mon 19:27] =>  0:25
-CLOCK: [2024-05-20 Mon 00:09]--[2024-05-20 Mon 00:34] =>  0:25
-CLOCK: [2024-05-19 Sun 22:31]--[2024-05-19 Sun 22:56] =>  0:25
-CLOCK: [2024-05-19 Sun 21:26]--[2024-05-19 Sun 21:51] =>  0:25
-CLOCK: [2024-05-19 Sun 20:59]--[2024-05-19 Sun 21:24] =>  0:25
-CLOCK: [2024-05-19 Sun 20:31]--[2024-05-19 Sun 20:57] =>  0:26
-:END:
 
-廊下、道に分けて作る。
-
-- 参考実装がどういう流れで使っているかよくわからないな
-
-#+caption: level_builderで階層によって使うbuilderを決めている
-#+begin_src git-permalink
-https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L290
-#+end_src
-
-#+RESULTS:
-#+begin_src go
-pub fn level_builder(
-#+end_src
-
-#+caption: 決定したbuilderを呼び出している箇所
-#+begin_src git-permalink
-https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/dungeon.rs#L33-L36
-#+end_src
-
-#+RESULTS:
-#+begin_src go
-fn transition_to_new_map(ecs: &mut World, new_depth: i32) -> Vec<Map> {
-    let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
-    let mut builder = level_builder(new_depth, &mut rng, 80, 50);
-    builder.build_map(&mut rng);
-#+end_src
-
-- rooms とか corridor をどうやってタイルにしているか
-
-#+caption: draw系でやっている
-#+begin_src git-permalink
-https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/common.rs#L105
-#+end_src
-
-#+RESULTS:
-#+begin_src
-pub fn draw_corridor(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i32) -> Vec<usize> {
-#+end_src
-
-- ↑引数のmapのtileを変更しつつ、corridor(tile indexのスライス)を返す
-- NewLevel を消して、 builderに置き換えればいいのかな
-
-#+caption: 部屋ビルダー
-#+begin_src git-permalink
-https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/room_draw.rs#L11
-#+end_src
-
-#+RESULTS:
-#+begin_src
-impl RoomDrawer {
-#+end_src
-
-- 廊下がけっこう大変な件
-  - 部屋ごとの距離を求めて、最短距離を結ぶ
-
-#+begin_src git-permalink
-https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/rooms_corridors_lines.rs#L20
-#+end_src
-
-#+RESULTS:
-#+begin_src
-    fn corridors(&mut self, _rng: &mut RandomNumberGenerator, build_data: &mut BuilderMap) {
-#+end_src
+廊下をつなぐ。
 
 ** TODO raycastを高速化する
 - もっとも近い壁を記憶することで、高速化できるという
@@ -2163,3 +2077,100 @@ pub struct BuilderChain {
 
 - tileをエンティティ化しなくてもいいような気もしてきた
 - tileとして、まとめて判定したいのか、〜の性質、で部分で判定したいのかとちらか。タイル判定だとわかりにくいと感じるけどな
+** DONE 生成を部屋化する
+CLOSED: [2024-05-29 Wed 00:11]
+:PROPERTIES:
+:Effort:   5:00
+:END:
+:LOGBOOK:
+CLOCK: [2024-05-28 Tue 21:26]--[2024-05-28 Tue 21:51] =>  0:25
+CLOCK: [2024-05-28 Tue 20:41]--[2024-05-28 Tue 21:06] =>  0:25
+CLOCK: [2024-05-28 Tue 20:05]--[2024-05-28 Tue 20:30] =>  0:25
+CLOCK: [2024-05-28 Tue 00:30]--[2024-05-28 Tue 00:56] =>  0:26
+CLOCK: [2024-05-27 Mon 22:38]--[2024-05-27 Mon 23:03] =>  0:25
+CLOCK: [2024-05-22 Wed 22:42]--[2024-05-22 Wed 23:07] =>  0:25
+CLOCK: [2024-05-22 Wed 00:22]--[2024-05-22 Wed 00:47] =>  0:25
+CLOCK: [2024-05-21 Tue 23:05]--[2024-05-21 Tue 23:30] =>  0:25
+CLOCK: [2024-05-21 Tue 22:29]--[2024-05-21 Tue 22:54] =>  0:25
+CLOCK: [2024-05-21 Tue 22:04]--[2024-05-21 Tue 22:29] =>  0:25
+CLOCK: [2024-05-21 Tue 21:38]--[2024-05-21 Tue 22:03] =>  0:25
+CLOCK: [2024-05-21 Tue 08:29]--[2024-05-21 Tue 08:54] =>  0:25
+CLOCK: [2024-05-21 Tue 08:04]--[2024-05-21 Tue 08:29] =>  0:25
+CLOCK: [2024-05-21 Tue 00:32]--[2024-05-21 Tue 00:57] =>  0:25
+CLOCK: [2024-05-20 Mon 23:48]--[2024-05-21 Tue 00:13] =>  0:25
+CLOCK: [2024-05-20 Mon 22:59]--[2024-05-20 Mon 23:24] =>  0:25
+CLOCK: [2024-05-20 Mon 22:34]--[2024-05-20 Mon 22:59] =>  0:25
+CLOCK: [2024-05-20 Mon 22:08]--[2024-05-20 Mon 22:33] =>  0:25
+CLOCK: [2024-05-20 Mon 21:02]--[2024-05-20 Mon 21:27] =>  0:25
+CLOCK: [2024-05-20 Mon 19:27]--[2024-05-20 Mon 19:52] =>  0:25
+CLOCK: [2024-05-20 Mon 19:02]--[2024-05-20 Mon 19:27] =>  0:25
+CLOCK: [2024-05-20 Mon 00:09]--[2024-05-20 Mon 00:34] =>  0:25
+CLOCK: [2024-05-19 Sun 22:31]--[2024-05-19 Sun 22:56] =>  0:25
+CLOCK: [2024-05-19 Sun 21:26]--[2024-05-19 Sun 21:51] =>  0:25
+CLOCK: [2024-05-19 Sun 20:59]--[2024-05-19 Sun 21:24] =>  0:25
+CLOCK: [2024-05-19 Sun 20:31]--[2024-05-19 Sun 20:57] =>  0:26
+:END:
+
+廊下、道に分けて作る。
+
+- 参考実装がどういう流れで使っているかよくわからないな
+
+#+caption: level_builderで階層によって使うbuilderを決めている
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L290
+#+end_src
+
+#+RESULTS:
+#+begin_src go
+pub fn level_builder(
+#+end_src
+
+#+caption: 決定したbuilderを呼び出している箇所
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/dungeon.rs#L33-L36
+#+end_src
+
+#+RESULTS:
+#+begin_src go
+fn transition_to_new_map(ecs: &mut World, new_depth: i32) -> Vec<Map> {
+    let mut rng = ecs.write_resource::<rltk::RandomNumberGenerator>();
+    let mut builder = level_builder(new_depth, &mut rng, 80, 50);
+    builder.build_map(&mut rng);
+#+end_src
+
+- rooms とか corridor をどうやってタイルにしているか
+
+#+caption: draw系でやっている
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/common.rs#L105
+#+end_src
+
+#+RESULTS:
+#+begin_src
+pub fn draw_corridor(map: &mut Map, x1: i32, y1: i32, x2: i32, y2: i32) -> Vec<usize> {
+#+end_src
+
+- ↑引数のmapのtileを変更しつつ、corridor(tile indexのスライス)を返す
+- NewLevel を消して、 builderに置き換えればいいのかな
+
+#+caption: 部屋ビルダー
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/room_draw.rs#L11
+#+end_src
+
+#+RESULTS:
+#+begin_src
+impl RoomDrawer {
+#+end_src
+
+- 廊下がけっこう大変な件
+  - 部屋ごとの距離を求めて、最短距離を結ぶ
+
+#+begin_src git-permalink
+https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/rooms_corridors_lines.rs#L20
+#+end_src
+
+#+RESULTS:
+#+begin_src
+    fn corridors(&mut self, _rng: &mut RandomNumberGenerator, build_data: &mut BuilderMap) {
+#+end_src
