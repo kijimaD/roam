@@ -1,10 +1,10 @@
 :properties:
-:ID: 20240605T103458
+:ID: 20240605T205919
 :end:
-#+title:      KDOC 184: イラストでわかるDockerとKubernetes
-#+date:       [2024-06-05 Wed 10:34]
-#+filetags:   :draft:book:
-#+identifier: 20240605T103458
+#+title:      KDOC 185: コンテナの中身をホストマシンにダンプする
+#+date:       [2024-06-05 Wed 20:59]
+#+filetags:   :draft:code:
+#+identifier: 20240605T205919
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -38,12 +38,6 @@
 # そのページのどこが本当に必要な部分なのか。
 
 * この文書のステータス
-:LOGBOOK:
-CLOCK: [2024-06-05 Wed 16:22]
-CLOCK: [2024-06-05 Wed 15:15]--[2024-06-05 Wed 15:40] =>  0:25
-CLOCK: [2024-06-05 Wed 11:17]--[2024-06-05 Wed 11:42] =>  0:25
-CLOCK: [2024-06-05 Wed 10:36]--[2024-06-05 Wed 11:01] =>  0:25
-:END:
 - 作成
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -60,10 +54,47 @@ CLOCK: [2024-06-05 Wed 10:36]--[2024-06-05 Wed 11:01] =>  0:25
 # タグを適切にした。
 # すべてのコメントを削除した。
 * 概要
-# 本文(タイトルをつける)。
-[[https://gihyo.jp/book/2024/978-4-297-14055-7][イラストでわかるDockerとKubernetes]]は、コンテナ関係を解説する本。
-* メモ
-- CRIランタイムはKubernetesからPod操作に関する指示を受け、それに従ってイメージをレジストリから取得したり、コンテナ群をPodとして作成したりするソフトウェアである、という。OCIランタイムとは異なる(p133)
+コンテナのルートファイルシステムを、ホストマシンのファイルシステムにダンプして中身を観察する。
+
+#+begin_src shell :results raw
+  mkdir -p bundle/rootfs
+  docker pull centos:8
+  docker run --rm --name tmp -d centos:8 sleep
+  docker export tmp | tar -xC bundle/rootfs
+  ls -al bundle/rootfs/
+#+end_src
+
+#+RESULTS:
+#+begin_src
+total 116
+drwxrwxr-x 17 orange orange  4096 Jun  5 21:01 .
+drwxrwxr-x  3 orange orange  4096 Jun  5 21:01 ..
+lrwxrwxrwx  1 orange orange     7 Nov  4  2020 bin -> usr/bin
+drwxr-xr-x  4 orange orange  4096 Jun  5 20:55 dev
+-rwxr-xr-x  1 orange orange     0 Jun  5 20:55 .dockerenv
+drwxr-xr-x 55 orange orange 24576 Jun  5 20:55 etc
+drwxr-xr-x  2 orange orange  4096 Nov  4  2020 home
+lrwxrwxrwx  1 orange orange     7 Nov  4  2020 lib -> usr/lib
+lrwxrwxrwx  1 orange orange     9 Nov  4  2020 lib64 -> usr/lib64
+drwx------  2 orange orange  4096 Sep 15  2021 lost+found
+drwxr-xr-x  2 orange orange  4096 Nov  4  2020 media
+drwxr-xr-x  2 orange orange  4096 Nov  4  2020 mnt
+drwxr-xr-x  2 orange orange  4096 Nov  4  2020 opt
+drwxr-xr-x  2 orange orange  4096 Sep 15  2021 proc
+dr-xr-x---  2 orange orange  4096 Sep 15  2021 root
+drwxr-xr-x 11 orange orange  4096 Sep 15  2021 run
+lrwxrwxrwx  1 orange orange     8 Nov  4  2020 sbin -> usr/sbin
+drwxr-xr-x  2 orange orange  4096 Nov  4  2020 srv
+drwxr-xr-x  2 orange orange  4096 Sep 15  2021 sys
+drwxrwxr-x  7 orange orange  4096 Sep 15  2021 tmp
+drwxr-xr-x 12 orange orange  4096 Sep 15  2021 usr
+drwxr-xr-x 20 orange orange  4096 Sep 15  2021 var
+#+end_src
+
+#+caption: 後片付け
+#+begin_src shell
+  docker stop tmp
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -72,3 +103,4 @@ CLOCK: [2024-06-05 Wed 10:36]--[2024-06-05 Wed 11:01] =>  0:25
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
+- [[id:20240605T103458][KDOC 184: 『イラストでわかるDockerとKubernetes』]]で紹介されていた方法
