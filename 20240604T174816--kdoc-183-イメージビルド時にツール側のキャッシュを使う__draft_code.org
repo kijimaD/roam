@@ -1,10 +1,10 @@
 :properties:
-:ID: 20240529T002323
+:ID: 20240604T174816
 :end:
-#+title:      KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』
-#+date:       [2024-05-29 Wed 00:23]
-#+filetags:   :draft:book:
-#+identifier: 20240529T002323
+#+title:      KDOC 183: イメージビルド時にツール側のキャッシュを使う
+#+date:       [2024-06-04 Tue 17:48]
+#+filetags:   :draft:code:
+#+identifier: 20240604T174816
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -38,16 +38,8 @@
 # そのページのどこが本当に必要な部分なのか。
 
 * この文書のステータス
-:LOGBOOK:
-CLOCK: [2024-06-02 Sun 15:46]--[2024-06-02 Sun 16:11] =>  0:25
-CLOCK: [2024-06-02 Sun 14:34]--[2024-06-02 Sun 14:59] =>  0:25
-CLOCK: [2024-06-01 Sat 11:01]--[2024-06-01 Sat 11:26] =>  0:25
-CLOCK: [2024-06-01 Sat 10:14]--[2024-06-01 Sat 10:39] =>  0:25
-CLOCK: [2024-05-29 Wed 00:28]--[2024-05-29 Wed 00:53] =>  0:25
-:END:
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-06-04 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -61,9 +53,25 @@ CLOCK: [2024-05-29 Wed 00:28]--[2024-05-29 Wed 00:53] =>  0:25
 # タグを適切にした。
 # すべてのコメントを削除した。
 * 概要
-[[https://www.shuwasystem.co.jp/book/9784798044781.html][ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ]]は、おなじみの"Hello, World"を表示するまでの流れを詳しく解説する本。
-* メモ
-- write と write() の違い。システムコールラッパー
+# 本文(タイトルをつける)。
+
+[[id:1658782a-d331-464b-9fd7-1f8233b8b7f8][Docker]] imageをビルドするときレイヤーキャッシュが生成されるが、ファイル内容に違いがあると破棄されてビルドが再実行される。なのでコードが1行でも、依存ライブラリが1行でも変更されると、ゼロからビルドして時間がかかることになる。パッケージ管理ツールやコンパイラ自体のビルドキャッシュ/インストールキャッシュを利用するには、専用の領域を指定して保存しておく。
+
+#+caption: https://docs.docker.com/build/guide/mounts/
+#+begin_src dockerfile
+  # Dockerfile
+  RUN --mount=type=cache,target=/go/pkg/mod \
+      --mount=type=cache,target=/root/.cache/go-build \
+      --mount=type=bind,target=.
+      go build .
+#+end_src
+
+これによって、2段階のキャッシュを利用することになる。
+
+1. 内容が全く同じ場合はDockerのレイヤーキャッシュを使う
+2. 内容が変わった場合はパッケージ管理ツールやコンパイラのキャッシュを使う
+
+となり、高速化できる。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -72,3 +80,4 @@ CLOCK: [2024-05-29 Wed 00:28]--[2024-05-29 Wed 00:53] =>  0:25
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
+なし。
