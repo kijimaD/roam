@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-06-09 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 188: 『Visual Guide to Slices in Go』</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 188: 『Visual Guide to Slices in Go』</h1>
+
+<div id="outline-container-org7181bf3" class="outline-2">
+<h2 id="org7181bf3"><a href="#org7181bf3">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org7181bf3">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-08 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4cd1e90" class="outline-2">
+<h2 id="org4cd1e90"><a href="#org4cd1e90">概要</a></h2>
+<div class="outline-text-2" id="text-org4cd1e90">
+<p>
+<a href="https://sazak.io/articles/visual-guide-to-slices-in-go-2024-03-25">Visual Guide to Slices in Go — Ozan Sazak</a>は、<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>のスライスを解説した記事。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgc8a47dc" class="outline-2">
+<h2 id="orgc8a47dc"><a href="#orgc8a47dc">メモ</a></h2>
+<div class="outline-text-2" id="text-orgc8a47dc">
+<ul class="org-ul">
+<li>スライスは配列を抽象化したもの。扱うときに実際に割り当てられているメモリについて考えなくてよくするため。たとえばCでは、当初のメモリ割当よりも配列が大きくなった場合、手動でメモリの再割り当てとコピーが必要であった</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>スライスの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/b8ac61e6e64c92f23d8cf868a92a70d13e20a124/src/runtime/slice.go#L15-L19
+</pre>
+</div>
+
+<pre class="example">
+type slice struct {
+	array unsafe.Pointer
+	len   int
+	cap   int
+}
+</pre>
+
+<ul class="org-ul">
+<li>capは基底配列の長さ。再メモリ確保せずに保存できる領域の長さ</li>
+<li>arrayフィールドは、基底配列への(最初の要素の)ポインタ。</li>
+<li>forによるイテレーションは、要素の長さ(len)で決まり、capの長さではない</li>
+<li>len == cap の状態で要素を加えた(append)とき、メモリを再割り当て(reallocate)する。capacityを増やして新しくsliceを作り、中身をコピーする</li>
+<li><code>sl = append(sl, "hello")</code> のようになるのは、コピーによって異なるポインタを指すことがあるから</li>
+<li>printfフォーマットの <code>%p</code> によって、ポインタを表示できる</li>
+<li>スライス記法を使うと、コピーされずに同じ基底配列を指す。スライスの最初の要素ポインタがずれる
+<ul class="org-ul">
+<li>↓の例では中の要素がbyteなので、1バイト文だけずれる</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>コピーされている</label><pre class="src src-go">s1 := []byte{16, 32, 48, 64, 80}
+s2 := s1[1:3]
+
+fmt.Printf("s1: %p %v len: %d cap: %d\n", s1, s1, len(s1), cap(s1))
+fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
+</pre>
+</div>
+
+<pre class="example">
+s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
+s2: 0xc0000120e1 [32 48] len: 2 cap: 4
+</pre>
+
+<p>
+同じ基底配列を使っているのを確認する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>s2に追加するとs1も増えている</label><pre class="src src-go">s1 := []byte{16, 32, 48, 64, 80}
+s2 := s1[1:3]
+
+s2 = append(s2, 100, 101)
+fmt.Printf("s1: %p %v len: %d cap: %d\n", s1, s1, len(s1), cap(s1))
+fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
+</pre>
+</div>
+
+<pre class="example">
+s1: 0xc0000120e0 [16 32 48 100 101] len: 5 cap: 5
+s2: 0xc0000120e1 [32 48 100 101] len: 4 cap: 4
+</pre>
+
+<p>
+capを超えた場合、再割り当てされるので、s1, s2は同じ基底配列ではなくなる。
+</p>
+
+<ul class="org-ul">
+<li>s2の先頭要素のポインタが変わっている</li>
+<li>s2への変更がs1に反映されない</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>s2のcapを超える</label><pre class="src src-go">s1 := []byte{16, 32, 48, 64, 80}
+s2 := s1[1:3]
+
+s2 = append(s2, 100, 101, 102)
+fmt.Printf("s1: %p %v len: %d cap: %d\n", s1, s1, len(s1), cap(s1))
+fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
+</pre>
+</div>
+
+<pre class="example">
+s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
+s2: 0xc0000120e8 [32 48 100 101 102] len: 5 cap: 8
+</pre>
+
+<p>
+スライス記法の3番目の引数で、新しいスライスの容量を制限できる。これによって、同じ基底配列に意図せず変更を加えるのを防げる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-go">s1 := []byte{16, 32, 48, 64, 80}
+s3 := s1[1:3:3]
+
+s3 = append(s3, 200, 201)
+
+fmt.Printf("s1: %v, len: %d, cap: %d\n", s1, len(s1), cap(s1))
+fmt.Printf("s3: %v, len: %d, cap: %d\n", s3, len(s3), cap(s3))
+</pre>
+</div>
+
+<pre class="example">
+s1: [16 32 48 64 80], len: 5, cap: 5
+s3: [32 48 200 201], len: 4, cap: 8
+</pre>
+</div>
+</div>
+
+<div id="outline-container-org9429711" class="outline-2">
+<h2 id="org9429711"><a href="#org9429711">関連</a></h2>
+<div class="outline-text-2" id="text-org9429711">
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
