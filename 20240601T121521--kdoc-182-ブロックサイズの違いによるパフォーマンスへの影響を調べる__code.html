@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-06-09 -->
+<!-- 2024-06-10 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 182: ブロックサイズの違いによるパフォーマンスへの影響を調べる</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 182: ブロックサイズの違いによるパフォーマンスへの影響を調べる</h1>
 
-<div id="outline-container-orgaa84202" class="outline-2">
-<h2 id="orgaa84202"><a href="#orgaa84202">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orgaa84202">
+<div id="outline-container-org9b5eac7" class="outline-2">
+<h2 id="org9b5eac7"><a href="#org9b5eac7">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org9b5eac7">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -26,30 +26,31 @@
 </ul></li>
 <li>レビュー
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-10 貴島</li>
 </ul></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgae896f8" class="outline-2">
-<h2 id="orgae896f8"><a href="#orgae896f8">概要</a></h2>
-<div class="outline-text-2" id="text-orgae896f8">
+
+<div id="outline-container-orge2165af" class="outline-2">
+<h2 id="orge2165af"><a href="#orge2165af">概要</a></h2>
+<div class="outline-text-2" id="text-orge2165af">
 <p>
 すべてのディスクI/Oは、ブロックごとに処理される。本だけ見てもあまりわからないので、コマンドでミニマルに試して理解を深める。
 </p>
 </div>
 </div>
 
-<div id="outline-container-org2a85532" class="outline-2">
-<h2 id="org2a85532"><a href="#org2a85532">方法</a></h2>
-<div class="outline-text-2" id="text-org2a85532">
+<div id="outline-container-org23f905c" class="outline-2">
+<h2 id="org23f905c"><a href="#org23f905c">方法</a></h2>
+<div class="outline-text-2" id="text-org23f905c">
 <ul class="org-ul">
 <li><code>dd</code> はファイルをコピーするコマンド。オプションを細かく指定できる</li>
 <li><code>/dev/zero</code> は、0を無限に返す仮想デバイス</li>
 </ul>
 
 <p>
-まず、ブロックサイズ1で保存してみる。8秒かかった。
+↓まず、ブロックサイズ1で保存してみる。8秒かかった。
 </p>
 
 <div class="org-src-container">
@@ -64,7 +65,7 @@
 </pre>
 
 <p>
-ブロックサイズ1024にして、コピーしてみる。↑と同じサイズだが、とても早い。
+↓ブロックサイズ1024にして、コピーしてみる。↑と同じサイズだが、とても早い。
 </p>
 
 <div class="org-src-container">
@@ -79,16 +80,30 @@
 </pre>
 
 <p>
-パフォーマンスが改善した理由。
+↓アラインメントしないバージョン。これで遅くなるはずなのだが、↑とあまり変わらなかった。サイズの問題だろうか。もっと大きなサイズにすると差が見えてくるとか。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>アラインメントしないブロックサイズ</label><pre class="src src-shell">dd <span class="org-variable-name">bs</span>=1025 <span class="org-variable-name">count</span>=2048 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp
+</pre>
+</div>
+
+<pre class="example">
+2048+0 records in
+2048+0 records out
+2099200 bytes (2.1 MB, 2.0 MiB) copied, 0.0131522 s, 160 MB/s
+</pre>
+
+<p>
+というわけで、パフォーマンスが改善した理由。
 </p>
 
 <ul class="org-ul">
-<li>ブロックサイズである1024の倍数である</li>
 <li>システムコールの回数が減った</li>
 </ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>システムコールの回数の比較</label><pre class="src src-shell">strace dd <span class="org-variable-name">bs</span>=1 <span class="org-variable-name">count</span>=2097152 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp 2&gt;&amp;1 | wc -l
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>システムコールの回数の比較</label><pre class="src src-shell">strace dd <span class="org-variable-name">bs</span>=1 <span class="org-variable-name">count</span>=2097152 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp 2&gt;&amp;1 | wc -l
 strace dd <span class="org-variable-name">bs</span>=1024 <span class="org-variable-name">count</span>=2048 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp 2&gt;&amp;1 | wc -l
 </pre>
 </div>
@@ -97,12 +112,16 @@ strace dd <span class="org-variable-name">bs</span>=1024 <span class="org-variab
 4194377
 4169
 </pre>
+
+<p>
+確かめられた。
+</p>
 </div>
 </div>
 
-<div id="outline-container-org67f14cb" class="outline-2">
-<h2 id="org67f14cb"><a href="#org67f14cb">関連</a></h2>
-<div class="outline-text-2" id="text-org67f14cb">
+<div id="outline-container-org5f41798" class="outline-2">
+<h2 id="org5f41798"><a href="#org5f41798">関連</a></h2>
+<div class="outline-text-2" id="text-org5f41798">
 <ul class="org-ul">
 <li><a href="20240225T174224--kdoc-109-発行システムコールを調べる__code.html#ID-20240225T174224">KDOC 109: 発行システムコールを調べる</a>。straceの使い方</li>
 <li><a href="20240601T120632--kdoc-181-『linuxシステムプログラミング』__draft_book.html#ID-20240601T120632">KDOC 181: 『Linuxシステムプログラミング』</a>。例を試した</li>
