@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-06-13 -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</title>
+<meta name="generator" content="Org mode">
+<meta name="author" content="root">
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content">
+<h1 class="title">KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</h1>
+
+<div id="outline-container-org7ece25b" class="outline-2">
+<h2 id="org7ece25b"><a href="#org7ece25b">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org7ece25b">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2b08349" class="outline-2">
+<h2 id="org2b08349"><a href="#org2b08349">概要</a></h2>
+<div class="outline-text-2" id="text-org2b08349">
+<p>
+<a href="https://tatsu-zine.com/books/ruby-under-a-microscope-ja">Rubyのしくみ Ruby Under a Microscope</a>は、<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>の言語処理系を解説する本。
+</p>
+</div>
+</div>
+<div id="outline-container-org0393cf7" class="outline-2">
+<h2 id="org0393cf7"><a href="#org0393cf7">メモ</a></h2>
+<div class="outline-text-2" id="text-org0393cf7">
+<ul class="org-ul">
+<li><code>RubyVM::InstructionSequence</code> を使うと、プログラム中からRubyのYARVエンジンにアクセスできる(p48)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'1 + 2'</span>).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,5)&gt; (catch: FALSE)
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 putobject                              2
+0003 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;
+0005 leave
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-ruby">code = <span class="org-string">&lt;&lt;END</span>
+<span class="org-string">10.times do |n|</span>
+<span class="org-string">       puts n</span>
+<span class="org-string">end</span>
+<span class="org-string">END</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+== catch table
+| catch type: break  st: 0000 ed: 0005 sp: 0000 cont: 0005
+| == disasm: #&lt;ISeq:block in &lt;compiled&gt;@&lt;compiled&gt;:1 (1,9)-(3,3)&gt; (catch: FALSE)
+| == catch table
+| | catch type: redo   st: 0001 ed: 0006 sp: 0000 cont: 0001
+| | catch type: next   st: 0001 ed: 0006 sp: 0000 cont: 0006
+| |------------------------------------------------------------------------
+| local table (size: 1, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+| [ 1] n@0&lt;Arg&gt;
+| 0000 nop                                                              (   1)[Bc]
+| 0001 putself                                                          (   2)[Li]
+| 0002 getlocal_WC_0                          n@0
+| 0004 opt_send_without_block                 &lt;calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE&gt;
+| 0006 nop
+| 0007 leave                                                            (   3)[Br]
+|------------------------------------------------------------------------
+0000 putobject                              10                        (   1)[Li]
+0002 send                                   &lt;calldata!mid:times, argc:0&gt;, block in &lt;compiled&gt;
+0005 nop
+0006 leave                                                            (   1)
+</pre>
+
+<ul class="org-ul">
+<li>一度Rubyコンパイラが実行されると、ブロックパラメータに関する情報はASTの外、ローカルテーブルと呼ばれる別のデータ構造にコピーされ、新しく生成されたYARV命令列の近くに保存される。書くYARV命令、つまりRubyプログラムの各スコープは専用のローカルスコープを持つ(p50)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>メソッド定義の処理</label><pre class="src src-ruby">code = <span class="org-string">&lt;&lt;END</span>
+<span class="org-string">def add_two(a, b)</span>
+<span class="org-string">    sum = a+b</span>
+<span class="org-string">end</span>
+<span class="org-string">END</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+0000 definemethod                           :add_two, add_two         (   1)[Li]
+0003 putobject                              :add_two
+0005 leave
+
+== disasm: #&lt;ISeq:add_two@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+local table (size: 3, argc: 2 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 3] a@0&lt;Arg&gt;   [ 2] b@1&lt;Arg&gt;   [ 1] sum@2
+0000 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0002 getlocal_WC_0                          b@1
+0004 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;
+0006 dup
+0007 setlocal_WC_0                          sum@2
+0009 leave                                                            (   3)[Re]
+</pre>
+
+<p>
+デフォルト引数。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">code = <span class="org-string">&lt;&lt;END</span>
+<span class="org-string">def add_two_opt(a, b = 99)</span>
+<span class="org-string">    sum = a+b</span>
+<span class="org-string">end</span>
+<span class="org-string">END</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+0000 definemethod                           :add_two_opt, add_two_opt (   1)[Li]
+0003 putobject                              :add_two_opt
+0005 leave
+
+== disasm: #&lt;ISeq:add_two_opt@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+local table (size: 3, argc: 1 [opts: 1, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 3] a@0&lt;Arg&gt;   [ 2] b@1&lt;Opt=0&gt; [ 1] sum@2
+0000 putobject                              99                        (   1)
+0002 setlocal_WC_0                          b@1
+0004 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0006 getlocal_WC_0                          b@1
+0008 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;
+0010 dup
+0011 setlocal_WC_0                          sum@2
+0013 leave                                                            (   3)[Re]
+</pre>
+
+<p>
+キーワード引数。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">code = <span class="org-string">&lt;&lt;END</span>
+<span class="org-string">def add_two_opt(a, b: 99)</span>
+<span class="org-string">    sum = a+b</span>
+<span class="org-string">end</span>
+<span class="org-string">END</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+0000 definemethod                           :add_two_opt, add_two_opt (   1)[Li]
+0003 putobject                              :add_two_opt
+0005 leave
+
+== disasm: #&lt;ISeq:add_two_opt@&lt;compiled&gt;:1 (1,0)-(3,3)&gt; (catch: FALSE)
+local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, kwrest: -1])
+[ 4] a@0&lt;Arg&gt;   [ 3] b@1        [ 2] ?@2        [ 1] sum@3
+0000 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0002 getlocal_WC_0                          b@1
+0004 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;
+0006 dup
+0007 setlocal_WC_0                          sum@3
+0009 leave                                                            (   3)[Re]
+</pre>
+
+<ul class="org-ul">
+<li>YARVは途中の値や引数、返り値を把握するために内部的にスタックを利用する。YARVはスタック志向な仮想マシンである、という。内部スタックに加えて、Rubyプログラムのコールスタックも把握し続ける。どのメソッドが他のメソッド、関数、ブロックやラムダなどを呼び出したか記録される。YARVは二重スタックマシンである(p62)</li>
+<li>p62の図</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'puts 1 + 2'</span>).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,10)&gt; (catch: FALSE)
+0000 putself                                                          (   1)[Li]
+0001 putobject_INT2FIX_1_
+0002 putobject                              2
+0004 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;
+0006 opt_send_without_block                 &lt;calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE&gt;
+0008 leave
+</pre>
+</div>
+</div>
+
+<div id="outline-container-orgad91d9a" class="outline-2">
+<h2 id="orgad91d9a"><a href="#orgad91d9a">関連</a></h2>
+<div class="outline-text-2" id="text-orgad91d9a">
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
