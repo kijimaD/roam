@@ -1,0 +1,227 @@
+:properties:
+:ID: 20240612T133312
+:end:
+#+title:      KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』
+#+date:       [2024-06-12 Wed 13:33]
+#+filetags:   :draft:book:
+#+identifier: 20240612T133312
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
+# (flush-lines "^\\#\s.+?")
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 文献メモの場合は、感想と混ぜないこと。1つのアイデアに反する
+# ツェッテルカステンの議論に寄与するか
+# 頭のなかやツェッテルカステンにある問いとどのようにかかわっているか
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+# ====永久保存メモのルール。
+# 自分の言葉で書く。
+# 後から読み返して理解できる。
+# 他のメモと関連付ける。
+# ひとつのメモにひとつのことだけを書く。
+# メモの内容は1枚で完結させる。
+# 論文の中に組み込み、公表できるレベルである。
+
+# ====価値があるか。
+# その情報がどういった文脈で使えるか。
+# どの程度重要な情報か。
+# そのページのどこが本当に必要な部分なのか。
+
+* この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-06-12 Wed 16:08]--[2024-06-12 Wed 16:33] =>  0:25
+CLOCK: [2024-06-12 Wed 15:37]--[2024-06-12 Wed 16:02] =>  0:25
+CLOCK: [2024-06-12 Wed 15:12]--[2024-06-12 Wed 15:37] =>  0:25
+:END:
+- 作成
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* 概要
+[[https://tatsu-zine.com/books/ruby-under-a-microscope-ja][Rubyのしくみ Ruby Under a Microscope]]は、[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]の言語処理系を解説する本。
+* メモ
+- ~RubyVM::InstructionSequence~ を使うと、プログラム中からRubyのYARVエンジンにアクセスできる(p48)
+
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('1 + 2').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,5)> (catch: FALSE)
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 putobject                              2
+0003 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
+0005 leave
+#+end_src
+
+#+begin_src ruby :results output
+  code = <<END
+  10.times do |n|
+         puts n
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+== catch table
+| catch type: break  st: 0000 ed: 0005 sp: 0000 cont: 0005
+| == disasm: #<ISeq:block in <compiled>@<compiled>:1 (1,9)-(3,3)> (catch: FALSE)
+| == catch table
+| | catch type: redo   st: 0001 ed: 0006 sp: 0000 cont: 0001
+| | catch type: next   st: 0001 ed: 0006 sp: 0000 cont: 0006
+| |------------------------------------------------------------------------
+| local table (size: 1, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+| [ 1] n@0<Arg>
+| 0000 nop                                                              (   1)[Bc]
+| 0001 putself                                                          (   2)[Li]
+| 0002 getlocal_WC_0                          n@0
+| 0004 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+| 0006 nop
+| 0007 leave                                                            (   3)[Br]
+|------------------------------------------------------------------------
+0000 putobject                              10                        (   1)[Li]
+0002 send                                   <calldata!mid:times, argc:0>, block in <compiled>
+0005 nop
+0006 leave                                                            (   1)
+#+end_src
+
+- 一度Rubyコンパイラが実行されると、ブロックパラメータに関する情報はASTの外、ローカルテーブルと呼ばれる別のデータ構造にコピーされ、新しく生成されたYARV命令列の近くに保存される。書くYARV命令、つまりRubyプログラムの各スコープは専用のローカルスコープを持つ(p50)
+
+#+caption: メソッド定義の処理
+#+begin_src ruby :results output
+  code = <<END
+  def add_two(a, b)
+      sum = a+b
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+0000 definemethod                           :add_two, add_two         (   1)[Li]
+0003 putobject                              :add_two
+0005 leave
+
+== disasm: #<ISeq:add_two@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+local table (size: 3, argc: 2 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 3] a@0<Arg>   [ 2] b@1<Arg>   [ 1] sum@2
+0000 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0002 getlocal_WC_0                          b@1
+0004 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
+0006 dup
+0007 setlocal_WC_0                          sum@2
+0009 leave                                                            (   3)[Re]
+#+end_src
+
+デフォルト引数。
+
+#+begin_src ruby :results output
+  code = <<END
+  def add_two_opt(a, b = 99)
+      sum = a+b
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+0000 definemethod                           :add_two_opt, add_two_opt (   1)[Li]
+0003 putobject                              :add_two_opt
+0005 leave
+
+== disasm: #<ISeq:add_two_opt@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+local table (size: 3, argc: 1 [opts: 1, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 3] a@0<Arg>   [ 2] b@1<Opt=0> [ 1] sum@2
+0000 putobject                              99                        (   1)
+0002 setlocal_WC_0                          b@1
+0004 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0006 getlocal_WC_0                          b@1
+0008 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
+0010 dup
+0011 setlocal_WC_0                          sum@2
+0013 leave                                                            (   3)[Re]
+#+end_src
+
+キーワード引数。
+
+#+begin_src ruby :results output
+  code = <<END
+  def add_two_opt(a, b: 99)
+      sum = a+b
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+0000 definemethod                           :add_two_opt, add_two_opt (   1)[Li]
+0003 putobject                              :add_two_opt
+0005 leave
+
+== disasm: #<ISeq:add_two_opt@<compiled>:1 (1,0)-(3,3)> (catch: FALSE)
+local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, kwrest: -1])
+[ 4] a@0<Arg>   [ 3] b@1        [ 2] ?@2        [ 1] sum@3
+0000 getlocal_WC_0                          a@0                       (   2)[LiCa]
+0002 getlocal_WC_0                          b@1
+0004 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
+0006 dup
+0007 setlocal_WC_0                          sum@3
+0009 leave                                                            (   3)[Re]
+#+end_src
+
+- YARVは途中の値や引数、返り値を把握するために内部的にスタックを利用する。YARVはスタック志向な仮想マシンである、という。内部スタックに加えて、Rubyプログラムのコールスタックも把握し続ける。どのメソッドが他のメソッド、関数、ブロックやラムダなどを呼び出したか記録される。YARVは二重スタックマシンである(p62)
+- p62の図
+
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,10)> (catch: FALSE)
+0000 putself                                                          (   1)[Li]
+0001 putobject_INT2FIX_1_
+0002 putobject                              2
+0004 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
+0006 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+0008 leave
+#+end_src
+
+* 関連
+# 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
+# この事実は自分のこのアイデアとどう整合するか。
+# この現象はあの理論でどう説明できるか。
+# ふたつのアイデアは互いに矛盾するか、互いを補っているか。
+# いま聞いた内容は以前に聞いたことがなかったか。
+# メモ y についてメモ x はどういう意味か。
