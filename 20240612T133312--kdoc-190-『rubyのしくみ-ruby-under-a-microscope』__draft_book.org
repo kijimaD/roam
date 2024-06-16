@@ -39,6 +39,7 @@
 
 * この文書のステータス
 :LOGBOOK:
+CLOCK: [2024-06-13 Thu 00:35]--[2024-06-13 Thu 01:00] =>  0:25
 CLOCK: [2024-06-12 Wed 16:08]--[2024-06-12 Wed 16:33] =>  0:25
 CLOCK: [2024-06-12 Wed 15:37]--[2024-06-12 Wed 16:02] =>  0:25
 CLOCK: [2024-06-12 Wed 15:12]--[2024-06-12 Wed 15:37] =>  0:25
@@ -202,6 +203,7 @@ local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, k
 
 - YARVは途中の値や引数、返り値を把握するために内部的にスタックを利用する。YARVはスタック志向な仮想マシンである、という。内部スタックに加えて、Rubyプログラムのコールスタックも把握し続ける。どのメソッドが他のメソッド、関数、ブロックやラムダなどを呼び出したか記録される。YARVは二重スタックマシンである(p62)
 - p62の図
+- 動的変数アクセス(p78)
 
 #+begin_src ruby :results output
 puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
@@ -216,6 +218,29 @@ puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
 0004 opt_plus                               <calldata!mid:+, argc:1, ARGS_SIMPLE>
 0006 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
 0008 leave
+#+end_src
+
+- スタック内の ~EIP-1~ スロットはこのスタックフレーム内で定義された特殊変数のポインタである ~svar~ の値を含んでいる。Rubyにおける特殊変数とは、利便性を目的に環境や直前の操作によってRubyが自動で生成した値を参照するもの、だという(p83)
+- ~$&~ は明らかにグローバルでない。Rubyはこの振る舞いを可能にするために、特殊変数の集合をスタックのレベルごとにわけて保存している
+
+#+caption: スコープごとに$&を保持している
+#+begin_src ruby :results output
+  str = "The quick brown fox jumps over the lazy dog"
+  /fox/.match(str)
+
+  def search(str)
+    /dog/.match(str)
+    puts "Value of $& inside method: #{$&}"
+  end
+
+  search(str)
+  puts "Value of $& top level scope: #{$&}"
+#+end_src
+
+#+RESULTS:
+#+begin_src
+Value of $& inside method: dog
+Value of $& top level scope: fox
 #+end_src
 
 * 関連
