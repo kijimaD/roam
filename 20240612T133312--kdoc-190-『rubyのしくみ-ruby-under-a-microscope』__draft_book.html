@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-06-13 -->
+<!-- 2024-06-16 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</h1>
 
-<div id="outline-container-org7d3d481" class="outline-2">
-<h2 id="org7d3d481"><a href="#org7d3d481">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org7d3d481">
+<div id="outline-container-org7000cc6" class="outline-2">
+<h2 id="org7000cc6"><a href="#org7000cc6">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org7000cc6">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org52ba785" class="outline-2">
-<h2 id="org52ba785"><a href="#org52ba785">概要</a></h2>
-<div class="outline-text-2" id="text-org52ba785">
+<div id="outline-container-org3c9ef0a" class="outline-2">
+<h2 id="org3c9ef0a"><a href="#org3c9ef0a">概要</a></h2>
+<div class="outline-text-2" id="text-org3c9ef0a">
 <p>
 <a href="https://tatsu-zine.com/books/ruby-under-a-microscope-ja">Rubyのしくみ Ruby Under a Microscope</a>は、<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>の言語処理系を解説する本。
 </p>
 </div>
 </div>
-<div id="outline-container-orgb1a42a0" class="outline-2">
-<h2 id="orgb1a42a0"><a href="#orgb1a42a0">メモ</a></h2>
-<div class="outline-text-2" id="text-orgb1a42a0">
+<div id="outline-container-org78d6ab9" class="outline-2">
+<h2 id="org78d6ab9"><a href="#org78d6ab9">メモ</a></h2>
+<div class="outline-text-2" id="text-org78d6ab9">
 <ul class="org-ul">
 <li><code>RubyVM::InstructionSequence</code> を使うと、プログラム中からRubyのYARVエンジンにアクセスできる(p48)</li>
 </ul>
@@ -194,6 +194,7 @@ local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, k
 <ul class="org-ul">
 <li>YARVは途中の値や引数、返り値を把握するために内部的にスタックを利用する。YARVはスタック志向な仮想マシンである、という。内部スタックに加えて、Rubyプログラムのコールスタックも把握し続ける。どのメソッドが他のメソッド、関数、ブロックやラムダなどを呼び出したか記録される。YARVは二重スタックマシンである(p62)</li>
 <li>p62の図</li>
+<li>動的変数アクセス(p78)</li>
 </ul>
 
 <div class="org-src-container">
@@ -210,12 +211,36 @@ local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, k
 0006 opt_send_without_block                 &lt;calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE&gt;
 0008 leave
 </pre>
+
+<ul class="org-ul">
+<li>スタック内の <code>EIP-1</code> スロットはこのスタックフレーム内で定義された特殊変数のポインタである <code>svar</code> の値を含んでいる。Rubyにおける特殊変数とは、利便性を目的に環境や直前の操作によってRubyが自動で生成した値を参照するもの、だという(p83)</li>
+<li><code>$&amp;</code> は明らかにグローバルでない。Rubyはこの振る舞いを可能にするために、特殊変数の集合をスタックのレベルごとにわけて保存している</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>スコープごとに$&amp;を保持している</label><pre class="src src-ruby">str = <span class="org-string">"The quick brown fox jumps over the lazy dog"</span>
+<span class="org-string">/fox/</span>.match(str)
+
+<span class="org-keyword">def</span> <span class="org-function-name">search</span>(str)
+  <span class="org-string">/dog/</span>.match(str)
+  <span class="org-builtin">puts</span> <span class="org-string">"Value of $&amp; inside method: </span><span class="org-variable-name">#{$&amp;}</span><span class="org-string">"</span>
+<span class="org-keyword">end</span>
+
+search(str)
+<span class="org-builtin">puts</span> <span class="org-string">"Value of $&amp; top level scope: </span><span class="org-variable-name">#{$&amp;}</span><span class="org-string">"</span>
+</pre>
+</div>
+
+<pre class="example">
+Value of $&amp; inside method: dog
+Value of $&amp; top level scope: fox
+</pre>
 </div>
 </div>
 
-<div id="outline-container-org516dfea" class="outline-2">
-<h2 id="org516dfea"><a href="#org516dfea">関連</a></h2>
-<div class="outline-text-2" id="text-org516dfea">
+<div id="outline-container-orgbc710fc" class="outline-2">
+<h2 id="orgbc710fc"><a href="#orgbc710fc">関連</a></h2>
+<div class="outline-text-2" id="text-orgbc710fc">
 </div>
 </div>
 </div>

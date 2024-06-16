@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-06-13 -->
+<!-- 2024-06-16 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 181: 『Linuxシステムプログラミング』</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 181: 『Linuxシステムプログラミング』</h1>
 
-<div id="outline-container-org51446a9" class="outline-2">
-<h2 id="org51446a9"><a href="#org51446a9">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org51446a9">
+<div id="outline-container-org047a478" class="outline-2">
+<h2 id="org047a478"><a href="#org047a478">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org047a478">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org086d5e3" class="outline-2">
-<h2 id="org086d5e3"><a href="#org086d5e3">概要</a></h2>
-<div class="outline-text-2" id="text-org086d5e3">
+<div id="outline-container-org28b977e" class="outline-2">
+<h2 id="org28b977e"><a href="#org28b977e">概要</a></h2>
+<div class="outline-text-2" id="text-org28b977e">
 <p>
 <a href="https://www.oreilly.co.jp/books/9784873113623/">Linuxシステムプログラミング</a>は、<a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>を解説する本。
 </p>
 </div>
 </div>
-<div id="outline-container-org35ab42a" class="outline-2">
-<h2 id="org35ab42a"><a href="#org35ab42a">メモ</a></h2>
-<div class="outline-text-2" id="text-org35ab42a">
+<div id="outline-container-orgd7ed49f" class="outline-2">
+<h2 id="orgd7ed49f"><a href="#orgd7ed49f">メモ</a></h2>
+<div class="outline-text-2" id="text-orgd7ed49f">
 <ul class="org-ul">
 <li>可能な限りどんなものでもファイルとして表現しようとしているLinuxのシステムでは、ファイルのオープン、読み取り、書き込み、クローズを把握することは重要である、という(p63)</li>
 <li>/dev/zero は0を無限に返す仮想デバイス(p65)</li>
@@ -67,14 +67,23 @@
 <li>ユーザがシステムにログインすると、ログインプロセスがカレントディレクトリを <code>/etc/passwd</code> に記載されたユーザのホームディレクトリへ設定する(p222)</li>
 <li>シェルが以前のディレクトリを蓄えておく、たとえば <code>cd -</code> のような場合。カレントディレクトリをオープンしておき、ファイルディスクリプタで戻るのが、パス名を保持するより早い。パス名保持は取得と保存にコストがかかる。ファイルディスクリプタを使うと、メモリ内に持つのはinodeだけ、だという(p224)</li>
 <li>シンボリックリンクはファイルシステムがマッピングするものではなく、実行時に解釈される、より上位で処理されるポインタである。シンボリックリンクは異なるファイルシステムに跨って使用できる(p231)</li>
-<li>ハードリンクはシステムコール、ソフトリンク(シンボリックリンク)は特殊な型を持つ専用ファイル(p233)</li>
+<li>ハードリンクは既存のファイルoldpathと同じinodeを参照する新規リンクnewpathを作成する。ソフトリンク(シンボリックリンク)は特殊な型を持つ専用ファイルで、他のファイル名のパス名を格納するもので、これをシンボリックリンクのターゲットという(p233)</li>
+<li>Unixではファイル、ディレクトリをコピーするシステムコールもライブラリも提供していない、という。移動はシステムコールがある(p237)</li>
+<li>デバイスノードはアプリケーションからデバイスドライバへアクセスするスペシャルファイル。Unixのファイルオープン、クローズ、読み取り、書き込みを行うと、カーネルは通常のファイルI/Oとしては処理せず、要求をデバイスドライバに渡す。デバイスドライバはI/Oを処理し、結果をアプリケーションに返す。デバイスノードはデバイスを抽象化したもの、だという(p239)</li>
+<li>特殊なデバイスノード。nullデバイス、zeroデバイス、fullデバイス。それらのデバイスには用途があり、アプリケーションの異常時の動作をテストする際に有用である(p240)</li>
+<li>BSS領域の語源は block started by symbol(p255)</li>
+<li>動的メモリ割当は渡されたsize自身が変化するため複雑な処理だという。配列要素のサイズは固定だが、割り当てる要素数は変化する(p257)</li>
+<li>malloc()で割り当てた領域の内容は不定だが、calloc()では領域の内容をすべて0で初期化する、という。calloc()はすでにゼロクリアされているページを割り当てるため、メモリ領域をある値で割り当てるmemset()より早い(p257)</li>
+<li>スタック上に自動的に領域が確保され、スタックの破棄と同時に領域が解放されるオート変数などとは異なり、動的に割り当てたメモリ領域は明示的に解放するまで、プロセスアドレス空間の一部として存在し続ける(p260)</li>
+<li>データのアラインメントとは、ハードウェアから見たメモリ領域とアドレスの関係を指す(p263)</li>
+<li>構造体の場合にはパディングが必要になる。char型のメンバ(1バイト)の直後にint型のメンバ(4バイト)を置いた場合、コンパイラが2者の間に3バイトのパディングを挿入し、int型のメンバが4バイト境界に沿うように配置する(p265)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org71cb4ce" class="outline-2">
-<h2 id="org71cb4ce"><a href="#org71cb4ce">関連</a></h2>
-<div class="outline-text-2" id="text-org71cb4ce">
+<div id="outline-container-orgd5486aa" class="outline-2">
+<h2 id="orgd5486aa"><a href="#orgd5486aa">関連</a></h2>
+<div class="outline-text-2" id="text-orgd5486aa">
 <ul class="org-ul">
 <li><a href="20240529T002323--kdoc-179-『ハローhello-world-osと標準ライブラリのシゴトとしくみ』__book.html#ID-20240529T002323">KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』</a>。OSつながり</li>
 <li><a href="https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%82%A8%E3%83%B3%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3">プリエンプション - Wikipedia</a></li>
