@@ -37,12 +37,27 @@
 # どの程度重要な情報か。
 # そのページのどこが本当に必要な部分なのか。
 
-* この文書のステータス
+* TODO この文書のステータス
 :PROPERTIES:
 :Effort:   20:00
 :END:
 :LOGBOOK:
-CLOCK: [2024-06-17 Mon 19:25]
+CLOCK: [2024-06-19 Wed 22:13]--[2024-06-19 Wed 22:38] =>  0:25
+CLOCK: [2024-06-19 Wed 21:36]--[2024-06-19 Wed 22:01] =>  0:25
+CLOCK: [2024-06-19 Wed 19:58]--[2024-06-19 Wed 20:23] =>  0:25
+CLOCK: [2024-06-19 Wed 19:23]--[2024-06-19 Wed 19:48] =>  0:25
+CLOCK: [2024-06-19 Wed 16:58]--[2024-06-19 Wed 17:23] =>  0:25
+CLOCK: [2024-06-19 Wed 16:31]--[2024-06-19 Wed 16:56] =>  0:25
+CLOCK: [2024-06-19 Wed 15:25]--[2024-06-19 Wed 15:50] =>  0:25
+CLOCK: [2024-06-19 Wed 14:41]--[2024-06-19 Wed 15:06] =>  0:25
+CLOCK: [2024-06-19 Wed 00:30]--[2024-06-19 Wed 00:55] =>  0:25
+CLOCK: [2024-06-18 Tue 23:58]--[2024-06-19 Wed 00:23] =>  0:25
+CLOCK: [2024-06-18 Tue 21:52]--[2024-06-18 Tue 22:17] =>  0:25
+CLOCK: [2024-06-18 Tue 20:12]--[2024-06-18 Tue 20:37] =>  0:25
+CLOCK: [2024-06-18 Tue 18:01]--[2024-06-18 Tue 18:27] =>  0:26
+CLOCK: [2024-06-17 Mon 21:43]--[2024-06-17 Mon 22:08] =>  0:25
+CLOCK: [2024-06-17 Mon 21:03]--[2024-06-17 Mon 21:28] =>  0:25
+CLOCK: [2024-06-17 Mon 19:25]--[2024-06-17 Mon 19:50] =>  0:25
 CLOCK: [2024-06-16 Sun 15:42]--[2024-06-16 Sun 16:07] =>  0:25
 CLOCK: [2024-06-13 Thu 00:35]--[2024-06-13 Thu 01:00] =>  0:25
 CLOCK: [2024-06-12 Wed 16:08]--[2024-06-12 Wed 16:33] =>  0:25
@@ -247,6 +262,115 @@ puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
 Value of $& inside method: dog
 Value of $& top level scope: fox
 #+end_src
+
+- Rubyがforループをどうコンパイルするか検証する。実際に内部でeachを使ってforループを実装していることを確認できる (p99)
+
+#+caption: eachを使ってforループを実装しているのを確認する
+#+begin_src ruby :results output
+  code = <<END
+       for i in 0..5
+         puts i
+       end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(3,8)> (catch: FALSE)
+== catch table
+| catch type: break  st: 0000 ed: 0005 sp: 0000 cont: 0005
+| == disasm: #<ISeq:block in <compiled>@<compiled>:1 (1,5)-(3,8)> (catch: FALSE)
+| == catch table
+| | catch type: redo   st: 0005 ed: 0010 sp: 0000 cont: 0005
+| | catch type: next   st: 0005 ed: 0010 sp: 0000 cont: 0010
+| |------------------------------------------------------------------------
+| local table (size: 1, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+| [ 1] ?@0<Arg>
+| 0000 getlocal_WC_0                          ?@0                       (   1)
+| 0002 setlocal_WC_1                          i@0
+| 0004 nop                                    [Bc]
+| 0005 putself                                                          (   2)[Li]
+| 0006 getlocal_WC_1                          i@0
+| 0008 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+| 0010 nop
+| 0011 leave                                                            (   3)[Br]
+|------------------------------------------------------------------------
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] i@0
+0000 putobject                              0..5                      (   1)[Li]
+0002 send                                   <calldata!mid:each, argc:0>, block in <compiled>
+0005 nop
+0006 leave                                                            (   1)
+#+end_src
+
+- メソッド探索の流れ
+  1. YARVがsendを呼ぶ
+  2. メソッド探索
+  3. メソッドディスパッチ
+  4. YARVが対象のメソッドを実行する
+- Rubyは内部的にメソッドを11種類のタイプに分けて扱っている。メソッドディスパッチの間、Rubyは呼び出そうとしているメソッドのタイプを調べ、そのタイプに従ってそれぞれ異なる呼び出し方をする。YARVはほとんどのメソッドを、ISEQ(命令列)というメソッドタイプとして扱う(p102)
+- キーワード引数を実装するためにハッシュが使われているのを証明する(p110)
+- Rubyは、ユーザが作成したクラスの各オブジェクトを、RObjectというCの構造体に格納する(p116)
+- すべてのRubyオブジェクトは、クラスへのポインタとインスタンス変数の配列の組み合わせである、という(p116)
+- クラスの2つのインスタンスの可視化の図(p119)
+- 整数や文字列、シンボルなどの基本データ型を含むすべての値がオブジェクトである(p119)
+  - ユーザが定義したクラスをRubyはRObject構造体に保存する
+  - 一般的なデータ型の各値を保存するために、RubyはRObjectとは異なるC構造体を使用する
+- パフォーマンスの最適化のため、Rubyは小さな整数値やシンボルといった単純な値を構造体を使わずVALUEポインタの中に直接保存する。VALUEの下位数ビットに保存したフラグを使ってクラスを記録する(p120)
+- 新しいインスタンス変数を保存するのにどれくらいかかるか検証する。オブジェクトごとに新しいクラスを作る(p124)
+
+#+caption: 新しいインスタンス変数を保存する時間を計測する
+#+begin_src ruby :results output
+  require 'benchmark'
+
+  ITERATIONS = 100000
+  GC.disable
+  obj = ITERATIONS.times.map { Class.new.new }
+
+  Benchmark.bm do |bench|
+    20.times do |count|
+      bench.report("adding instance variable number #{count+1}") do
+        ITERATIONS.times do |n|
+          obj[n].instance_variable_set("@var#{count}", "value")
+        end
+      end
+    end
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+       user     system      total        real
+adding instance variable number 1  0.021548   0.020863   0.042411 (  0.042811)
+adding instance variable number 2  0.022505   0.003532   0.026037 (  0.026317)
+adding instance variable number 3  0.023075   0.003734   0.026809 (  0.027071)
+adding instance variable number 4  0.024410   0.004075   0.028485 (  0.028722)
+adding instance variable number 5  0.031556   0.003862   0.035418 (  0.035679)
+adding instance variable number 6  0.020043   0.009000   0.029043 (  0.029327)
+adding instance variable number 7  0.022835   0.003691   0.026526 (  0.026792)
+adding instance variable number 8  0.031815   0.000680   0.032495 (  0.032762)
+adding instance variable number 9  0.035043   0.008684   0.043727 (  0.044222)
+adding instance variable number 10  0.027289   0.000000   0.027289 (  0.027487)
+adding instance variable number 11  0.027571   0.003536   0.031107 (  0.031416)
+adding instance variable number 12  0.015372   0.012116   0.027488 (  0.027830)
+adding instance variable number 13  0.028007   0.000680   0.028687 (  0.029049)
+adding instance variable number 14  0.031383   0.003799   0.035182 (  0.035621)
+adding instance variable number 15  0.025727   0.003518   0.029245 (  0.029572)
+adding instance variable number 16  0.015992   0.012207   0.028199 (  0.028549)
+adding instance variable number 17  0.049342   0.004136   0.053478 (  0.054039)
+adding instance variable number 18  0.023057   0.016051   0.039108 (  0.039487)
+adding instance variable number 19  0.016073   0.013158   0.029231 (  0.029594)
+adding instance variable number 20  0.026045   0.003476   0.029521 (  0.029833)
+#+end_src
+
+- すべてのオブジェクトは、RClass構造体へのポインタを保存することで自分のクラスを記憶する(p127)
+- Rubyクラスの定義(p129)
+  - メソッド定義のグループを含む
+  - 属性名のテーブルを含む
+  - Rubyオブジェクトである
+  - スーパークラスポインタを含む
+  - 定数テーブルを含む
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
