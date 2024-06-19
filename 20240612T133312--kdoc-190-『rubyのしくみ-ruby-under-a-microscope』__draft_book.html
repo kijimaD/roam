@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-06-17 -->
+<!-- 2024-06-20 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</h1>
 
-<div id="outline-container-org5559a12" class="outline-2">
-<h2 id="org5559a12"><a href="#org5559a12">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org5559a12">
+<div id="outline-container-orgd05c291" class="outline-2">
+<h2 id="orgd05c291"><a href="#orgd05c291"><span class="todo TODO">TODO</span> この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgd05c291">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org74fc4b6" class="outline-2">
-<h2 id="org74fc4b6"><a href="#org74fc4b6">概要</a></h2>
-<div class="outline-text-2" id="text-org74fc4b6">
+<div id="outline-container-org53e92fc" class="outline-2">
+<h2 id="org53e92fc"><a href="#org53e92fc">概要</a></h2>
+<div class="outline-text-2" id="text-org53e92fc">
 <p>
 <a href="https://tatsu-zine.com/books/ruby-under-a-microscope-ja">Rubyのしくみ Ruby Under a Microscope</a>は、<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>の言語処理系を解説する本。
 </p>
 </div>
 </div>
-<div id="outline-container-org53ddb28" class="outline-2">
-<h2 id="org53ddb28"><a href="#org53ddb28">メモ</a></h2>
-<div class="outline-text-2" id="text-org53ddb28">
+<div id="outline-container-org01f97ee" class="outline-2">
+<h2 id="org01f97ee"><a href="#org01f97ee">メモ</a></h2>
+<div class="outline-text-2" id="text-org01f97ee">
 <ul class="org-ul">
 <li><code>RubyVM::InstructionSequence</code> を使うと、プログラム中からRubyのYARVエンジンにアクセスできる(p48)</li>
 </ul>
@@ -235,12 +235,131 @@ search(str)
 Value of $&amp; inside method: dog
 Value of $&amp; top level scope: fox
 </pre>
+
+<ul class="org-ul">
+<li>Rubyがforループをどうコンパイルするか検証する。実際に内部でeachを使ってforループを実装していることを確認できる (p99)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>eachを使ってforループを実装しているのを確認する</label><pre class="src src-ruby">code = <span class="org-string">&lt;&lt;END</span>
+<span class="org-string">     for i in 0..5</span>
+<span class="org-string">       puts i</span>
+<span class="org-string">     end</span>
+<span class="org-string">END</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(3,8)&gt; (catch: FALSE)
+== catch table
+| catch type: break  st: 0000 ed: 0005 sp: 0000 cont: 0005
+| == disasm: #&lt;ISeq:block in &lt;compiled&gt;@&lt;compiled&gt;:1 (1,5)-(3,8)&gt; (catch: FALSE)
+| == catch table
+| | catch type: redo   st: 0005 ed: 0010 sp: 0000 cont: 0005
+| | catch type: next   st: 0005 ed: 0010 sp: 0000 cont: 0010
+| |------------------------------------------------------------------------
+| local table (size: 1, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+| [ 1] ?@0&lt;Arg&gt;
+| 0000 getlocal_WC_0                          ?@0                       (   1)
+| 0002 setlocal_WC_1                          i@0
+| 0004 nop                                    [Bc]
+| 0005 putself                                                          (   2)[Li]
+| 0006 getlocal_WC_1                          i@0
+| 0008 opt_send_without_block                 &lt;calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE&gt;
+| 0010 nop
+| 0011 leave                                                            (   3)[Br]
+|------------------------------------------------------------------------
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] i@0
+0000 putobject                              0..5                      (   1)[Li]
+0002 send                                   &lt;calldata!mid:each, argc:0&gt;, block in &lt;compiled&gt;
+0005 nop
+0006 leave                                                            (   1)
+</pre>
+
+<ul class="org-ul">
+<li>メソッド探索の流れ
+<ol class="org-ol">
+<li>YARVがsendを呼ぶ</li>
+<li>メソッド探索</li>
+<li>メソッドディスパッチ</li>
+<li>YARVが対象のメソッドを実行する</li>
+</ol></li>
+<li>Rubyは内部的にメソッドを11種類のタイプに分けて扱っている。メソッドディスパッチの間、Rubyは呼び出そうとしているメソッドのタイプを調べ、そのタイプに従ってそれぞれ異なる呼び出し方をする。YARVはほとんどのメソッドを、ISEQ(命令列)というメソッドタイプとして扱う(p102)</li>
+<li>キーワード引数を実装するためにハッシュが使われているのを証明する(p110)</li>
+<li>Rubyは、ユーザが作成したクラスの各オブジェクトを、RObjectというCの構造体に格納する(p116)</li>
+<li>すべてのRubyオブジェクトは、クラスへのポインタとインスタンス変数の配列の組み合わせである、という(p116)</li>
+<li>クラスの2つのインスタンスの可視化の図(p119)</li>
+<li>整数や文字列、シンボルなどの基本データ型を含むすべての値がオブジェクトである(p119)
+<ul class="org-ul">
+<li>ユーザが定義したクラスをRubyはRObject構造体に保存する</li>
+<li>一般的なデータ型の各値を保存するために、RubyはRObjectとは異なるC構造体を使用する</li>
+</ul></li>
+<li>パフォーマンスの最適化のため、Rubyは小さな整数値やシンボルといった単純な値を構造体を使わずVALUEポインタの中に直接保存する。VALUEの下位数ビットに保存したフラグを使ってクラスを記録する(p120)</li>
+<li>新しいインスタンス変数を保存するのにどれくらいかかるか検証する。オブジェクトごとに新しいクラスを作る(p124)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>新しいインスタンス変数を保存する時間を計測する</label><pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">'benchmark'</span>
+
+<span class="org-type">ITERATIONS</span> = 100000
+<span class="org-type">GC</span>.disable
+obj = <span class="org-type">ITERATIONS</span>.times.map { <span class="org-type">Class</span>.new.new }
+
+<span class="org-type">Benchmark</span>.bm <span class="org-keyword">do</span> |bench|
+  20.times <span class="org-keyword">do</span> |count|
+    bench.report(<span class="org-string">"adding instance variable number </span><span class="org-variable-name">#{count+1}</span><span class="org-string">"</span>) <span class="org-keyword">do</span>
+      <span class="org-type">ITERATIONS</span>.times <span class="org-keyword">do</span> |n|
+        obj[n].instance_variable_set(<span class="org-string">"@var</span><span class="org-variable-name">#{count}</span><span class="org-string">"</span>, <span class="org-string">"value"</span>)
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<pre class="example">
+       user     system      total        real
+adding instance variable number 1  0.021548   0.020863   0.042411 (  0.042811)
+adding instance variable number 2  0.022505   0.003532   0.026037 (  0.026317)
+adding instance variable number 3  0.023075   0.003734   0.026809 (  0.027071)
+adding instance variable number 4  0.024410   0.004075   0.028485 (  0.028722)
+adding instance variable number 5  0.031556   0.003862   0.035418 (  0.035679)
+adding instance variable number 6  0.020043   0.009000   0.029043 (  0.029327)
+adding instance variable number 7  0.022835   0.003691   0.026526 (  0.026792)
+adding instance variable number 8  0.031815   0.000680   0.032495 (  0.032762)
+adding instance variable number 9  0.035043   0.008684   0.043727 (  0.044222)
+adding instance variable number 10  0.027289   0.000000   0.027289 (  0.027487)
+adding instance variable number 11  0.027571   0.003536   0.031107 (  0.031416)
+adding instance variable number 12  0.015372   0.012116   0.027488 (  0.027830)
+adding instance variable number 13  0.028007   0.000680   0.028687 (  0.029049)
+adding instance variable number 14  0.031383   0.003799   0.035182 (  0.035621)
+adding instance variable number 15  0.025727   0.003518   0.029245 (  0.029572)
+adding instance variable number 16  0.015992   0.012207   0.028199 (  0.028549)
+adding instance variable number 17  0.049342   0.004136   0.053478 (  0.054039)
+adding instance variable number 18  0.023057   0.016051   0.039108 (  0.039487)
+adding instance variable number 19  0.016073   0.013158   0.029231 (  0.029594)
+adding instance variable number 20  0.026045   0.003476   0.029521 (  0.029833)
+</pre>
+
+<ul class="org-ul">
+<li>すべてのオブジェクトは、RClass構造体へのポインタを保存することで自分のクラスを記憶する(p127)</li>
+<li>Rubyクラスの定義(p129)
+<ul class="org-ul">
+<li>メソッド定義のグループを含む</li>
+<li>属性名のテーブルを含む</li>
+<li>Rubyオブジェクトである</li>
+<li>スーパークラスポインタを含む</li>
+<li>定数テーブルを含む</li>
+</ul></li>
+</ul>
 </div>
 </div>
 
-<div id="outline-container-orgdeaf319" class="outline-2">
-<h2 id="orgdeaf319"><a href="#orgdeaf319">関連</a></h2>
-<div class="outline-text-2" id="text-orgdeaf319">
+<div id="outline-container-org0ac7bb0" class="outline-2">
+<h2 id="org0ac7bb0"><a href="#org0ac7bb0">関連</a></h2>
+<div class="outline-text-2" id="text-org0ac7bb0">
 </div>
 </div>
 </div>
