@@ -100,7 +100,9 @@ WORKDIR /work
 
 COPY package.json ./
 COPY yarn.lock ./
-RUN npm install
+RUN --mount=type=cache,target=/root/.npm \
+    --mount=type=cache,target=/work/node_modules \
+    npm install
 
 COPY .textlintrc ./
 COPY prh.yml ./

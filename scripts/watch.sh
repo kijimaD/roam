@@ -12,7 +12,8 @@ which inotifywait # 依存チェック
 
 docker build . --target textlint -t roam_textlint
 
-modify() {
+# orgファイルの更新時フック
+modifyorg() {
     inotifywait -m -e modify --format '%w%f' . | while read FILE; do
         if [[ $FILE =~ .*org$ ]]; then
             echo "File $FILE was modified..."
@@ -31,6 +32,16 @@ modify() {
                 notify-send "Fail Textlint" ""
             fi
             echo "✓ finish textlint"
+        fi
+    done
+}
+
+# 画像ファイルの更新フック
+modifyimage() {
+    inotifywait -m -e modify --format '%w%f' ./images | while read FILE; do
+        if [[ $FILE =~ \./images/.* ]]; then
+            # 画像を反映する
+            cp -r images public/
         fi
     done
 }
@@ -62,6 +73,7 @@ dblock() {
     done
 }
 
-modify &
+modifyorg &
+modifyimage &
 dblock &
 wait
