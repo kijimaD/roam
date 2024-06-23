@@ -42,6 +42,7 @@
 :Effort:   20:00
 :END:
 :LOGBOOK:
+CLOCK: [2024-06-23 Sun 22:13]--[2024-06-23 Sun 22:38] =>  0:25
 CLOCK: [2024-06-23 Sun 20:54]--[2024-06-23 Sun 21:19] =>  0:25
 CLOCK: [2024-06-23 Sun 20:27]--[2024-06-23 Sun 20:52] =>  0:25
 CLOCK: [2024-06-23 Sun 19:48]--[2024-06-23 Sun 20:13] =>  0:25
@@ -555,6 +556,61 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
   - OPTIMIZED
   - MISSING
   - REFINED
+
+#+caption: メソッド呼び出し。呼び出し元のコードとターゲットメソッドの両方がYARV命令列で構成されている(p104)
+#+begin_src ruby :results output
+  code = <<END
+    def display_message
+      puts "The quick brown fox jumps over the lazy dog."
+    end
+    display_message
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(4,17)> (catch: FALSE)
+0000 definemethod                           :display_message, display_message(   1)[Li]
+0003 putself                                                          (   4)[Li]
+0004 opt_send_without_block                 <calldata!mid:display_message, argc:0, FCALL|VCALL|ARGS_SIMPLE>
+0006 leave
+
+== disasm: #<ISeq:display_message@<compiled>:1 (1,2)-(3,5)> (catch: FALSE)
+0000 putself                                                          (   2)[LiCa]
+0001 putstring                              "The quick brown fox jumps over the lazy dog."
+0003 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+0005 leave                                                            (   3)[Re]
+#+end_src
+
+#+caption: 単純なメソッド呼び出しのスタックフレームの関係図(p104)
+[[file:images/20240623-method.drawio.svg]]
+
+#+caption: 引数タイプを調べる(p105)
+#+begin_src ruby :results output
+    def five_argument_types(a, b = 1, *args, c, &d)
+      puts "Standard argument #{a.inspect}"
+      puts "Optional argument #{b.inspect}"
+      puts "Splat argument array #{args.inspect}"
+      puts "Post argument #{c.inspect}"
+      puts "Block argument #{d.inspect}"
+    end
+
+  five_argument_types(1, 2, 3, 4, 5, 6) do
+    puts "block"
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+Standard argument 1
+Optional argument 2
+Splat argument array [3, 4, 5]
+Post argument 6
+Block argument #<Proc:0x0000561ae7064340 -:9>
+#+end_src
+
+- Rubyはコードをコンパイルすると、各メソッドごとにローカル変数と引数を格納するテーブルを作成する(p105)
 - キーワード引数を実装するためにハッシュが使われているのを証明する(p110)
 - Rubyは、ユーザが作成したクラスの各オブジェクトを、RObjectというCの構造体に格納する(p116)
 - すべてのRubyオブジェクトは、クラスへのポインタとインスタンス変数の配列の組み合わせである、という(p116)
