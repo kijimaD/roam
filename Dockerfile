@@ -101,7 +101,6 @@ WORKDIR /work
 COPY package.json ./
 COPY yarn.lock ./
 RUN --mount=type=cache,target=/root/.npm \
-    --mount=type=cache,target=/work/node_modules \
     npm install
 
 COPY .textlintrc ./

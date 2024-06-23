@@ -42,6 +42,10 @@ modifyimage() {
         if [[ $FILE =~ \./images/.* ]]; then
             # 画像を反映する
             cp -r images public/
+
+            # 一覧ページ更新(org)
+            make update-dlinks
+            echo "✓ update dblock"
         fi
     done
 }

@@ -42,6 +42,25 @@
 :Effort:   20:00
 :END:
 :LOGBOOK:
+CLOCK: [2024-06-23 Sun 20:54]--[2024-06-23 Sun 21:19] =>  0:25
+CLOCK: [2024-06-23 Sun 20:27]--[2024-06-23 Sun 20:52] =>  0:25
+CLOCK: [2024-06-23 Sun 19:48]--[2024-06-23 Sun 20:13] =>  0:25
+CLOCK: [2024-06-23 Sun 19:22]--[2024-06-23 Sun 19:47] =>  0:25
+CLOCK: [2024-06-23 Sun 17:12]--[2024-06-23 Sun 17:37] =>  0:25
+CLOCK: [2024-06-23 Sun 13:30]--[2024-06-23 Sun 13:56] =>  0:26
+CLOCK: [2024-06-23 Sun 11:12]--[2024-06-23 Sun 11:37] =>  0:25
+CLOCK: [2024-06-22 Sat 23:31]--[2024-06-22 Sat 23:56] =>  0:25
+CLOCK: [2024-06-22 Sat 23:06]--[2024-06-22 Sat 23:31] =>  0:25
+CLOCK: [2024-06-22 Sat 22:41]--[2024-06-22 Sat 23:06] =>  0:25
+CLOCK: [2024-06-22 Sat 21:36]--[2024-06-22 Sat 22:01] =>  0:25
+CLOCK: [2024-06-22 Sat 19:16]--[2024-06-22 Sat 19:41] =>  0:25
+CLOCK: [2024-06-22 Sat 18:46]--[2024-06-22 Sat 19:11] =>  0:25
+CLOCK: [2024-06-22 Sat 18:07]--[2024-06-22 Sat 18:32] =>  0:25
+CLOCK: [2024-06-22 Sat 15:07]--[2024-06-22 Sat 15:32] =>  0:25
+CLOCK: [2024-06-22 Sat 10:25]--[2024-06-22 Sat 10:50] =>  0:25
+CLOCK: [2024-06-22 Sat 10:00]--[2024-06-22 Sat 10:25] =>  0:25
+CLOCK: [2024-06-22 Sat 09:14]--[2024-06-22 Sat 09:39] =>  0:25
+CLOCK: [2024-06-22 Sat 08:32]--[2024-06-22 Sat 08:57] =>  0:25
 CLOCK: [2024-06-20 Thu 21:40]--[2024-06-20 Thu 22:05] =>  0:25
 CLOCK: [2024-06-20 Thu 20:13]--[2024-06-20 Thu 20:38] =>  0:25
 CLOCK: [2024-06-20 Thu 19:42]--[2024-06-20 Thu 20:07] =>  0:25
@@ -225,8 +244,124 @@ local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, k
 #+end_src
 
 - YARVは途中の値や引数、返り値を把握するために内部的にスタックを利用する。YARVはスタック志向な仮想マシンである、という。内部スタックに加えて、Rubyプログラムのコールスタックも把握し続ける。どのメソッドが他のメソッド、関数、ブロックやラムダなどを呼び出したか記録される。YARVは二重スタックマシンである(p62)
-- p62の図
+
+#+caption: YARV命令列、YARVが管理するフレーム、内部レジスタの関係図(p62参考)
+[[file:images/20240623-inner.drawio.svg]]
+
+#+caption: スタックフレームの積み重なるイメージ(p62参考)
+[[file:images/20240623-stack.drawio.svg]]
+
+- Rubyは新しいプログラムを開始する際、まずはじめにTOPフレームを生成する。EVALというタイプのフレームは、Rubyスクリプトのトップレベルのスコープに対応している(p67)
+- Rubyは ~pubobject~ や ~send~ といったすべてのYARV命令をCを使って実装している。しかしCソースファイル内に各YARV命令のコードはない。そのかわり、 ~insns.def~ (define instruction)という単一の巨大なファイル内にYARV命令のCソースコードを記述している、という。ほとんどの部分はCではない。ビルド処理の中で ~insns.def~ の内容をCコードへと変換する(p68)
+  - YARNV命令定義(~insns.def~ ファイル) -> プリプロセス -> YARV Cコード(~vm.inc~ ファイル)
+  - RubyはRubyを使って ~insns.def~ を処理し、 ~vm.inc~ というCソースコードを生成する。そして生成したCソースコードとあわせて、まずは小さなminirubyというコマンドをビルドし、これを用いて大きなRubyコマンドを作っていく
+
+#+caption: YARV命令putself
+#+begin_src git-permalink
+https://github.com/kd-collective/ruby/blob/dd04def10f22296c9a98b4d796c100b9ad4e2388/insns.def#L348-L356
+#+end_src
+
+#+RESULTS:
+#+begin_src c
+/* put self. */
+DEFINE_INSN
+putself
+()
+()
+(VALUE val)
+{
+    val = GET_SELF();
+}
+#+end_src
+
+- RubyコアチームはRuby1.9からYARV仮想マシンを導入した。Rubyの初期のバージョンはASTのノードを直接たどることでプログラムを実行していた。Rubyはただ字句解析と構文解析を行い、すぐにコードを実行していた。コンパイラと新しい仮想マシンを導入したのは、速度だ。YARVを使用してコンパイルされたRubyプログラムを実行すると、直接ASTをたどるよりはるかに高速にプログラムを実行できる(p71)
+- Rubyは変数に保存した値すべてを、YARV命令列の引数や返り値と一緒にYARVスタックに保存する。しかしこれらの変数へのアクセスはそう単純ではない。変数の値を読み書きしやすくするために、Rubyはローカル変数アクセスと動的変数アクセスという2つの全く異なる方法を用いる、という(p74)
+- ローカル変数アクセス(p74)
+  - Rubyは現在のメソッドにおける特殊変数のテーブルへのポインタか、現在のレキシカルスコープへのポインタのいずれかをsvar/crefに含める
+  - スタック上のスペースに値を書き込むために、環境ポインタ(EP)を使う。このポインタは現在のメソッド用のローカル変数がスタック上のどこにあるかをポイントする。スタックポインタ(SP)の値がYARV命令を実行することによって変化しても、EPの値はそこにとどまる
+
+#+caption: ローカル変数アクセスの例。setlocalでスタックからstrの位置に保存する。後でEPとインデックス0を使って保存位置をたどれる
+#+begin_src ruby :results output
+  code = <<END
+  def display_string
+      str1 = "Local access."
+      puts str1
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(4,3)> (catch: FALSE)
+0000 definemethod                           :display_string, display_string(   1)[Li]
+0003 putobject                              :display_string
+0005 leave
+
+== disasm: #<ISeq:display_string@<compiled>:1 (1,0)-(4,3)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] str1@0
+0000 putstring                              "Local access."           (   2)[LiCa]
+0002 setlocal_WC_0                          str1@0
+0004 putself                                                          (   3)[Li]
+0005 getlocal_WC_0                          str1@0
+0007 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+0009 leave                                                            (   4)[Re]
+#+end_src
+
+#+caption: setlocal, getlocalを図で見る
+[[file:images/20240623-local.drawio.svg]]
+
 - 動的変数アクセス(p78)
+  - 異なるスコープで定義された変数を使用しようとした場合にRubyは動的変数アクセスを行う。たとえばブロックの内側かブロックの外側の変数にアクセスしようとしたとき
+
+#+caption: 動的変数アクセスの例。putsメソッドがあるブロックのgetlocal_WC_1命令に注目。1はブロックのスコープからそれを呼んだメソッドのスコープに1つ戻ることを意味している
+#+begin_src ruby :results output
+  code = <<END
+  def display_string
+    str = "Dynamic access."
+    10.times do
+      puts str
+    end
+  end
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(6,3)> (catch: FALSE)
+0000 definemethod                           :display_string, display_string(   1)[Li]
+0003 putobject                              :display_string
+0005 leave
+
+== disasm: #<ISeq:display_string@<compiled>:1 (1,0)-(6,3)> (catch: FALSE)
+== catch table
+| catch type: break  st: 0004 ed: 0009 sp: 0000 cont: 0009
+| == disasm: #<ISeq:block in display_string@<compiled>:3 (3,11)-(5,5)> (catch: FALSE)
+| == catch table
+| | catch type: redo   st: 0001 ed: 0006 sp: 0000 cont: 0001
+| | catch type: next   st: 0001 ed: 0006 sp: 0000 cont: 0006
+| |------------------------------------------------------------------------
+| 0000 nop                                                              (   3)[Bc]
+| 0001 putself                                                          (   4)[Li]
+| 0002 getlocal_WC_1                          str@0
+| 0004 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+| 0006 nop
+| 0007 leave                                                            (   5)[Br]
+|------------------------------------------------------------------------
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] str@0
+0000 putstring                              "Dynamic access."         (   2)[LiCa]
+0002 setlocal_WC_0                          str@0
+0004 putobject                              10                        (   3)[Li]
+0006 send                                   <calldata!mid:times, argc:0>, block in display_string
+0009 nop
+0010 leave                                                            (   6)[Re]
+#+end_src
+
+#+caption: 動的変数アクセス
+[[file:images/20240623-dynamic.drawio.svg]]
 
 #+begin_src ruby :results output
 puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
@@ -244,7 +379,7 @@ puts RubyVM::InstructionSequence.compile('puts 1 + 2').disasm
 #+end_src
 
 - スタック内の ~EIP-1~ スロットはこのスタックフレーム内で定義された特殊変数のポインタである ~svar~ の値を含んでいる。Rubyにおける特殊変数とは、利便性を目的に環境や直前の操作によってRubyが自動で生成した値を参照するもの、だという(p83)
-- ~$&~ は明らかにグローバルでない。Rubyはこの振る舞いを可能にするために、特殊変数の集合をスタックのレベルごとにわけて保存している
+- ~$&~ は明らかにグローバルでない。Rubyはこの振る舞いを可能にするために、特殊変数の集合をスタックのレベルごとにわけて保存している(p84)
 
 #+caption: スコープごとに$&を保持している
 #+begin_src ruby :results output
@@ -266,9 +401,105 @@ Value of $& inside method: dog
 Value of $& top level scope: fox
 #+end_src
 
+#+caption: 各スタックフレームは専用の特殊変数のセットを持つ
+[[file:images/20240623-special.drawio.svg]]
+
+#+caption: ブロック内で実行されたdogの検索によってトップレベルスコープの$&の値が上書きされる。Rubyは特殊変数に関してはトップレベルスコープとブロックの内側のスコープは同じとみなす、という(p86)
+#+begin_src ruby :results output
+  str = "The quick brown fox jumped over the lazy dog.\n"
+  /fox/.match(str)
+
+  2.times do
+    /dog/.match(str)
+    puts "Value of $& inside block: #{$&}"
+  end
+
+  puts "Value of $& in the top-level scope: #{$&}"
+#+end_src
+
+#+RESULTS:
+#+begin_src
+Value of $& inside block: dog
+Value of $& inside block: dog
+Value of $& in the top-level scope: dog
+#+end_src
+
+#+caption: ソースコードから特殊変数の一覧を確認する
+#+begin_src git-permalink
+  https://github.com/kd-collective/ruby/blob/dd04def10f22296c9a98b4d796c100b9ad4e2388/parse.y#L9572-L9587
+#+end_src
+
+#+RESULTS:
+#+begin_src
+      case '~':		/* $~: match-data */
+      case '*':		/* $*: argv */
+      case '$':		/* $$: pid */
+      case '?':		/* $?: last status */
+      case '!':		/* $!: error string */
+      case '@':		/* $@: error position */
+      case '/':		/* $/: input record separator */
+      case '\\':		/* $\: output record separator */
+      case ';':		/* $;: field separator */
+      case ',':		/* $,: output field separator */
+      case '.':		/* $.: last read line number */
+      case '=':		/* $=: ignorecase */
+      case ':':		/* $:: load path */
+      case '<':		/* $<: reading filename */
+      case '>':		/* $>: default output handle */
+      case '\"':		/* $": already loaded files */
+#+end_src
+
+#+caption: ブロックをコンパイルしたコード内のthrow 2はYARVコード片のいずれかにつながるポインタのテーブル、捕捉テーブルを使ってYARV命令レベルで例外を送出するもの、だという(p96)
+#+begin_src ruby :results output
+  code = <<END
+    10.times do |n|
+      puts n
+      break
+    end
+      puts "continue from here."
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(5,30)> (catch: TRUE)
+== catch table
+| catch type: break  st: 0000 ed: 0005 sp: 0000 cont: 0005
+| == disasm: #<ISeq:block in <compiled>@<compiled>:1 (1,11)-(4,5)> (catch: TRUE)
+| == catch table
+| | catch type: redo   st: 0001 ed: 0010 sp: 0000 cont: 0001
+| | catch type: next   st: 0001 ed: 0010 sp: 0000 cont: 0010
+| |------------------------------------------------------------------------
+| local table (size: 1, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+| [ 1] n@0<Arg>
+| 0000 nop                                                              (   1)[Bc]
+| 0001 putself                                                          (   2)[Li]
+| 0002 getlocal_WC_0                          n@0
+| 0004 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+| 0006 pop
+| 0007 putnil                                                           (   3)[Li]
+| 0008 throw                                  2
+| 0010 nop
+| 0011 leave                                                            (   4)[Br]
+|------------------------------------------------------------------------
+0000 putobject                              10                        (   1)[Li]
+0002 send                                   <calldata!mid:times, argc:0>, block in <compiled>
+0005 nop
+0006 pop                                                              (   1)
+0007 putself                                                          (   5)[Li]
+0008 putstring                              "continue from here."
+0010 opt_send_without_block                 <calldata!mid:puts, argc:1, FCALL|ARGS_SIMPLE>
+0012 leave
+#+end_src
+
+- YARVはthrow命令を実行すると、現在のYARV命令シーケンス用のブレークポインタを含む捕捉テーブルがあるかどうかをチェックする。見つからなければ、スタックを繰り返したどる。一度捕捉テーブルへのポインタを見つけると、新しい実行ポイントを反映するために、Rubyコールスタック(CFP)と内部YARVスタックの両方をリセットする。そしてYARVはその地点から処理を継続する(p96)
+- returnキーワードも、捕捉テーブルを使用するRubyの一般的な制御構造である。ブロック内でreturnを呼び出す際にはいつでも、Rubyは内部的に例外を送出する。そしてbreakと同じ方法で捕捉テーブルポインタとともにそれを捕捉する。breakとreturnは例外を送出する同じYARV命令を使っている。breakに加えて、rescue, ensure, retry, redo, nextの実装に捕捉テーブルを使用する(p98)
+  - return -> throw 1
+  - break -> throw 2
 - Rubyがforループをどうコンパイルするか検証する。実際に内部でeachを使ってforループを実装していることを確認できる (p99)
 
-#+caption: eachを使ってforループを実装しているのを確認する
+#+caption: eachを使ってforループを実装しているのを確認する(p99)
 #+begin_src ruby :results output
   code = <<END
        for i in 0..5
@@ -307,12 +538,23 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
 0006 leave                                                            (   1)
 #+end_src
 
-- メソッド探索の流れ
+- メソッド探索の流れ(p102)
   1. YARVがsendを呼ぶ
   2. メソッド探索
   3. メソッドディスパッチ
   4. YARVが対象のメソッドを実行する
 - Rubyは内部的にメソッドを11種類のタイプに分けて扱っている。メソッドディスパッチの間、Rubyは呼び出そうとしているメソッドのタイプを調べ、そのタイプに従ってそれぞれ異なる呼び出し方をする。YARVはほとんどのメソッドを、ISEQ(命令列)というメソッドタイプとして扱う(p102)
+  - ISEQ
+  - CFUNC
+  - ATTRSET
+  - IVAR
+  - BMETHOD
+  - ZSUPER
+  - UNDEF
+  - NOTIMPLEMENTED
+  - OPTIMIZED
+  - MISSING
+  - REFINED
 - キーワード引数を実装するためにハッシュが使われているのを証明する(p110)
 - Rubyは、ユーザが作成したクラスの各オブジェクトを、RObjectというCの構造体に格納する(p116)
 - すべてのRubyオブジェクトは、クラスへのポインタとインスタンス変数の配列の組み合わせである、という(p116)
