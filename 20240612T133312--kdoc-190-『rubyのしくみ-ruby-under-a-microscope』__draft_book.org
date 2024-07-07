@@ -42,6 +42,7 @@
 :Effort:   20:00
 :END:
 :LOGBOOK:
+CLOCK: [2024-07-07 Sun 19:59]--[2024-07-07 Sun 20:24] =>  0:25
 CLOCK: [2024-06-26 Wed 22:40]--[2024-06-26 Wed 23:05] =>  0:25
 CLOCK: [2024-06-26 Wed 22:15]--[2024-06-26 Wed 22:40] =>  0:25
 CLOCK: [2024-06-26 Wed 21:49]--[2024-06-26 Wed 22:14] =>  0:25
@@ -717,6 +718,320 @@ adding instance variable number 20  0.026045   0.003476   0.029521 (  0.029833)
   - モジュールはスーパークラスを持てない
   - includeキーワードを使うと、モジュールをクラスにインクルードできる
 - Rubyは内部的に、モジュールをクラスとして実装している。モジュールを定義すると、新しいクラスを作るときと同じようにRClass/rb_classext_struct構造体のペアを作成する(p148)
+
+#+caption: includeする
+#+begin_src ruby
+  module Professor
+  end
+  class Mathematician < Person
+      include Professor
+  end
+#+end_src
+
+- ↑を実行したとき、RubyはProfessorモジュール用にRClass構造体のコピーを生成し、Mathematicianの新しいスーパークラスとして使う(p150)
+
+#+caption: includeしたときに起こること(p150)
+[[file:images/20240707-include.drawio.svg]]
+
+- Rubyのメソッド探索アルゴリズム。対象のメソッドを含むクラスかモジュールを見つけるまでsuperポインタをたどる(p152)
+- Rubyは内部的にクラス継承を使ってモジュールのインクルードを実装している(p156)
+- チェーン中のスーパークラスの数に依存して、メソッド探索は時間を消費する。これを軽減するため、Rubyは後で使えるように探索結果をキャッシュする。コードから呼び出されたメソッドを実装しているクラスあるいはモジュールを、グローバルメソッドキャッシュとインラインメソッドキャッシュという2つの方法でキャッシュする(p156)
+- Rubyは動的言語なので、好きなときに新しいメソッドを定義できる。メソッド探索の結果が変更になってしまう可能性があるため、これを実現するにはRubyはグローバルとインラインのキャッシュをクリアする必要がある(p158)
+- モジュールはRubyプログラム中ではスーパークラスを持てない。しかし内部的にはモジュールはクラスとして表現されるので、Rubyの内部では可能(p161)
+- prependを使うとRubyはスーパークラスチェーンで対象クラスの前にモジュールを配置する(p166)
+
+#+caption: prependは対象クラスの前にモジュールを配置する(p166)
+[[file:images/20240707-prepend.drawio.svg]]
+
+#+caption: Rubyがモジュールをコピーしている箇所
+#+begin_src git-permalink
+https://github.com/kd-collective/ruby/blob/dd04def10f22296c9a98b4d796c100b9ad4e2388/class.c#L1137-L1160
+#+end_src
+
+#+RESULTS:
+#+begin_src
+VALUE
+rb_include_class_new(VALUE module, VALUE super)
+{
+    VALUE klass = rb_iclass_alloc(rb_cClass);
+
+    RCLASS_M_TBL(klass) = RCLASS_M_TBL(module);
+
+    RCLASS_SET_ORIGIN(klass, klass);
+    if (BUILTIN_TYPE(module) == T_ICLASS) {
+        module = METACLASS_OF(module);
+    }
+    RUBY_ASSERT(!RB_TYPE_P(module, T_ICLASS));
+    if (!RCLASS_CONST_TBL(module)) {
+        RCLASS_CONST_TBL(module) = rb_id_table_create(0);
+    }
+
+    RCLASS_CVC_TBL(klass) = RCLASS_CVC_TBL(module);
+    RCLASS_CONST_TBL(klass) = RCLASS_CONST_TBL(module);
+
+    RCLASS_SET_SUPER(klass, super);
+    RBASIC_SET_CLASS(klass, module);
+
+    return (VALUE)klass;
+}
+#+end_src
+
+- モジュールやクラスを定義するたびに、実は定数も定義されている。そしてモジュールやクラスを参照したり使用するたび、Rubyは関連する定数を探索する必要がある(p173)
+- レキシカルスコープは、クラス階層でも他のいずれのスキームでもなく、プログラムの構文的な構造上のコードの区分をさす(p176)
+- コンパイルされた各コード片用に、Rubyは親のレキシカルスコープと現在のクラスあるいはモジュールを把握するためのポインタを使用する(p177)
+- Rubyはメソッドを見つけるためにスーパークラスを、定数を見つけるために親のレキシカルスコープをそれぞれ使用する(p181)
+- 定数探索アルゴリズム(p183)
+  1. レキシカルスコープチェーン内を探索する
+  2. 各スコープのクラスについてautoloadを確認する
+  3. スーパークラスチェーン内を探索する
+  4. 各スーパークラスについてautoloadを確認する
+  5. const_missingを呼ぶ
+- autoloadは、与えられた定数が未定義だった場合にRubyに新しいソースファイルを開いて読み込むよう指示するもの(p183)
+- クラスやモジュールを定義するときには、継承階層とレキシカルスコープ階層両方にその新しいクラス(かモジュール)を追加する(p184)
+- ハッシュテーブルは値を、元の値から計算された整数値に基づいて、バケットと呼ばれるグループに組織化する。値を見つける必要があるときには、ハッシュ値を再計算することでどのバケットにその値があるかを見つけられる。このおかげでハッシュテーブルは検索を高速に行える(p188)
+- Ruby1.8と1.9は新しい空のハッシュのために11個のバケットを最初に作成する(p189)
+- ハッシュ値をバケット数で割った剰余が、新しいキーと値のペアを保存するバケットの添字となる(p190)
+- ハッシュテーブルを使用すると、そのキーのハッシュ値を再計算することでRubyはまっすぐ探しているキーにジャンプできる(p191)
+- なぜRubyは11個のバケットに分散しているそれらのデータを高速に検索できるのだろうか。ハッシュ関数が高速でも、Rubyがいくら値をハッシュテーブル内の11個のバケットにむらなく分散させたとしても、100万強の要素があるとしたらターゲットキーを見つけるためにまだ10万の要素の中からバケットを検索しなければならない(p194)
+- ゆくゆくは2つ以上の要素が同じバケット内に保存されることになる。そうなるとハッシュ衝突が生じる。これはもはやハッシュ関数に基づいたキーを一意に識別して取り出せないことを意味している(p195)
+
+#+caption: 各st_table_entry構造体は同一のバケット内の次のエントリへのポインタを含んでいる(p195)
+[[file:images/20240707-hash.drawio.svg]]
+
+- 値を取得するためには、Rubyは連結リストを順に辿りながらターゲットを各キーと比較していく必要がある(p195)
+- 密度が5(RubyのCコード内で定数になっている値)を超えると、Rubyはより多くのバケットを割り当て、新しいバケットを含めた集合に対して再ハッシュ(再分散)する(p196)
+
+#+caption: 再ハッシュする実験。9回目や65回目の要素追加で大幅に時間がかかっているのがわかる(p198)
+#+begin_src ruby :results output
+  require 'benchmark'
+
+  100.times do |size|
+    hashes = []
+    10000.times do
+      hash = {}
+      (1..size).each do
+        hash[rand] = rand
+      end
+      hashes << hash
+    end
+
+    GC.disable
+
+    Benchmark.bm do |bench|
+      bench.report("adding element number #{size+1}") do
+        10000.times do |n|
+          hashes[n][size] = rand
+        end
+      end
+    end
+
+    GC.enable
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+       user     system      total        real
+adding element number 1  0.001368   0.000000   0.001368 (  0.001366)
+       user     system      total        real
+adding element number 2  0.000759   0.000000   0.000759 (  0.000759)
+       user     system      total        real
+adding element number 3  0.000765   0.000000   0.000765 (  0.000764)
+       user     system      total        real
+adding element number 4  0.000822   0.000000   0.000822 (  0.000821)
+       user     system      total        real
+adding element number 5  0.001048   0.000000   0.001048 (  0.001049)
+       user     system      total        real
+adding element number 6  0.000849   0.000000   0.000849 (  0.000849)
+       user     system      total        real
+adding element number 7  0.000946   0.000000   0.000946 (  0.000946)
+       user     system      total        real
+adding element number 8  0.000896   0.000000   0.000896 (  0.000896)
+       user     system      total        real
+adding element number 9  0.002349   0.003923   0.006272 (  0.006272)
+       user     system      total        real
+adding element number 10  0.001054   0.000000   0.001054 (  0.001053)
+       user     system      total        real
+adding element number 11  0.001067   0.000000   0.001067 (  0.001067)
+       user     system      total        real
+adding element number 12  0.001206   0.000000   0.001206 (  0.001205)
+       user     system      total        real
+adding element number 13  0.001314   0.000000   0.001314 (  0.001314)
+       user     system      total        real
+adding element number 14  0.001103   0.000000   0.001103 (  0.001102)
+       user     system      total        real
+adding element number 15  0.001265   0.000000   0.001265 (  0.001264)
+       user     system      total        real
+adding element number 16  0.001205   0.000000   0.001205 (  0.001205)
+       user     system      total        real
+adding element number 17  0.001184   0.000000   0.001184 (  0.001184)
+       user     system      total        real
+adding element number 18  0.001367   0.000000   0.001367 (  0.001368)
+       user     system      total        real
+adding element number 19  0.001186   0.000000   0.001186 (  0.001184)
+       user     system      total        real
+adding element number 20  0.001239   0.000000   0.001239 (  0.001241)
+       user     system      total        real
+adding element number 21  0.001491   0.000000   0.001491 (  0.001490)
+       user     system      total        real
+adding element number 22  0.001310   0.000000   0.001310 (  0.001308)
+       user     system      total        real
+adding element number 23  0.001512   0.000000   0.001512 (  0.001512)
+       user     system      total        real
+adding element number 24  0.001599   0.000000   0.001599 (  0.001599)
+       user     system      total        real
+adding element number 25  0.001432   0.000000   0.001432 (  0.001432)
+       user     system      total        real
+adding element number 26  0.001622   0.000000   0.001622 (  0.001620)
+       user     system      total        real
+adding element number 27  0.001733   0.000000   0.001733 (  0.001733)
+       user     system      total        real
+adding element number 28  0.001698   0.000000   0.001698 (  0.001697)
+       user     system      total        real
+adding element number 29  0.001774   0.000000   0.001774 (  0.001774)
+       user     system      total        real
+adding element number 30  0.001970   0.000000   0.001970 (  0.001971)
+       user     system      total        real
+adding element number 31  0.001885   0.000000   0.001885 (  0.001884)
+       user     system      total        real
+adding element number 32  0.001836   0.000000   0.001836 (  0.001837)
+       user     system      total        real
+adding element number 33  0.010920   0.000000   0.010920 (  0.010919)
+       user     system      total        real
+adding element number 34  0.002047   0.000000   0.002047 (  0.002045)
+       user     system      total        real
+adding element number 35  0.001828   0.000000   0.001828 (  0.001828)
+       user     system      total        real
+adding element number 36  0.002283   0.000000   0.002283 (  0.002283)
+       user     system      total        real
+adding element number 37  0.001917   0.000000   0.001917 (  0.001916)
+       user     system      total        real
+adding element number 38  0.002289   0.000000   0.002289 (  0.002288)
+       user     system      total        real
+adding element number 39  0.002257   0.000000   0.002257 (  0.002256)
+       user     system      total        real
+adding element number 40  0.002469   0.000000   0.002469 (  0.002467)
+       user     system      total        real
+adding element number 41  0.002412   0.000000   0.002412 (  0.002411)
+       user     system      total        real
+adding element number 42  0.002147   0.000000   0.002147 (  0.002147)
+       user     system      total        real
+adding element number 43  0.002468   0.000000   0.002468 (  0.002468)
+       user     system      total        real
+adding element number 44  0.002620   0.000000   0.002620 (  0.002619)
+       user     system      total        real
+adding element number 45  0.002422   0.000000   0.002422 (  0.002423)
+       user     system      total        real
+adding element number 46  0.002546   0.000000   0.002546 (  0.002546)
+       user     system      total        real
+adding element number 47  0.002206   0.000000   0.002206 (  0.002205)
+       user     system      total        real
+adding element number 48  0.002395   0.000000   0.002395 (  0.002393)
+       user     system      total        real
+adding element number 49  0.001899   0.000000   0.001899 (  0.001897)
+       user     system      total        real
+adding element number 50  0.001850   0.000000   0.001850 (  0.001848)
+       user     system      total        real
+adding element number 51  0.001983   0.000000   0.001983 (  0.001984)
+       user     system      total        real
+adding element number 52  0.001851   0.000000   0.001851 (  0.001851)
+       user     system      total        real
+adding element number 53  0.001862   0.000000   0.001862 (  0.001859)
+       user     system      total        real
+adding element number 54  0.002343   0.000000   0.002343 (  0.002341)
+       user     system      total        real
+adding element number 55  0.001798   0.000000   0.001798 (  0.001797)
+       user     system      total        real
+adding element number 56  0.001727   0.000000   0.001727 (  0.001726)
+       user     system      total        real
+adding element number 57  0.001812   0.000000   0.001812 (  0.001812)
+       user     system      total        real
+adding element number 58  0.001746   0.000000   0.001746 (  0.001745)
+       user     system      total        real
+adding element number 59  0.001738   0.000000   0.001738 (  0.001738)
+       user     system      total        real
+adding element number 60  0.001469   0.000000   0.001469 (  0.001467)
+       user     system      total        real
+adding element number 61  0.002399   0.000000   0.002399 (  0.002398)
+       user     system      total        real
+adding element number 62  0.001758   0.000000   0.001758 (  0.001757)
+       user     system      total        real
+adding element number 63  0.001801   0.000000   0.001801 (  0.001800)
+       user     system      total        real
+adding element number 64  0.001832   0.000000   0.001832 (  0.001829)
+       user     system      total        real
+adding element number 65  0.003167   0.011981   0.015148 (  0.015147)
+       user     system      total        real
+adding element number 66  0.001695   0.000009   0.001704 (  0.001703)
+       user     system      total        real
+adding element number 67  0.001782   0.000000   0.001782 (  0.001782)
+       user     system      total        real
+adding element number 68  0.001786   0.000000   0.001786 (  0.001784)
+       user     system      total        real
+adding element number 69  0.001754   0.000000   0.001754 (  0.001752)
+       user     system      total        real
+adding element number 70  0.001748   0.000000   0.001748 (  0.001747)
+       user     system      total        real
+adding element number 71  0.001699   0.000000   0.001699 (  0.001697)
+       user     system      total        real
+adding element number 72  0.001798   0.000000   0.001798 (  0.001798)
+       user     system      total        real
+adding element number 73  0.001767   0.000000   0.001767 (  0.001766)
+       user     system      total        real
+adding element number 74  0.002035   0.000000   0.002035 (  0.002033)
+       user     system      total        real
+adding element number 75  0.002110   0.000000   0.002110 (  0.002107)
+       user     system      total        real
+adding element number 76  0.002300   0.000000   0.002300 (  0.002298)
+       user     system      total        real
+adding element number 77  0.002153   0.000000   0.002153 (  0.002153)
+       user     system      total        real
+adding element number 78  0.002280   0.000000   0.002280 (  0.002280)
+       user     system      total        real
+adding element number 79  0.002345   0.000000   0.002345 (  0.002342)
+       user     system      total        real
+adding element number 80  0.002283   0.000000   0.002283 (  0.002280)
+       user     system      total        real
+adding element number 81  0.002317   0.000000   0.002317 (  0.002316)
+       user     system      total        real
+adding element number 82  0.002423   0.000000   0.002423 (  0.002421)
+       user     system      total        real
+adding element number 83  0.002793   0.000000   0.002793 (  0.002807)
+       user     system      total        real
+adding element number 84  0.002397   0.000000   0.002397 (  0.002396)
+       user     system      total        real
+adding element number 85  0.001989   0.000000   0.001989 (  0.001986)
+       user     system      total        real
+adding element number 86  0.001914   0.000000   0.001914 (  0.001913)
+       user     system      total        real
+adding element number 87  0.001927   0.000000   0.001927 (  0.001925)
+       user     system      total        real
+adding element number 88  0.001840   0.000000   0.001840 (  0.001839)
+       user     system      total        real
+adding element number 89  0.001760   0.000000   0.001760 (  0.001759)
+       user     system      total        real
+adding element number 90  0.001768   0.000000   0.001768 (  0.001767)
+       user     system      total        real
+adding element number 91  0.001835   0.000000   0.001835 (  0.001834)
+       user     system      total        real
+adding element number 92  0.001833   0.000000   0.001833 (  0.001831)
+       user     system      total        real
+adding element number 93  0.001803   0.000000   0.001803 (  0.001803)
+       user     system      total        real
+adding element number 94  0.001910   0.000000   0.001910 (  0.001909)
+       user     system      total        real
+adding element number 95  0.001831   0.000000   0.001831 (  0.001829)
+       user     system      total        real
+adding element number 96  0.001876   0.000000   0.001876 (  0.001874)
+       user     system      total        real
+adding element number 97  0.001859   0.000000   0.001859 (  0.001857)
+       user     system      total        real
+adding element number 98  0.001899   0.000000   0.001899 (  0.001896)
+       user     system      total        real
+adding element number 99  0.001913   0.000000   0.001913 (  0.001911)
+       user     system      total        real
+adding element number 100  0.001989   0.000000   0.001989 (  0.001988)
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
