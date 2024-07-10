@@ -1,5 +1,6 @@
 :properties:
 :ID: 20240709T000150
+:header-args+: :results output
 :end:
 #+title:      KDOC 198: 『ゼロから作るDeep Learning』
 #+date:       [2024-07-09 Tue 00:01]
@@ -38,6 +39,15 @@
 # そのページのどこが本当に必要な部分なのか。
 
 * この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-07-10 Wed 20:50]--[2024-07-10 Wed 21:15] =>  0:25
+CLOCK: [2024-07-10 Wed 17:50]--[2024-07-10 Wed 18:15] =>  0:25
+CLOCK: [2024-07-10 Wed 13:06]--[2024-07-10 Wed 13:31] =>  0:25
+CLOCK: [2024-07-10 Wed 00:05]--[2024-07-10 Wed 00:30] =>  0:25
+CLOCK: [2024-07-09 Tue 23:31]--[2024-07-09 Tue 23:56] =>  0:25
+CLOCK: [2024-07-09 Tue 00:33]--[2024-07-09 Tue 00:58] =>  0:25
+CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
+:END:
 - 作成
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -56,6 +66,279 @@
 * 概要
 # 本文(タイトルをつける)。
 [[https://www.oreilly.co.jp/books/9784873117584/][ゼロから作るDeep Learning]]は、深層学習を実装して学ぶ本。
+* メモ
+- パーセプトロンの限界は、このように 1 本の直線で分けた領域だけしか表現できない点にある(p30)
+- パーセプトロンの素晴らしさは、“層を重ねる”ことができる点にある(p31)
+- 行列Aと行列Bの積を計算するとき、Aの列数とBの行数を同じ値にする必要がある
+  - A(2x3) と B(3x4) みたいに
+
+* 実行メモ
+別のエントリに移動させる。
+
+#+caption: NumPy配列との演算
+#+begin_src python
+  import numpy as np
+  x = np.array([-1.0, 1.0, 2.0])
+  print(x)
+
+  y = x > 0
+  print(y)
+
+  z = y.astype(int)
+  print(z)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[-1.  1.  2.]
+[False  True  True]
+[0 1 1]
+#+end_src
+
+#+caption: org-babelで実行が終わらないのでshow()はコメントアウトしている
+#+begin_src python :results print
+  import numpy as np
+  import matplotlib.pylab as plt
+
+  def step_function(x):
+      return np.array(x > 0, dtype=int)
+
+  x = np.arange(-5.0, 5.0, 0.1)
+  y = step_function(x)
+  plt.plot(x, y)
+  plt.ylim(-0.1, 1.1)
+  # plt.show()
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+#+caption: シグモイド関数
+#+begin_src python
+  import numpy as np
+
+  def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+  print(sigmoid(-5))
+  print(sigmoid(-1))
+  print(sigmoid(0))
+  print(sigmoid(1))
+  print(sigmoid(5))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0.0066928509242848554
+0.2689414213699951
+0.5
+0.7310585786300049
+0.9933071490757153
+#+end_src
+
+#+caption: NumPy配列の演算
+#+begin_src python
+  import numpy as np
+
+  t = np.array([1.0, 2.0, 3.0])
+  print(1.0 + t)
+  print(1.0 / t)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[2. 3. 4.]
+[1.         0.5        0.33333333]
+#+end_src
+
+#+caption: ReLU関数
+#+begin_src python
+  import numpy as np
+
+  def rel(x):
+      return np.maximum(0, x)
+
+  print(rel(-1))
+  print(rel(0))
+  print(rel(1))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0
+0
+1
+#+end_src
+
+#+caption: 多次元配列
+#+begin_src python
+  import numpy as np
+
+  A = np.array([10, 20, 30, 40])
+  print(A)
+  print(np.ndim(A))
+  print(A.shape)
+  print(A.shape[0])
+
+  print("================")
+
+  B = np.array([[10, 20, 30, 40], [10, 20, 30, 40]])
+  print(B)
+  print(np.ndim(B))
+  print(B.shape)
+  print(B.shape[0])
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[10 20 30 40]
+1
+(4,)
+4
+================
+[[10 20 30 40]
+ [10 20 30 40]]
+2
+(2, 4)
+2
+#+end_src
+
+#+caption: 行列同士の演算
+#+begin_src python
+  import numpy as np
+
+  A = np.array([[1, 2], [3, 4]])
+  A.shape
+
+  B = np.array([[5, 6], [7, 8]])
+  B.shape
+
+  print(np.dot(A, B))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[[19 22]
+ [43 50]]
+#+end_src
+
+#+caption: 行列同士の演算では、順番を変えると結果が変わる
+#+begin_src python
+  import numpy as np
+
+  A = np.array([[1, 2], [3, 4]])
+  A.shape
+
+  B = np.array([[7, 8], [5, 6]])
+  B.shape
+
+  print(np.dot(A, B))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[[17 20]
+ [41 48]]
+#+end_src
+
+#+caption: 1x2 と 2x3 の積
+#+begin_src python
+  import numpy as np
+  X = np.array([1, 2])
+  print(X)
+  W = np.array([[1, 3, 5], [2, 4, 8]])
+  print(W)
+
+  print(X.shape)
+  print(W.shape)
+  print(np.dot(X, W))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[1 2]
+[[1 3 5]
+ [2 4 8]]
+(2,)
+(2, 3)
+[ 5 11 21]
+#+end_src
+
+#+caption: 基本式を実装する 1x2 と 2x3
+#+begin_src python
+  import numpy as np
+
+  def sigmoid(x):
+      return 1 / (1 + np.exp(-x))
+
+  X = np.array([1.0, 0.5])
+  W1 = np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+  B1 = np.array([0.1, 0.2, 0.3])
+
+  print(X.shape)
+  print(W1.shape)
+  print(B1.shape)
+
+  A1 = np.dot(X, W1) + B1
+  Z1 = sigmoid(A1)
+  print(A1)
+  print(Z1)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+(2,)
+(2, 3)
+(3,)
+[0.3 0.7 1.1]
+[0.57444252 0.66818777 0.75026011]
+#+end_src
+
+#+caption: まとめ
+#+begin_src python
+  import numpy as np
+
+  def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+  def identity_function(x):
+    return x
+
+  def init_network():
+    network = {}
+    network['W1'] = np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+    network['b1'] = np.array([0.1, 0.2, 0.3])
+    network['W2'] = np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+    network['b2'] = np.array([0.1, 0.2])
+    network['W3'] = np.array([[0.1, 0.3], [0.2, 0.4]])
+    network['b3'] = np.array([0.1, 0.2])
+
+    return network
+
+  def forward(network, x):
+    W1, W2, W3 = network['W1'], network['W2'], network['W3']
+    b1, b2, b3 = network['b1'], network['b2'], network['b3']
+
+    a1 = np.dot(x, W1) + b1
+    z1 = sigmoid(a1)
+    a2 = np.dot(z1, W2) + b2
+    z2 = sigmoid(a2)
+    a3 = np.dot(z2, W3) + b3
+    y = identity_function(a3)
+
+    return y
+
+  network = init_network()
+  x = np.array([1.0, 0.5])
+  y = forward(network, x)
+  print(y)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[0.31682708 0.69627909]
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
