@@ -40,6 +40,12 @@
 
 * この文書のステータス
 :LOGBOOK:
+CLOCK: [2024-07-11 Thu 21:28]--[2024-07-11 Thu 21:53] =>  0:25
+CLOCK: [2024-07-11 Thu 21:00]--[2024-07-11 Thu 21:25] =>  0:25
+CLOCK: [2024-07-11 Thu 14:12]--[2024-07-11 Thu 14:37] =>  0:25
+CLOCK: [2024-07-11 Thu 10:09]--[2024-07-11 Thu 10:34] =>  0:25
+CLOCK: [2024-07-11 Thu 09:35]--[2024-07-11 Thu 10:00] =>  0:25
+CLOCK: [2024-07-10 Wed 21:37]--[2024-07-10 Wed 22:02] =>  0:25
 CLOCK: [2024-07-10 Wed 20:50]--[2024-07-10 Wed 21:15] =>  0:25
 CLOCK: [2024-07-10 Wed 17:50]--[2024-07-10 Wed 18:15] =>  0:25
 CLOCK: [2024-07-10 Wed 13:06]--[2024-07-10 Wed 13:31] =>  0:25
@@ -71,6 +77,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 - パーセプトロンの素晴らしさは、“層を重ねる”ことができる点にある(p31)
 - 行列Aと行列Bの積を計算するとき、Aの列数とBの行数を同じ値にする必要がある
   - A(2x3) と B(3x4) みたいに
+- 一般的に回帰問題では恒等関数を、分類問題ではソフトマックス関数を使う(p66)
 
 * 実行メモ
 別のエントリに移動させる。
@@ -316,6 +323,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 
     return network
 
+  # 入力から出力方向への伝達処理
   def forward(network, x):
     W1, W2, W3 = network['W1'], network['W2'], network['W3']
     b1, b2, b3 = network['b1'], network['b2'], network['b3']
@@ -339,6 +347,331 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 #+begin_src
 [0.31682708 0.69627909]
 #+end_src
+
+#+caption: ソフトマックス関数
+#+begin_src python
+  import numpy as np
+
+  a = np.array([0.3, 2.9, 4.0])
+  exp_a = np.exp(a) # 指数関数
+  sum_exp_a = np.sum(exp_a) # 指数関数の和
+  y = exp_a / sum_exp_a
+  print(exp_a)
+  print(sum_exp_a)
+  print(y)
+
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[ 1.34985881 18.17414537 54.59815003]
+74.1221542101633
+[0.01821127 0.24519181 0.73659691]
+#+end_src
+
+#+caption: ソフトマックス関数のオーバーフロー
+#+begin_src python
+  import numpy as np
+
+  a = np.array([1010, 1000, 990])
+  result = np.exp(a) / np.sum(np.exp(a))
+  print(result)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[nan nan nan]
+#+end_src
+
+#+caption: ソフトマックス関数のオーバーフロー対策。入力信号の最大値を引く
+#+begin_src python
+  import numpy as np
+
+  a = np.array([1010, 1000, 990])
+  c = np.max(a)
+  result = np.exp(a-c) / np.sum(np.exp(a-c))
+  print(result)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[9.99954600e-01 4.53978686e-05 2.06106005e-09]
+#+end_src
+
+#+caption: ソフトマックス関数の特徴
+#+begin_src python
+  import numpy as np
+
+  def softmax(a):
+      c = np.max(a)
+      exp_a = np.exp(a - c) # オーバーフロー対策
+      sum_exp_a = np.sum(exp_a)
+      y = exp_a / sum_exp_a
+
+      return y
+
+  a = np.array([0.3, 2.9, 4.0])
+  y = softmax(a)
+  print(y)
+  print(np.sum(y))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[0.01821127 0.24519181 0.73659691]
+1.0
+#+end_src
+
+ソフトマックス関数の出力の総和は1になる。この性質のおかげでソフトマックス関数の出力を確率として解釈できる。
+
+#+caption: NumPy配列どうしで比較する
+#+begin_src python
+  import numpy as np
+
+  y = np.array([1, 2, 1, 0])
+  t = np.array([1, 2, 0, 0])
+  print(y==t)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[ True  True False  True]
+#+end_src
+
+#+caption: 2乗誤差
+#+begin_src python
+  import numpy as np
+
+  def sum_squared_error(y, t):
+      return 0.5 * np.sum((y-t)**2)
+
+  # 「2」を正解とする
+  t = [0,0,1,0,0,0,0,0,0,0]
+
+  # 「2」の確率が最も高い場合
+  y = [0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0]
+  print(sum_squared_error(np.array(y), np.array(t)))
+
+  # 「7」の確率が最も高い場合
+  y = [0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0]
+  print(sum_squared_error(np.array(y), np.array(t)))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0.09750000000000003
+0.5975
+#+end_src
+
+#+caption: 誤差エントロピー誤差
+#+begin_src python
+  import numpy as np
+  def cross_entropy_error(y, t):
+    delta = 1e-7 # 微細な値を追加してマイナス無限大を発生させないようにする
+    return -np.sum(t * np.log(y + delta))
+
+  # 「2」を正解とする
+  t = [0,0,1,0,0,0,0,0,0,0]
+
+  # 「2」の確率が最も高い場合
+  y = [0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0]
+  print(cross_entropy_error(np.array(y), np.array(t)))
+
+  # 「7」の確率が最も高い場合
+  y = [0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0]
+  print(cross_entropy_error(np.array(y), np.array(t)))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0.510825457099338
+2.302584092994546
+#+end_src
+
+#+caption: ランダムに選び出す
+#+begin_src python
+  import numpy as np
+
+  print(np.random.choice(60000, 10))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[ 2811 41200  8006  1524 57277 54382 27135 35842 18590 13150]
+#+end_src
+
+#+caption: 微分の悪い実装例
+#+begin_src python
+  def numerical_diff(f, x):
+    h = 1e-50 # ごく小さい値
+    return (f(x+h) - f(x)) / h
+#+end_src
+
+#+caption: 丸め誤差を試す
+#+begin_src python
+  import numpy as np
+
+  print(np.float32(1e-50))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0.0
+#+end_src
+
+#+caption: 微分の改良した実装例
+#+begin_src python
+  def numerical_diff(f, x):
+    h = 1e-4 # 丸め誤差をさける
+    return (f(x+h) - f(x-h)) / (2*h) # 中心差分で誤差を減らせる
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+- 極小な差分によって微分を求めることを数値微分という。数式の展開によって微分を求めることを解析的に微分を求めるなどという(p99)
+
+#+caption: 数値微分の例
+#+begin_src python
+  def function_1(x):
+    return 0.01*x**2 + 0.1*x
+
+  import numpy as np
+  import matplotlib.pylab as plt
+
+  x = np.arange(0.0, 20.0, 0.1)
+  y = function_1(x)
+  plt.xlabel("x")
+  plt.ylabel("f(x)")
+  plt.plot(x, y)
+  plt.show()
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+#+caption: 2変数
+#+begin_src python
+  def function_2(x):
+    return x[0]**2 + x[1]**2
+
+  import numpy as np
+  import matplotlib.pylab as plt
+
+  # x = np.arange(0.0, 20.0, 0.1)
+  # y = function_2(x)
+  # plt.xlabel("x")
+  # plt.ylabel("f(x)")
+  # plt.plot(x, y)
+  # plt.show()
+
+  # xとyの範囲を設定
+  x = np.linspace(-5, 5, 100)
+  y = np.linspace(-5, 5, 100)
+
+  # メッシュグリッドを作成
+  X, Y = np.meshgrid(x, y)
+
+  # 関数の値を計算
+  Z = function_2([X, Y])
+
+  # プロットを作成
+  fig = plt.figure()
+  ax = fig.add_subplot(111, projection='3d')
+  ax.plot_surface(X, Y, Z, cmap='viridis')
+
+  # グラフのラベルを設定
+  ax.set_xlabel('X axis')
+  ax.set_ylabel('Y axis')
+  ax.set_zlabel('Z axis')
+  ax.set_title('3D plot of function_2')
+
+  # グラフを表示
+  plt.show()
+#+end_src
+
+#+begin_src python
+  import numpy as np
+
+  def function_2(x):
+      return x[0]**2 + x[1]**2
+
+  def numerical_gradient(f, x):
+      h = 1e-4
+      grad = np.zeros_like(x) # xと同じ形状の配列を生成する
+
+      for idx in range(x.size):
+          tmp_val = x[idx]
+          x[idx] = tmp_val + h
+          fxh1 = f(x)
+
+          x[idx] = tmp_val - h
+          fxh2 = f(x)
+
+          grad[idx] = (fxh1 - fxh2) / (2*h)
+          x[idx] = tmp_val # 値を元に戻す
+
+      return grad
+
+  print(numerical_gradient(function_2, np.array([3.0, 4.0])))
+  print(numerical_gradient(function_2, np.array([0.0, 2.0])))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[6. 8.]
+[0. 4.]
+#+end_src
+
+#+caption: 勾配降下法
+#+begin_src python
+  import numpy as np
+
+  # 微分
+  def numerical_gradient(f, x):
+      h = 1e-4
+      grad = np.zeros_like(x) # xと同じ形状の配列を生成する
+
+      for idx in range(x.size):
+          tmp_val = x[idx]
+          x[idx] = tmp_val + h
+          fxh1 = f(x)
+
+          x[idx] = tmp_val - h
+          fxh2 = f(x)
+
+          grad[idx] = (fxh1 - fxh2) / (2*h)
+          x[idx] = tmp_val # 値を元に戻す
+
+      return grad
+
+  # 勾配降下
+  # lr -> learning rate
+  def gradient_descent(f, init_x, lr=0.01, step_num=100):
+    x = init_x
+
+    for i in range(step_num):
+      grad = numerical_gradient(f, x)
+      x -= lr * grad
+
+    return x
+
+  def function_2(x):
+    return x[0]**2 + x[1]**2
+
+  init_x = np.array([-3.0, 4.0])
+  print(gradient_descent(function_2, init_x=init_x, lr=0.1, step_num=100))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[-6.11110793e-10  8.14814391e-10]
+#+end_src
+
+- 損失関数を重みで微分することで、各重みが損失関数にどの程度影響を与えるかを知ることができる
+- 勾配(微分の結果)は、損失関数の値が最も急速に変化する方向とその大きさを示す。重みをどの方向にどれだけ調整すれば損失関数を最小化できるかを示す
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
