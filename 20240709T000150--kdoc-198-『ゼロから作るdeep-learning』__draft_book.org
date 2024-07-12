@@ -82,6 +82,10 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 * 実行メモ
 別のエントリに移動させる。
 
+実行の前提。
+
+- https://github.com/kijimaD/zerodeep1 を ~~/Project~ 下に展開してから実行する
+
 #+caption: NumPy配列との演算
 #+begin_src python
   import numpy as np
@@ -671,7 +675,60 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 #+end_src
 
 - 損失関数を重みで微分することで、各重みが損失関数にどの程度影響を与えるかを知ることができる
-- 勾配(微分の結果)は、損失関数の値が最も急速に変化する方向とその大きさを示す。重みをどの方向にどれだけ調整すれば損失関数を最小化できるかを示す
+- 勾配(微分の結果)は、損失関数の値がもっとも急速に変化する方向とその大きさを示す。重みをどの方向にどれだけ調整すれば損失関数を最小化できるかを示す
+
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch04.gradient_simpleset import simpleNet
+
+  import numpy as np
+
+  net = simpleNet()
+  print(net.W)
+
+  x = np.array([0.6, 0.9])
+  p = net.predict(x)
+  print(p)
+
+  print(np.argmax(p)) # 最大値のインデックス
+
+  t = np.array([0, 0, 1]) # 正解ラベル
+  print(net.loss(x, t))
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[[-0.49595624  0.76780514 -0.77374279]
+ [ 0.30493713  0.28693231  1.38213332]]
+[-0.02313033  0.71892216  0.77967431]
+2
+0.8709277794567005
+#+end_src
+
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch04.gradient_simpleset import simpleNet
+  from ch04.gradient import numerical_gradient
+
+  import numpy as np
+
+  x = np.array([0.6, 0.9])
+  t = np.array([0, 0, 1])
+
+  net = simpleNet()
+
+  f = lambda w: net.loss(x, t)
+  dW = numerical_gradient(f, net.W)
+  print(dW)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+[[ 0.52613449  0.03084159 -0.55697608]
+ [ 0.78920174  0.04626239 -0.83546413]]
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
