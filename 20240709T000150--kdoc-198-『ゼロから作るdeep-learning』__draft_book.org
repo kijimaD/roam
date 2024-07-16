@@ -73,18 +73,15 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 # 本文(タイトルをつける)。
 [[https://www.oreilly.co.jp/books/9784873117584/][ゼロから作るDeep Learning]]は、深層学習を実装して学ぶ本。
 * メモ
+
+実行の前提環境: https://github.com/kijimaD/zerodeep1 を ~~/Project~ 下に展開してから実行する。
+
 - パーセプトロンの限界は、このように 1 本の直線で分けた領域だけしか表現できない点にある(p30)
 - パーセプトロンの素晴らしさは、“層を重ねる”ことができる点にある(p31)
 - 行列Aと行列Bの積を計算するとき、Aの列数とBの行数を同じ値にする必要がある
   - A(2x3) と B(3x4) みたいに
 - 一般的に回帰問題では恒等関数を、分類問題ではソフトマックス関数を使う(p66)
-
-* 実行メモ
-別のエントリに移動させる。
-
-実行の前提。
-
-- https://github.com/kijimaD/zerodeep1 を ~~/Project~ 下に展開してから実行する
+- 計算グラフにおけるレイヤの実装(例: 乗算、加算…)は簡単に行うことができる。それらを使えば複雑な微分の計算を求めることができる(p141)
 
 #+caption: NumPy配列との演算
 #+begin_src python
@@ -647,7 +644,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
           fxh2 = f(x)
 
           grad[idx] = (fxh1 - fxh2) / (2*h)
-          x[idx] = tmp_val # 値を元に戻す
+          x[idx] = tmp_val # 前後にずらした値を元に戻す
 
       return grad
 
@@ -659,6 +656,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
     for i in range(step_num):
       grad = numerical_gradient(f, x)
       x -= lr * grad
+      print("x: ", x)
 
     return x
 
@@ -666,12 +664,24 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
     return x[0]**2 + x[1]**2
 
   init_x = np.array([-3.0, 4.0])
-  print(gradient_descent(function_2, init_x=init_x, lr=0.1, step_num=100))
+  print("init_x: ", init_x)
+  print("gradient_descent: ", gradient_descent(function_2, init_x=init_x, lr=0.1, step_num=10))
 #+end_src
 
 #+RESULTS:
 #+begin_src
-[-6.11110793e-10  8.14814391e-10]
+init_x:  [-3.  4.]
+x:  [-2.4  3.2]
+x:  [-1.92  2.56]
+x:  [-1.536  2.048]
+x:  [-1.2288  1.6384]
+x:  [-0.98304  1.31072]
+x:  [-0.786432  1.048576]
+x:  [-0.6291456  0.8388608]
+x:  [-0.50331648  0.67108864]
+x:  [-0.40265318  0.53687091]
+x:  [-0.32212255  0.42949673]
+gradient_descent:  [-0.32212255  0.42949673]
 #+end_src
 
 - 損失関数を重みで微分することで、各重みが損失関数にどの程度影響を与えるかを知ることができる
@@ -685,27 +695,28 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
   import numpy as np
 
   net = simpleNet()
-  print(net.W)
+  print("net.W: ", net.W)
 
   x = np.array([0.6, 0.9])
   p = net.predict(x)
-  print(p)
+  print("p: ", p)
 
-  print(np.argmax(p)) # 最大値のインデックス
+  print("argmax: ", np.argmax(p)) # 最大値のインデックス
 
   t = np.array([0, 0, 1]) # 正解ラベル
-  print(net.loss(x, t))
+  print("loss: ", net.loss(x, t))
 #+end_src
 
 #+RESULTS:
 #+begin_src
-[[-0.49595624  0.76780514 -0.77374279]
- [ 0.30493713  0.28693231  1.38213332]]
-[-0.02313033  0.71892216  0.77967431]
-2
-0.8709277794567005
+net.W:  [[ 0.66771825 -0.03691929  1.8614051 ]
+ [-1.38471091 -0.62661547  0.3531814 ]]
+p:  [-0.84560886 -0.58610549  1.43470632]
+argmax:  2
+loss:  0.21090872143605693
 #+end_src
 
+#+caption: 勾配を計算する
 #+begin_src python
   import sys, os
   sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
@@ -718,16 +729,254 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
   t = np.array([0, 0, 1])
 
   net = simpleNet()
+  print("net.W: ", net.W)
 
-  f = lambda w: net.loss(x, t)
+  f = lambda w: net.loss(x, t) # 損失関数を計算する関数
   dW = numerical_gradient(f, net.W)
-  print(dW)
+  print("dW: ", dW)
 #+end_src
 
 #+RESULTS:
 #+begin_src
-[[ 0.52613449  0.03084159 -0.55697608]
- [ 0.78920174  0.04626239 -0.83546413]]
+net.W:  [[-2.09839831 -1.31760955 -0.01513779]
+ [-0.14700285 -0.98933336 -0.75867432]]
+dW:  [[ 0.15952377  0.11941069 -0.27893446]
+ [ 0.23928565  0.17911604 -0.41840169]]
+#+end_src
+
+- 勾配は、損失関数の値を最も減らす方向を示す(p113)
+
+#+caption: ディクショナリを確認する
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch04.two_layer_net import TwoLayerNet
+
+  net = TwoLayerNet(input_size=784, hidden_size=100, output_size=10)
+  print(net.params['W1'].shape)
+  print(net.params['b1'].shape)
+  print(net.params['W2'].shape)
+  print(net.params['b2'].shape)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+(784, 100)
+(100,)
+(100, 10)
+(10,)
+#+end_src
+
+#+caption: 推論を実行する
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch04.two_layer_net import TwoLayerNet
+  import numpy as np
+
+  net = TwoLayerNet(input_size=784, hidden_size=100, output_size=10)
+
+  x = np.random.rand(100, 784) # ダミーの入力データ（100 枚分）
+  y = net.predict(x)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+#+caption: numerical_gradientを使って勾配を計算すると、grads変数に勾配情報が格納される
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch04.two_layer_net import TwoLayerNet
+  import numpy as np
+
+  # 入力画像は 28x28, 分類は10クラス分
+  net = TwoLayerNet(input_size=784, hidden_size=100, output_size=10)
+  x = np.random.rand(100, 784) # ダミーの入力データ （100 枚分）
+  t = np.random.rand(100, 10) # ダミーの正解ラベル（100 枚分）
+  grads = net.numerical_gradient(x, t) # 勾配を計算
+  print(grads['W1'].shape)
+  print(grads['b1'].shape)
+  print(grads['W2'].shape)
+  print(grads['b2'].shape)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+(784, 100)
+(100,)
+(100, 10)
+(10,)
+#+end_src
+
+- 誤差逆伝播法を使って求めた勾配の結果は、数値微分による結果とほぼ同じになるが、高速に処理することができる(p117)
+
+#+caption: 乗算レイヤを使って順伝播で合計金額を求める例
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch05.layer_naive import MulLayer
+
+  apple = 100   # 単価
+  apple_num = 2 # 個数
+  tax = 1.1     # 消費税
+
+  # layer
+  mul_apple_layer = MulLayer()
+  mul_tax_layer = MulLayer()
+
+  # forward
+  apple_price = mul_apple_layer.forward(apple, apple_num)
+  price = mul_tax_layer.forward(apple_price, tax)
+
+  print(price)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+220.00000000000003
+#+end_src
+
+#+caption: 各変数に対する微分をbackward()で求める。p138の図を見よ
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch05.layer_naive import MulLayer
+
+  apple = 100   # 単価
+  apple_num = 2 # 個数
+  tax = 1.1     # 消費税
+
+  # layer
+  mul_apple_layer = MulLayer()
+  mul_tax_layer = MulLayer()
+
+  # forward
+  # 最後の値のx, yをセットする
+  apple_price = mul_apple_layer.forward(apple, apple_num) # りんごの合計価格 = 単価 * 個数
+  price = mul_tax_layer.forward(apple_price, tax)         # 合計価格 = りんごの合計価格 * 税
+
+  # backward
+  # backwardは値が2つに分かれるので返り値は2つある
+  dprice = 1
+  dapple_price, dtax = mul_tax_layer.backward(dprice)         # 引数は順伝播の際の出力変数に対する微分
+  dapple, dapple_num = mul_apple_layer.backward(dapple_price) # 引数は順伝播の際の出力変数に対する微分
+  print("dapple: ", dapple)
+  print("dapple_num: ", dapple_num)
+  print("dtax: ", dtax)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+dapple:  2.2
+dapple_num:  110.00000000000001
+dtax:  200
+#+end_src
+
+#+caption: りんご2個とみかん3個の買い物
+#+begin_src python
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from ch05.layer_naive import MulLayer, AddLayer
+
+  apple = 100
+  apple_num = 2
+  orange = 150
+  orange_num = 3
+  tax = 1.1
+
+  # layer
+  mul_apple_layer = MulLayer()
+  mul_orange_layer = MulLayer()
+  add_apple_orange_layer = AddLayer()
+  mul_tax_layer = MulLayer()
+
+  # forward
+  apple_price = mul_apple_layer.forward(apple, apple_num)
+  orange_price = mul_orange_layer.forward(orange, orange_num)
+  all_price = add_apple_orange_layer.forward(apple_price, orange_price)
+  price = mul_tax_layer.forward(all_price, tax)
+  print("price", price)
+
+  # backward
+  dprice = 1
+  dall_price, dtax = mul_tax_layer.backward(dprice)
+  dapple_price, dorange_price = add_apple_orange_layer.backward(dall_price)
+  dorange, dorange_num = mul_orange_layer.backward(dorange_price)
+  dapple, dapple_num = mul_apple_layer.backward(dapple_price)
+
+  print("dapple_num: ", dapple_num)
+  print("dapple: ",dapple)
+  print("dorange: ",dorange)
+  print("dorange_num: ",dorange_num)
+  print("dtax", dtax)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+price 715.0000000000001
+dapple_num:  110.00000000000001
+dapple:  2.2
+dorange:  3.3000000000000003
+dorange_num:  165.0
+dtax 650
+#+end_src
+
+- 計算グラフの考え方をニューラルネットワークに適用する(p141)
+- 活性関数として使われるReLUを、計算グラフのレイヤとして見る。順伝播時の入力である x が 0 より大きければ、逆伝播は上流の値をそのまま下流に流す。逆に、順伝播時に x が 0 以下であれば、逆伝播では下流への信号はそこでストップする(p141)
+
+#+caption: NumPyでマスクする例
+#+begin_src python
+  import numpy as np
+  x = np.array([[1.0, -0.5], [-2.0, 3.0]])
+  print("x: ", x)
+
+  mask = (x <= 0)
+  print("mask: ", mask)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+x:  [[ 1.  -0.5]
+ [-2.   3. ]]
+mask:  [[False  True]
+ [ True False]]
+#+end_src
+
+#+caption: 順伝播でのバイアスの加算。それぞれのデータに対して加算が行われる
+#+begin_src python
+  import numpy as np
+  X_dot_w = np.array([[0, 0, 0], [10, 10, 10]])
+  B = np.array([1, 2, 3])
+  print("X_dot_w", X_dot_w)
+  print("X_dot_w + B", X_dot_w + B)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+X_dot_w [[ 0  0  0]
+ [10 10 10]]
+X_dot_w + B [[ 1  2  3]
+ [11 12 13]]
+#+end_src
+
+#+caption: 逆伝播でのバイアスの加算。それぞれのデータの逆伝播の値がバイアスの要素に集約される必要がある
+#+begin_src python
+  import numpy as np
+
+  dY = np.array([[1, 2, 3], [4, 5, 6]])
+  print("dY: ", dY)
+
+  dB = np.sum(dY, axis=0)
+  print("dB: ", dB)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+dY:  [[1 2 3]
+ [4 5 6]]
+dB:  [5 7 9]
 #+end_src
 
 * 関連
