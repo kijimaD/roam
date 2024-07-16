@@ -68,11 +68,22 @@
 (setq make-backup-files nil)
 (setq org-export-with-smart-quotes t)
 (setq org-html-checkbox-type 'html)
-(setq org-babel-default-header-args '((:session . "none") (:results . "replace") (:exports . "code") (:cache . "no") (:noweb . "no") (:hlines . "no") (:tangle . "no")(:wrap . "src")))
+(setq org-babel-default-header-args '((:session . "none")
+                                      (:results . "replace")
+                                      (:exports . "code")
+                                      (:cache . "no")
+                                      (:noweb . "no")
+                                      (:hlines . "no")
+                                      (:tangle . "no")
+                                      (:wrap . "src")
+                                      ))
 ;; CIでNo org-babel-execute function for bash!と出るので
 (org-babel-do-load-languages 'org-babel-load-languages
                              '((shell . t)
                                ))
+
+;; ignore org-babel warning
+(setq python-indent-guess-indent-offset nil)
 
 ;; View
 (setq dw/site-title   "Insomnia")
