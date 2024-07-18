@@ -1036,7 +1036,119 @@ adding element number 100  0.001989   0.000000   0.001989 (  0.001988)
 
 - ハッシュに含まれる要素が6個以内の場合、Rubyはハッシュ値の計算を確保し、単純に配列内にハッシュデータを保存する(p210)
 
+#+caption: while呼び出しのベンチマーク(p223)
+#+begin_src ruby :results output
+  require 'benchmark'
+  iters = 10000000
+  Benchmark.bm do |bench|
+    bench.report("iterationg from 1 to 10, many times") do
+      iters.times do
+        sum = 0
+        i = 1
+        while i <= 10
+          sum += i
+          i += 1
+        end
+      end
+    end
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+       user     system      total        real
+iterationg from 1 to 10, one million times  2.182566   0.000000   2.182566 (  2.182683)
+#+end_src
+
+#+caption: each呼び出しのベンチマーク(p224)
+#+begin_src ruby :results output
+  require 'benchmark'
+  iters = 10000000
+  Benchmark.bm do |bench|
+    bench.report("iterationg from 1 to 10, many times") do
+      iters.times do
+        sum = 0
+        (1..10).each do |i|
+          sum += i
+        end
+      end
+    end
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+       user     system      total        real
+iterationg from 1 to 10, one million times  2.453038   0.000000   2.453038 (  2.453121)
+#+end_src
+
+- ループの繰り返しごとにプログラムカウンタのリセットするだけでよいため、whileの方が早い。本より劇的には変化していない。何かバージョンによる違いがあるのだろうか
+- 内部的にRubyはデータを2つの場所、スタックとヒープに保存する(p227)
+  - スタックはプログラムの各メソッドのローカル変数や返り値、および引数を保存する。スタック上の値はメソッドが実行されている間ののみ有効で、実行が終わると削除される
+  - メソッド呼び出しから返ったあともしばらくの間必要になる可能性がある情報を保存するとき、Rubyはヒープを使用する
+  - Rubyはスタック上にデータへの参照のみを保存する
+- クロージャは関数が参照している環境、もしくは関数が作られた環境を含んでいる。環境とは、ヒープ内に保存され続ける、スタックフレームのコピーである(p236)
+- lambdaによって作成されたスタック上の新しいコピーを編集できる(p239)
+  1. lambdaを呼び出すと、Rubyは内部スタックからヒープにスタックフレームをコピーする
+  2. コピーしたところを指すようにrb_control_frame_t構造体の ~EP~ をリセットする
+  3. 次に呼び出すとき、新しい ~EP~ を使用してスタック上の元の値ではなくヒープ内の値にアクセスする。したがって、編集できる
+
+#+caption: lambdaによって作成されたスタック上の新しいコピーを編集できる
+#+begin_src ruby :results output
+  def message_function
+    str = "The quick brown fox"
+    func = lambda do |animal|
+      puts "#{str} jumps over the lazy #{animal}."
+    end
+    str = "The sly brown fox"
+    func
+  end
+  function_value = message_function
+  function_value.call("dog")
+#+end_src
+
+#+RESULTS:
+#+begin_src
+The sly brown fox jumps over the lazy dog.
+#+end_src
+
+#+caption: 同じスコープでラムダを1回以上呼び出す。同じヒープコピーとスタックを共有する
+#+begin_src ruby :results output
+  i = 0
+  increment_function = lambda do
+    puts "incrementing from #{i} to #{i+1}"
+    i += 1
+  end
+  decrement_function = lambda do
+    i -= 1
+    puts "decrementing from #{i+1} to #{i}"
+  end
+
+  increment_function.call
+  decrement_function.call
+  increment_function.call
+  increment_function.call
+  decrement_function.call
+#+end_src
+
+#+RESULTS:
+#+begin_src
+incrementing from 0 to 1
+decrementing from 1 to 0
+incrementing from 0 to 1
+incrementing from 1 to 2
+decrementing from 2 to 1
+#+end_src
+
+- def キーワードを使用してプログラム内にメソッドを定義するため、Rubyは次の3つの処理のステップを踏む(p248)
+  1. それぞれのメソッドの本体を、独立したYARV命令列のコード片にコンパイルする
+  2. 現在のレキシカルスコープを使って、クラスあるいはモジュールのポインタを取得する
+  3. 新しいメソッドの名前をクラスのメソッドテーブルに保存する
+- クラスメソッドを定義するときの ~self~ プレフィックスは、現在のレキシカルスコープではなくプレフィックスで指定したオブジェクトのクラスにメソッドを追加するようRubyに指示する。メタクラスにメソッドが追加されることになる(p249)
+
 * 関連
+なし。
+
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
 # この事実は自分のこのアイデアとどう整合するか。
 # この現象はあの理論でどう説明できるか。
