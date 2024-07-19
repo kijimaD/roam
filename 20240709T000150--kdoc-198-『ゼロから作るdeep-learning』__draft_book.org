@@ -124,7 +124,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 #+begin_src
 #+end_src
 
-#+caption: シグモイド関数
+#+caption: シグモイド関数。0から1の間になる
 #+begin_src python
   import numpy as np
 
@@ -162,7 +162,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 [1.         0.5        0.33333333]
 #+end_src
 
-#+caption: ReLU関数
+#+caption: ReLU関数。0より大きいとそのまま返す
 #+begin_src python
   import numpy as np
 
@@ -172,6 +172,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
   print(rel(-1))
   print(rel(0))
   print(rel(1))
+  print(rel(100))
 #+end_src
 
 #+RESULTS:
@@ -179,6 +180,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 0
 0
 1
+100
 #+end_src
 
 #+caption: 多次元配列
@@ -555,7 +557,7 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 #+begin_src
 #+end_src
 
-#+caption: 2変数
+#+caption: 2変数関数のプロット
 #+begin_src python
   def function_2(x):
     return x[0]**2 + x[1]**2
@@ -601,41 +603,55 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
   def function_2(x):
       return x[0]**2 + x[1]**2
 
+  # 勾配を計算する
   def numerical_gradient(f, x):
-      h = 1e-4
-      grad = np.zeros_like(x) # xと同じ形状の配列を生成する
+      h = 1e-4                # 極小値
+      grad = np.zeros_like(x) # 勾配を格納する。xと同じ形状の配列を生成する
 
       for idx in range(x.size):
-          tmp_val = x[idx]
+          print("idx:", idx)
+          tmp_val = x[idx] # 元の値を保持する
           x[idx] = tmp_val + h
-          fxh1 = f(x)
+          fxh1 = f(x) # 極小値を入れて計算する
 
           x[idx] = tmp_val - h
-          fxh2 = f(x)
+          fxh2 = f(x) # 極小値を入れて計算する
 
-          grad[idx] = (fxh1 - fxh2) / (2*h)
+          grad[idx] = (fxh1 - fxh2) / (2*h) # 中心差分
           x[idx] = tmp_val # 値を元に戻す
 
       return grad
 
   print(numerical_gradient(function_2, np.array([3.0, 4.0])))
+  print("========")
   print(numerical_gradient(function_2, np.array([0.0, 2.0])))
+  print("========")
+  print(numerical_gradient(function_2, np.array([-3.0, 4.0])))
 #+end_src
 
 #+RESULTS:
 #+begin_src
+idx: 0
+idx: 1
 [6. 8.]
+========
+idx: 0
+idx: 1
 [0. 4.]
+========
+idx: 0
+idx: 1
+[-6.  8.]
 #+end_src
 
 #+caption: 勾配降下法
 #+begin_src python
   import numpy as np
 
-  # 微分
+  # 数値微分
   def numerical_gradient(f, x):
       h = 1e-4
-      grad = np.zeros_like(x) # xと同じ形状の配列を生成する
+      grad = np.zeros_like(x) # 勾配を格納する。xと同じ形状の配列を生成する
 
       for idx in range(x.size):
           tmp_val = x[idx]
@@ -653,12 +669,13 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
   # 勾配降下
   # lr -> learning rate
   def gradient_descent(f, init_x, lr=0.01, step_num=100):
+    # 引数で渡された値が変わらないようにコピーする
     x = init_x
 
     for i in range(step_num):
       grad = numerical_gradient(f, x)
-      x -= lr * grad
-      print("x: ", x)
+      x -= lr * grad # 勾配の分更新する
+      print(i, " x: ", x, "\tgrad: ", grad)
 
     return x
 
@@ -673,27 +690,27 @@ CLOCK: [2024-07-09 Tue 00:05]--[2024-07-09 Tue 00:30] =>  0:25
 #+RESULTS:
 #+begin_src
 init_x:  [-3.  4.]
-x:  [-2.4  3.2]
-x:  [-1.92  2.56]
-x:  [-1.536  2.048]
-x:  [-1.2288  1.6384]
-x:  [-0.98304  1.31072]
-x:  [-0.786432  1.048576]
-x:  [-0.6291456  0.8388608]
-x:  [-0.50331648  0.67108864]
-x:  [-0.40265318  0.53687091]
-x:  [-0.32212255  0.42949673]
+0  x:  [-2.4  3.2] 	grad:  [-6.  8.]
+1  x:  [-1.92  2.56] 	grad:  [-4.8  6.4]
+2  x:  [-1.536  2.048] 	grad:  [-3.84  5.12]
+3  x:  [-1.2288  1.6384] 	grad:  [-3.072  4.096]
+4  x:  [-0.98304  1.31072] 	grad:  [-2.4576  3.2768]
+5  x:  [-0.786432  1.048576] 	grad:  [-1.96608  2.62144]
+6  x:  [-0.6291456  0.8388608] 	grad:  [-1.572864  2.097152]
+7  x:  [-0.50331648  0.67108864] 	grad:  [-1.2582912  1.6777216]
+8  x:  [-0.40265318  0.53687091] 	grad:  [-1.00663296  1.34217728]
+9  x:  [-0.32212255  0.42949673] 	grad:  [-0.80530637  1.07374182]
 gradient_descent:  [-0.32212255  0.42949673]
 #+end_src
 
 - 損失関数を重みで微分することで、各重みが損失関数にどの程度影響を与えるかを知ることができる
 - 勾配(微分の結果)は、損失関数の値がもっとも急速に変化する方向とその大きさを示す。重みをどの方向にどれだけ調整すれば損失関数を最小化できるかを示す
 
+#+caption: 損失を求める
 #+begin_src python
   import sys, os
   sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
   from ch04.gradient_simpleset import simpleNet
-
   import numpy as np
 
   net = simpleNet()
@@ -718,7 +735,7 @@ argmax:  2
 loss:  0.21090872143605693
 #+end_src
 
-#+caption: 勾配を計算する
+#+caption: 重みの勾配を求める
 #+begin_src python
   import sys, os
   sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
@@ -786,7 +803,7 @@ dW:  [[ 0.15952377  0.11941069 -0.27893446]
 #+begin_src
 #+end_src
 
-#+caption: numerical_gradientを使って勾配を計算すると、grads変数に勾配情報が格納される
+#+caption: numerical_gradientを使って勾配を計算すると、grads変数に勾配情報が格納される。非常に時間がかかる
 #+begin_src python
   import sys, os
   sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
@@ -855,7 +872,7 @@ dW:  [[ 0.15952377  0.11941069 -0.27893446]
   mul_tax_layer = MulLayer()
 
   # forward
-  # 最後の値のx, yをセットする
+  # 最後の値のクラス変数x, yをセットする
   apple_price = mul_apple_layer.forward(apple, apple_num) # りんごの合計価格 = 単価 * 個数
   price = mul_tax_layer.forward(apple_price, tax)         # 合計価格 = りんごの合計価格 * 税
 
@@ -980,6 +997,15 @@ dY:  [[1 2 3]
  [4 5 6]]
 dB:  [5 7 9]
 #+end_src
+
+- 数値微分が実践的に必要とされる場面もある。誤差逆伝播法の実装の正しさを確認するとき(p161)
+- ニューラルネットワークを行う処理をレイヤという単位で実装した。これらのレイヤには、forward と backward というメソッドが実装されており、データを順方向と逆方向に伝播することで、重みパラメータの勾配を効率的に求められる(p163)
+- AdaGrad は、過去の勾配を 2 乗和としてすべて記録する。そのため、学習を進めれば進めるほど、更新度合いは小さくなる(p173)
+- 重みの初期値を 0 にすると、正しい学習が行えない。誤差逆伝播法において、すべての重みの値が均一に（同じように）更新されてしまうため(p179)
+- 隠れ層のアクティベーション(活性化関数の後の出力データ)の分布を観察することで多くの知見が得られる(p179)
+- シグモイド関数の出力が 0 に近づくにつれて(または 1 に近づくにつれて)、その微分の値は 0 に近づく。そのため、0 と 1 に偏ったデータ分布では、逆伝播での勾配の値がどんどん小さくなって消える。これは勾配消失（gradient vanishing）と呼ばれる問題である(p180)
+- 活性化関数によって、効果的な初期値が異なる。適度な広がりが必要。重みの初期値を適切に設定すれば、各層のアクティベーションの分布は適度な広がりを持ち、学習がスムーズに行える(p185)
+- Batch Normは各層でのアクティベーションの分布を適度な広がりを持つように調整する(p187)
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
