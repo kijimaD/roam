@@ -37,7 +37,8 @@
 # どの程度重要な情報か。
 # そのページのどこが本当に必要な部分なのか。
 
-* TODO この文書のステータス
+* DONE この文書のステータス
+CLOSED: [2024-07-19 Fri 00:16]
 :PROPERTIES:
 :Effort:   20:00
 :END:
@@ -105,8 +106,7 @@ CLOCK: [2024-06-12 Wed 15:37]--[2024-06-12 Wed 16:02] =>  0:25
 CLOCK: [2024-06-12 Wed 15:12]--[2024-06-12 Wed 15:37] =>  0:25
 :END:
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-07-19 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -1145,6 +1145,124 @@ decrementing from 2 to 1
   2. 現在のレキシカルスコープを使って、クラスあるいはモジュールのポインタを取得する
   3. 新しいメソッドの名前をクラスのメソッドテーブルに保存する
 - クラスメソッドを定義するときの ~self~ プレフィックスは、現在のレキシカルスコープではなくプレフィックスで指定したオブジェクトのクラスにメソッドを追加するようRubyに指示する。メタクラスにメソッドが追加されることになる(p249)
+- クラスメソッドを追加する方法も、メタプログラミングである。クラスのクラス(メタクラス)にメソッドを追加するから(p251)
+- Ruby2.0 の  Refinements機能はあらかじめ定義したメソッドを、任意のタイミングでクラスに追加できるようにしてくれる(p254)
+- トップレベルのレキシカルスコープのクラスはObjectである。つまりスクリプトのトップレベルでメソッドを定義すると、RubyはObjectクラスにメソッドを追加する。Objectは他のすべてのクラスのスーパークラスなので、どこからでも呼び出せる(p259)
+- クラスやモジュールのスコープ内では、selfは常にそのクラスかモジュールに設定される。classかmoduleキーワードを使うとRubyは新しいレキシカルスコープを作成する。そして、スコープのクラスを新しいクラスかモジュールに設定する
+- メソッド内では、Rubyはselfにそのメソッド呼び出しのレシーバを設定する
+- Rubyは eval を呼び出した場所と同じコンテキストで新しいコードの文字列を評価する
+
+#+caption: evalもクロージャを介して周辺のスコープにアクセスする。周辺のローカル変数にアクセスしている(p264)
+#+begin_src ruby :results output
+  a = 2
+  b = 3
+  str = "puts"
+  str += " a"
+  str += " +"
+  str += " b"
+  eval(str)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+5
+#+end_src
+
+#+caption: ブロック内のコードは周辺のスコープの変数にアクセスできる
+#+begin_src ruby :results output
+  a = 2
+  b = 3
+  10.times do
+    puts a+b
+  end
+#+end_src
+
+#+RESULTS:
+#+begin_src
+5
+5
+5
+5
+5
+5
+5
+5
+5
+5
+#+end_src
+
+- 関数にブロックを渡すのと同じように、evalメソッドは「関数」と「関数が参照される環境」、つまりクロージャを作成する(p265)
+- evalメソッドは第2引数にバインディングを取れる。バインディングとは、関数なしのクロージャ、つまり参照元の環境である。バインディングはYARVスタックフレームへのポインタと考えられる(p266)
+
+  #+begin_src ruby :results output
+    def get_binding
+      a = 2
+      b = 3
+      binding
+    end
+    eval("puts a+b", get_binding)
+  #+end_src
+
+  #+RESULTS:
+  #+begin_src
+  5
+  #+end_src
+
+- 現在のフレームがスタックからポップされた後にevalが呼ばれる可能性があるため、Rubyはヒープにこの環境の持続的なコピーを作成する。この例↑では ~get_binding~ はすでに返っているにもかかわらず、Rubyはevalによってパース、コンパイルされたコードを実行するときに ~a~ と ~b~ の値を参照できる(p266)
+
+#+caption: instance_evalの内部のコードはobjのインスタンス変数にアクセスする。@strはQuoteインスタンス、str2は周辺のスコープ(環境)から取得している(p268)
+#+begin_src ruby
+  class Quote
+    def initialize
+      @str = "The quick brown fox"
+    end
+  end
+  str2 = "jumps over the lazy dog."
+  obj = Quote.new
+  obj.instance_eval do
+    puts "#{@str} #{str2}"
+  end
+
+  # => The quick brown fox jumps over the lazy dog.
+#+end_src
+
+- instance_eval は、 eval とほぼ同じだが、与えられた文字列を instance_eval上のレシーバのコンテキスト上で評価するという点が異なる(p269)
+- selfポインタは、その時点で実行されているメソッドの所有者であるオブジェクトを示している(p269)
+- doを加えてクロージャを導入することは、新しいメソッド内のコードは外側の環境へのアクセス権を持つことを意味している。これはdefキーワードにはない特徴である(p276)
+- Rubyにおいてクロージャはブロックやラムダ、Procオブジェクトを動作する中心的な概念である。レキシカルスコープの概念は、Rubyでメソッドを作成してそれをクラスに割り当てるすべての方法を支えている(p278)
+- Rubyの内部を学習することはメタプログラミングの概念を確認し、それが何を意味するのかを教えてくれる(p278)
+- MRIでは組み込みクラスを[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C language]]で実装している。一方JRubyはすべての組み込みクラスを[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]を使って実装している(p287)
+- 処理系によって、性能特性が変化する。コードを長く実行するほど、JVMはコードを最適化し、コードは高速に実行されるものになっていく(p295)
+
+#+caption: MRIは文字列リテラルを使用する際にYARV命令のdupを使う
+#+begin_src ruby :results output
+  code = <<END
+     str = "hello"
+  END
+  puts RubyVM::InstructionSequence.compile(code).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,16)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] str@0
+0000 putstring                              "hello"                   (   1)[Li]
+0002 dup
+0003 setlocal_WC_0                          str@0
+0005 leave
+#+end_src
+
+流れ。
+
+1. putstringでスタック上に文字列を置く
+2. dupを使ってsetlocalに引数として使うための文字列のコピーを作成する
+3. strlocal_WC_0を使って文字列をstr変数に保存する
+
+Rubiunisについて。
+
+- Rubiniusは組み込みクラスをRubyで実装している。特定のRubyの機能やメソッドの動きがわからなければ、Rubiniusのコードが理解する助けになる(p309)
+- [[https://www.oreilly.co.jp/books/9784873114712/][言語設計者たちが考えること]]
 
 * 関連
 なし。
