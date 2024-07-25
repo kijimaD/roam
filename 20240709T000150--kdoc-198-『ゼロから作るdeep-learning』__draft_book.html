@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-07-23 -->
+<!-- 2024-07-25 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 198: 『ゼロから作るDeep Learning』</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 198: 『ゼロから作るDeep Learning』</h1>
 
-<div id="outline-container-org4995b5e" class="outline-2">
-<h2 id="org4995b5e"><a href="#org4995b5e"><span class="todo TODO">TODO</span> この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org4995b5e">
+<div id="outline-container-org6a66008" class="outline-2">
+<h2 id="org6a66008"><a href="#org6a66008"><span class="todo TODO">TODO</span> この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org6a66008">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org4c7cda0" class="outline-2">
-<h2 id="org4c7cda0"><a href="#org4c7cda0">概要</a></h2>
-<div class="outline-text-2" id="text-org4c7cda0">
+<div id="outline-container-orga14db0b" class="outline-2">
+<h2 id="orga14db0b"><a href="#orga14db0b">概要</a></h2>
+<div class="outline-text-2" id="text-orga14db0b">
 <p>
 <a href="https://www.oreilly.co.jp/books/9784873117584/">ゼロから作るDeep Learning</a>は、深層学習を実装して学ぶ本。
 </p>
 </div>
 </div>
-<div id="outline-container-org09a3ed4" class="outline-2">
-<h2 id="org09a3ed4"><a href="#org09a3ed4">メモ</a></h2>
-<div class="outline-text-2" id="text-org09a3ed4">
+<div id="outline-container-org80ca62a" class="outline-2">
+<h2 id="org80ca62a"><a href="#org80ca62a">メモ</a></h2>
+<div class="outline-text-2" id="text-org80ca62a">
 <p>
 実行の前提環境: <a href="https://github.com/kijimaD/zerodeep1">https://github.com/kijimaD/zerodeep1</a> を <code>~/Project</code> 下に展開してから実行する。
 </p>
@@ -964,13 +964,82 @@ dB:  [5 7 9]
 <li>シグモイド関数の出力が 0 に近づくにつれて(または 1 に近づくにつれて)、その微分の値は 0 に近づく。そのため、0 と 1 に偏ったデータ分布では、逆伝播での勾配の値がどんどん小さくなって消える。これは勾配消失（gradient vanishing）と呼ばれる問題である(p180)</li>
 <li>活性化関数によって、効果的な初期値が異なる。適度な広がりが必要。重みの初期値を適切に設定すれば、各層のアクティベーションの分布は適度な広がりを持ち、学習がスムーズに行える(p185)</li>
 <li>Batch Normは各層でのアクティベーションの分布を適度な広がりを持つように調整する(p187)</li>
+<li>ハイパーパラメータの調整用のデータは、一般に検証データ(validation data)と呼ぶ</li>
+<li>全結合層の問題点は、データの形状が“無視”されてしまうこと。たとえば入力データが画像の場合、画像は通常、縦・横・チャンネル方向の3次元の形状である。全結合層に入力するときには、3次元のデータを1次元のデータにする必要がある(p207)</li>
+<li>全結合層は、形状を無視して、すべての入力データを同等のニューロン(同じ次元のニューロン)として扱うので、形状に関わる情報を生かせない。畳み込み層は形状を維持する。画像の場合、入力データを3次元のデータとして受け取り、同じく3次元のデータとして、次の層にデータを出力する(p207)</li>
+<li>CNNでは、畳み込み層の入出力データを特徴マップということがある(p207)</li>
+<li>幅1のパディングとは、周囲を幅1ピクセルの0で埋めることを言う。パディングを行う理由は、出力サイズを調整するため(p210)</li>
+<li>フィルターを適用する位置の間隔をストライドという。ストライドを大きくすると出力サイズは小さくなる(p211)</li>
+<li>画像の場合、縦・横方向に加えてチャンネル方向も合わせた3次元のデータを扱う必要がある(p214)</li>
+<li>フィルターの重みデータは4次元のデータとして(output_channel, input_channel, height, width)という順に書く。たとえばチャンネル数3、サイズ5x5のフィルターが5個ある場合は(20, 3, 5, 5)と書く</li>
+<li>プーリングは、縦・横方向の空間を小さくする演算。たとえば、2x2の領域を1つの要素に集約するような処理をし、空間サイズを小さくする(p219)</li>
+<li>大きな行列にまとめて計算することは、コンピュータで計算する上で多くの恩恵がある。たとえば、行列計算のライブラリ(線形代数ライブラリ)などは、行列の計算実装が高度に最適化されており、大きな行列の掛け算を高速に行うことができる。そのため、行列の計算に帰着させることで、線形代数ライブラリを有効に活用できる(p223)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] + <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> common.util <span class="org-keyword">import</span> im2col
+
+<span class="org-variable-name">x1</span> = np.random.rand(1, 3, 7, 7)
+<span class="org-variable-name">col1</span> = im2col(x1, 5, 5, stride=1, pad=0)
+<span class="org-keyword">print</span>(<span class="org-string">"col1: "</span>, col1.shape)
+
+<span class="org-variable-name">x2</span> = np.random.rand(10, 3, 7, 7) <span class="org-comment-delimiter"># </span><span class="org-comment">10&#20491;&#12398;&#12487;&#12540;&#12479;</span>
+<span class="org-variable-name">col2</span> = im2col(x2, 5, 5, stride=1, pad=0)
+<span class="org-keyword">print</span>(<span class="org-string">"col2: "</span>, col2.shape)
+</pre>
+</div>
+
+<pre class="example">
+col1:  (9, 75)
+col2:  (90, 75)
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] + <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> common.util <span class="org-keyword">import</span> im2col
+
+<span class="org-keyword">class</span> <span class="org-type">Convolution</span>:
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, w, b, stride=1, pad=0):
+        <span class="org-keyword">self</span>.W = W
+        <span class="org-keyword">self</span>.b = b
+        <span class="org-keyword">self</span>.stride = stride
+        <span class="org-keyword">self</span>.pad = pad
+
+    <span class="org-keyword">def</span> <span class="org-function-name">forward</span>(<span class="org-keyword">self</span>, x):
+        <span class="org-variable-name">FN</span>, <span class="org-variable-name">C</span>, <span class="org-variable-name">FH</span>, <span class="org-variable-name">FW</span> = <span class="org-keyword">self</span>.W.shape
+        <span class="org-variable-name">N</span>, <span class="org-variable-name">C</span>, <span class="org-variable-name">H</span>, <span class="org-variable-name">W</span> = x.shape
+        <span class="org-variable-name">out_h</span> = <span class="org-builtin">int</span>(1 + (H + 2*<span class="org-keyword">self</span>.pad - FH) / <span class="org-keyword">self</span>.stride)
+        <span class="org-variable-name">out_w</span> = <span class="org-builtin">int</span>(1 + (W + 2*<span class="org-keyword">self</span>.pad - FW) / <span class="org-keyword">self</span>.stride)
+
+        <span class="org-variable-name">col</span> = im2col(x, FH, FW, <span class="org-keyword">self</span>.stride, <span class="org-keyword">self</span>.pad)
+        <span class="org-variable-name">col_W</span> = <span class="org-keyword">self</span>.W.reshape(FN, -1).T
+        <span class="org-variable-name">out</span> = np.dot(col, col_W) + <span class="org-keyword">self</span>.b
+
+        <span class="org-variable-name">out</span> = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
+
+        <span class="org-keyword">return</span> out
+</pre>
+</div>
+
+<pre class="example">
+
+</pre>
+
+<ul class="org-ul">
+<li>ディープラーニングは層を深くしたディープなニューラルネットワークである、という(p241)</li>
+<li>手書き数字という比較的単純な問題に対しては、ネットワークの表現力をそこまで高める必要がないと考えられる。そのため、層を深くすることの恩恵が少ないと言える。大規模な一般物体認識では、問題が複雑になるため、層を深くすることが認識精度の向上に大いに貢献することが分かる(p245)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org1cdc276" class="outline-2">
-<h2 id="org1cdc276"><a href="#org1cdc276">関連</a></h2>
-<div class="outline-text-2" id="text-org1cdc276">
+<div id="outline-container-org8117236" class="outline-2">
+<h2 id="org8117236"><a href="#org8117236">関連</a></h2>
+<div class="outline-text-2" id="text-org8117236">
 </div>
 </div>
 </div>
