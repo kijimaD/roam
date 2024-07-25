@@ -1006,6 +1006,72 @@ dB:  [5 7 9]
 - シグモイド関数の出力が 0 に近づくにつれて(または 1 に近づくにつれて)、その微分の値は 0 に近づく。そのため、0 と 1 に偏ったデータ分布では、逆伝播での勾配の値がどんどん小さくなって消える。これは勾配消失（gradient vanishing）と呼ばれる問題である(p180)
 - 活性化関数によって、効果的な初期値が異なる。適度な広がりが必要。重みの初期値を適切に設定すれば、各層のアクティベーションの分布は適度な広がりを持ち、学習がスムーズに行える(p185)
 - Batch Normは各層でのアクティベーションの分布を適度な広がりを持つように調整する(p187)
+- ハイパーパラメータの調整用のデータは、一般に検証データ(validation data)と呼ぶ
+- 全結合層の問題点は、データの形状が“無視”されてしまうこと。たとえば入力データが画像の場合、画像は通常、縦・横・チャンネル方向の3次元の形状である。全結合層に入力するときには、3次元のデータを1次元のデータにする必要がある(p207)
+- 全結合層は、形状を無視して、すべての入力データを同等のニューロン(同じ次元のニューロン)として扱うので、形状に関わる情報を生かせない。畳み込み層は形状を維持する。画像の場合、入力データを3次元のデータとして受け取り、同じく3次元のデータとして、次の層にデータを出力する(p207)
+- CNNでは、畳み込み層の入出力データを特徴マップということがある(p207)
+- 幅1のパディングとは、周囲を幅1ピクセルの0で埋めることを言う。パディングを行う理由は、出力サイズを調整するため(p210)
+- フィルターを適用する位置の間隔をストライドという。ストライドを大きくすると出力サイズは小さくなる(p211)
+- 画像の場合、縦・横方向に加えてチャンネル方向も合わせた3次元のデータを扱う必要がある(p214)
+- フィルターの重みデータは4次元のデータとして(output_channel, input_channel, height, width)という順に書く。たとえばチャンネル数3、サイズ5x5のフィルターが5個ある場合は(20, 3, 5, 5)と書く
+- プーリングは、縦・横方向の空間を小さくする演算。たとえば、2x2の領域を1つの要素に集約するような処理をし、空間サイズを小さくする(p219)
+- 大きな行列にまとめて計算することは、コンピュータで計算する上で多くの恩恵がある。たとえば、行列計算のライブラリ(線形代数ライブラリ)などは、行列の計算実装が高度に最適化されており、大きな行列の掛け算を高速に行うことができる。そのため、行列の計算に帰着させることで、線形代数ライブラリを有効に活用できる(p223)
+
+#+begin_src python
+  import numpy as np
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from common.util import im2col
+
+  x1 = np.random.rand(1, 3, 7, 7)
+  col1 = im2col(x1, 5, 5, stride=1, pad=0)
+  print("col1: ", col1.shape)
+
+  x2 = np.random.rand(10, 3, 7, 7) # 10個のデータ
+  col2 = im2col(x2, 5, 5, stride=1, pad=0)
+  print("col2: ", col2.shape)
+#+end_src
+
+#+RESULTS:
+#+begin_src
+col1:  (9, 75)
+col2:  (90, 75)
+#+end_src
+
+#+begin_src python
+  import numpy as np
+  import sys, os
+  sys.path.append(os.environ['HOME'] + "/Project/zerodeep1")
+  from common.util import im2col
+
+  class Convolution:
+      def __init__(self, w, b, stride=1, pad=0):
+          self.W = W
+          self.b = b
+          self.stride = stride
+          self.pad = pad
+
+      def forward(self, x):
+          FN, C, FH, FW = self.W.shape
+          N, C, H, W = x.shape
+          out_h = int(1 + (H + 2*self.pad - FH) / self.stride)
+          out_w = int(1 + (W + 2*self.pad - FW) / self.stride)
+
+          col = im2col(x, FH, FW, self.stride, self.pad)
+          col_W = self.W.reshape(FN, -1).T
+          out = np.dot(col, col_W) + self.b
+
+          out = out.reshape(N, out_h, out_w, -1).transpose(0, 3, 1, 2)
+
+          return out
+#+end_src
+
+#+RESULTS:
+#+begin_src
+#+end_src
+
+- ディープラーニングは層を深くしたディープなニューラルネットワークである、という(p241)
+- 手書き数字という比較的単純な問題に対しては、ネットワークの表現力をそこまで高める必要がないと考えられる。そのため、層を深くすることの恩恵が少ないと言える。大規模な一般物体認識では、問題が複雑になるため、層を深くすることが認識精度の向上に大いに貢献することが分かる(p245)
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
