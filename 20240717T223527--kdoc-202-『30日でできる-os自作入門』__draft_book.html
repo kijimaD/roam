@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-08-01 -->
+<!-- 2024-08-03 -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>KDOC 202: 『30日でできる! OS自作入門』</title>
@@ -16,9 +16,9 @@
 <div id="content">
 <h1 class="title">KDOC 202: 『30日でできる! OS自作入門』</h1>
 
-<div id="outline-container-org300c9d0" class="outline-2">
-<h2 id="org300c9d0"><a href="#org300c9d0">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org300c9d0">
+<div id="outline-container-org10b2601" class="outline-2">
+<h2 id="org10b2601"><a href="#org10b2601">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org10b2601">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org4c19c7f" class="outline-2">
-<h2 id="org4c19c7f"><a href="#org4c19c7f">概要</a></h2>
-<div class="outline-text-2" id="text-org4c19c7f">
+<div id="outline-container-orgd3cae0c" class="outline-2">
+<h2 id="orgd3cae0c"><a href="#orgd3cae0c">概要</a></h2>
+<div class="outline-text-2" id="text-orgd3cae0c">
 <p>
 <a href="https://tatsu-zine.com/books/make-your-own-os-in30days">30日でできる! OS自作入門【委託】 - 達人出版会</a>は、OS自作の本。付録コードは<a href="https://github.com/hide27k/haribote-os">hide27k/haribote-os</a>にある。
 </p>
 </div>
 </div>
-<div id="outline-container-org32bf3bc" class="outline-2">
-<h2 id="org32bf3bc"><a href="#org32bf3bc">メモ</a></h2>
-<div class="outline-text-2" id="text-org32bf3bc">
+<div id="outline-container-org5130ff8" class="outline-2">
+<h2 id="org5130ff8"><a href="#org5130ff8">メモ</a></h2>
+<div class="outline-text-2" id="text-org5130ff8">
 <ul class="org-ul">
 <li>EQUは、C言語でいうところの <code>#define</code> のようなもので、定数を宣言するのに使う(p57)</li>
 <li>空の状態のディスクに対してファイルを保存したとき(p59)
@@ -105,24 +105,39 @@
 </ul></li>
 <li><code>INT 0x00~0x1f</code> はIRQ用に使ってはいけない。 <code>INT 0x00~0x1f</code> はアプリケーションがOSに対して悪さをしようとしたときにCPUが内部で自動的に発生させて、それを通じてOSに通報するためのものだから。IRQをこれに重なるように割り当てると、IRQからなのか、それともCPU保護の通知なのか、わからなくなってしまう(p130)</li>
 <li>割り込み処理は基本的に本来の仕事に割り込んで実行されるものだから、すぐに終わらなければならない。ほかの割り込みが受け付けられなくなる(p139)</li>
+<li>2バイトのキーコードの場合、キーボード回路は一度には1バイトしか送れない。なので一度のキーの押し下げに対して2回のキーボード割り込みが発生する(p142)</li>
+<li>キーボード割り込みのバッファを実装する。遅いコピーを避け、使い回せるような構造を持ったFIFOキュー(p148)</li>
+<li>486以降にしかセットされないビットがあり、そこに書き込んでみて反映するかで判定する。使えるメモリがどこまであるかを、書き込んで反映されるかで調べる(p178)</li>
 </ul>
 </div>
 </div>
-<div id="outline-container-orgf9cd762" class="outline-2">
-<h2 id="orgf9cd762"><a href="#orgf9cd762">用語集</a></h2>
-<div class="outline-text-2" id="text-orgf9cd762">
+<div id="outline-container-orgf48e21c" class="outline-2">
+<h2 id="orgf48e21c"><a href="#orgf48e21c">用語集</a></h2>
+<div class="outline-text-2" id="text-orgf48e21c">
 <dl class="org-dl">
 <dt>IDT(Interrupt Descriptor Table)</dt><dd>割り込み処理が発生したとき、対応する命令を設定する機能。キーボードの入力処理などをやる</dd>
 <dt>GDT(Global Descriptor Table)</dt><dd>システムで唯一のセグメントディスクリプタテーブル</dd>
+<dt>LGDT命令</dt><dd>GDTRレジスタをロードする命令</dd>
 <dt>セグメントディスクリプタ</dt><dd>論理アドレスと対になった物理アドレスとのマッピング</dd>
 <dt>CLI命令</dt><dd>ハードウェア割り込みを禁止する</dd>
+<dt>STI命令</dt><dd>ハードウェア割り込みを許可する</dd>
 <dt>PIC</dt><dd>プログラマブル割り込みコントローラ。外部デバイスからの割り込みを管理するためのハードウェア</dd>
+<dt>OCW2レジスタ</dt><dd>PICに対して割り込みの処理完了を通知するために使用されるレジスタ。特定のビットフィールドを設定することでどの割り込みラインの処理が完了したかをPICに伝える
+<ul class="org-ul">
+<li>例えば、 <code>0x61</code> が設定されたとき、 <code>0x60</code> はOCW2レジスタの基本値で、割り込み受付完了を通知するコマンドを示す。 <code>0x01</code> はIRQライン1(キーボード割り込み)を表す</li>
+</ul></dd>
+<dt>KBC</dt><dd>キーボード制御回路</dd>
+<dt>IPL</dt><dd>Initial Program Loader</dd>
 </dl>
 </div>
 </div>
-<div id="outline-container-orgea87892" class="outline-2">
-<h2 id="orgea87892"><a href="#orgea87892">関連</a></h2>
-<div class="outline-text-2" id="text-orgea87892">
+<div id="outline-container-org82b2b56" class="outline-2">
+<h2 id="org82b2b56"><a href="#org82b2b56">関連</a></h2>
+<div class="outline-text-2" id="text-org82b2b56">
+<ul class="org-ul">
+<li><a href="20240505T160356--kdoc-167-『cpuの創り方』__book.html#ID-20240505T160356">KDOC 167: 『CPUの創り方』</a>。低レイヤーつながり</li>
+<li><a href="20240427T113714--kdoc-140-『自作エミュレータで学ぶx86アーキテクチャ』__book.html#ID-20240427T113714">KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』</a>。低レイヤーつながり</li>
+</ul>
 </div>
 </div>
 </div>
