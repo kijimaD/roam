@@ -59,7 +59,6 @@
 (setq org-roam-v2-ack t)
 (setq org-id-link-to-org-use-id t)
 (setq org-id-extra-files (org-roam--list-files org-roam-directory))
-(generate-org-roam-db)
 
 (use-package htmlize
   :ensure t)
@@ -188,6 +187,7 @@
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (setq org-roam-v2-ack t)
   (org-roam-db-sync))
+(generate-org-roam-db)
 
 (setq org-todo-keywords '((type "TODO" "WIP" "|" "DONE" "CLOSE")))
 (setq org-todo-keyword-faces
