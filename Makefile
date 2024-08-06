@@ -20,6 +20,7 @@ update-dlinks: ## denote linksページを更新する(ローカルで実行す�
 
 .PHONY: org2html
 org2html: ## org projectをhtmlに一括変換する
+	emacs --batch -l ./publish.el --funcall generate-org-roam-db
 	emacs --batch -l ./publish.el --funcall kd/publish
 	cp -r ./images ./public/
 

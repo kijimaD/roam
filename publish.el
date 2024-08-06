@@ -187,7 +187,6 @@
   (setq org-roam-graph-link-hidden-types '("https" "http" "file"))
   (setq org-roam-v2-ack t)
   (org-roam-db-sync))
-(generate-org-roam-db)
 
 (setq org-todo-keywords '((type "TODO" "WIP" "|" "DONE" "CLOSE")))
 (setq org-todo-keyword-faces
@@ -267,6 +266,7 @@
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
 ;; TODO: uniqしたい
+;; TODO: sortしたい
 (defun collect-backlinks-string (backend)
   (when (org-roam-node-at-point)
     (goto-char (point-max))
