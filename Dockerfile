@@ -1,5 +1,4 @@
 # ruby ================
-
 FROM amazonlinux:2 AS ruby
 RUN yum -y update && \
     yum -y install \
@@ -26,34 +25,42 @@ RUN ruby-build 2.7.5 /usr/local/
 RUN gem update --system
 
 # builder ================
-
-FROM amazonlinux:2 AS builder
-
-RUN yum -y update && \
-    yum -y install \
-        make \
-        which \
-        gcc \
-        git \
-        sqlite-devel \
-        sqlite3 \
-        emacs \
-        python3 \
-        gnuplot \
-        glibc-langpack-ja \
-        https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/drawio-x86_64-24.1.0.rpm \
-        xorg-x11-server-Xvfb \
-        ipa-pgothic-fonts # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
-
-COPY --from=ghcr.io/kijimad/roam_ruby:master /usr/local /usr/local
+FROM ubuntu:24.10 AS builder
 
 WORKDIR /roam
+
+RUN apt -y update && \
+    apt -y install \
+        make \
+        which \
+        wget \
+        gcc \
+        git \
+        sqlite3 \
+        # build-essential \
+        libsqlite3-dev \
+        python3 \
+        python3-pip \
+        ruby \
+        ruby-dev \
+        gnuplot \
+        emacs \
+        language-pack-ja \
+        xvfb \
+        fonts-ipafont # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
+
+RUN apt -y install \
+    libnss3 \
+    libxss1 \
+    xdg-utils \
+    libsecret-1-0
+RUN wget https://github.com/jgraph/drawio-desktop/releases/download/v24.7.5/drawio-amd64-24.7.5.deb && dpkg -i drawio-amd64-24.7.5.deb && rm drawio-amd64-24.7.5.deb
 
 COPY Gemfile* ./
 RUN gem install bundler && bundle install
 
 COPY requirements.txt ./
-RUN pip3 install -r requirements.txt
+RUN pip3 install -r requirements.txt --break-system-packages
 
 CMD /bin/sh
 
@@ -93,7 +100,6 @@ COPY --from=build /roam/public /roam/public
 CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # textlint ================
-
 FROM node:22 AS textlint
 
 WORKDIR /work
@@ -107,7 +113,6 @@ COPY .textlintrc ./
 COPY prh.yml ./
 
 # ci ================
-
 FROM build AS ci
 
 RUN yum -y update && \
@@ -124,7 +129,6 @@ COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
 RUN sh dockle-installer.sh
 
 # pandoc ================
-
 FROM ubuntu AS pandoc
 ENV DEBIAN_FRONTEND=noninteractive
 
