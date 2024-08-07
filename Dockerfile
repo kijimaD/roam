@@ -1,29 +1,3 @@
-# ruby ================
-FROM amazonlinux:2 AS ruby
-RUN yum -y update && \
-    yum -y install \
-        software-properties-common \
-        yum-utils \
-        epel-release \
-        sudo \
-        which \
-        bzip2 \
-        wget \
-        tar \
-        git \
-        gcc \
-        gcc-c++ \
-        make \
-        openssl-devel \
-        openssh-server \
-        readline-devel \
-        zlib-devel
-
-RUN git clone https://github.com/rbenv/ruby-build.git /usr/local/plugins/ruby-build && \
-    /usr/local/plugins/ruby-build/install.sh
-RUN ruby-build 2.7.5 /usr/local/
-RUN gem update --system
-
 # builder ================
 FROM ubuntu:24.10 AS builder
 
