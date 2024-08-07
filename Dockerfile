@@ -58,7 +58,7 @@ CMD /bin/sh
 
 # release ================
 # GitHub Pages(production)
-FROM amazonlinux:2 as release
+FROM gcr.io/distroless/static-debian11 AS release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
@@ -67,7 +67,7 @@ COPY --from=build /roam/pdfs /roam/public/pdfs
 CMD /bin/sh
 
 # Heroku(staging)
-FROM amazonlinux:2 as staging
+FROM gcr.io/distroless/static-debian11 AS staging
 
 COPY --from=build /roam/public /roam/public
 
@@ -103,7 +103,7 @@ COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
 RUN sh dockle-installer.sh
 
 # pandoc ================
-FROM ubuntu AS pandoc
+FROM ubuntu:24.10 AS pandoc
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
