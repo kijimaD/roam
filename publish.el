@@ -265,13 +265,13 @@
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
-;; TODO: uniqしたい
-;; TODO: sortしたい
 (defun collect-backlinks-string (backend)
+  (interactive)
   (when (org-roam-node-at-point)
     (goto-char (point-max))
     ;; Add a new header for the references
-    (let* ((backlinks (org-roam-backlinks-get (org-roam-node-at-point))))
+    (let* ((backlinks (org-roam-backlinks-get (org-roam-node-at-point)))
+           (results))
       (when (> (length backlinks) 0)
         (insert "\n\n* Backlinks\n")
         (dolist (backlink backlinks)
@@ -280,8 +280,10 @@
                  (node-file (org-roam-node-file source-node))
                  (file-name (file-name-nondirectory node-file))
                  (title (org-roam-node-title source-node)))
-            (insert
-             (format "- [[./%s][%s]]\n" file-name title))))))))
+            (add-to-list 'results (format "- [[./%s][%s]]\n" file-name title))))
+        (setq results (sort results 'string<))
+        (dolist (result results)
+          (insert result))))))
 (add-hook 'org-export-before-processing-functions #'collect-backlinks-string)
 
 (provide 'publish)
