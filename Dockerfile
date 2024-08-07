@@ -58,7 +58,7 @@ CMD /bin/sh
 
 # release ================
 # GitHub Pages(production)
-FROM gcr.io/distroless/static-debian11 AS release
+FROM ubuntu:24.10 AS release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
@@ -67,7 +67,7 @@ COPY --from=build /roam/pdfs /roam/public/pdfs
 CMD /bin/sh
 
 # Heroku(staging)
-FROM gcr.io/distroless/static-debian11 AS staging
+FROM ubuntu:24.10 AS staging
 
 COPY --from=build /roam/public /roam/public
 
