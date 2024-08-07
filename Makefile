@@ -27,7 +27,7 @@ org2html: ## org projectをhtmlに一括変換する
 .PHONY: node-graph
 node-graph: ## ファイルの関係性グラフを描画する
 	emacs --batch -l ./publish.el --funcall generate-org-roam-db
-	pip3 install -r requirements.txt
+	pip3 install -r requirements.txt --break-system-packages
 	python3 node_graph/build_graph.py > public/js/graph.json
 
 .PHONY: pmd-graph
