@@ -16,12 +16,10 @@ RUN apt -y update && \
     python3-pip \
     ruby \
     ruby-dev \
-    # ↓最新の6系だと凡例が崩れてしまう
     gnuplot \
     emacs \
     language-pack-ja \
-    # ↓なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
-    fonts-ipafont
+    fonts-ipafont # ↓なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
 
 RUN apt -y install \
     xvfb \
