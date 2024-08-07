@@ -5,25 +5,26 @@ WORKDIR /roam
 
 RUN apt -y update && \
     apt -y install \
-        make \
-        which \
-        wget \
-        gcc \
-        git \
-        sqlite3 \
-        # build-essential \
-        libsqlite3-dev \
-        python3 \
-        python3-pip \
-        ruby \
-        ruby-dev \
-        gnuplot \
-        emacs \
-        language-pack-ja \
-        xvfb \
-        fonts-ipafont # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
+    make \
+    which \
+    wget \
+    gcc \
+    git \
+    sqlite3 \
+    libsqlite3-dev \
+    python3 \
+    python3-pip \
+    ruby \
+    ruby-dev \
+    # ↓最新の6系だと凡例が崩れてしまう
+    gnuplot \
+    emacs \
+    language-pack-ja \
+    # ↓なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
+    fonts-ipafont
 
 RUN apt -y install \
+    xvfb \
     libnss3 \
     libxss1 \
     xdg-utils \
