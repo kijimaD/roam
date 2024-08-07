@@ -46,6 +46,8 @@ line-graph: ## 行数の統計情報をグラフ化する
 
 .PHONY: gen-file-table
 gen-file-table: ## ファイルの情報を書き込む
+	# 日本語のファイルがあると文字化けする対策
+	git config --global core.quotepath false
 	ruby ./file-count/table.rb >> ./index.org
 
 .PHONY: export-pdfs-dev
