@@ -18,3 +18,9 @@
 make org2html
 make server3
 ```
+
+## submodule
+
+```shell
+git submodule update --init
+```
