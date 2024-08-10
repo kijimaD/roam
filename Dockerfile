@@ -62,8 +62,7 @@ FROM gcr.io/distroless/static-debian11 AS release
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
 COPY --from=build /roam/pdfs /roam/public/pdfs
-
-CMD /bin/sh
+COPY --from=builder /usr/bin/sleep /usr/bin/sleep
 
 # Heroku(staging)
 FROM ubuntu:24.10 AS staging
