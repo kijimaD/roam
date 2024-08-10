@@ -57,7 +57,7 @@ CMD /bin/sh
 
 # release ================
 # GitHub Pages(production)
-FROM ubuntu:24.10 AS release
+FROM gcr.io/distroless/static-debian11 AS release
 
 COPY --from=build /roam/public /roam/public
 COPY --from=build /roam/images /roam/public/images
