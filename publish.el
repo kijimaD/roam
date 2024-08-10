@@ -37,7 +37,7 @@
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
 
-(use-package emacsql-sqlite
+(use-package emacsql
   :ensure t)
 
 ;; Install other dependencies
