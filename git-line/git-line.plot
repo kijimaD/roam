@@ -1,4 +1,4 @@
-set terminal png
+set terminal pngcairo
 set output "./public/git-line.png"
 set datafile separator ","
 
