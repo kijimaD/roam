@@ -11,7 +11,7 @@ Dir.chdir(BASE) do
       sha1_date = line.split(',')
       sha1 = sha1_date.first
 
-      date = sha1_date.last.chomp.tr('-', '/')
+      date = sha1_date.last.chomp
       Open3.capture2("git checkout #{sha1}")
       file_count = Open3.capture2("git ls-files | grep #{EXT} | wc -l").first.strip
       memo[date] = file_count
