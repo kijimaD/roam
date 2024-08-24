@@ -1,0 +1,77 @@
+:properties:
+:ID: 20240824T173305
+:end:
+#+title:      KDOC 225: mallocをアセンブラで見る
+#+date:       [2024-08-24 Sat 17:33]
+#+filetags:   :draft:iru:
+#+identifier: 20240824T173305
+
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
+# (flush-lines "^\\#\s.+?")
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 文献メモの場合は、感想と混ぜないこと。1つのアイデアに反する
+# ツェッテルカステンの議論に寄与するか
+# 頭のなかやツェッテルカステンにある問いとどのようにかかわっているか
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+
+# ====永久保存メモのルール。
+# 自分の言葉で書く。
+# 後から読み返して理解できる。
+# 他のメモと関連付ける。
+# ひとつのメモにひとつのことだけを書く。
+# メモの内容は1枚で完結させる。
+# 論文の中に組み込み、公表できるレベルである。
+
+# ====価値があるか。
+# その情報がどういった文脈で使えるか。
+# どの程度重要な情報か。
+# そのページのどこが本当に必要な部分なのか。
+
+* この文書のステータス
+- 作成
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* 概要
+# 本文(タイトルをつける)。
+
+mallocは[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C言語]]の標準ライブラリの関数である。動的にメモリ確保する。
+
+これはメモリ管理をプログラマー自身がやるための機能であって、コンパイル時にメモリ量が決定される仕組みから離れる。アセンブラを見てもmallocが何をしているかはわからない。ただの関数呼び出しにすぎない。
+
+#+begin_export html
+<iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:14,endLineNumber:5,positionColumn:14,positionLineNumber:5,selectionStartColumn:14,selectionStartLineNumber:5,startColumn:14,startLineNumber:5),source:'%23include+%3Cstdlib.h%3E%0A%0Aint+main()+%7B++++%0A++++int+*p+%3D+(int*)malloc(sizeof(int)*100)%3B%0A++++free+(p)%3B%0A%7D'),l:'5',n:'1',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+- [[https://ja.wikipedia.org/wiki/Malloc][malloc - Wikipedia]]
+
+通常の変数はコールスタック上に展開される。コンパイル時に、メモリ上に展開するサイズが決定している。必要なサイズが実行時でないとわからないようなケースでは、これは都合がよくない。それにスタック構造を超えて保持しておくということもできない。その解決策として、mallocによってヒープ領域のメモリを使う。
+
+- 動的に、好きなメモリサイズを確保できる
+- 破棄しない限り保持し続ける
+
+ということがポイントか。
+
+* 関連
+なし。
