@@ -1,7 +1,7 @@
 :properties:
 :ID: 20240825T193415
 :end:
-#+title:      KDOC 228: 実行時のアドレスの使い方が逆に見える
+#+title:      KDOC 228: 変数を書いた順番とアドレスの関係はコンパイラによって異なる
 #+date:       [2024-08-25 Sun 19:34]
 #+filetags:   :draft:code:
 #+identifier: 20240825T193415
@@ -39,8 +39,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-08-25 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -55,8 +54,9 @@
 # すべてのコメントを削除した。
 * 概要
 # 本文(タイトルをつける)。
+コンパイラによって、コードで変数を初期化した順番とアドレスの順番は異なることがある。
 
-C言語で実行時のアドレス位置と、アセンブリの位置で違いがあるように見えたので確かめる。
+最初に、gcc。
 
 #+caption: 変数の番地を表示する
 #+begin_src C
@@ -81,7 +81,7 @@ C言語で実行時のアドレス位置と、アセンブリの位置で違い�
 0x7fffa55f0a87: c
 #+end_src
 
-つまり、↓このようになっているように見える。コードで変数を初期化した順番とアドレスの順番が一致している。
+つまり、メモリは↓このようになっているように見える。コードで変数を初期化した順番とアドレスの順番が一致している。スタックだからアドレスが書いた逆順になる、というわけではない。
 
 #+caption: 先に書いた変数(base)が低位アドレスとなる
 #+begin_src shell
@@ -95,54 +95,7 @@ C言語で実行時のアドレス位置と、アセンブリの位置で違い�
   v番地大(高)
 #+end_src
 
-いっぽう、アセンブリで見る。
-
-#+begin_export html
-<iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:6,positionColumn:2,positionLineNumber:6,selectionStartColumn:2,selectionStartLineNumber:6,startColumn:2,startLineNumber:6),source:'int+main()+%7B%0A++++char+base+%3D+1%3B%0A++++char+a+%3D+!'a!'%3B%0A++++char+b+%3D+!'b!'%3B%0A++++char+c+%3D+!'c!'%3B%0A%7D'),l:'5',n:'1',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:cclang1701,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+x86-64+clang+17.0.1+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
-#+end_export
-
-つまり、アセンブリでは↓こう格納されそうに見える。コードで変数を初期化した順番とアドレスの順番は逆順になる。スタックの成長する方向であり、納得できる。
-
-#+caption: 先に書いた変数(base)が高位アドレスとなる
-#+begin_src shell
-  ^番地小(低)
-
-  | rbp-4: c |
-  | rbp-3: b |
-  | rbp-2: a |
-  | rbp-1: base  |
-
-  v番地大(高)
-#+end_src
-
-実行して確認したアドレスと、アセンブリのアドレスの順番が、逆になっているように見える。これはなぜなのだろう。
-
-いくつか調べるなかで、箇所は不明だが環境依存であると考えた。
-
-- [[https://brain.cc.kogakuin.ac.jp/~kanamaru/lecture/prog1/08-03.html][第八回-03 メインメモリとアドレス]]の例では、同じようなコードだが、アドレスの順番が高位アドレス→低位アドレスとなっている
-- [[https://paiza.io/projects/P_5GA1AKodgUoRjfhdY3_A?language=c][ブラウザでプログラミング・実行ができる「オンライン実行環境」| paiza.IO]]で実行するとアドレスの順番が高位アドレス→低位アドレスとなっている。paizaではclangを使っているようだ
-- 手元で ~clang~ でコンパイルすると高位アドレス→低位アドレスになる。gccでコンパイルすると低位アドレス→高位アドレスになる
-- Compiler Explorerでgcc, clangを入れ替えてみたが順序は変わらず
-
-#+caption: clangでコンパイルして実行した結果。先に書いた変数が高位アドレスとなる
-#+begin_src shell
-  0x7ffe71de7317: base
-  0x7ffe71de7316: a
-  0x7ffe71de7315: b
-  0x7ffe71de7314: c
-
-  --------------------
-  ^番地小(低)
-
-  | ...14: c |
-  | ...15: b |
-  | ...16: a |
-  | ...17: base |
-
-  v番地大(高)
-#+end_src
-
-手元のgccでアセンブラを見てみると、(低)base, a, b, c(高)順のアドレスになっているのを確認できた。
+アセンブラを見てみると、(低)base, a, b, c(高)順のアドレスになっているのを確認できた。
 
 #+caption: 手元のgccで-Sオプションを使って出力した
 #+begin_src asm
@@ -237,6 +190,26 @@ C言語で実行時のアドレス位置と、アセンブリの位置で違い�
     |-11(%rbp): a |
     |-10(%rbp): b |
     | -9(%rbp): c |
+#+end_src
+
+いっぽうclangでコンパイルした場合、先に書いた変数が高位アドレスとなる。
+
+#+caption: clangでコンパイルして実行した結果。先に書いた変数が高位アドレスとなる
+#+begin_src shell
+  0x7ffe71de7317: base
+  0x7ffe71de7316: a
+  0x7ffe71de7315: b
+  0x7ffe71de7314: c
+
+  --------------------
+  ^番地小(低)
+
+  | ...14: c |
+  | ...15: b |
+  | ...16: a |
+  | ...17: base |
+
+  v番地大(高)
 #+end_src
 
 つまり、コードで変数を初期化した順番と、アドレスの順番は必ずしも逆にはならないことがある。なぜそうなるのかは、いつか調べる。
