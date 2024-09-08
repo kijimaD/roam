@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-09-08 -->
+<!-- 2024-09-09 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 20: docker build のログ出力を読む</title>
@@ -28,14 +28,14 @@
 ミニマムに実装しようとしたが、あまりよくわからなかった&#x2026;。contextの知識が足りなそう。
 </p>
 
-<div id="outline-container-org0aa9565" class="outline-2">
-<h2 id="org0aa9565"><a href="#org0aa9565">memo</a></h2>
-<div class="outline-text-2" id="text-org0aa9565">
+<div id="outline-container-org0817149" class="outline-2">
+<h2 id="org0817149"><a href="#org0817149">memo</a></h2>
+<div class="outline-text-2" id="text-org0817149">
 </div>
 
-<div id="outline-container-org313dcca" class="outline-3">
-<h3 id="org313dcca"><a href="#org313dcca">図</a></h3>
-<div class="outline-text-3" id="text-org313dcca">
+<div id="outline-container-org1fadc9d" class="outline-3">
+<h3 id="org1fadc9d"><a href="#org1fadc9d">図</a></h3>
+<div class="outline-text-3" id="text-org1fadc9d">
 <div class="org-src-container">
 <pre class="src src-mermaid">classDiagram
 class oneOffProgress {
@@ -66,9 +66,9 @@ newWriter      "1" --&gt; "1" append
 </pre>
 </div>
 
-<div class="results" id="org162c390">
+<div class="results" id="orgb576d1a">
 
-<div id="org0334c38" class="figure">
+<div id="orgd217b8c" class="figure">
 <p><img src="./images/20230219200923-GI4NyKiVWY.png" alt="20230219200923-GI4NyKiVWY.png">
 </p>
 </div>
@@ -77,9 +77,9 @@ newWriter      "1" --&gt; "1" append
 </div>
 </div>
 
-<div id="outline-container-org15e1877" class="outline-3">
-<h3 id="org15e1877"><a href="#org15e1877">ログ送信</a></h3>
-<div class="outline-text-3" id="text-org15e1877">
+<div id="outline-container-org09a63bb" class="outline-3">
+<h3 id="org09a63bb"><a href="#org09a63bb">ログ送信</a></h3>
+<div class="outline-text-3" id="text-org09a63bb">
 <p>
 よく見るログ文から、どこで実行してるかを調べる。
 </p>
@@ -89,7 +89,7 @@ newWriter      "1" --&gt; "1" append
 </pre>
 </div>
 
-<div class="results" id="org6519116">
+<div class="results" id="orga7980cd">
 <p>
 layersDone := oneOffProgress(ctx, &ldquo;exporting layers&rdquo;)
 </p>
@@ -105,7 +105,7 @@ vendorにもある。
 </pre>
 </div>
 
-<div class="results" id="orgd6c6ce9">
+<div class="results" id="orgc37e8ad">
 <p>
 layersDone := progress.OneOff(ctx, &ldquo;exporting layers&rdquo;)
 </p>
@@ -125,7 +125,7 @@ layersDone := progress.OneOff(ctx, &ldquo;exporting layers&rdquo;)
 oneOffProgressを調べる。
 </p>
 
-<div class="results" id="orgfc9a3c6">
+<div class="results" id="org01b10b9">
 <p>
 func oneOffProgress(ctx context.Context, id string) func(err error) error {
 	pw, _, _ := progress.NewFromContext(ctx)
@@ -156,7 +156,7 @@ progress.NewFromContext(ctx)を調べる。
 </pre>
 </div>
 
-<div class="results" id="orga39e504">
+<div class="results" id="org5589275">
 <p>
 <i>/ NewFromContext creates a new Writer based on a Writer previously stored
 /</i> in the Context and returns a new Context with the new Writer stored.  It is
@@ -178,7 +178,7 @@ func NewFromContext(ctx context.Context, opts &#x2026;WriterOption) (Writer, boo
 </pre>
 </div>
 
-<div class="results" id="org38ca1b4">
+<div class="results" id="org2d0eed2">
 <p>
 <i>/ FromContext returns a WriterFactory to generate new progress writers based
 /</i> on a Writer previously stored in the Context.
@@ -230,7 +230,7 @@ func FromContext(ctx context.Context, opts &#x2026;WriterOption) WriterFactory {
 </pre>
 </div>
 
-<div class="results" id="org0a86fc2">
+<div class="results" id="orgd013c2f">
 <p>
 type progressWriter struct {
 	done   bool
@@ -250,7 +250,7 @@ type progressWriter struct {
 </pre>
 </div>
 
-<div class="results" id="org1359de8">
+<div class="results" id="org8f82cc7">
 <p>
 func newWriter(pw *progressWriter) *progressWriter {
 	meta := make(map[string]interface{})
@@ -291,7 +291,7 @@ func newWriter(pw *progressWriter) *progressWriter {
 </pre>
 </div>
 
-<div class="results" id="org2fe352c">
+<div class="results" id="org8f312d9">
 <p>
 type progressReader struct {
 	ctx     context.Context
@@ -309,7 +309,7 @@ type progressReader struct {
 </pre>
 </div>
 
-<div class="results" id="org8eaee84">
+<div class="results" id="orgf706a71">
 <p>
 func (pr *progressReader) append(pw *progressWriter) {
 	pr.mu.Lock()
@@ -352,17 +352,17 @@ func (pr *progressReader) append(pw *progressWriter) {
 </div>
 </div>
 
-<div id="outline-container-orgfc84590" class="outline-3">
-<h3 id="orgfc84590"><a href="#orgfc84590">送信したログをどこで表示してるか</a></h3>
-<div class="outline-text-3" id="text-orgfc84590">
+<div id="outline-container-org441aedb" class="outline-3">
+<h3 id="org441aedb"><a href="#org441aedb">送信したログをどこで表示してるか</a></h3>
+<div class="outline-text-3" id="text-org441aedb">
 <p>
 ログの送信とprintは分離されている。どこでprintしているのだろうか。
 </p>
 </div>
 </div>
-<div id="outline-container-orga80aea7" class="outline-3">
-<h3 id="orga80aea7"><a href="#orga80aea7">contextの使い方</a></h3>
-<div class="outline-text-3" id="text-orga80aea7">
+<div id="outline-container-org555bfa6" class="outline-3">
+<h3 id="org555bfa6"><a href="#org555bfa6">contextの使い方</a></h3>
+<div class="outline-text-3" id="text-org555bfa6">
 <ul class="org-ul">
 <li><a href="https://deeeet.com/writing/2017/02/23/go-context-value/">Golangのcontext.Valueの使い方 | Taichi Nakashima</a></li>
 </ul>
@@ -383,9 +383,9 @@ func (pr *progressReader) append(pw *progressWriter) {
 </div>
 </div>
 
-<div id="outline-container-org7bdc12c" class="outline-3">
-<h3 id="org7bdc12c"><a href="#org7bdc12c">progressWriter</a></h3>
-<div class="outline-text-3" id="text-org7bdc12c">
+<div id="outline-container-org964ed5c" class="outline-3">
+<h3 id="org964ed5c"><a href="#org964ed5c">progressWriter</a></h3>
+<div class="outline-text-3" id="text-org964ed5c">
 <ul class="org-ul">
 <li>ProgressWriterというのがあるな。関係ありそう</li>
 </ul>
@@ -395,7 +395,7 @@ func (pr *progressReader) append(pw *progressWriter) {
 </pre>
 </div>
 
-<div class="results" id="org2a65b54">
+<div class="results" id="orgfb0cd01">
 <p>
 type ProgressWriter struct {
 	Output             io.Writer
@@ -410,9 +410,9 @@ type ProgressWriter struct {
 </div>
 </div>
 
-<div id="outline-container-orga40ebdf" class="outline-3">
-<h3 id="orga40ebdf"><a href="#orga40ebdf">builder</a></h3>
-<div class="outline-text-3" id="text-orga40ebdf">
+<div id="outline-container-org75696cc" class="outline-3">
+<h3 id="org75696cc"><a href="#org75696cc">builder</a></h3>
+<div class="outline-text-3" id="text-org75696cc">
 <ul class="org-ul">
 <li>気づいた</li>
 <li>stdoutとoutputが別になってる
@@ -426,7 +426,7 @@ type ProgressWriter struct {
 </pre>
 </div>
 
-<div class="results" id="org8cbd74b">
+<div class="results" id="org168a011">
 <p>
 type Builder struct {
 	options *types.ImageBuildOptions
@@ -459,9 +459,9 @@ clientCtx context.Context
 </div>
 </div>
 
-<div id="outline-container-org20fd571" class="outline-3">
-<h3 id="org20fd571"><a href="#org20fd571">openAPI定義</a></h3>
-<div class="outline-text-3" id="text-org20fd571">
+<div id="outline-container-org6a648e2" class="outline-3">
+<h3 id="org6a648e2"><a href="#org6a648e2">openAPI定義</a></h3>
+<div class="outline-text-3" id="text-org6a648e2">
 <p>
 docker engineのAPI定義を発見した。
 </p>
@@ -472,9 +472,9 @@ docker engineのAPI定義を発見した。
 </div>
 </div>
 
-<div id="outline-container-org8c11c5c" class="outline-3">
-<h3 id="org8c11c5c"><a href="#org8c11c5c">処理はどこにあるか</a></h3>
-<div class="outline-text-3" id="text-org8c11c5c">
+<div id="outline-container-org2cfa84e" class="outline-3">
+<h3 id="org2cfa84e"><a href="#org2cfa84e">処理はどこにあるか</a></h3>
+<div class="outline-text-3" id="text-org2cfa84e">
 <ul class="org-ul">
 <li><a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>はエンジンと、クライアントに分かれている。Docker EngineとDocker CLI</li>
 <li>CLIはただのラッパーにすぎない。本質的な処理はエンジンのほうがやっている、はず</li>
@@ -482,9 +482,9 @@ docker engineのAPI定義を発見した。
 </div>
 </div>
 
-<div id="outline-container-org6fc281e" class="outline-3">
-<h3 id="org6fc281e"><a href="#org6fc281e">APIサーバ</a></h3>
-<div class="outline-text-3" id="text-org6fc281e">
+<div id="outline-container-orgeb85076" class="outline-3">
+<h3 id="orgeb85076"><a href="#orgeb85076">APIサーバ</a></h3>
+<div class="outline-text-3" id="text-orgeb85076">
 <ul class="org-ul">
 <li>APIサーバはgorillaであることがわかる。</li>
 </ul>
@@ -494,7 +494,7 @@ docker engineのAPI定義を発見した。
 </pre>
 </div>
 
-<div class="results" id="org43f47e3">
+<div class="results" id="org6099a3f">
 <p>
 &ldquo;github.com/gorilla/mux&rdquo;
 </p>
