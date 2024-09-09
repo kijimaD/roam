@@ -4,7 +4,7 @@
 <!-- 2024-09-09 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KDOC 227: フィールド定義の順番によってサイズが変わることがある</title>
+<title>KDOC 227: フィールド定義の順番によってメモリサイズが変わることがある</title>
 <meta name="author" content="root" />
 <meta name="generator" content="Org Mode" />
 <link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
@@ -14,11 +14,11 @@
 <div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
 </div>
 <div id="content" class="content">
-<h1 class="title">KDOC 227: フィールド定義の順番によってサイズが変わることがある</h1>
+<h1 class="title">KDOC 227: フィールド定義の順番によってメモリサイズが変わることがある</h1>
 
-<div id="outline-container-org07294b7" class="outline-2">
-<h2 id="org07294b7"><a href="#org07294b7">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org07294b7">
+<div id="outline-container-org37326f2" class="outline-2">
+<h2 id="org37326f2"><a href="#org37326f2">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org37326f2">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -26,14 +26,15 @@
 </ul></li>
 <li>レビュー
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-09-09 貴島</li>
 </ul></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org36cc7e9" class="outline-2">
-<h2 id="org36cc7e9"><a href="#org36cc7e9">概要</a></h2>
-<div class="outline-text-2" id="text-org36cc7e9">
+
+<div id="outline-container-org494c080" class="outline-2">
+<h2 id="org494c080"><a href="#org494c080">概要</a></h2>
+<div class="outline-text-2" id="text-org494c080">
 <p>
 <a href="https://hirokuma.blog/?p=1691">【C言語】メモリアライメント を全力でわかりやすく説明する</a>を、確認する。構造体のフィールドの順番どおりにメモリを割り当てるが、フィールドの型のサイズによっては、無駄なサイズを使うことになる。
 </p>
@@ -41,7 +42,7 @@
 <iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:1,endLineNumber:16,positionColumn:1,positionLineNumber:16,selectionStartColumn:1,selectionStartLineNumber:16,startColumn:1,startLineNumber:16),source:'%23include+%3Cstdlib.h%3E%0A%0Atypedef+struct+%7B%0A++++unsigned+long+a%3B%0A++++unsigned+short+b%3B%0A++++unsigned+short+c%3B%0A++++unsigned+long+d%3B%0A%7D+sample1%3B%0A%0Atypedef+struct+%7B%0A++++unsigned+long+a%3B%0A++++unsigned+short+b%3B%0A++++unsigned+long+d%3B%0A++++unsigned+short+c%3B%0A%7D+sample2%3B%0A%0Aint+main()+%7B%0A++++sample1+s1+%3D+%7B1,+2,+3,+4%7D%3B%0A++++sample2+s2+%3D+%7B1,+2,+3,+4%7D%3B%0A%7D'),l:'5',n:'1',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
 
 <p>
-ストアしているアドレスを見ると、サイズがわかる。 <code>sample2</code> では、サイズがすべて4バイトになっている。
+ストアしているアドレスを見ると、サイズがわかる。 <code>sample2</code> では、サイズがすべて4バイトになっていて、同じ情報量でも余計に使っているのがわかる。
 </p>
 
 <div class="org-src-container">
@@ -68,10 +69,8 @@
 </div>
 </div>
 
-<div id="outline-container-orgcbfc8f0" class="outline-2">
-<h2 id="orgcbfc8f0"><a href="#orgcbfc8f0">関連</a></h2>
-<div class="outline-text-2" id="text-orgcbfc8f0">
-</div>
+<div id="outline-container-orgd2d6423" class="outline-2">
+<h2 id="orgd2d6423"><a href="#orgd2d6423">関連</a></h2>
 </div>
 </div>
 <div id="postamble" class="status">
