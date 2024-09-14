@@ -50,6 +50,20 @@ modifyimage() {
     done
 }
 
+# buseumファイルの更新フック
+modifyimage() {
+    inotifywait -m -e modify --format '%w%f' ./buseum | while read FILE; do
+        if [[ $FILE =~ \./buseum/.* ]]; then
+            # 画像を反映する
+            cp -r buseum public/
+
+            # 一覧ページ更新(org)
+            make update-dlinks
+            echo "✓ update dblock"
+        fi
+    done
+}
+
 # ページ一覧を更新する
 dblock() {
     # 同じ監視ディレクトリ内での移動だから、moveだと2回発火する。なのでmoved_toかmove_fromを使う
