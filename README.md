@@ -16,7 +16,7 @@
 
 ```shell
 make org2html
-make server3
+make server
 ```
 
 ## submodule

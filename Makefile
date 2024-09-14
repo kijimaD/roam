@@ -82,12 +82,8 @@ dockle:
 	dockle ghcr.io/kijimad/roam:master
 
 .PHONY: server
-server: ## webサーバを起動する(Python2)
-	cd ./public; python -m SimpleHTTPServer 8888
-
-.PHONY: server3
-server3: ## webサーバを起動する(Python3)
-	cd ./public; python3 -m http.server 8000
+server: ## webサーバを起動する
+	docker run --rm -d -v "$(PWD)/public":/usr/share/nginx/html -w /usr/share/nginx/html -p 8005:80 --name roam-server docker.io/nginx:1.27
 
 .PHONY: watch
 watch: ## 自動更新する
