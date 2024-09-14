@@ -7,9 +7,7 @@
 
 - Notes by Emacs package Org Roam https://github.com/org-roam/org-roam
 
-+ production: https://kijimad.github.io/roam/
-+ staging: https://roam-staging.herokuapp.com/
-+ monitor: https://kijimad.github.io/roam_upptime/
+- production: https://kijimad.github.io/roam/
 - rich UI: https://github.com/kijimaD/roam-ui
 
 ## development
