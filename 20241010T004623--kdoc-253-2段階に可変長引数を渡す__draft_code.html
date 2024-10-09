@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-10-10 -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 253: Goで2段階に可変長引数を渡す</title>
+<meta name="author" content="root" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 253: Goで2段階に可変長引数を渡す</h1>
+
+<div id="outline-container-org64e3e03" class="outline-2">
+<h2 id="org64e3e03"><a href="#org64e3e03">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org64e3e03">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-10-10 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgeb0de09" class="outline-2">
+<h2 id="orgeb0de09"><a href="#orgeb0de09">概要</a></h2>
+<div class="outline-text-2" id="text-orgeb0de09">
+<p>
+<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>の可変長引数は、関数定義側では左側に <code>...</code> をつけて示す(<code>...args</code>)。関数内ではスライスとして使える。
+</p>
+
+<p>
+また、関数呼び出し側ではスライスの右側に <code>...</code> をつけてスライスの要素を可変長引数として渡せる(<code>slice...</code>)。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>等しい2つの例。呼び出し側にはスライスで渡すか、通常の複数の引数で渡すかの選択肢がある</label><pre class="src src-go">package main
+
+import "fmt"
+
+// func Print(a ...any) (n int, err error) {}
+
+func main() {
+        fmt.Print("a", "b", "c")
+        fmt.Println() // 改行
+        fmt.Print([]any{"a", "b", "c"}...)
+}
+</pre>
+</div>
+
+<pre class="example">
+abc
+abc
+</pre>
+
+<p>
+多くのユースケースをサポートする、オプショナルな項目の多いタイプのプログラムでは、この構文を多用するものがある。<sup><a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>
+</p>
+
+<p>
+オプショナルな項目が階層になって構成されていることもある。特定のオプショナルな項目の組み合わせを関数化して、さらにその関数にオプショナルな項目をつける、というようなことだ。そういう場合は直感的でなく、少し目を慣らさないといけない。コードで見てみる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>等しい2つの例</label><pre class="src src-go">package main
+
+import "fmt"
+
+func main() {
+        run1("a", "b", "c")
+        fmt.Println() // 改行
+        run2("c")
+}
+
+func run1(opts ...string) {
+        for _, str := range opts {
+                fmt.Print(str)
+        }
+}
+
+func run2(opts ...string) {
+        run1(append([]string{"a", "b"}, opts...)...)
+}
+</pre>
+</div>
+
+<pre class="example">
+abc
+abc
+</pre>
+
+<p>
+<code>run1()</code> では &ldquo;a&rdquo;, &ldquo;b&rdquo;, &ldquo;c&rdquo; がオプショナルだが、 <code>run2()</code> では &ldquo;c&rdquo; だけがオプショナルになっている。 <code>run2()</code> では &ldquo;b&rdquo;, &ldquo;c&rdquo; は自動で渡される。利用者は長大なオプショナル引数を渡すことなく、プリセットの機能をすぐ利用できる。いっぽうで、細かく引数を指定して自分のケースに合わせたい利用者の要望も満たせている。
+</p>
+
+<p>
+1つずつ見る。
+</p>
+
+<ol class="org-ol">
+<li><code>opts</code> -&gt; スライス</li>
+<li><code>...opts</code> -&gt; スライスを展開してappendの可変長引数となる
+<ul class="org-ul">
+<li><code>append</code> のシグネチャ <code>func append(slice []Type, elems ...Type) []Type</code></li>
+</ul></li>
+<li><code>append([]string{"a", "b"}, opts...)</code> -&gt; これは合体したスライスとなる
+<ul class="org-ul">
+<li>つまり <code>[]string{"a", "b", "c"}</code> となる</li>
+</ul></li>
+<li><code>append([]string{"a", "b"}, opts...)...</code> -&gt; スライスを展開してrun1の可変長引数となる
+<ul class="org-ul">
+<li>つまり <code>run1("a", "b", "c")</code> というように呼び出す</li>
+</ul></li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-orgb097bc1" class="outline-2">
+<h2 id="orgb097bc1"><a href="#orgb097bc1">関連</a></h2>
+<div class="outline-text-2" id="text-orgb097bc1">
+<ul class="org-ul">
+<li><a href="20231128T074518--kdoc-59-ecsを使ってサンプルゲームを作る__project.html#ID-20231128T074518">KDOC 59: ECSを使ってサンプルゲームを作る</a>。コードを読む中でよく見かけたため、書いておくことにした</li>
+</ul>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+例えば<a href="https://github.com/ebitenui/ebitenui">ebitenui/ebitenui</a>。
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
