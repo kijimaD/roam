@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-10-10 -->
+<!-- 2024-10-16 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 59: ECSを使ってサンプルゲームを作る</title>
@@ -39,9 +39,9 @@
 <li>リポジトリ。<a href="https://github.com/kijimaD/nova">kijimaD/nova</a></li>
 </ul>
 
-<div id="outline-container-org4e3f1e8" class="outline-2">
-<h2 id="org4e3f1e8"><a href="#org4e3f1e8">方針</a></h2>
-<div class="outline-text-2" id="text-org4e3f1e8">
+<div id="outline-container-org277d750" class="outline-2">
+<h2 id="org277d750"><a href="#org277d750">方針</a></h2>
+<div class="outline-text-2" id="text-org277d750">
 <p>
 まずストーリー抜きで、RPGとしてゲームが成立するようにする。
 </p>
@@ -59,9 +59,9 @@
 </div>
 </div>
 
-<div id="outline-container-org71f3b1d" class="outline-2">
-<h2 id="org71f3b1d"><a href="#org71f3b1d">素材</a></h2>
-<div class="outline-text-2" id="text-org71f3b1d">
+<div id="outline-container-orga736c58" class="outline-2">
+<h2 id="orga736c58"><a href="#orga736c58">素材</a></h2>
+<div class="outline-text-2" id="text-orga736c58">
 <p>
 よさげな素材をリンクしておく。
 </p>
@@ -74,13 +74,2672 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-orgf10df19" class="outline-2">
-<h2 id="orgf10df19"><a href="#orgf10df19">Tasks</a></h2>
-<div class="outline-text-2" id="text-orgf10df19">
+<div id="outline-container-org21d1570" class="outline-2">
+<h2 id="org21d1570"><a href="#org21d1570">Tasks</a></h2>
+<div class="outline-text-2" id="text-org21d1570">
 </div>
-<div id="outline-container-org333a6fd" class="outline-3">
-<h3 id="org333a6fd"><a href="#org333a6fd"><span class="todo TODO">TODO</span> 戦闘追加する</a></h3>
-<div class="outline-text-3" id="text-org333a6fd">
+<div id="outline-container-org635cdf6" class="outline-3">
+<h3 id="org635cdf6"><a href="#org635cdf6"><span class="todo TODO">TODO</span> スクロールコンテナをListコンテナに置き換える</a></h3>
+<div class="outline-text-3" id="text-org635cdf6">
+<p>
+わかりやすくなる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orge23fc16" class="outline-3">
+<h3 id="orge23fc16"><a href="#orge23fc16"><span class="todo TODO">TODO</span> フィールドに敵シンボルを作る</a></h3>
+<div class="outline-text-3" id="text-orge23fc16">
+<ul class="org-ul">
+<li>とりあえず動かないやつ</li>
+<li>ランダムに動くやつ</li>
+<li>向きによる画像をどうするか
+<ul class="org-ul">
+<li>自キャラは8方向にしか動かないが、敵キャラはそうではない</li>
+<li>角度の範囲にすればいいか</li>
+<li>今は回転だが、回転は見た目があまりよくない</li>
+<li>画像を5方向分用意して切り替えがよさそう(反転させて全方向にする)</li>
+<li>とりあえず回転はなくしておく</li>
+</ul></li>
+<li>かぶる問題
+<ul class="org-ul">
+<li>positionを指定したはいいけど、重複検知がやりにくいな</li>
+<li>tileだったら全体管理できていて楽だけど&#x2026;</li>
+<li>スポーンのとき限定で、スポーン済みタイル配列を持っておいてチェックするとか</li>
+<li>スポーン時はタイルで判断できれば問題ない。スポーン時、すべてのエンティティがタイルに沿った位置にある</li>
+<li>タイルを指定してスポーンするインターフェースにすればよいのでは</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org7f392ba" class="outline-3">
+<h3 id="org7f392ba"><a href="#org7f392ba"><span class="todo TODO">TODO</span> クリアできるようにする</a></h3>
+<div class="outline-text-3" id="text-org7f392ba">
+<p>
+とりあえずクリアできるようにする。
+</p>
+
+<ul class="org-ul">
+<li>20Fにいくとボス部屋になる</li>
+<li>最終階層では脱出するか、ボスと戦う</li>
+<li>将来的には、階層の異なる複数の遺跡があるが、とりあえずは1つの遺跡だけでよい</li>
+<li>最終階層にあるイベントパッドに触れるとクリア</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgcac9115" class="outline-3">
+<h3 id="orgcac9115"><a href="#orgcac9115"><span class="todo TODO">TODO</span> 階層移動をEffectでやる</a></h3>
+<div class="outline-text-3" id="text-orgcac9115">
+<p>
+階層移動をイベントとして、ほかの箇所で使いやすくする。
+</p>
+
+<ul class="org-ul">
+<li>特定のenitityを対象としないeffectだけど、これでいいのかな。参考コードの状況とは異なる。特定のentityではなく、gameResourceを変更する。ただ、アイテムで階層移動とかもしたいので、effectでできればいいか</li>
+<li>今の階層移動の仕組み、わかりづらいな</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org8858ecf" class="outline-3">
+<h3 id="org8858ecf"><a href="#org8858ecf"><span class="todo TODO">TODO</span> 接触でイベント発火させる</a></h3>
+<div class="outline-text-3" id="text-org8858ecf">
+<ul class="org-ul">
+<li>接触したときに、テキストをいくつか表示したあとに、クリアにして、メインメニューに戻す</li>
+<li>テキスト表示と、ステート遷移</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>疑似コード</label><pre class="src src-go">winEvent()
+
+func finishEvent() {
+        msg(`
+&lt;bg='treasure'&gt;
+黒く輝く珠を発見した。
+&lt;bg='black'&gt;
+願いを叶え、幸せに暮らした。
+`)
+        switch(MainMenuState)
+}
+
+# 将来的
+# ボスとの戦闘
+func bossEvent() {
+        events := []eventFunc{
+                msg(`
+美しい庭園が広がっている。中心には鏡のような水面を湛えた池がある。ほかの階層より気温が低い。雰囲気が変わったので、ここが最下層だろう。
+庭園の中心に浮かぶ島には、青白い炎に囲まれた、ローブを着た骸骨が待ち受けている。
+`),
+                battle('Elder Witch'),
+                msg('宝を入手した'),
+                flag(TowerFinish),
+        }
+        submit(events, HomeMenuState)
+}
+
+# フィールドでの汎用イベント
+func itemEvent() {
+        msg(`何か落ちているぞ`)
+        getRandomItem()
+        pop(DungeonState)
+}
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>フィールドでの戦闘勝利後はフィールドに戻ってほしい</li>
+<li>イベントでの戦闘勝利後は後続のイベントを開始してほしい</li>
+<li>イベント進行ステートを作ればいいかな。会話終了時や戦闘終了時はpopしてもらってイベント進行ステートに戻る。前の続きから開始する</li>
+<li>フラグ管理とかアイテム入手とかあるから、コード形式なのが望ましい</li>
+<li>どうやって戻ってきて再開するか。キューをポップしてから実行してやればいいのかな。実行したものは消えて、戻ると新しいイベントを実行して遷移する、という</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-function-name">func</span> (s State) Update() {
+    event := s.Queue.Pop()
+    event() <span class="org-comment-delimiter"># </span><span class="org-comment">&#36983;&#31227;&#12364;&#23455;&#34892;&#12373;&#12428;&#12427;&#12290;&#12461;&#12517;&#12540;&#12395;&#12394;&#12356;&#22580;&#21512;&#12399;&#12289;&#12473;&#12486;&#12540;&#12488;&#12434;&#32066;&#20102;&#12377;&#12427;</span>
+}
+</pre>
+</div>
+</div>
+</div>
+
+<div id="outline-container-org714c48f" class="outline-3">
+<h3 id="org714c48f"><a href="#org714c48f"><span class="todo TODO">TODO</span> 合成のレアリティスコア</a></h3>
+<div class="outline-text-3" id="text-org714c48f">
+<p>
+性能にスコアをつけ、結果的に出来上がったものに対してレアリティランクをつけるとよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org062dbe4" class="outline-3">
+<h3 id="org062dbe4"><a href="#org062dbe4"><span class="todo TODO">TODO</span> イベント部分の設計</a></h3>
+<div class="outline-text-3" id="text-org062dbe4">
+<p>
+1章のうろつきをどうするか考える。
+</p>
+
+<ul class="org-ul">
+<li>ローグライト形式にすると物語に関してあまり考えなくてよい
+<ul class="org-ul">
+<li>繰り返しのゲームプレイに変化をつけやすい</li>
+<li>設定とかが伝わりにくい可能性がある</li>
+<li>Tipsという形式でオプショナルに読めればよさそう</li>
+<li>Tipsだと自然に紹介できなさそうな感じもする</li>
+<li>あまり物語性はない</li>
+<li>物語部分は背景やSEつきのメッセージ形式で良い</li>
+</ul></li>
+<li>行けるところはランダムで選ばれた4つにする
+<ul class="org-ul">
+<li>行った回数によってイベントが起こる</li>
+<li>背反なイベントがある</li>
+<li>回数を重ねることで仲間になったりアイテムがもらえたりする
+<ul class="org-ul">
+<li>例</li>
+<li>市場 x 2 =&gt; 整備士が仲間になる</li>
+<li>広場 x 2 =&gt; 回復薬がもらえる</li>
+</ul></li>
+<li>単調な感じもする</li>
+</ul></li>
+<li>イベントによって仲間になったり、アイテムが増えたり、ステータスが変動したりする</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org44ad8b4" class="outline-3">
+<h3 id="org44ad8b4"><a href="#org44ad8b4"><span class="todo TODO">TODO</span> アイテム使用・削除をsystem化する</a></h3>
+<div class="outline-text-3" id="text-org44ad8b4">
+<p>
+wantsToUseエンティティを生成して、そのエンティティをsystemでキャッチする。
+</p>
+
+<p>
+直接削除すると共通処理が追加しにくかったりする。
+</p>
+
+<p>
+共通の関数化するだけでよさそうな感じもする。実行順とかがややこしくなるのかな。メッセージを伝える用のエンティティをいちいち作るのが面倒なんだよな。コードも増える。ポリシーを考えなければ。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgba34950" class="outline-3">
+<h3 id="orgba34950"><a href="#orgba34950"><span class="todo TODO">TODO</span> モジュール分けする</a></h3>
+<div class="outline-text-3" id="text-orgba34950">
+<p>
+名前がかぶってややこしいものは分ける。
+</p>
+
+<ul class="org-ul">
+<li>system</li>
+<li>app</li>
+<li>message engine</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8bafb5e" class="outline-3">
+<h3 id="org8bafb5e"><a href="#org8bafb5e"><span class="todo TODO">TODO</span> 味方一覧表示を共通化する</a></h3>
+<div class="outline-text-3" id="text-org8bafb5e">
+<p>
+いろんなところで使いそうかつ、複数のパーツで構成されているので作成が面倒なので。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org1882828" class="outline-3">
+<h3 id="org1882828"><a href="#org1882828"><span class="todo TODO">TODO</span> ステート切り替えが怪しい部分がある</a></h3>
+<div class="outline-text-3" id="text-org1882828">
+<p>
+特にpopしている部分。
+</p>
+
+<ul class="org-ul">
+<li>pushで、文字があると重なる</li>
+<li>popしたときにOnStartは走らないので、前の画面を削除するのはダメ</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org3dab4f4" class="outline-3">
+<h3 id="org3dab4f4"><a href="#org3dab4f4"><span class="todo TODO">TODO</span> 図形 or 画像描画の方法を考える</a></h3>
+<div class="outline-text-3" id="text-org3dab4f4">
+<p>
+UIのために図形描画したい。どうするか。画像を用意すればよいが、いい感じにやるためにはどうすればいいか。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org2e21742" class="outline-3">
+<h3 id="org2e21742"><a href="#org2e21742"><span class="todo TODO">TODO</span> 生成をランダム化する</a></h3>
+<div class="outline-text-3" id="text-org2e21742">
+<p>
+ある程度ランダム化したい。プレイヤー、モンスター、ワープゲートの出る位置をバラけさせる。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org4cb17c3" class="outline-3">
+<h3 id="org4cb17c3"><a href="#org4cb17c3"><span class="todo TODO">TODO</span> 未探索の暗闇を追加する</a></h3>
+<div class="outline-text-3" id="text-org4cb17c3">
+<p>
+未探検の部分は暗くなる。
+</p>
+
+<p>
+レイキャストして、タイルごとに探索済みフラグを立てていけばよいだろう。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org7bd0887" class="outline-3">
+<h3 id="org7bd0887"><a href="#org7bd0887"><span class="todo TODO">TODO</span> 光源を追加する</a></h3>
+<div class="outline-text-3" id="text-org7bd0887">
+<p>
+光源がある部分は色が変わる。
+</p>
+
+<p>
+タイルごとに色のフィルタを設定できればよいのだろうな。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd96daf1" class="outline-3">
+<h3 id="orgd96daf1"><a href="#orgd96daf1"><span class="todo TODO">TODO</span> タイルの種類を増やす</a></h3>
+<div class="outline-text-3" id="text-orgd96daf1">
+<p>
+見た目がよくないので、2種類の通常フロアを用意する。
+</p>
+
+<p>
+ステージ作成が少し面倒になるか。2種類のタイルの違いをファイルに書き出したくないな。勝手に判断して入れてくれるのが一番良い。壁が隣接してたら〜とか。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orga789bcd" class="outline-3">
+<h3 id="orga789bcd"><a href="#orga789bcd"><span class="todo TODO">TODO</span> ゲームループカウントをグローバル化する</a></h3>
+<div class="outline-text-3" id="text-orga789bcd">
+<p>
+カウントしてメッセージをアニメーションさせる用。汎用的なのでグローバルでやってよさそう。アニメーションのためのもっとよい方法がある可能性はある。ちゃんと調べないとな…。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgfe6bb0f" class="outline-3">
+<h3 id="orgfe6bb0f"><a href="#orgfe6bb0f"><span class="todo TODO">TODO</span> アニメーションのやり方を考える</a></h3>
+<div class="outline-text-3" id="text-orgfe6bb0f">
+<p>
+どうやっているのだろう。
+</p>
+
+<ul class="org-ul">
+<li>最後にアニメーションした時刻を取っておいて、それから経過した時間で決定すればよい</li>
+<li>しかし、アニメーションのたびにそれをあちこちに保存しておきたくない感じはする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org136a583" class="outline-3">
+<h3 id="org136a583"><a href="#org136a583"><span class="todo TODO">TODO</span> コメントアウト記法をサポートする</a></h3>
+<div class="outline-text-3" id="text-org136a583">
+<p>
+無視する。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org3c01e0c" class="outline-2">
+<h2 id="org3c01e0c"><a href="#org3c01e0c">考察</a></h2>
+<div class="outline-text-2" id="text-org3c01e0c">
+<ul class="org-ul">
+<li>作った</li>
+<li>しかし、発表に値するような事柄はない</li>
+<li>技術的な挑戦的な部分は一切ない。新しいことをやっているわけでもない</li>
+<li>参考にして面白かったことはある
+<ul class="org-ul">
+<li>ECS - コンポーネントで考える</li>
+<li>ゲームにはさまざなデータがあるが、確実にファイル化する。ソースコードに入れない</li>
+</ul></li>
+<li>ひとつある</li>
+<li>個人のゲーム開発の99%は途中で挫折する(自分比)</li>
+<li>工夫
+<ul class="org-ul">
+<li>意図的にやらないことを選択した</li>
+<li>グラフィック、アニメーション、音楽は捨てた</li>
+<li>常にプレイできる状態を保った</li>
+<li>とりあえずクリアできるようにして、人に見せた</li>
+</ul></li>
+</ul>
+
+<p>
+工夫。
+</p>
+
+<ul class="org-ul">
+<li>データを別にしている。ファイルからパラメータを調整できる</li>
+<li>ECS(Entity Component System)</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org02a7f8c" class="outline-2">
+<h2 id="org02a7f8c"><a href="#org02a7f8c">Archives</a></h2>
+<div class="outline-text-2" id="text-org02a7f8c">
+</div>
+<div id="outline-container-org005f2f0" class="outline-3">
+<h3 id="org005f2f0"><a href="#org005f2f0"><span class="done DONE">DONE</span> メッセージ表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-org005f2f0">
+<p>
+<a href="https://github.com/x-hgg-x/sokoban-go">x-hgg-x/sokoban-go</a>を使って小さいサンプルを作る。
+</p>
+</div>
+</div>
+<div id="outline-container-org5a01f49" class="outline-3">
+<h3 id="org5a01f49"><a href="#org5a01f49"><span class="done DONE">DONE</span> メッセージシステムのリファクタ</a></h3>
+<div class="outline-text-3" id="text-org5a01f49">
+<p>
+使いにくいので直す。
+</p>
+</div>
+</div>
+<div id="outline-container-orga2ce18f" class="outline-3">
+<h3 id="orga2ce18f"><a href="#orga2ce18f"><span class="done DONE">DONE</span> メッセージシステムに自動改行を入れる</a></h3>
+<div class="outline-text-3" id="text-orga2ce18f">
+<p>
+飛び出すのを防ぐ。
+</p>
+</div>
+</div>
+<div id="outline-container-org1396ceb" class="outline-3">
+<h3 id="org1396ceb"><a href="#org1396ceb"><span class="done DONE">DONE</span> ファイルを埋め込む</a></h3>
+<div class="outline-text-3" id="text-org1396ceb">
+<p>
+デプロイで扱いやすいように。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb1f2068" class="outline-3">
+<h3 id="orgb1f2068"><a href="#orgb1f2068"><span class="done DONE">DONE</span> CI設定</a></h3>
+<div class="outline-text-3" id="text-orgb1f2068">
+<p>
+テストとビルドとデプロイする。
+</p>
+
+<p>
+デプロイしたけど、ブラウザで表示できてないな。
+</p>
+</div>
+</div>
+<div id="outline-container-org98f7aeb" class="outline-3">
+<h3 id="org98f7aeb"><a href="#org98f7aeb"><span class="done DONE">DONE</span> フィールドで動けるようにする</a></h3>
+<div class="outline-text-3" id="text-org98f7aeb">
+<ul class="org-ul">
+<li>テキストで地図を読み込む</li>
+<li>コンポーネントを作る</li>
+<li>地図を表示する</li>
+<li>移動できるようにする</li>
+</ul>
+
+<p>
+実行時エラーになる。表示できない。インターフェースが取り出せないよう。
+</p>
+
+<ul class="org-ul">
+<li>コンポーネントの初期化を忘れていた</li>
+<li>LoadLevel()によって読み込んだComponentListをAddEntities()-&gt;AddEntityComponent()に渡す。が、AddEntitiesで失敗する。テキストで読み込んだ内容をreflectでオブジェクト化するときに、新しく作成したコンポーネントを初期化するのに失敗している</li>
+<li>ecsComponentListを調べてみよう
+<ul class="org-ul">
+<li>ecvでGameが入ってない</li>
+<li>world.Components.Game</li>
+</ul></li>
+<li>sokoban-go では main.goのw.InitWorld(&amp;gc.Components{})の時点でworld.Components.Gameがセットされている</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org57c1704" class="outline-3">
+<h3 id="org57c1704"><a href="#org57c1704"><span class="done DONE">DONE</span> マップを表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-org57c1704">
+<p>
+表示する。
+</p>
+</div>
+</div>
+<div id="outline-container-org05149cf" class="outline-3">
+<h3 id="org05149cf"><a href="#org05149cf"><span class="done DONE">DONE</span> 階数を移動できるようにする</a></h3>
+<div class="outline-text-3" id="text-org05149cf">
+<p>
+1階からはじまって、次の階層に移動する。
+</p>
+
+<p>
+ワープホール。
+</p>
+</div>
+</div>
+<div id="outline-container-org41cb87c" class="outline-3">
+<h3 id="org41cb87c"><a href="#org41cb87c"><span class="done DONE">DONE</span> クロスコンパイルする</a></h3>
+<div class="outline-text-3" id="text-org41cb87c">
+<p>
+一応CIに設定して保証しておく。
+</p>
+</div>
+</div>
+<div id="outline-container-org1b901d8" class="outline-3">
+<h3 id="org1b901d8"><a href="#org1b901d8"><span class="done DONE">DONE</span> メッセージが飛び出すのを直す</a></h3>
+<div class="outline-text-3" id="text-org1b901d8">
+<p>
+ステート遷移イベントを作る。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdca53c2" class="outline-3">
+<h3 id="orgdca53c2"><a href="#orgdca53c2"><span class="done DONE">DONE</span> 次の階をランダムに選択する</a></h3>
+<div class="outline-text-3" id="text-orgdca53c2">
+<p>
+一覧からランダムに選択する。
+</p>
+</div>
+</div>
+<div id="outline-container-orge210a4c" class="outline-3">
+<h3 id="orge210a4c"><a href="#orge210a4c"><span class="done DONE">DONE</span> HomeStateを作成する</a></h3>
+<div class="outline-text-3" id="text-orge210a4c">
+<p>
+ゲームプレイの基軸になるメニュー。
+</p>
+</div>
+</div>
+<div id="outline-container-org33a0498" class="outline-3">
+<h3 id="org33a0498"><a href="#org33a0498"><span class="done DONE">DONE</span> 脱出できるようにする</a></h3>
+<div class="outline-text-3" id="text-org33a0498">
+<p>
+脱出階層で脱出できるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org055f0e5" class="outline-3">
+<h3 id="org055f0e5"><a href="#org055f0e5"><span class="done DONE">DONE</span> 背景を設定する</a></h3>
+<div class="outline-text-3" id="text-org055f0e5">
+<p>
+背景を追加する。スプライトはあるけど、同じでいいのか。いや、スプライトは1枚の画像を分割するものだから、同じ感じでは扱えないな。変えるとsystemも変えないといけない。面倒なのでとりあえずいいか。
+</p>
+</div>
+</div>
+<div id="outline-container-org4b0eb3e" class="outline-3">
+<h3 id="org4b0eb3e"><a href="#org4b0eb3e"><span class="done DONE">DONE</span> サブメニュー追加</a></h3>
+<div class="outline-text-3" id="text-org4b0eb3e">
+<p>
+拠点メニューにはサブメニューがある。どうやるか考える。
+</p>
+
+<ul class="org-ul">
+<li>別stateでやる
+<ul class="org-ul">
+<li>大量にstateができるのどうなのという感じ。背景コンポーネントとかも同じ感じで準備しないといけない</li>
+</ul></li>
+<li>リファレンスではどうやっているのだろう。ポーズでは、後ろを透明に表示しつつ、メニューを表示している。あれと同じようなことができないか
+<ul class="org-ul">
+<li>ポーズメニューでは、OnStopでポーズメニューのエンティティのみを削除しているようだ。ほかのstateでは、すべてのエンティティを削除することが異なる</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org63cd5f4" class="outline-3">
+<h3 id="org63cd5f4"><a href="#org63cd5f4"><span class="done DONE">DONE</span> pauseステート作成</a></h3>
+<div class="outline-text-3" id="text-org63cd5f4">
+<p>
+デバッグで便利なので。
+</p>
+</div>
+</div>
+<div id="outline-container-org041e823" class="outline-3">
+<h3 id="org041e823"><a href="#org041e823"><span class="done DONE">DONE</span> アイテムを生成する</a></h3>
+<div class="outline-text-3" id="text-org041e823">
+<p>
+アイテムを追加する。
+</p>
+
+<ul class="org-ul">
+<li>item
+<ul class="org-ul">
+<li>consumable</li>
+<li>name</li>
+<li>description</li>
+</ul></li>
+</ul>
+
+<p>
+まずそれぞれのコンポーネントの雛形をファイルで作成する。
+</p>
+
+<ul class="org-ul">
+<li>items
+<ul class="org-ul">
+<li>entityA
+<ul class="org-ul">
+<li>componentA(consumable)</li>
+<li>componentB(weight)</li>
+</ul></li>
+<li>entityB
+<ul class="org-ul">
+<li>componentA(consumable)</li>
+<li>componentB(weight)</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+で、そのデータを読み込んでエンティティとコンポーネントを生成する関数を作る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>engineも作らないといけない</label><pre class="src src-go">componentList := loader.EntityComponentList{}
+// engineとgameは同数でなければならない。分割されているのが面倒だな…
+componentList.Engine = append(componentList.Engine, loader.EngineComponentList{})
+componentList.Game = append(componentList.Game, gloader.GameComponentList{
+	Item: &amp;gc.Item{},
+})
+loader.AddEntities(world, componentList)
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>元ネタ</label><pre class="src src-rust">pub fn spawn_named_item(
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfec153a" class="outline-3">
+<h3 id="orgfec153a"><a href="#orgfec153a"><span class="done DONE">DONE</span> UI設計</a></h3>
+<div class="outline-text-3" id="text-orgfec153a">
+<p>
+いちいちゲーム画面見るのもアレなので、書いておく。
+</p>
+</div>
+</div>
+<div id="outline-container-org8dd7e51" class="outline-3">
+<h3 id="org8dd7e51"><a href="#org8dd7e51"><span class="done DONE">DONE</span> UIエンティティだけを消す</a></h3>
+<div class="outline-text-3" id="text-org8dd7e51">
+<p>
+DeleteAllEntitiesでステート切り替え時のUIリセットをしている。entitiesが全部消えるので、困る。ほとんどの場合、UIだけをリセットすればよさそう。
+</p>
+
+<p>
+UIコンポーネントと、UIコンポーネントを消す関数を作ればよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org91e520f" class="outline-3">
+<h3 id="org91e520f"><a href="#org91e520f"><span class="done DONE">DONE</span> 各メニューを作成する</a></h3>
+<div class="outline-text-3" id="text-org91e520f">
+<p>
+仮の内容で全部作る。
+</p>
+</div>
+</div>
+<div id="outline-container-org945ecee" class="outline-3">
+<h3 id="org945ecee"><a href="#org945ecee"><span class="done DONE">DONE</span> アイテムを使う</a></h3>
+<div class="outline-text-3" id="text-org945ecee">
+<ul class="org-ul">
+<li>キャラクタを作る</li>
+<li>ステータスを作る</li>
+<li>影響を与えられるようにする</li>
+<li>memo
+<ul class="org-ul">
+<li>可変のアイテムリストについて、選択中の印をつける必要がある</li>
+<li>選択中の座標をとってきて、選択印の位置を変化させればいいのかな</li>
+</ul></li>
+
+<li>ゲーム
+<ul class="org-ul">
+<li>戦車にしたいけど、戦闘システムがややこしくなる</li>
+<li>合成とかで各自の装備メインにしたいんだよな</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga573ea8" class="outline-3">
+<h3 id="orga573ea8"><a href="#orga573ea8"><span class="done DONE">DONE</span> アイテムを選択して使えるようにする</a></h3>
+<div class="outline-text-3" id="text-orga573ea8">
+<p>
+今は固定にしている。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdda12c1" class="outline-3">
+<h3 id="orgdda12c1"><a href="#orgdda12c1"><span class="done DONE">DONE</span> アイテムリストをebitenUIで作る</a></h3>
+<div class="outline-text-3" id="text-orgdda12c1">
+<p>
+いい感じに、スクロールできるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-org0de55b1" class="outline-3">
+<h3 id="org0de55b1"><a href="#org0de55b1"><span class="done DONE">DONE</span> サイドメニューを表示する</a></h3>
+<div class="outline-text-3" id="text-org0de55b1">
+<p>
+性能を表示するサイドパネル。
+</p>
+
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> メニューバーが太いのを直す</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6ad41a3" class="outline-3">
+<h3 id="org6ad41a3"><a href="#org6ad41a3"><span class="done DONE">DONE</span> UIをリロードせずに反映できるようにする</a></h3>
+<div class="outline-text-3" id="text-org6ad41a3">
+<p>
+アイテムを使用したときにUIをリロードしているが、スクロール位置が元へ戻ってしまうのでリロードしないようにする。
+</p>
+
+<p>
+また、表示ジャンルの切替もあるので、リロードすると保持しなくて困る。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc541f3d" class="outline-3">
+<h3 id="orgc541f3d"><a href="#orgc541f3d"><span class="done DONE">DONE</span> ebitenUIを使う</a></h3>
+<div class="outline-text-3" id="text-orgc541f3d">
+<p>
+使う。
+</p>
+</div>
+</div>
+<div id="outline-container-org63a8cf6" class="outline-3">
+<h3 id="org63a8cf6"><a href="#org63a8cf6"><span class="done DONE">DONE</span> アイテムに対するアクションを選べるようにする</a></h3>
+<div class="outline-text-3" id="text-org63a8cf6">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 使う</li>
+<li class="on"><input type='checkbox' checked='checked' /> 捨てる</li>
+<li class="on"><input type='checkbox' checked='checked' /> キャンセル</li>
+
+<li>ebitenUIを組み込もうとしている
+<ul class="org-ul">
+<li>うまくUpdateできてないからか、windowが開けない</li>
+<li>今の構造だと、作成したuiをDrawとUpdateの2つができない
+<ul class="org-ul">
+<li>UIもコンポーネント</li>
+</ul></li>
+</ul></li>
+<li>ebitenUIだとキーボード志向にしにくそう
+<ul class="org-ul">
+<li>いや対応できるか</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgee0ce9f" class="outline-3">
+<h3 id="orgee0ce9f"><a href="#orgee0ce9f"><span class="done DONE">DONE</span> メッセージシステムの命令追加</a></h3>
+<div class="outline-text-3" id="text-orgee0ce9f">
+<p>
+背景とか。
+</p>
+
+<ul class="org-ul">
+<li>文字列に開始の合図がないから、識別子との判断ができてないみたい</li>
+<li>画像を重ねる順番を指定できない</li>
+<li>倉庫番のポーズではできてるからできそう
+<ul class="org-ul">
+<li>ただポーズは表示順が後なので&#x2026;。明らかにポーズ画面は後だ。メッセージシステムの場合は背景が後で変わる可能性がある。</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdfb8b87" class="outline-3">
+<h3 id="orgdfb8b87"><a href="#orgdfb8b87"><span class="done DONE">DONE</span> インベントリメニューでpanicになる</a></h3>
+<div class="outline-text-3" id="text-orgdfb8b87">
+<p>
+別のステートに遷移したあと、再び戻ってクリックするとエラーになる。
+</p>
+
+<ul class="org-ul">
+<li>アイテム選択</li>
+<li>「使う」クリックでpanic</li>
+<li>partyContainerの数が2つずつ増えているようだ</li>
+<li>1度しか付与されないようにしたら解決した</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5772ae4" class="outline-3">
+<h3 id="org5772ae4"><a href="#org5772ae4"><span class="done DONE">DONE</span> アイテムを使う対象を選べるようにする</a></h3>
+<div class="outline-text-3" id="text-org5772ae4">
+<ul class="org-ul">
+<li>回復薬の場合は1人の味方を選ぶ</li>
+<li>回復スプレーの場合は全員を選択している画面になる</li>
+<li>ロケット弾の場合は1人の敵を選ぶ</li>
+<li>決めること
+<ul class="org-ul">
+<li>使う対象
+<ul class="org-ul">
+<li>敵</li>
+<li>味方</li>
+<li>なし</li>
+</ul></li>
+<li>対象数
+<ul class="org-ul">
+<li>単数</li>
+<li>複数</li>
+</ul></li>
+<li>使う場面
+<ul class="org-ul">
+<li>戦闘中のみと制限されるものがある</li>
+<li>戦闘中</li>
+<li>フィールド / 拠点</li>
+</ul></li>
+</ul></li>
+
+<li>パーティ一覧を表示する</li>
+<li>選択したときに適用する</li>
+<li>ProvidesHealingがあるものは自動で仲間対象でも良い、が</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga586ffa" class="outline-3">
+<h3 id="orga586ffa"><a href="#orga586ffa"><span class="done DONE">DONE</span> ゲーム設計</a></h3>
+<div class="outline-text-3" id="text-orga586ffa">
+<p>
+どうするか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgecc64e6" class="outline-3">
+<h3 id="orgecc64e6"><a href="#orgecc64e6"><span class="done DONE">DONE</span> UIのリファクタ</a></h3>
+<div class="outline-text-3" id="text-orgecc64e6">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 統一感をもって扱えるようにする</li>
+<li class="on"><input type='checkbox' checked='checked' /> 説明文とメニューの間隔を空ける</li>
+<li>resourceに各UI(idle, hover, pressed)を初期化しておく</li>
+<li>参考コードを見てどうやっているかを調べる</li>
+<li>完璧でなくてよい。やっても成果が見えなくて辛いので、次をやるか</li>
+<li>UI間に依存があって、思ったよりきれいに書けなかった感</li>
+<li>まあ、アイテム画面と同じスタイルで別のメニューを表示したくなったら考えればいい</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7ac8875" class="outline-3">
+<h3 id="org7ac8875"><a href="#org7ac8875"><span class="done DONE">DONE</span> 武器を追加する</a></h3>
+<div class="outline-text-3" id="text-org7ac8875">
+<p>
+使うアイテムとは別枠で表示できる。
+</p>
+
+<ul class="org-ul">
+<li>武器名</li>
+<li>元となった武器名</li>
+<li>攻撃力</li>
+<li>命中</li>
+<li>攻撃回数</li>
+<li>属性
+<ul class="org-ul">
+<li>拳銃</li>
+<li>小銃</li>
+<li>刀剣</li>
+</ul></li>
+</ul>
+
+<p>
+武器の性能にはばらつきがある。種類によってベースがある。ばらつきやすさが違う。
+</p>
+
+<p>
+メニューをトグルさせるためにどうするか。既存のchildを削除して、再度追加すればいいか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgffc3694" class="outline-3">
+<h3 id="orgffc3694"><a href="#orgffc3694"><span class="done DONE">DONE</span> 素材を追加する</a></h3>
+<div class="outline-text-3" id="text-orgffc3694">
+<ul class="org-ul">
+<li>素材は表示が違う。個数を表示することになっている。どうするか</li>
+<li>素材はグローバルに個数カウントできればよい。そのへんはほかのエンティティと事情が違う</li>
+<li>表示方法を変えないといけないがどうするか
+<ul class="org-ul">
+<li>しょせん中のテキストが違うだけ</li>
+</ul></li>
+<li class="off"><input type='checkbox' /> 素材を追加する
+<ul class="org-ul">
+<li>素材は個数カウント。エンティティを追加する必要はあるか。単なるmapでもよい</li>
+<li>ただ、同じtomlで生成できるほうがわかりやすい。nameとdescriptionあるし</li>
+</ul></li>
+</ul>
+
+<p>
+インターフェースから考える。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-go">// tomlにあるものはカウント0で初期化される
+
+material.GetCount("ガラクタ") // =&gt; 3
+material.IncCount("ガラクタ", 1)
+material.DeclCount("小さな花", 1)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org804fea0" class="outline-3">
+<h3 id="org804fea0"><a href="#org804fea0"><span class="done DONE">DONE</span> 合成画面を作る</a></h3>
+<div class="outline-text-3" id="text-org804fea0">
+<p>
+まず画面を作って、そこから共通化していけばいいか。
+</p>
+
+<ul class="org-ul">
+<li>装備画面</li>
+<li>合成画面</li>
+<li>使用画面</li>
+</ul>
+
+<p>
+これらは似たようなUIを持つ。
+</p>
+
+<ul class="org-ul">
+<li>カテゴリ選択</li>
+<li>アイテムメニュー(左)
+<ul class="org-ul">
+<li>中身の取得ロジックは異なる</li>
+<li>中に入るデータの種類が違うということ</li>
+</ul></li>
+<li>性能メニュー(右)</li>
+</ul>
+
+<p>
+あたりは共通。ボタンのアクションが違うくらいか。
+</p>
+
+<p>
+合成に必要なもの。
+</p>
+
+<ul class="org-ul">
+<li>レシピ
+<ul class="org-ul">
+<li>素材の種類と個数</li>
+<li>鉄の剣 = <code>[{鉄くず,2}, {木の棒,1}]</code></li>
+</ul></li>
+<li class="on"><input type='checkbox' checked='checked' /> レシピを表示する</li>
+<li class="on"><input type='checkbox' checked='checked' /> 合成する関数を作成する
+<ul class="org-ul">
+<li>アイテム名からベースアイテムを作成する</li>
+<li>加工する</li>
+</ul></li>
+<li class="off"><input type='checkbox' /> レシピをもとに作成できるようにする
+<ul class="org-ul">
+<li>所持数量とレシピを比較して満たしていると合成が選択できる</li>
+<li>合成を選択すると、所持数量を減らし該当アイテムを追加する</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-go">gc := Craft("ハンドガン", 4) ecs.Entity // 品名、合成オプション
+Spawn(gc, spawntype.OnBackpack)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org916144f" class="outline-3">
+<h3 id="org916144f"><a href="#org916144f"><span class="done DONE">DONE</span> アイテムUIまわりをリファクタする</a></h3>
+<div class="outline-text-3" id="text-org916144f">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> グローバル変数を構造体のフィールドに移す</li>
+</ul>
+
+<p>
+合成とか装備品変更とか、よく似たUIで別画面を作ることになる。別で作ってたら大変なことになる。再利用するためにはどうすればよいか。
+</p>
+</div>
+</div>
+<div id="outline-container-orge6e875b" class="outline-3">
+<h3 id="orge6e875b"><a href="#orge6e875b"><span class="done DONE">DONE</span> 乗り物をどうするか</a></h3>
+<div class="outline-text-3" id="text-orge6e875b">
+<p>
+結論、小さなSFチックな機械を導入する。戦闘には参加しないがサポートする。知能は持たない。
+</p>
+
+<p>
+パーティ全体を強化できるようなのがあると面白そうに思える。乗り物はそういう強化が自然にできて面白い。人だけだとつけ外し要素がない。ただし、戦車だとシステムが複雑になる可能性がある。アイテム合成が生きないような。
+</p>
+
+<ul class="org-ul">
+<li>ドローンやタレットとか、自律的な何か</li>
+<li>戦闘で交じるのはややこしくて困る</li>
+<li>非戦闘な乗り物ってないな</li>
+<li>歩数制限のもっともな理由がほしい
+<ul class="org-ul">
+<li>燃料とか食べ物の類</li>
+</ul></li>
+<li>小さなSFチックな機械を導入する。それがないと遺跡に入れない的な。いろいろ効果をつけられる</li>
+<li>戦車は逆に敵が強くなるとかの理由をつけて遺跡に入らない。戦闘が面倒になるので</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga92c5c9" class="outline-3">
+<h3 id="orga92c5c9"><a href="#orga92c5c9"><span class="done DONE">DONE</span> タイル移動でなくするか</a></h3>
+<div class="outline-text-3" id="text-orga92c5c9">
+<p>
+いやでもアニメーションやリアルタイムとなると大変そうだから、タイル移動のままがよさそう。
+</p>
+
+<p>
+あまりローグライクさせる意味はなさそう。敵を避けにくい。banbandonを参考にして自由移動にするか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf6c864e" class="outline-3">
+<h3 id="orgf6c864e"><a href="#orgf6c864e"><span class="done DONE">DONE</span> 一貫させるためインターフェースを定義する</a></h3>
+<div class="outline-text-3" id="text-orgf6c864e">
+<p>
+stateごとにコードがバラバラで、直していくのが辛い。
+</p>
+
+<p>
+一部共通部分もあるが、違う部分も多いので、しょうがないところではある。
+</p>
+
+<p>
+インターフェース化して、ある程度同じにするか。とはいえ、アイテム画面がそこまで種類多いかと言われるとそうでもない。3、4個だからあまり神経質にならなくてもいい。
+</p>
+</div>
+</div>
+<div id="outline-container-org17d7715" class="outline-3">
+<h3 id="org17d7715"><a href="#org17d7715"><span class="done DONE">DONE</span> 武器コンポーネントに属性を追加する</a></h3>
+<div class="outline-text-3" id="text-org17d7715">
+<ul class="org-ul">
+<li>火炎(耐火)</li>
+<li>電気(耐電)</li>
+<li>光力(耐光)</li>
+</ul>
+
+<p>
+だとそのまますぎるか。光は異色だが、SFらしさを出すのに良い。ややこしいのであまり属性を増やしたくない。冷気(耐冷)を追加した。
+</p>
+
+<p>
+時代背景的に、SFではない。でも合成するとSFになるよな。SFよりの現代、でよいか。
+</p>
+</div>
+</div>
+<div id="outline-container-org942da42" class="outline-3">
+<h3 id="org942da42"><a href="#org942da42"><span class="done DONE">DONE</span> アイテム種別に防具を追加する</a></h3>
+<div class="outline-text-3" id="text-org942da42">
+<ul class="org-ul">
+<li>消耗品</li>
+<li>武器</li>
+<li>防具</li>
+<li>素材</li>
+</ul>
+
+<p>
+で、種別が揃う。
+</p>
+</div>
+</div>
+<div id="outline-container-orge8949c2" class="outline-3">
+<h3 id="orge8949c2"><a href="#orge8949c2"><span class="done DONE">DONE</span> 武器種別を追加する</a></h3>
+<div class="outline-text-3" id="text-orge8949c2">
+<p>
+剣とか銃とか。
+</p>
+</div>
+</div>
+<div id="outline-container-org7ee028c" class="outline-3">
+<h3 id="org7ee028c"><a href="#org7ee028c"><span class="done DONE">DONE</span> 合成画面をリファクタする</a></h3>
+<div class="outline-text-3" id="text-org7ee028c">
+<p>
+書き直す。
+</p>
+</div>
+</div>
+<div id="outline-container-org5bbea37" class="outline-3">
+<h3 id="org5bbea37"><a href="#org5bbea37"><span class="done DONE">DONE</span> 装備画面を作る</a></h3>
+<div class="outline-text-3" id="text-org5bbea37">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> スロットを作成する
+<ul class="org-ul">
+<li>コードから装備させる</li>
+</ul></li>
+<li class="on"><input type='checkbox' checked='checked' /> 装備画面を作成する
+<ul class="org-ul">
+<li>スロット表示画面。各キャラごと</li>
+</ul></li>
+<li class="on"><input type='checkbox' checked='checked' /> 選択画面を作成する
+<ul class="org-ul">
+<li>ここで選択したものが前で選択したスロットに装備される</li>
+<li>モードをどう表現するか。これをstateとしてやるのはやりすぎな気もする</li>
+<li>選択モードとだけしとけばいいか</li>
+<li>選択モードだと、左側を武器リストにする。スライダーがあるから、全く同じにならなそうだな</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org20cfc82" class="outline-3">
+<h3 id="org20cfc82"><a href="#org20cfc82"><span class="done DONE">DONE</span> enumのバリデーション</a></h3>
+<div class="outline-text-3" id="text-org20cfc82">
+<p>
+楽にバリデーションできる書き方にする。
+</p>
+</div>
+</div>
+<div id="outline-container-orgca3fd9b" class="outline-3">
+<h3 id="orgca3fd9b"><a href="#orgca3fd9b"><span class="done DONE">DONE</span> カメラ追加</a></h3>
+<div class="outline-text-3" id="text-orgca3fd9b">
+<p>
+今はそのまま表示してる。プレイヤーの位置に追従してステージの一部だけを表示したい。
+</p>
+
+<p>
+とりあえず、仮で追加した。
+</p>
+</div>
+</div>
+<div id="outline-container-org38740ba" class="outline-3">
+<h3 id="org38740ba"><a href="#org38740ba"><span class="done CLOSE">CLOSE</span> UIと分離したい</a></h3>
+<div class="outline-text-3" id="text-org38740ba">
+<p>
+完全にUIと一体化しているのでよくわからなくなる。
+</p>
+
+<ul class="org-ul">
+<li>UIを保持する構造体</li>
+<li>UIで表示されているボタンに設定されたイベントがトリガーされて、ECSクエリを実行して表示を切り替えたり追加したりする</li>
+<li>stateはviewだと考えてよさそうな感じがする</li>
+<li>データストアと直にやりとりしてるわけじゃないからいいのか。UIの変更だけだな</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdd5c74e" class="outline-3">
+<h3 id="orgdd5c74e"><a href="#orgdd5c74e"><span class="done DONE">DONE</span> 装備画面のリファクタ</a></h3>
+<div class="outline-text-3" id="text-orgdd5c74e">
+<p>
+汚いので直す。
+</p>
+
+<p>
+どこから直せばいいのかよくわからないな。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd169a54" class="outline-3">
+<h3 id="orgd169a54"><a href="#orgd169a54"><span class="done DONE">DONE</span> ステータスを追加する</a></h3>
+<div class="outline-text-3" id="text-orgd169a54">
+<p>
+生命力とか、力とか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgabf8e01" class="outline-3">
+<h3 id="orgabf8e01"><a href="#orgabf8e01"><span class="done DONE">DONE</span> 装備でステータスを変更する</a></h3>
+<div class="outline-text-3" id="text-orgabf8e01">
+<p>
+防具を装備すると防御力が上がるなど。
+</p>
+
+<ul class="org-ul">
+<li>キャラ固有のステータスは、Attributes
+<ul class="org-ul">
+<li>キャラごとに固有の値をもつ</li>
+<li>装備によって上がることがある</li>
+</ul></li>
+<li>防御力はどうするか
+<ul class="org-ul">
+<li>キャラごとに固有の値をもたない。装備がなければみんな0となる</li>
+</ul></li>
+<li>防御力以外が上がることもある。武器、防具どちらでも。
+<ul class="org-ul">
+<li>器用さ+1などのステータス値</li>
+<li>火耐性+20%などの属性耐性</li>
+<li>頑丈+1、貫通+2などのスキル</li>
+<li>「救護」「乱射」などの行動追加</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7b213ca" class="outline-3">
+<h3 id="org7b213ca"><a href="#org7b213ca"><span class="done DONE">DONE</span> 説明図を書く</a></h3>
+<div class="outline-text-3" id="text-org7b213ca">
+<p>
+見返してみるとけっこういい図がある。概念整理する。
+</p>
+</div>
+</div>
+<div id="outline-container-orge4026cd" class="outline-3">
+<h3 id="orge4026cd"><a href="#orge4026cd"><span class="done DONE">DONE</span> 回復薬を割合回復にする</a></h3>
+<div class="outline-text-3" id="text-orge4026cd">
+<ul class="org-ul">
+<li>固定値ではないようにする</li>
+<li>割合回復の仕組みは作ったので、回復薬に適用する</li>
+<li>components, raw, effect をいい感じにしていく作業。大体同じ構造体になる</li>
+<li>直にeffectを追加するのはよくないかもな。アイテムと共通に、いったんcomponentsを渡してeffectに変換させるようにする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgeb7bd36" class="outline-3">
+<h3 id="orgeb7bd36"><a href="#orgeb7bd36"><span class="done DONE">DONE</span> 戦闘部分の設計</a></h3>
+<div class="outline-text-3" id="text-orgeb7bd36">
+<p>
+未知の部分。どうするか。
+</p>
+
+<ul class="org-ul">
+<li>デッキ型にすると面白そうだなあ
+<ul class="org-ul">
+<li>取れる行動が毎回異なる</li>
+<li>マイナス行動は手札を圧迫する</li>
+<li>カードには消費コストが設定されているから、強いものを選べばいいというわけでもない</li>
+<li>ターンに行動カードは1枚選ぶ</li>
+<li>デッキに1枚しか設定されてないと、それしか出なくないか。10枚登録固定にすればいいか</li>
+</ul></li>
+
+<li>白瀬
+<ul class="org-ul">
+<li>行動カード
+<ul class="org-ul">
+<li>マシンガン(sp2) by 装備武器</li>
+<li>防御(シールド装備, sp1)</li>
+<li>回復(体力回復, アイテム消費) by 所持スキル</li>
+<li>乱射(攻撃回数1.5倍, sp1) by 装備</li>
+<li>狙撃(待ち時間1.5倍+攻撃力2倍, sp2) by 所持スキル</li>
+</ul></li>
+<li>パッシブスキル
+<ul class="org-ul">
+<li>連携LV2(連携率1.4倍) by 所持スキル</li>
+<li>射撃LV1(命中率1.1倍, 射撃武器の攻撃力1.1倍) by 所持スキル</li>
+</ul></li>
+</ul></li>
+<li>ピエロ
+<ul class="org-ul">
+<li>行動カード
+<ul class="org-ul">
+<li>レーザーブレード(装備武器, sp2)</li>
+<li>高出力(炎属性, sp2) by 装備</li>
+<li>応援 by 固有行動</li>
+</ul></li>
+</ul></li>
+<li>選択
+<ul class="org-ul">
+<li>基本攻撃(白瀬)</li>
+<li>基本攻撃(ピエロ)</li>
+</ul></li>
+</ul>
+
+<p>
+デッキ。
+</p>
+
+<p>
+参考。
+</p>
+
+<ul class="org-ul">
+<li>デッキは共通のことが多いようだ
+<ul class="org-ul">
+<li>特定の人ばかり攻撃することにならないのだろうか</li>
+<li>チームとは別に、人ごとの行動力もある</li>
+<li>同じターンで複数行動はコスト増加する</li>
+<li>コスト増加しないものもある</li>
+<li>ドローしなくても使えるものがある</li>
+</ul></li>
+<li>ターンごとに行動力が回復する。戦闘ごとにリセット</li>
+<li>カードのストックはできない
+<ul class="org-ul">
+<li>毎回同じにならない</li>
+</ul></li>
+<li>カードの入手はランダム</li>
+<li>装備が2枠ある</li>
+<li>戦闘と関係ないサポートキャラが1人いる</li>
+</ul>
+
+<p>
+それをふまえて。
+</p>
+
+<ul class="org-ul">
+<li>調整が難しいので、もっとシンプルなルールがよさそう</li>
+<li>ランダム制はそこまでなくてよい</li>
+<li>頭脳や運というよりはRPG的な、レベル上げて準備すれば勝てる要素強めにしたい</li>
+<li>カスタム性を高めたい</li>
+<li>アイテムのアップグレード要素はなし</li>
+<li>特殊攻撃がついたカードはどう扱うか。あるなしどっちもほしい
+<ul class="org-ul">
+<li>2枚生成させるか</li>
+<li>合成結果は複数になることがある</li>
+<li>アイテム取得全般が、複数あるのを考慮しておく</li>
+<li>ある武器に対して、アクションが複数選べるというのが自然だ</li>
+<li>アクションは、他のカードを強化するカードでよさそう</li>
+</ul></li>
+<li>カードとアクションは変えたいんだよな</li>
+<li>防具とかどうする
+<ul class="org-ul">
+<li>基本パラメータは変わらないでいいのか</li>
+<li>デッキに含めるとパラメータUPでよさそう</li>
+</ul></li>
+<li>カードは直に入手できるのか、合成で入手するのか
+<ul class="org-ul">
+<li>ダンジョン内で入手したやつを試せたほうがよさそう</li>
+<li>制限ともいえるが&#x2026;</li>
+<li>入手は完全ランダム。1度入手すると合成で複数手に入れやすい</li>
+</ul></li>
+</ul>
+
+<p>
+実装。
+</p>
+
+<ul class="org-ul">
+<li>じつはEffectと同じように、組み合わせてエンティティにしておけばいいだけか
+<ul class="org-ul">
+<li>アクションカードは攻撃を与える性質や、回復する性質がついていればよい。あと対象が敵か味方か、単数か</li>
+<li>ブーストカードは、変化させる内容を保持していればよい。あと対象が敵か味方か、単数か</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb491f55" class="outline-3">
+<h3 id="orgb491f55"><a href="#orgb491f55"><span class="done DONE">DONE</span> UpdateSpecに渡すComponentsの更新を忘れる</a></h3>
+<div class="outline-text-3" id="text-orgb491f55">
+<p>
+オートで全コンポーネントを対象にすればよさそう。
+</p>
+
+<p>
+componentListに渡せばよい。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgd7d36b6" class="outline-3">
+<h3 id="orgd7d36b6"><a href="#orgd7d36b6"><span class="done DONE">DONE</span> 防具ジャンルを消す</a></h3>
+<div class="outline-text-3" id="text-orgd7d36b6">
+<p>
+あまり区分けする必要はなさそうか。あの正方形のUIにすれば、混ざって入っていてもあまり違和感はない。
+</p>
+
+<p>
+ただ、合成のときは分けたい感じも。
+</p>
+
+<ul class="org-ul">
+<li>アイテム
+<ul class="org-ul">
+<li>消耗品</li>
+<li>売却アイテム</li>
+<li>防具</li>
+</ul></li>
+<li>手札
+<ul class="org-ul">
+<li>アクションカード</li>
+<li>サポートカード</li>
+</ul></li>
+</ul>
+
+<p>
+メモ。
+</p>
+
+<ul class="org-ul">
+<li>なぜかInBackpackの条件で、結果に入らない
+<ul class="org-ul">
+<li>装備してるせいだった&#x2026;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6d66809" class="outline-3">
+<h3 id="org6d66809"><a href="#org6d66809"><span class="done CLOSE">CLOSE</span> アイテム以外でeffectをトリガーする方法</a></h3>
+<div class="outline-text-3" id="text-org6d66809">
+<p>
+今はまだ、アイテムトリガーしかない。AddItemで、コンポーネントに分解されてそれぞれEffectのキューに入り、実行される。
+</p>
+
+<p>
+ただ、今後全回復とか、アイテム以外で何かしたいときが増える。そのときはどうするか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb8a8529" class="outline-3">
+<h3 id="orgb8a8529"><a href="#orgb8a8529"><span class="done DONE">DONE</span> メインメニューを開いているとCPU使用率が爆増する</a></h3>
+<div class="outline-text-3" id="text-orgb8a8529">
+<p>
+リークしている。
+</p>
+
+<ul class="org-ul">
+<li>フィールド画面でも起こるな</li>
+<li>ほかの画面では起こらない。どうもメニューの仕組みを使っているところで起きてそう</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">ps aux | head -n 1
+</pre>
+</div>
+
+<pre class="example">
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+</pre>
+
+<ul class="org-ul">
+<li>ほかの画面でも、タブを切り替えたときなどに発生する。生成した画面を生成できてないんだろうな</li>
+<li>RemoveChildren()で、表示されなくはなっているけど、それがガベージコレクションされてない</li>
+<li>プロファイラの設定した</li>
+<li>LoadFont()設定があると、残り続けるな。ないと、残らない</li>
+<li>ずっとコンテナの親子関係に問題があると考えていた(RemoveChildrenまわり)けど、そうではなかった</li>
+<li>Faceまわりを毎回初期化してたのを、リソース構造体に保存して、それを使うようにしたら解決した</li>
+<li>なんだかよくわからないな</li>
+<li>相変わらず微妙に増えてるように見えるが、freeされてるようにも見える</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc01a810" class="outline-3">
+<h3 id="orgc01a810"><a href="#orgc01a810"><span class="done DONE">DONE</span> 画像回帰テスト</a></h3>
+<div class="outline-text-3" id="text-orgc01a810">
+<p>
+コマンドで各ステートの画像を取れるようにする。
+</p>
+</div>
+</div>
+<div id="outline-container-orge1beb0b" class="outline-3">
+<h3 id="orge1beb0b"><a href="#orge1beb0b"><span class="done DONE">DONE</span> メモリリークをCIで検知したい</a></h3>
+<div class="outline-text-3" id="text-orge1beb0b">
+<p>
+まあパフォーマンスを画面表示してるし、わかるだろう。
+</p>
+
+<p>
+一定期間起動して、一定になるか確かめるとよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org74a412a" class="outline-3">
+<h3 id="org74a412a"><a href="#org74a412a"><span class="done DONE">DONE</span> ホーム画面をクリック対応する</a></h3>
+<div class="outline-text-3" id="text-org74a412a">
+<p>
+キーボードはとりあえずなくした。
+</p>
+
+<p>
+今はキーボードでしか移動できない。
+</p>
+
+<p>
+でもキーボード移動も残したい。
+</p>
+</div>
+</div>
+<div id="outline-container-org9bdbb05" class="outline-3">
+<h3 id="org9bdbb05"><a href="#org9bdbb05"><span class="done DONE">DONE</span> Ray Castingを参考にしてフィールドの原型を作る</a></h3>
+<div class="outline-text-3" id="text-org9bdbb05">
+<ul class="org-ul">
+<li>Ray Castingを原型に動くものを作る</li>
+<li>やりたいことに近い。<a href="https://al-ro.github.io/projects/raycasting/">2D Ray Casting</a></li>
+<li>ban-ban-donを参考にして各システムを実装する</li>
+<li>特に目新しいことはなく、移動に関しては完全に参考にして作成できるように見える</li>
+</ul>
+
+<p>
+ゲーム的。
+</p>
+
+<ul class="org-ul">
+<li>動かしてみて、難易度的に難しい割に、そんなに移動にゲーム性生まれなくないかと感じた</li>
+<li>不可視の範囲を作るのがそこまで面白いかと言われるとビミョー</li>
+<li>ほかのサンプルでは興味深く見えた。距離をつけてないから、明るすぎるためか</li>
+<li>シューティング要素はないからな。単なる追いかけっこが面白いかというと…ミンサガとかのイメージが近い。避けるためのスキルを使う</li>
+<li>お宝探し感は楽しい</li>
+<li>リアルタイムだと、シューティングの劣化版にしかならない。自分が動くと相手も動く形式であればよさそう。じっくり考えて駆け引きにする</li>
+</ul>
+
+<p>
+実装。
+</p>
+
+<ul class="org-ul">
+<li>三角形をグラデーションにすればよさそう</li>
+<li>jsの方ではどうやってるか
+<ul class="org-ul">
+<li>単にfillをグラデーションで設定してるだけに見える</li>
+</ul></li>
+<li>画像
+<ul class="org-ul">
+<li>背景</li>
+<li>影</li>
+<li>三角</li>
+</ul></li>
+</ul>
+
+<p>
+ECSとの兼ね合い。
+</p>
+
+<ul class="org-ul">
+<li>システムにしていきたいが、描画とかは厳しそうに見える。少なくとも1タイルごとに1エンティティとかにはできない</li>
+<li>描画以外はECSにしていく</li>
+<li>なんだか難しすぎるように見えるけど、どうなのだろう</li>
+<li>たくさんの構造体をstateに書くのは違う。が、いじりたい状態フィールドがある</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgffa22ac" class="outline-3">
+<h3 id="orgffa22ac"><a href="#orgffa22ac"><span class="done DONE">DONE</span> フィールドの背景を全体に設定する</a></h3>
+<div class="outline-text-3" id="text-orgffa22ac">
+<p>
+敷き詰めたい。
+</p>
+
+<ul class="org-ul">
+<li>やっぱりVRTで失敗するな</li>
+<li>手元で動かすと発生しないのはなぜなんだろうな</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org50a5921" class="outline-3">
+<h3 id="org50a5921"><a href="#org50a5921"><span class="done DONE">DONE</span> コンポーネントを移動する</a></h3>
+<div class="outline-text-3" id="text-org50a5921">
+<p>
+移動する。
+</p>
+
+<ul class="org-ul">
+<li>メニューを透過できないな。真っ暗になる。fieldだとできるのはなぜだろう</li>
+<li>スプライトを表示できない。何も表示されない
+<ul class="org-ul">
+<li>geoMで位置を指定してないせいだった</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9af6f1e" class="outline-3">
+<h3 id="org9af6f1e"><a href="#org9af6f1e"><span class="done DONE">DONE</span> 影描画をsystemでやる</a></h3>
+<div class="outline-text-3" id="text-org9af6f1e">
+<p>
+元の仕組みとは異なるため、調整が必要。
+</p>
+
+<ul class="org-ul">
+<li>真っ黒になるな</li>
+<li>レイも見えないので、間違ってるようだ</li>
+<li>視点と同じ位置にあるために、全部真っ暗になっている説</li>
+<li>外すと、いくつかのrayがおかしくなっていて失敗する
+<ul class="org-ul">
+<li>特定の点がおかしいようだ</li>
+</ul></li>
+<li>外周の壁がなくて、交点がないrayがあったせいだった</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org15d12ff" class="outline-3">
+<h3 id="org15d12ff"><a href="#org15d12ff"><span class="done DONE">DONE</span> フィールド描画をECS化する</a></h3>
+<div class="outline-text-3" id="text-org15d12ff">
+<ul class="org-ul">
+<li>まず影は置いておく</li>
+<li>プレイヤー部分を色塗りできた</li>
+<li>スプライトを表示するにはどうすればいいのだろう</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span><a href="https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367">https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367</a> ワープホールのsprite</label><pre class="src src-go">func createWarpNextEntity(componentList *loader.EntityComponentList, gameSpriteSheet *ec.SpriteSheet, line, col int) {
+	componentList.Engine = append(componentList.Engine, loader.EngineComponentList{
+		SpriteRender: &amp;ec.SpriteRender{SpriteSheet: gameSpriteSheet, SpriteNumber: warpNextSpriteNumber},
+		Transform:    &amp;ec.Transform{},
+	})
+	componentList.Game = append(componentList.Game, GameComponentList{
+		Warp:        &amp;gc.Warp{Mode: gc.WarpModeNext},
+		GridElement: &amp;gc.GridElement{Line: line, Col: col},
+	})
+}
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>スプライトシートは、起動時にtomlがロードされResourceの構造体に入れられる。ステート名をキーにして別々になっている
+<ul class="org-ul">
+<li>フィールドは &ldquo;field&rdquo; に、まとめて入っている</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org614f9c3" class="outline-3">
+<h3 id="org614f9c3"><a href="#org614f9c3"><span class="done DONE">DONE</span> とりあえずの背景を設定する</a></h3>
+<div class="outline-text-3" id="text-org614f9c3">
+<p>
+Menuをなくしたとき、非表示にしてた。戻す。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcd2e42b" class="outline-3">
+<h3 id="orgcd2e42b"><a href="#orgcd2e42b"><span class="done DONE">DONE</span> 壁を通過できないようにする</a></h3>
+<div class="outline-text-3" id="text-orgcd2e42b">
+<ul class="org-ul">
+<li>rectの中に入れないようにする。</li>
+<li>線として持っておく必要はなくて、点4つだけを持っていればいい</li>
+<li>ただそれだとステージの壁を自動生成しづらくなるのだが&#x2026;</li>
+<li>範囲内のオブジェクトに対して衝突判定する</li>
+<li>すべてのフィールド上オブジェクトは、中心のx, yをもつ。その中心と合わせてスプライトを配置し、4つの点を衝突判定に使う
+<ul class="org-ul">
+<li>この方式はキャラクターや敵、飾りオブジェクトには良いが、壁を配置するときには不適当だ。1点ではなくて、4点を指定したいだろう</li>
+<li>ピクセル単位で配置できなくてもよくて、50ピクセルごととかでよさそう。こうするとテキストファイルでマップを作成できる。壁は50ピクセル正方形で囲って表現する</li>
+<li>オブジェクト数が大変なことになりそうな懸念。視界をもつキャラごとにあるわけで。とはいえ、視界を限ればそんなでもなさそうな気も。オブジェクト数は多くなるが、そういうもんだろう。</li>
+<li>2次元配列の問題に落とし込めることは重要に見える</li>
+<li>壁は近傍8タイルで座標を変化させればいい。縦に並んでいれば横は細くするみたいな</li>
+</ul></li>
+</ul>
+
+<pre class="example">
+spawnWall(1, 1) // (1, 1)に壁を生成
+spawnPlayer(2, 2)
+spawnObject("岩", 20, 20)
+spawnObject("花", 30, 30)
+spawnWarp(40, 50)
+</pre>
+
+<pre class="example">
+############
+#          #
+#          #
+/          #
+############
+</pre>
+
+<ul class="org-ul">
+<li>現状のraycastの構造を、1点だけ保持するように修正しようとしているが、よくわからない</li>
+<li>プレイヤーや壁の描画を先にやればよいのでは。影は一度忘れる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org75c6edf" class="outline-3">
+<h3 id="org75c6edf"><a href="#org75c6edf"><span class="done DONE">DONE</span> 壁テクスチャが影で隠れないようにする</a></h3>
+<div class="outline-text-3" id="text-org75c6edf">
+<p>
+今は影に隠されている。影側で表示しようとすると、影の中にあるときもテクスチャが表示されてしまって微妙。
+</p>
+
+<ul class="org-ul">
+<li>視界側でブレンドするとよさそう。いやでも、視界に入れば影になっていても見えてしまうのは同じか</li>
+<li>テクスチャ 影 ほかのテクスチャ 影</li>
+<li>テクスチャの描画優先度が距離によって変わればいいのかな。大変そうだ</li>
+<li>rayブレンド時に、スプライトも追加してやればいいかな</li>
+<li>ぐちゃぐちゃになったのでいったんもどす</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>memo(できてない)</label><pre class="src src-go">// rayが命中しているかで、分岐させないといけない
+// raysのindex 2,3をrectに含んでいれば命中しているということになる
+world.Manager.Join(
+	gameComponents.Position,
+	gameComponents.SpriteRender,
+	gameComponents.BlockView,
+).Visit(ecs.Visit(func(entity ecs.Entity) {
+	oPos := gameComponents.Position.Get(entity).(*gc.Position)
+	oSprite := gameComponents.SpriteRender.Get(entity).(*ec.SpriteRender)
+	spriteWidth := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Width
+	spriteHeight := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Height
+
+	if !entity.HasComponent(gameComponents.Player) {
+		x1 := float64(oPos.X - spriteWidth/2)
+		x2 := float64(oPos.X + spriteWidth/2)
+		y1 := float64(oPos.Y - spriteHeight/2)
+		y2 := float64(oPos.Y + spriteHeight/2)
+		for _, r := range rays {
+			// x1 == r.X2
+			if (x1 &lt; r.X2 &amp;&amp; x2 &lt; r.X2) || (y1 &lt; r.Y2 &amp;&amp; y2 &lt; r.Y2) {
+				drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
+			}
+
+			// if x1 &lt; r.X2 || x2 == r.X2 || y1 == r.Y2 || y2 == r.Y2 {
+			// drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
+			// }
+		}
+	}
+}))
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>rayを飛ばして判定しているところで、エンティティにフラグを立てればよさそう
+<ul class="org-ul">
+<li>とすると、エンティティ単位でしか影を切り替えられなくなるな。ちょっと見えていてもテクスチャを全部表示するか、全部視界に入れないと表示しなくなる。微妙</li>
+</ul></li>
+<li>近づいた影を消せばよさそう</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1aaa0db" class="outline-3">
+<h3 id="org1aaa0db"><a href="#org1aaa0db"><span class="done DONE">DONE</span> 旧フィールドまわりを消す</a></h3>
+<div class="outline-text-3" id="text-org1aaa0db">
+<ul class="org-ul">
+<li>componentsもいらないものがある</li>
+<li>prefabもいらなくなる</li>
+<li>levelまわりうつすのは、新しいものができてからでよさそう。参考になるからな</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf3b1185" class="outline-3">
+<h3 id="orgf3b1185"><a href="#orgf3b1185"><span class="done DONE">DONE</span> state名のフィールドという名前をリネームする</a></h3>
+<div class="outline-text-3" id="text-orgf3b1185">
+<p>
+構造体のフィールドとかと同じになるので、あまりよくない命名に思えてきた。dungeonとかだろうか。
+</p>
+</div>
+</div>
+<div id="outline-container-org4d8b634" class="outline-3">
+<h3 id="org4d8b634"><a href="#org4d8b634"><span class="done DONE">DONE</span> カメラ移動を追加する</a></h3>
+<div class="outline-text-3" id="text-org4d8b634">
+<p>
+後からやると大変そうなので今のうちにやっておく。
+</p>
+
+<ul class="org-ul">
+<li>置物はgrid elementにしたほうが楽そうな感じがしてきた。いちいち座標で持っているのが扱いにくい。また別の問題は起きそうだが&#x2026;</li>
+<li>グリッドの方が生成もしやすいしな</li>
+<li>でもグリッドだと、グリッドごとでしか配置できない。壁とかはそれでいいが、プレイヤーや敵はそうではない。描画で2つ必要になるのは微妙そうな</li>
+<li>カメラはコンポーネント化したほうがいいのだろうか。リソースでよさそうな感じもするが
+<ul class="org-ul">
+<li>1つしかない想定なのでコンポーネント化はおおげさな感じ</li>
+<li>頻繁に変わる値だが、リソースだと不適当な感じ</li>
+<li>Playerと同一でよさそうな。いやでも今たまたま同じというだけで、効果によっては変えたいこともありそう。カメラを自分以外に動かしたいこともあるだろ。分けたほうがよさそう</li>
+<li>ズーム率とかも持ちたいから、そこは別にしたい</li>
+</ul></li>
+<li>cameraはutilsでなくresourcesにあるべきなのでは</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd82e63b" class="outline-3">
+<h3 id="orgd82e63b"><a href="#orgd82e63b"><span class="done DONE">DONE</span> ズームを追加する</a></h3>
+<div class="outline-text-3" id="text-orgd82e63b">
+<p>
+追加する。
+</p>
+</div>
+</div>
+<div id="outline-container-org6a6240d" class="outline-3">
+<h3 id="org6a6240d"><a href="#org6a6240d"><span class="done DONE">DONE</span> 方向を追加する</a></h3>
+<div class="outline-text-3" id="text-org6a6240d">
+<p>
+追加する。
+</p>
+
+<ul class="org-ul">
+<li>方向による回転描画</li>
+<li>方向転換</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4df40cd" class="outline-3">
+<h3 id="org4df40cd"><a href="#org4df40cd"><span class="done DONE">DONE</span> 描画の優先順を指定できるようにする</a></h3>
+<div class="outline-text-3" id="text-org4df40cd">
+<p>
+ワープパッドとキャラでは、キャラを上に表示する。
+</p>
+
+<ul class="org-ul">
+<li>キャラクター
+<ul class="org-ul">
+<li>キャラクター同士は重ならない</li>
+</ul></li>
+<li>ワープパッド
+<ul class="org-ul">
+<li>同士は重ならない</li>
+</ul></li>
+<li>フィールドのアイテム
+<ul class="org-ul">
+<li>同士は重ならない</li>
+</ul></li>
+<li>これは、SpriteRenderに設定してよさそうか。タイルの種別ごとに設定できれば問題ないよな</li>
+<li>SpriteRenderはengineにあるので、移動させてからいじるか&#x2026;</li>
+<li>Positionに置くのもよさそう。描画の優先順位なので、単なる描画に使う要素なのだが、まあいいのかな</li>
+<li>depthはあまり種類は多くない。重なる組み合わせは少ない</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7205a5e" class="outline-3">
+<h3 id="org7205a5e"><a href="#org7205a5e"><span class="done DONE">DONE</span> フィードバックをもらうためにどうするか</a></h3>
+<div class="outline-text-3" id="text-org7205a5e">
+<p>
+いったん最低限で完成させて、フィードバックをもらうのを優先する。
+</p>
+</div>
+</div>
+<div id="outline-container-org2766f90" class="outline-3">
+<h3 id="org2766f90"><a href="#org2766f90"><span class="done DONE">DONE</span> 視界範囲外を描画しない</a></h3>
+<div class="outline-text-3" id="text-org2766f90">
+<p>
+カメラ外も描画して重くなっている。と考えて描画しないようにしたら、逆に重くなった。キャッシュされているのだろうか。まだ別に必要ではなさそうなので、必要なときにやる。
+</p>
+</div>
+</div>
+<div id="outline-container-org4098b4b" class="outline-3">
+<h3 id="org4098b4b"><a href="#org4098b4b"><span class="done DONE">DONE</span> 階層を追加する</a></h3>
+<div class="outline-text-3" id="text-org4098b4b">
+<p>
+ステージの初期化と、階層移動できるようにする。
+</p>
+
+<ul class="org-ul">
+<li>現状はフロアの概念がない。ステートに入ったときに1フロア分初期化してるだけ</li>
+<li><a href="https://ebitengine.org/ja/examples/isometric.html">https://ebitengine.org/ja/examples/isometric.html</a> が参考になりそう</li>
+<li>階を移動するごとにフロアを生成する</li>
+<li>今の仕組みだと、オブジェクトが莫大な数になる
+<ul class="org-ul">
+<li>影描画はしなくてよさそう</li>
+<li>見えてる部分のオブジェクトとタイルにフラグをもたせて、そこだけ表示すればいい</li>
+<li>衝突判定が多いのは同じなのでは</li>
+<li>衝突判定範囲を限れば、そう問題にはならないか</li>
+</ul></li>
+<li>マップ構造物がオブジェクトだと、マップ生成がしにくい</li>
+<li>絵の描画と、座標がどのタイルにあたるかがわかればいい。わざわざオブジェクトにしなくてもいい</li>
+<li>視界の衝突判定はどうするか
+<ul class="org-ul">
+<li>diggerではfield_of_viewという便利関数があった</li>
+</ul></li>
+<li>壁はオブジェクトではなく、タイルにする。変わることはないのと、数が多くて大変だから
+<ul class="org-ul">
+<li>タイルも、見えてる部分しか描画しない</li>
+</ul></li>
+<li>現状は、見える部分をすべてポリゴンで表示する必要がある。このポリゴンを作るために、周囲を囲ってrayが命中しなければならない</li>
+</ul>
+
+<pre class="example">
+##############
+###        @ #
+###o ##      #
+##############
+</pre>
+</div>
+</div>
+<div id="outline-container-org5c7e603" class="outline-3">
+<h3 id="org5c7e603"><a href="#org5c7e603"><span class="done DONE">DONE</span> タイル位置と座標位置の変換が煩雑</a></h3>
+<div class="outline-text-3" id="text-org5c7e603">
+<p>
+これが全部コンポーネントであれば楽なのだが。まあ、タイルだと衝突判定とかは楽になるから&#x2026;。
+</p>
+
+<ul class="org-ul">
+<li>タイルコンポーネントにするのはありか</li>
+<li>タイルに沿わせたいものと、そうでないものがある</li>
+<li>壁とかワープホールはタイルに沿わせたい</li>
+<li>移動体はタイルに沿わせたくない</li>
+<li>配置方法は共通化したい</li>
+<li>衝突判定は別でよさそう。タイルに沿わないのは計算が多く必要で、タイルに沿うのは計算が簡単</li>
+<li>resources と GridElement の使い分けがわからない。どちらもタイルを保持しているように見える
+<ul class="org-ul">
+<li>resourcesのほうはタイルの幅と高さか</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4ada4a9" class="outline-3">
+<h3 id="org4ada4a9"><a href="#org4ada4a9"><span class="done DONE">DONE</span> levelを消す</a></h3>
+<div class="outline-text-3" id="text-org4ada4a9">
+<p>
+普通のgameComponent(engineではないほう)でlevelを実装してから、消す感じでいいか。参考になりそうだから消してない。
+</p>
+</div>
+</div>
+<div id="outline-container-org7411b55" class="outline-3">
+<h3 id="org7411b55"><a href="#org7411b55"><span class="done DONE">DONE</span> レイキャスト範囲を狭くする</a></h3>
+<div class="outline-text-3" id="text-org7411b55">
+<p>
+今後オブジェクトを増やすたびに重くなるので。
+</p>
+
+<p>
+ある程度狭い範囲に、範囲を制限する矩形を置くようにした。
+</p>
+
+<ul class="org-ul">
+<li>NPCを追加したときに、競合しないか。つまりほかの視界をもつオブジェクトとの兼ね合いをどうするかの問題はある
+<ul class="org-ul">
+<li>それぞれのエンティティごとに競合しない形であれば、よさそうか</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfdc01b9" class="outline-3">
+<h3 id="orgfdc01b9"><a href="#orgfdc01b9"><span class="done DONE">DONE</span> 階層設計</a></h3>
+<div class="outline-text-3" id="text-orgfdc01b9">
+<p>
+ランダムだと難しそうなのでとりあえずは手動か。
+</p>
+
+<p>
+どうやって内外を判定すればいいのだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-org5803c19" class="outline-3">
+<h3 id="org5803c19"><a href="#org5803c19"><span class="done DONE">DONE</span> タイルを追加する</a></h3>
+<div class="outline-text-3" id="text-org5803c19">
+<ul class="org-ul">
+<li>まだタイルがない。壁はタイルにしたい</li>
+<li>タイルで視界判定をするには</li>
+<li>タイルは、正方形に沿うもの。オブジェクトは沿わないもの
+<ul class="org-ul">
+<li>今はオブジェクトだけで、タイルベースでなく扱いにくい。タイルは大量に生成するものなので</li>
+</ul></li>
+<li>タイル保持の方法をどうするか。メリットデメリットがあまりよくわからない
+<ul class="org-ul">
+<li>ban-ban-don</li>
+<li>digger</li>
+<li>sokoban</li>
+</ul></li>
+<li>いったんdigger方式でやるか。生成とかしやすそうだし</li>
+<li>影はややこしいので、とりあえず忘れる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgeb57786" class="outline-3">
+<h3 id="orgeb57786"><a href="#orgeb57786"><span class="done CLOSE">CLOSE</span> engine コンポーネントを移す</a></h3>
+<div class="outline-text-3" id="text-orgeb57786">
+<p>
+分かれてるのがやりづらい。分け方が利用側からすると不明瞭。ただloaderまわりが大変そう。
+</p>
+
+<ul class="org-ul">
+<li>うむむ、共通のものはengine部分にあったほうがよい感じもしてきた</li>
+<li>依存しないためにinterfaceになるが</li>
+<li>SpriteSheet componentsは移せない。engineのResourceで定義されているから。依存してしまう
+<ul class="org-ul">
+<li>resourceごと移動するか&#x2026;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb523c92" class="outline-3">
+<h3 id="orgb523c92"><a href="#orgb523c92"><span class="done CLOSE">CLOSE</span> いったんクリアできるようにする</a></h3>
+<div class="outline-text-3" id="text-orgb523c92">
+<p>
+戦闘抜きで、全体を作る。
+</p>
+
+<ul class="org-ul">
+<li>ステージ移動
+<ul class="org-ul">
+<li>ステージは手動で作っておき、それをランダムに選ぶ</li>
+<li>将来的に複数のステージ生成手法から選べるようにしておく</li>
+</ul></li>
+<li>クリアイベント
+<ul class="org-ul">
+<li>20階でクリアできるようにする(仮)</li>
+</ul></li>
+<li>戦闘を作成する</li>
+<li>エンカウントする</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org1c7cb95" class="outline-3">
+<h3 id="org1c7cb95"><a href="#org1c7cb95"><span class="done CLOSE">CLOSE</span> キャラクタを生成する</a></h3>
+<div class="outline-text-3" id="text-org1c7cb95">
+<p>
+味方/敵を生成する。
+</p>
+</div>
+</div>
+<div id="outline-container-org87a90aa" class="outline-3">
+<h3 id="org87a90aa"><a href="#org87a90aa"><span class="done CLOSE">CLOSE</span> 階の生成方法を考える</a></h3>
+<div class="outline-text-3" id="text-org87a90aa">
+<ul class="org-ul">
+<li>ランダム選択の一般階層
+<ul class="org-ul">
+<li>ダンジョンによって選ばれやすさに偏りがある</li>
+<li>5の倍数の場合は帰還ワープも出す</li>
+<li>すべてのマップに帰還ワープを設定しておく</li>
+</ul></li>
+<li>ボスの階層
+<ul class="org-ul">
+<li>特殊マップ</li>
+<li>固定</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7879bee" class="outline-3">
+<h3 id="org7879bee"><a href="#org7879bee"><span class="done DONE">DONE</span> 書き換え</a></h3>
+<div class="outline-text-3" id="text-org7879bee">
+<p>
+<code>gameComponents != nil</code> で検索して、HasComponentで書き換える。
+</p>
+</div>
+</div>
+<div id="outline-container-org179f9be" class="outline-3">
+<h3 id="org179f9be"><a href="#org179f9be"><span class="done DONE">DONE</span> 階層移動できるようにする</a></h3>
+<div class="outline-text-3" id="text-org179f9be">
+<ul class="org-ul">
+<li>触れた判定できるようにする</li>
+<li>触れたときにイベントを発火する
+<ul class="org-ul">
+<li>とりあえずタイル。どのタイルにいるか取得する</li>
+<li>オブジェクトでイベントが発生する場合もある(エンカウント)</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/ruins/blob/c633001385e79d4ecb783f7fd89ba306730fc3c4/lib/resources/move.go#L70-L74
+</pre>
+</div>
+
+<pre class="example">
+if oneFrontTile.Contains(TileWarpEscape) {
+	gameResources := world.Resources.Game.(*Game)
+	gameResources.StateEvent = StateEventWarpEscape
+	return
+}
+</pre>
+
+<p>
+field stateの Updateにて。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/ruins/blob/c633001385e79d4ecb783f7fd89ba306730fc3c4/lib/states/field.go#L45-L50
+</pre>
+</div>
+
+<pre class="example">
+gameResources := world.Resources.Game.(*resources.Game)
+switch gameResources.StateEvent {
+case resources.StateEventWarpEscape:
+	gameResources.StateEvent = resources.StateEventNone
+	return states.Transition{Type: states.TransSwitch, NewStates: []states.State{&amp;MainMenuState{}}}
+}
+</pre>
+
+<ul class="org-ul">
+<li>ワープタイルが表示されない
+<ul class="org-ul">
+<li>座標を正しく指定してなかった。タイル座標を指定する</li>
+</ul></li>
+<li>Componentに保存するだけだと、1つだけその座標のタイルを取れない。全部ループして探す必要がある</li>
+<li>Tileは複数階層が存在しうるので、タイル座標だけでは一意に定まるわけではない</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/resources/game.go#L157
+</pre>
+</div>
+
+<pre class="example">
+grid, levelComponentList := utils.Try2(gloader.LoadLevel(gameResources.Package, levelNum, gridLayout.Width, gridLayout.Height, &amp;gameSpriteSheet))
+</pre>
+
+<ul class="org-ul">
+<li>gridスライスとコンポーネントを返している。gridはResourceに加えられる</li>
+<li>GridElementのままだと、座標で1つだけ取り出して、ということがしづらい。全体にクエリをかけなければいけない。あらかじめスライスで座標順に並んでいれば、一発で取れるのに</li>
+<li>階層を生成するときに、Resourceに保存しておけばよさそう</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-comment-delimiter">####</span>
+<span class="org-comment-delimiter">#</span><span class="org-comment">..#</span>
+....
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>gridの初期化</label><pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/loader/level.go#L315
+</pre>
+</div>
+
+<pre class="example">
+gameGrid := utils.Try(gutils.NewVec2d(gridHeight, gridWidth, tiles))
+</pre>
+
+<ul class="org-ul">
+<li>ComponentとResourceの2重管理にならないか
+<ul class="org-ul">
+<li>2つあっても、初回に生成するだけなら問題ない</li>
+<li>タイル判定必要なのだろうか</li>
+<li>ワープパッドはタイルに沿うので、判定のために必要</li>
+<li>タイルの状態が変わった場合はどうするか。ドアとか、罠とか、スイッチとかはタイルだろうが、状態がある</li>
+<li>状態によってスプライトを切り替え、複数回起動しないようにする必要がある。このへんはコンポーネントがやりやすい</li>
+</ul></li>
+<li>Component: 全ループする処理用。描画とか</li>
+<li>Resource: 位置を指定して特定のタイルを処理する用。現在タイルの確認とか</li>
+<li>タイルが情報を持たないのが原因なのでは。entityを入れればよいのでは</li>
+</ul>
+
+<p>
+階層移動したとき、ワープホールが消えない。
+</p>
+
+<ul class="org-ul">
+<li>既存のワープホールが消えない</li>
+<li>新しいワープホールに乗っても機能しない
+<ul class="org-ul">
+<li>描画はされている</li>
+<li>生成時、座標の縦と横を逆にしていた</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org352aa47" class="outline-3">
+<h3 id="org352aa47"><a href="#org352aa47"><span class="done DONE">DONE</span> 階数をどこに保持するか</a></h3>
+<div class="outline-text-3" id="text-org352aa47">
+<ul class="org-ul">
+<li>階層移動したときに、階数までリセットされてしまう</li>
+<li>便利なのでResourceに保存しておきたい</li>
+<li>いつ階数を初期化するか
+<ul class="org-ul">
+<li>現状はstateのonstartで実行してるが、これだと移動したときに毎回リセットがかかる</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org22014f6" class="outline-3">
+<h3 id="org22014f6"><a href="#org22014f6"><span class="done DONE">DONE</span> WASMローディング表示がほしい</a></h3>
+<div class="outline-text-3" id="text-org22014f6">
+<p>
+3秒くらい真っ白画面になるのがよくない。
+</p>
+</div>
+</div>
+<div id="outline-container-org288cb2a" class="outline-3">
+<h3 id="org288cb2a"><a href="#org288cb2a"><span class="done DONE">DONE</span> ランダムに部屋を生成する</a></h3>
+<div class="outline-text-3" id="text-org288cb2a">
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/rect.rs#L4-L9
+</pre>
+</div>
+
+<pre class="example">
+pub struct Rect {
+    pub x1: i32,
+    pub x2: i32,
+    pub y1: i32,
+    pub y2: i32,
+}
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/utils/vec2d.go#L5-L9
+</pre>
+</div>
+
+<pre class="example">
+type Vec2d[T any] struct {
+	NRows int
+	NCols int
+	Data  []T
+}
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/mod.rs#L14-L26
+</pre>
+</div>
+
+<pre class="example">
+pub struct Map {
+    pub tiles: Vec&lt;TileType&gt;,
+    pub width: i32,
+    pub height: i32,
+    pub revealed_tiles: Vec&lt;bool&gt;,
+    pub visible_tiles: Vec&lt;bool&gt;,
+    pub depth: i32,
+    pub bloodstains: HashSet&lt;usize&gt;,
+    pub view_blocked: HashSet&lt;usize&gt;,
+    pub name: String,
+    pub outdoors: bool,
+    pub light: Vec&lt;rltk::RGB&gt;,
+}
+</pre>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L66-L75
+</pre>
+</div>
+
+<pre class="example">
+pub struct BuilderMap {
+    pub spawn_list: Vec&lt;(usize, String)&gt;,
+    pub map: Map,
+    pub starting_position: Option&lt;Position&gt;,
+    pub rooms: Option&lt;Vec&lt;Rect&gt;&gt;,
+    pub corridors: Option&lt;Vec&lt;Vec&lt;usize&gt;&gt;&gt;,
+    pub history: Vec&lt;Map&gt;,
+    pub width: i32,
+    pub height: i32,
+}
+</pre>
+
+<ul class="org-ul">
+<li>マップ生成時はタイルのスライスを保持する。したがってマップ生成は単にスライスをいじくる処理となる</li>
+<li>生成したタイルマップは、配置するときエンティティ化する
+<ul class="org-ul">
+<li>例: 壁タイルは BlockPass, SpriteRender, GridElement コンポーネントを持つEntityとなる</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L89-L93
+</pre>
+</div>
+
+<pre class="example">
+pub struct BuilderChain {
+    starter: Option&lt;Box&lt;dyn InitialMapBuilder&gt;&gt;,
+    builders: Vec&lt;Box&lt;dyn MetaMapBuilder&gt;&gt;,
+    pub build_data: BuilderMap,
+}
+</pre>
+
+<ul class="org-ul">
+<li>tileをエンティティ化しなくてもいいような気もしてきた</li>
+<li>tileとして、まとめて判定したいのか、〜の性質、で部分で判定したいのかとちらか。タイル判定だとわかりにくいと感じるけどな</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9c720d8" class="outline-3">
+<h3 id="org9c720d8"><a href="#org9c720d8"><span class="done DONE">DONE</span> 生成を部屋化する</a></h3>
+<div class="outline-text-3" id="text-org9c720d8">
+<p>
+廊下、道に分けて作る。
+</p>
+
+<ul class="org-ul">
+<li>参考実装がどういう流れで使っているかよくわからないな</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>level_builderで階層によって使うbuilderを決めている</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L290
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-go">pub fn level_builder(
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>決定したbuilderを呼び出している箇所</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/dungeon.rs#L33-L36
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-go">fn transition_to_new_map(ecs: &amp;mut World, new_depth: i32) -&gt; Vec&lt;Map&gt; {
+    let mut rng = ecs.write_resource::&lt;rltk::RandomNumberGenerator&gt;();
+    let mut builder = level_builder(new_depth, &amp;mut rng, 80, 50);
+    builder.build_map(&amp;mut rng);
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>rooms とか corridor をどうやってタイルにしているか</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>draw系でやっている</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/common.rs#L105
+</pre>
+</div>
+
+<pre class="example">
+pub fn draw_corridor(map: &amp;mut Map, x1: i32, y1: i32, x2: i32, y2: i32) -&gt; Vec&lt;usize&gt; {
+</pre>
+
+<ul class="org-ul">
+<li>↑引数のmapのtileを変更しつつ、corridor(tile indexのスライス)を返す</li>
+<li>NewLevel を消して、 builderに置き換えればいいのかな</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>部屋ビルダー</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/room_draw.rs#L11
+</pre>
+</div>
+
+<pre class="example">
+impl RoomDrawer {
+</pre>
+
+<ul class="org-ul">
+<li>廊下がけっこう大変な件
+<ul class="org-ul">
+<li>部屋ごとの距離を求めて、最短距離を結ぶ</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/rooms_corridors_lines.rs#L20
+</pre>
+</div>
+
+<pre class="example">
+fn corridors(&amp;mut self, _rng: &amp;mut RandomNumberGenerator, build_data: &amp;mut BuilderMap) {
+</pre>
+</div>
+</div>
+<div id="outline-container-org500acbe" class="outline-3">
+<h3 id="org500acbe"><a href="#org500acbe"><span class="done DONE">DONE</span> 廊下を追加する</a></h3>
+<div class="outline-text-3" id="text-org500acbe">
+<p>
+廊下をつなぐ。
+</p>
+</div>
+</div>
+<div id="outline-container-org72e3679" class="outline-3">
+<h3 id="org72e3679"><a href="#org72e3679"><span class="done DONE">DONE</span> 衝突判定を軽量化する</a></h3>
+<div class="outline-text-3" id="text-org72e3679">
+<ul class="org-ul">
+<li>中心距離の近いものだけを接触判定するようにするとよさそう</li>
+<li>フロアを50x50にすると、激しく重くなった</li>
+<li>フロアと接触している壁だけを、影や視線判定の対象にするとよさそう</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0f4d78d" class="outline-3">
+<h3 id="org0f4d78d"><a href="#org0f4d78d"><span class="done DONE">DONE</span> 脱出ワープホールを配置する</a></h3>
+<div class="outline-text-3" id="text-org0f4d78d">
+<p>
+今は次の階層しかない。
+</p>
+</div>
+</div>
+<div id="outline-container-org1eb0d0f" class="outline-3">
+<h3 id="org1eb0d0f"><a href="#org1eb0d0f"><span class="done DONE">DONE</span> 壁の影を軽量化する</a></h3>
+<div class="outline-text-3" id="text-org1eb0d0f">
+<p>
+先に影画像を生成しておいて、軽くする。
+</p>
+</div>
+</div>
+<div id="outline-container-org3e63421" class="outline-3">
+<h3 id="org3e63421"><a href="#org3e63421"><span class="done DONE">DONE</span> シナリオジャンプを実装する</a></h3>
+<div class="outline-text-3" id="text-org3e63421">
+<p>
+<a href="https://krkrz.github.io/krkr2doc/kag3doc/contents/Tags.html#jump">吉里吉里タグリファレンス</a>を調べた。
+</p>
+
+<ul class="org-ul">
+<li>ファイルをまたぐ外部ジャンプ</li>
+<li>ファイル内の内部ジャンプ</li>
+<li>ファイルごとでメモリに読み込まれている雰囲気</li>
+<li>外部ジャンプはとりあえずいらない
+<ul class="org-ul">
+<li>外部ジャンプは、ファイルごとで名前空間が切れるとかの理由だろうか。整理されそう</li>
+</ul></li>
+<li>関数みたいにパースすればよさそうな</li>
+</ul>
+
+<pre class="example">
+; ラベル定義
+*extraflagend
+
+; ジャンプ
+[jump target=*sel02_loop]
+</pre>
+
+<pre class="example">
+*label1
+...
+...
+*label2
+...
+...
+</pre>
+
+<ul class="org-ul">
+<li>ラベル1
+<ul class="org-ul">
+<li>文字列</li>
+<li>コマンド</li>
+<li>文字列</li>
+<li>文字列</li>
+</ul></li>
+<li>ラベル2
+<ul class="org-ul">
+<li>文字列</li>
+<li>コマンド</li>
+<li>コマンド</li>
+<li>文字列</li>
+</ul></li>
+</ul>
+
+<p>
+的な構造となる。
+</p>
+
+<ul class="org-ul">
+<li>ラベル
+<ul class="org-ul">
+<li>文1</li>
+<li>文2</li>
+</ul></li>
+</ul>
+
+<p>
+ラベルテーブルに登録する。
+</p>
+
+<pre class="example">
+*start
+開始
+[jmp dest="sample1"]
+*sample1
+終了
+*sample2
+</pre>
+
+<ul class="org-ul">
+<li>一連のイベントが終了したらどうなるんだ。とりあえず今のように止まるでよい</li>
+<li>jmpしたあとは戻ってこないものとする</li>
+<li>ほかのステートとの連携とか考えると全然わからない。いったん忘れる</li>
+<li>サンプルでは、関数名の登録とかどうやっているか
+<ul class="org-ul">
+<li><code>変数 = fn(){}</code> 形式だから、変数と同じ仕組みになっている</li>
+<li>evalはオブジェクトを返す。オブジェクトは即値を返すメソッドを持っていて、計算もしくは表示に使える</li>
+</ul></li>
+<li>先にlabel名を登録する必要があるような
+<ul class="org-ul">
+<li>jumpEvent{dest: &ldquo;aaa&rdquo;}</li>
+<li>いや、別にやらなくてもいいのか。イベント実行時に解釈すればいい</li>
+</ul></li>
+<li>投入した時点で、イベントオブジェクトが一意に定まる
+<ul class="org-ul">
+<li>label1: &#x2026;</li>
+<li>label2: &#x2026;</li>
+<li>label3: &#x2026;</li>
+<li>内部jumpだけでなく、どこから開始する、という命令も使える</li>
+<li>start(&ldquo;label1&rdquo;)</li>
+<li>選択肢が実装できると、メニューも実装できるのか</li>
+</ul></li>
+<li>通常のコードは、1つの値を返す。途中のコードはすべて評価される</li>
+<li>ノベルエンジンは、評価はない。途中も必要である</li>
+</ul>
+
+<p>
+一連の流れ。
+</p>
+
+<pre class="example">
+p := parse()
+e := Eval(p)
+events1 := e("sample1")
+events2 := e("sample2")
+</pre>
+</div>
+</div>
+<div id="outline-container-orgb0158d5" class="outline-3">
+<h3 id="orgb0158d5"><a href="#orgb0158d5"><span class="done DONE">DONE</span> 改行とか直す</a></h3>
+<div class="outline-text-3" id="text-orgb0158d5">
+<ul class="org-ul">
+<li>現状、改行があるたびに別イベントとなっている。なのでクリックが必要である。これを1つにまとめてしまう
+<ul class="org-ul">
+<li>どこまでひとまとめとするか</li>
+</ul></li>
+<li>見たままが改行となる</li>
+<li>自動改行があれば問題ないような</li>
+<li>そんなに手動で改行入れたいことないしな</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">*start
+&#12354;&#12354;&#12354;&#12354;
+&#12356;&#12356;&#12356;&#12356;[p]
+&#12363;&#12363;&#12363;&#12363;
+&#12365;&#12365;&#12365;&#12365;[p]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>[l]を実行した待ちにしたいときに、自動改行が無視されて飛び出す。待ったあとは強制改行でよいだろう</li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-org4283243" class="outline-3">
+<h3 id="org4283243"><a href="#org4283243"><span class="done DONE">DONE</span> メッセージエンジンのサンプル実装を作る</a></h3>
+<div class="outline-text-3" id="text-org4283243">
+<p>
+まだGUIで見られないのでよくわからないため。
+</p>
+</div>
+</div>
+
+<div id="outline-container-orgb0722f8" class="outline-3">
+<h3 id="orgb0722f8"><a href="#orgb0722f8"><span class="done DONE">DONE</span> メッセージシステムのパッケージを切り出す</a></h3>
+<div class="outline-text-3" id="text-orgb0722f8">
+<p>
+今は1パッケージに入っていてわかりにくい。
+</p>
+
+<ul class="org-ul">
+<li>テキストを解釈してイベントとし、キューに入れる</li>
+<li>呼び出し側で解釈してイベントごとに処理していく</li>
+<li>Pop() キューからイベントを取り出す。呼び出し側から実行される。クリック時などを想定
+<ul class="org-ul">
+<li>イベントを通知する。呼び出し側での処理が必要なものもある</li>
+<li>animText 現在表示中としたいテキスト。allとbufを持つ。bufはアニメーション用に1文字ずつ入っていく
+<ul class="org-ul">
+<li>1文字ずつ送っていくのをどうするか。時間実行だとテストが面倒だからやりたくない。1文字ずつAPIを叩くか、一気に表示するAPIによって文字表示を再現できるようにしたい</li>
+<li>1文字ずつループにどうやって割り込めばいいのか。キューにskipフラグを持てばよいか</li>
+<li>animTextは状態を持つ、ということになる</li>
+<li>なのでPopしても次のイベントに進まないことがある</li>
+</ul></li>
+<li>changeBG &lt;呼び出し側での処理が必要&gt;</li>
+<li>clickWait クリック待ち</li>
+<li>sleep &lt;呼び出し側での処理が必要&gt;</li>
+</ul></li>
+<li>呼び出し側からエンジンに作用できないといけないのか
+<ul class="org-ul">
+<li>メッセージスキップとか</li>
+</ul></li>
+<li>Head()</li>
+<li>Popしたときに先頭のやつを実行するのか
+<ul class="org-ul">
+<li>キューを食うのが2つあることが混乱の原因になっている。テキストエンジンと呼び出し側</li>
+</ul></li>
+<li>queue.Pop()
+<ul class="org-ul">
+<li>先頭のEventの状態が未完了であればSkip()するだけにする</li>
+</ul></li>
+<li>queue.Display()
+<ul class="org-ul">
+<li>勝手に増えていく</li>
+<li>呼び出し側ではメッセージを表示する。メッセージはどのイベントでも常に表示するものだから</li>
+</ul></li>
+<li>もう1つキューを追加するのはどうだろう
+<ul class="org-ul">
+<li>全体バッファと現在バッファがあって、追いつかせるように非同期実行する</li>
+</ul></li>
+<li>キューの終了もeventとする</li>
+<li>実行中 -&gt; (強制スキップ) -&gt; 終了 -&gt; 次のタスク
+<ul class="org-ul">
+<li>テキスト送り中にボタン押すと全部文章が表示されるような感じ</li>
+<li>スキップ操作など用のキューも別で用意しておくとよさそう</li>
+</ul></li>
+<li>Pop()とSkip()を状況に合わせて使い分けたい
+<ul class="org-ul">
+<li>現在のタスクが終わっていればPop()</li>
+<li>現在のタスクが終わってなければSkip()</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org825cdbb" class="outline-3">
+<h3 id="org825cdbb"><a href="#org825cdbb"><span class="done DONE">DONE</span> クリック待ち状態を表示できるようにする</a></h3>
+<div class="outline-text-3" id="text-org825cdbb">
+<ul class="org-ul">
+<li>待ち</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7a3e2a1" class="outline-3">
+<h3 id="org7a3e2a1"><a href="#org7a3e2a1"><span class="done DONE">DONE</span> 戻れるようにする</a></h3>
+<div class="outline-text-3" id="text-org7a3e2a1">
+<p>
+popの逆を辿れるようにしたい。今消しちゃってるのをインデックスにすればよいだろう。
+</p>
+
+<p>
+1つ戻るのは、意外に面倒だ。一気に最初に戻るだけにした。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb8e2e74" class="outline-3">
+<h3 id="orgb8e2e74"><a href="#orgb8e2e74"><span class="done DONE">DONE</span> イベント捕捉</a></h3>
+<div class="outline-text-3" id="text-orgb8e2e74">
+<p>
+今のところテキストだけで、背景変更などを捕捉できていない。
+</p>
+
+<ul class="org-ul">
+<li>テキストまわりのインターフェースはbufでやっている。これによって、呼び出し側はそれを画面に表示すればいいだけになっている</li>
+<li>イベントは、チャネルなどに流すのがよさそうか</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2331c45" class="outline-3">
+<h3 id="org2331c45"><a href="#org2331c45"><span class="done DONE">DONE</span> 『坊っちゃん』でサンプルを作る</a></h3>
+<div class="outline-text-3" id="text-org2331c45">
+<p>
+作る。
+</p>
+
+<ul class="org-ul">
+<li>任意の場所での改行ができない</li>
+</ul>
+
+<pre class="example">
+「おい」
+「おい」
+「来たぜ」
+「とうとう来た」
+「これでようやく安心した」
+
+これは1行ずつ表示したい
+</pre>
+
+<p>
+改行して、次の行に何もないと、自動改行のカウンタがリセットされてないので横に文字が表示されてしまう。
+</p>
+
+<pre class="example">
+あいうえお
+かきくけこ
+たちつてと&lt;なにぬねの&gt;
+</pre>
+
+<p>
+この場合、「なにぬねの」を改行してほしい。
+</p>
+</div>
+</div>
+<div id="outline-container-org007e830" class="outline-3">
+<h3 id="org007e830"><a href="#org007e830"><span class="done DONE">DONE</span> シナリオを一覧できるようにする</a></h3>
+<div class="outline-text-3" id="text-org007e830">
+<ul class="org-ul">
+<li>一覧すれば、ジャンプは簡単にできる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf8a0a7f" class="outline-3">
+<h3 id="orgf8a0a7f"><a href="#orgf8a0a7f"><span class="done CLOSE">CLOSE</span> 視覚影でスプライトが隠れているのを直す</a></h3>
+<div class="outline-text-3" id="text-orgf8a0a7f">
+<p>
+近くのライトで見られるようにしたが、微妙だ。
+</p>
+
+<ul class="org-ul">
+<li>壁の向こう側が見える
+<ul class="org-ul">
+<li>対策のため1マス分だけ照らすようにしたが、変だ</li>
+</ul></li>
+<li>やはり、直接視界が当たった部分はフラグをもたせて表示するのがよさそう
+<ul class="org-ul">
+<li>個別のタイルごとにあるので、新しくコンポーネントを作ったほうがよさそう</li>
+<li><code>IsHide</code> とか</li>
+</ul></li>
+<li>ここに時間かけてもしょうがないから後回しか</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4a3ae8f" class="outline-3">
+<h3 id="org4a3ae8f"><a href="#org4a3ae8f"><span class="done CLOSE">CLOSE</span> raycastを高速化する</a></h3>
+<div class="outline-text-3" id="text-org4a3ae8f">
+<ul class="org-ul">
+<li>もっとも近い壁を記憶することで、高速化できるという</li>
+<li><a href="https://www.redblobgames.com/articles/visibility/#wall-tracking">https://www.redblobgames.com/articles/visibility/#wall-tracking</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8f8ac22" class="outline-3">
+<h3 id="org8f8ac22"><a href="#org8f8ac22"><span class="done DONE">DONE</span> 移動時に画像を回転させる</a></h3>
+<div class="outline-text-3" id="text-org8f8ac22">
+<p>
+Angleを設定すればよい。
+</p>
+</div>
+</div>
+<div id="outline-container-org81b00d6" class="outline-3">
+<h3 id="org81b00d6"><a href="#org81b00d6"><span class="done DONE">DONE</span> カードを装備できるようにする</a></h3>
+<div class="outline-text-3" id="text-org81b00d6">
+<p>
+防具だけが対象なのを直す。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf3e0860" class="outline-3">
+<h3 id="orgf3e0860"><a href="#orgf3e0860"><span class="done CLOSE">CLOSE</span> リアルタイムなローグライクがよさそう</a></h3>
+<div class="outline-text-3" id="text-orgf3e0860">
+<ul class="org-ul">
+<li>フィールドは<a href="https://ebitengine.org/en/examples/raycasting.html">Ray Casting - Ebitengine</a>という感じ</li>
+<li>タイルごとにターン制で動くという感じでない。細かく移動できる</li>
+<li>自分が動いたら時間が進行する</li>
+<li>シンボルエンカウントで、回避する方法がある。煙幕的な</li>
+<li>電力と燃料がある
+<ul class="org-ul">
+<li>電力は短期的なスタミナ。フィールドでダッシュ、煙幕、掘削で減る。有利に進められるが、時間での制限がある</li>
+<li>燃料は、腹減り度。電力を使うと早く消費する。なくなるとゲームオーバーになる。移動で減る</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6837508" class="outline-3">
+<h3 id="org6837508"><a href="#org6837508"><span class="done DONE">DONE</span> 排反コンポーネントを作る</a></h3>
+<div class="outline-text-3" id="text-org6837508">
+<p>
+排反を表現する。
+</p>
+
+<p>
+Joinのときに指定するのはComponentsで、ecs.NullComponentなどの溜められているデータそのものである。なのでenumにできたりしない。
+</p>
+
+<p>
+アイデア。
+</p>
+
+<ul class="org-ul">
+<li>エンティティを初期化するときに制約する</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-go">world.Manager.Join(
+        gameComponents.Name,
+        gameComponents.Pools,
+        gameComponents.FactionTypeEnemy, // みたいにしたいが、Componentは実際に保持してるデータなのでenumにはできない
+)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>Joinで、gameComponentsを直に渡すのではなく、関数をはさむとか</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-go">group(aCompo, bCompo)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>myutilsを消す</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdc2a838" class="outline-3">
+<h3 id="orgdc2a838"><a href="#orgdc2a838"><span class="done DONE">DONE</span> 戦闘追加する</a></h3>
+<div class="outline-text-3" id="text-orgdc2a838">
 <div class="org-src-container">
 <pre class="src src-go"> // デッキ
 type Deck struct {
@@ -231,128 +2890,34 @@ func Toggle() {}
 </div>
 </div>
 
-<div id="outline-container-org51188ce" class="outline-3">
-<h3 id="org51188ce"><a href="#org51188ce"><span class="todo TODO">TODO</span> フィールドに敵シンボルを作る</a></h3>
-<div class="outline-text-3" id="text-org51188ce">
-<ul class="org-ul">
-<li>とりあえず動かないやつ</li>
-<li>ランダムに動くやつ</li>
-<li>向きによる画像をどうするか
-<ul class="org-ul">
-<li>自キャラは8方向にしか動かないが、敵キャラはそうではない</li>
-<li>角度の範囲にすればいいか</li>
-<li>今は回転だが、回転は見た目があまりよくない</li>
-<li>画像を5方向分用意して切り替えがよさそう(反転させて全方向にする)</li>
-<li>とりあえず回転はなくしておく</li>
-</ul></li>
-<li>かぶる問題
-<ul class="org-ul">
-<li>positionを指定したはいいけど、重複検知がやりにくいな</li>
-<li>tileだったら全体管理できていて楽だけど&#x2026;</li>
-<li>スポーンのとき限定で、スポーン済みタイル配列を持っておいてチェックするとか</li>
-<li>スポーン時はタイルで判断できれば問題ない。スポーン時、すべてのエンティティがタイルに沿った位置にある</li>
-<li>タイルを指定してスポーンするインターフェースにすればよいのでは</li>
-</ul></li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org8f212bb" class="outline-3">
-<h3 id="org8f212bb"><a href="#org8f212bb"><span class="todo TODO">TODO</span> クリアできるようにする</a></h3>
-<div class="outline-text-3" id="text-org8f212bb">
+<div id="outline-container-org1959832" class="outline-3">
+<h3 id="org1959832"><a href="#org1959832"><span class="done DONE">DONE</span> メッセージログ追加</a></h3>
+<div class="outline-text-3" id="text-org1959832">
 <p>
-とりあえずクリアできるようにする。
+汎用なメッセージを表示できるようにする。メッセージパートの仕組みとは別でよい。
 </p>
 
-<ul class="org-ul">
-<li>20Fにいくとボス部屋になる</li>
-<li>最終階層では脱出するか、ボスと戦う</li>
-<li>将来的には、階層の異なる複数の遺跡があるが、とりあえずは1つの遺跡だけでよい</li>
-<li>最終階層にあるイベントパッドに触れるとクリア</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-orgc327389" class="outline-3">
-<h3 id="orgc327389"><a href="#orgc327389"><span class="todo TODO">TODO</span> 階層移動をEffectでやる</a></h3>
-<div class="outline-text-3" id="text-orgc327389">
 <p>
-階層移動をイベントとして、ほかの箇所で使いやすくする。
+戦闘、フィールドなどのイベントによってメッセージを発行して表示できるようにする。
 </p>
-
-<ul class="org-ul">
-<li>特定のenitityを対象としないeffectだけど、これでいいのかな。参考コードの状況とは異なる。特定のentityではなく、gameResourceを変更する。ただ、アイテムで階層移動とかもしたいので、effectでできればいいか</li>
-<li>今の階層移動の仕組み、わかりづらいな</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org8ccdaa8" class="outline-3">
-<h3 id="org8ccdaa8"><a href="#org8ccdaa8"><span class="todo TODO">TODO</span> 接触でイベント発火させる</a></h3>
-<div class="outline-text-3" id="text-org8ccdaa8">
-<ul class="org-ul">
-<li>接触したときに、テキストをいくつか表示したあとに、クリアにして、メインメニューに戻す</li>
-<li>テキスト表示と、ステート遷移</li>
-</ul>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>疑似コード</label><pre class="src src-go">winEvent()
+<pre class="src src-go">msglog.BattleLog.Append("イシハラは軽戦車を攻撃した")
 
-func finishEvent() {
-        msg(`
-&lt;bg='treasure'&gt;
-黒く輝く珠を発見した。
-&lt;bg='black'&gt;
-願いを叶え、幸せに暮らした。
-`)
-        switch(MainMenuState)
-}
 
-# 将来的
-# ボスとの戦闘
-func bossEvent() {
-        events := []eventFunc{
-                msg(`
-美しい庭園が広がっている。中心には鏡のような水面を湛えた池がある。ほかの階層より気温が低い。雰囲気が変わったので、ここが最下層だろう。
-庭園の中心に浮かぶ島には、青白い炎に囲まれた、ローブを着た骸骨が待ち受けている。
-`),
-                battle('Elder Witch'),
-                msg('宝を入手した'),
-                flag(TowerFinish),
-        }
-        submit(events, HomeMenuState)
-}
-
-# フィールドでの汎用イベント
-func itemEvent() {
-        msg(`何か落ちているぞ`)
-        getRandomItem()
-        pop(DungeonState)
-}
+msglog.BattleLog.Get(10)
 </pre>
 </div>
 
 <ul class="org-ul">
-<li>フィールドでの戦闘勝利後はフィールドに戻ってほしい</li>
-<li>イベントでの戦闘勝利後は後続のイベントを開始してほしい</li>
-<li>イベント進行ステートを作ればいいかな。会話終了時や戦闘終了時はpopしてもらってイベント進行ステートに戻る。前の続きから開始する</li>
-<li>フラグ管理とかアイテム入手とかあるから、コード形式なのが望ましい</li>
-<li>どうやって戻ってきて再開するか。キューをポップしてから実行してやればいいのかな。実行したものは消えて、戻ると新しいイベントを実行して遷移する、という</li>
+<li class="on"><input type='checkbox' checked='checked' /> 残ってたらクリック待ちにしたい</li>
+<li class="on"><input type='checkbox' checked='checked' /> クリック待ち状態のときは何か表示する</li>
 </ul>
-
-<div class="org-src-container">
-<pre class="src src-shell"><span class="org-function-name">func</span> (s State) Update() {
-    event := s.Queue.Pop()
-    event() <span class="org-comment-delimiter"># </span><span class="org-comment">&#36983;&#31227;&#12364;&#23455;&#34892;&#12373;&#12428;&#12427;&#12290;&#12461;&#12517;&#12540;&#12395;&#12394;&#12356;&#22580;&#21512;&#12399;&#12289;&#12473;&#12486;&#12540;&#12488;&#12434;&#32066;&#20102;&#12377;&#12427;</span>
-}
-</pre>
 </div>
 </div>
-</div>
-
-<div id="outline-container-org334c87a" class="outline-3">
-<h3 id="org334c87a"><a href="#org334c87a"><span class="todo TODO">TODO</span> 汎用の選択コンテナを作成する</a></h3>
-<div class="outline-text-3" id="text-org334c87a">
+<div id="outline-container-orga53d21c" class="outline-3">
+<h3 id="orga53d21c"><a href="#orga53d21c"><span class="done DONE">DONE</span> 汎用の選択コンテナを作成する</a></h3>
+<div class="outline-text-3" id="text-orga53d21c">
 <p>
 メニューなど、なにかを一覧して選択するのは多く使うので、作っておきたい。
 </p>
@@ -399,2502 +2964,33 @@ func (aa *aa) assemble {
 </div>
 </div>
 </div>
-
-<div id="outline-container-org40318d9" class="outline-3">
-<h3 id="org40318d9"><a href="#org40318d9"><span class="todo TODO">TODO</span> リアルタイムなローグライクがよさそう</a></h3>
-<div class="outline-text-3" id="text-org40318d9">
-<ul class="org-ul">
-<li>フィールドは<a href="https://ebitengine.org/en/examples/raycasting.html">Ray Casting - Ebitengine</a>という感じ</li>
-<li>タイルごとにターン制で動くという感じでない。細かく移動できる</li>
-<li>自分が動いたら時間が進行する</li>
-<li>シンボルエンカウントで、回避する方法がある。煙幕的な</li>
-<li>電力と燃料がある
-<ul class="org-ul">
-<li>電力は短期的なスタミナ。フィールドでダッシュ、煙幕、掘削で減る。有利に進められるが、時間での制限がある</li>
-<li>燃料は、腹減り度。電力を使うと早く消費する。なくなるとゲームオーバーになる。移動で減る</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org96e0b4e" class="outline-3">
-<h3 id="org96e0b4e"><a href="#org96e0b4e"><span class="todo TODO">TODO</span> 合成のレアリティスコア</a></h3>
-<div class="outline-text-3" id="text-org96e0b4e">
-<p>
-性能にスコアをつけ、結果的に出来上がったものに対してレアリティランクをつけるとよさそう。
-</p>
-</div>
-</div>
-<div id="outline-container-orgaab5501" class="outline-3">
-<h3 id="orgaab5501"><a href="#orgaab5501"><span class="todo TODO">TODO</span> イベント部分の設計</a></h3>
-<div class="outline-text-3" id="text-orgaab5501">
-<p>
-1章のうろつきをどうするか考える。
-</p>
-
-<ul class="org-ul">
-<li>ローグライト形式にすると物語に関してあまり考えなくてよい
-<ul class="org-ul">
-<li>繰り返しのゲームプレイに変化をつけやすい</li>
-<li>設定とかが伝わりにくい可能性がある</li>
-<li>Tipsという形式でオプショナルに読めればよさそう</li>
-<li>Tipsだと自然に紹介できなさそうな感じもする</li>
-<li>あまり物語性はない</li>
-<li>物語部分は背景やSEつきのメッセージ形式で良い</li>
-</ul></li>
-<li>行けるところはランダムで選ばれた4つにする
-<ul class="org-ul">
-<li>行った回数によってイベントが起こる</li>
-<li>背反なイベントがある</li>
-<li>回数を重ねることで仲間になったりアイテムがもらえたりする
-<ul class="org-ul">
-<li>例</li>
-<li>市場 x 2 =&gt; 整備士が仲間になる</li>
-<li>広場 x 2 =&gt; 回復薬がもらえる</li>
-</ul></li>
-<li>単調な感じもする</li>
-</ul></li>
-<li>イベントによって仲間になったり、アイテムが増えたり、ステータスが変動したりする</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org9f12fcb" class="outline-3">
-<h3 id="org9f12fcb"><a href="#org9f12fcb"><span class="todo TODO">TODO</span> アイテム使用・削除をsystem化する</a></h3>
-<div class="outline-text-3" id="text-org9f12fcb">
-<p>
-wantsToUseエンティティを生成して、そのエンティティをsystemでキャッチする。
-</p>
-
-<p>
-直接削除すると共通処理が追加しにくかったりする。
-</p>
-
-<p>
-共通の関数化するだけでよさそうな感じもする。実行順とかがややこしくなるのかな。メッセージを伝える用のエンティティをいちいち作るのが面倒なんだよな。コードも増える。ポリシーを考えなければ。
-</p>
-</div>
-</div>
-
-<div id="outline-container-org8789bcd" class="outline-3">
-<h3 id="org8789bcd"><a href="#org8789bcd"><span class="todo TODO">TODO</span> モジュール分けする</a></h3>
-<div class="outline-text-3" id="text-org8789bcd">
-<p>
-名前がかぶってややこしいものは分ける。
-</p>
-
-<ul class="org-ul">
-<li>system</li>
-<li>app</li>
-<li>message engine</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org07656c6" class="outline-3">
-<h3 id="org07656c6"><a href="#org07656c6"><span class="todo TODO">TODO</span> 味方一覧表示を共通化する</a></h3>
-<div class="outline-text-3" id="text-org07656c6">
-<p>
-いろんなところで使いそうかつ、複数のパーツで構成されているので作成が面倒なので。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orgb2e629e" class="outline-3">
-<h3 id="orgb2e629e"><a href="#orgb2e629e"><span class="todo TODO">TODO</span> ステート切り替えが怪しい部分がある</a></h3>
-<div class="outline-text-3" id="text-orgb2e629e">
-<p>
-特にpopしている部分。
-</p>
-
-<ul class="org-ul">
-<li>pushで、文字があると重なる</li>
-<li>popしたときにOnStartは走らないので、前の画面を削除するのはダメ</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-orgf0a58c8" class="outline-3">
-<h3 id="orgf0a58c8"><a href="#orgf0a58c8"><span class="todo TODO">TODO</span> 図形 or 画像描画の方法を考える</a></h3>
-<div class="outline-text-3" id="text-orgf0a58c8">
-<p>
-UIのために図形描画したい。どうするか。画像を用意すればよいが、いい感じにやるためにはどうすればいいか。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orgebe109c" class="outline-3">
-<h3 id="orgebe109c"><a href="#orgebe109c"><span class="todo TODO">TODO</span> 生成をランダム化する</a></h3>
-<div class="outline-text-3" id="text-orgebe109c">
-<p>
-ある程度ランダム化したい。プレイヤー、モンスター、ワープゲートの出る位置をバラけさせる。
-</p>
-</div>
-</div>
-
-<div id="outline-container-org642aef2" class="outline-3">
-<h3 id="org642aef2"><a href="#org642aef2"><span class="todo TODO">TODO</span> 未探索の暗闇を追加する</a></h3>
-<div class="outline-text-3" id="text-org642aef2">
-<p>
-未探検の部分は暗くなる。
-</p>
-
-<p>
-レイキャストして、タイルごとに探索済みフラグを立てていけばよいだろう。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orge9578ee" class="outline-3">
-<h3 id="orge9578ee"><a href="#orge9578ee"><span class="todo TODO">TODO</span> 光源を追加する</a></h3>
-<div class="outline-text-3" id="text-orge9578ee">
-<p>
-光源がある部分は色が変わる。
-</p>
-
-<p>
-タイルごとに色のフィルタを設定できればよいのだろうな。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orgc445aa4" class="outline-3">
-<h3 id="orgc445aa4"><a href="#orgc445aa4"><span class="todo TODO">TODO</span> タイルの種類を増やす</a></h3>
-<div class="outline-text-3" id="text-orgc445aa4">
-<p>
-見た目がよくないので、2種類の通常フロアを用意する。
-</p>
-
-<p>
-ステージ作成が少し面倒になるか。2種類のタイルの違いをファイルに書き出したくないな。勝手に判断して入れてくれるのが一番良い。壁が隣接してたら〜とか。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orgdd4ce87" class="outline-3">
-<h3 id="orgdd4ce87"><a href="#orgdd4ce87"><span class="todo TODO">TODO</span> ゲームループカウントをグローバル化する</a></h3>
-<div class="outline-text-3" id="text-orgdd4ce87">
-<p>
-カウントしてメッセージをアニメーションさせる用。汎用的なのでグローバルでやってよさそう。アニメーションのためのもっとよい方法がある可能性はある。ちゃんと調べないとな…。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orge62a1bb" class="outline-3">
-<h3 id="orge62a1bb"><a href="#orge62a1bb"><span class="todo TODO">TODO</span> アニメーションのやり方を考える</a></h3>
-<div class="outline-text-3" id="text-orge62a1bb">
-<p>
-どうやっているのだろう。
-</p>
-
-<ul class="org-ul">
-<li>最後にアニメーションした時刻を取っておいて、それから経過した時間で決定すればよい</li>
-<li>しかし、アニメーションのたびにそれをあちこちに保存しておきたくない感じはする</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org5477596" class="outline-3">
-<h3 id="org5477596"><a href="#org5477596"><span class="todo TODO">TODO</span> コメントアウト記法をサポートする</a></h3>
-<div class="outline-text-3" id="text-org5477596">
-<p>
-無視する。
-</p>
-</div>
-</div>
-</div>
-<div id="outline-container-org71ede8f" class="outline-2">
-<h2 id="org71ede8f"><a href="#org71ede8f">考察</a></h2>
-<div class="outline-text-2" id="text-org71ede8f">
-<ul class="org-ul">
-<li>作った</li>
-<li>しかし、発表に値するような事柄はない</li>
-<li>技術的な挑戦的な部分は一切ない。新しいことをやっているわけでもない</li>
-<li>参考にして面白かったことはある
-<ul class="org-ul">
-<li>ECS - コンポーネントで考える</li>
-<li>ゲームにはさまざなデータがあるが、確実にファイル化する。ソースコードに入れない</li>
-</ul></li>
-<li>ひとつある</li>
-<li>個人のゲーム開発の99%は途中で挫折する(自分比)</li>
-<li>工夫
-<ul class="org-ul">
-<li>意図的にやらないことを選択した</li>
-<li>グラフィック、アニメーション、音楽は捨てた</li>
-<li>常にプレイできる状態を保った</li>
-<li>とりあえずクリアできるようにして、人に見せた</li>
-</ul></li>
-</ul>
-
-<p>
-工夫。
-</p>
-
-<ul class="org-ul">
-<li>データを別にしている。ファイルからパラメータを調整できる</li>
-<li>ECS(Entity Component System)</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org5a396e8" class="outline-2">
-<h2 id="org5a396e8"><a href="#org5a396e8">Archives</a></h2>
-<div class="outline-text-2" id="text-org5a396e8">
-</div>
-<div id="outline-container-orgfa5a650" class="outline-3">
-<h3 id="orgfa5a650"><a href="#orgfa5a650"><span class="done DONE">DONE</span> メッセージ表示できるようにする</a></h3>
-<div class="outline-text-3" id="text-orgfa5a650">
-<p>
-<a href="https://github.com/x-hgg-x/sokoban-go">x-hgg-x/sokoban-go</a>を使って小さいサンプルを作る。
-</p>
-</div>
-</div>
-<div id="outline-container-org74f86de" class="outline-3">
-<h3 id="org74f86de"><a href="#org74f86de"><span class="done DONE">DONE</span> メッセージシステムのリファクタ</a></h3>
-<div class="outline-text-3" id="text-org74f86de">
-<p>
-使いにくいので直す。
-</p>
-</div>
-</div>
-<div id="outline-container-org206f020" class="outline-3">
-<h3 id="org206f020"><a href="#org206f020"><span class="done DONE">DONE</span> メッセージシステムに自動改行を入れる</a></h3>
-<div class="outline-text-3" id="text-org206f020">
-<p>
-飛び出すのを防ぐ。
-</p>
-</div>
-</div>
-<div id="outline-container-orgf16a275" class="outline-3">
-<h3 id="orgf16a275"><a href="#orgf16a275"><span class="done DONE">DONE</span> ファイルを埋め込む</a></h3>
-<div class="outline-text-3" id="text-orgf16a275">
-<p>
-デプロイで扱いやすいように。
-</p>
-</div>
-</div>
-
-<div id="outline-container-org9da4ee1" class="outline-3">
-<h3 id="org9da4ee1"><a href="#org9da4ee1"><span class="done DONE">DONE</span> CI設定</a></h3>
-<div class="outline-text-3" id="text-org9da4ee1">
-<p>
-テストとビルドとデプロイする。
-</p>
-
-<p>
-デプロイしたけど、ブラウザで表示できてないな。
-</p>
-</div>
-</div>
-<div id="outline-container-orga3506aa" class="outline-3">
-<h3 id="orga3506aa"><a href="#orga3506aa"><span class="done DONE">DONE</span> フィールドで動けるようにする</a></h3>
-<div class="outline-text-3" id="text-orga3506aa">
-<ul class="org-ul">
-<li>テキストで地図を読み込む</li>
-<li>コンポーネントを作る</li>
-<li>地図を表示する</li>
-<li>移動できるようにする</li>
-</ul>
-
-<p>
-実行時エラーになる。表示できない。インターフェースが取り出せないよう。
-</p>
-
-<ul class="org-ul">
-<li>コンポーネントの初期化を忘れていた</li>
-<li>LoadLevel()によって読み込んだComponentListをAddEntities()-&gt;AddEntityComponent()に渡す。が、AddEntitiesで失敗する。テキストで読み込んだ内容をreflectでオブジェクト化するときに、新しく作成したコンポーネントを初期化するのに失敗している</li>
-<li>ecsComponentListを調べてみよう
-<ul class="org-ul">
-<li>ecvでGameが入ってない</li>
-<li>world.Components.Game</li>
-</ul></li>
-<li>sokoban-go では main.goのw.InitWorld(&amp;gc.Components{})の時点でworld.Components.Gameがセットされている</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgb19fb70" class="outline-3">
-<h3 id="orgb19fb70"><a href="#orgb19fb70"><span class="done DONE">DONE</span> マップを表示できるようにする</a></h3>
-<div class="outline-text-3" id="text-orgb19fb70">
-<p>
-表示する。
-</p>
-</div>
-</div>
-<div id="outline-container-org4518b6f" class="outline-3">
-<h3 id="org4518b6f"><a href="#org4518b6f"><span class="done DONE">DONE</span> 階数を移動できるようにする</a></h3>
-<div class="outline-text-3" id="text-org4518b6f">
-<p>
-1階からはじまって、次の階層に移動する。
-</p>
-
-<p>
-ワープホール。
-</p>
-</div>
-</div>
-<div id="outline-container-orgb3a1747" class="outline-3">
-<h3 id="orgb3a1747"><a href="#orgb3a1747"><span class="done DONE">DONE</span> クロスコンパイルする</a></h3>
-<div class="outline-text-3" id="text-orgb3a1747">
-<p>
-一応CIに設定して保証しておく。
-</p>
-</div>
-</div>
-<div id="outline-container-orga23eac2" class="outline-3">
-<h3 id="orga23eac2"><a href="#orga23eac2"><span class="done DONE">DONE</span> メッセージが飛び出すのを直す</a></h3>
-<div class="outline-text-3" id="text-orga23eac2">
-<p>
-ステート遷移イベントを作る。
-</p>
-</div>
-</div>
-<div id="outline-container-orgd9ef5de" class="outline-3">
-<h3 id="orgd9ef5de"><a href="#orgd9ef5de"><span class="done DONE">DONE</span> 次の階をランダムに選択する</a></h3>
-<div class="outline-text-3" id="text-orgd9ef5de">
-<p>
-一覧からランダムに選択する。
-</p>
-</div>
-</div>
-<div id="outline-container-orgb6768db" class="outline-3">
-<h3 id="orgb6768db"><a href="#orgb6768db"><span class="done DONE">DONE</span> HomeStateを作成する</a></h3>
-<div class="outline-text-3" id="text-orgb6768db">
-<p>
-ゲームプレイの基軸になるメニュー。
-</p>
-</div>
-</div>
-<div id="outline-container-orgf22afa4" class="outline-3">
-<h3 id="orgf22afa4"><a href="#orgf22afa4"><span class="done DONE">DONE</span> 脱出できるようにする</a></h3>
-<div class="outline-text-3" id="text-orgf22afa4">
-<p>
-脱出階層で脱出できるようにする。
-</p>
-</div>
-</div>
-<div id="outline-container-org79bac36" class="outline-3">
-<h3 id="org79bac36"><a href="#org79bac36"><span class="done DONE">DONE</span> 背景を設定する</a></h3>
-<div class="outline-text-3" id="text-org79bac36">
-<p>
-背景を追加する。スプライトはあるけど、同じでいいのか。いや、スプライトは1枚の画像を分割するものだから、同じ感じでは扱えないな。変えるとsystemも変えないといけない。面倒なのでとりあえずいいか。
-</p>
-</div>
-</div>
-<div id="outline-container-org1d7a2ef" class="outline-3">
-<h3 id="org1d7a2ef"><a href="#org1d7a2ef"><span class="done DONE">DONE</span> サブメニュー追加</a></h3>
-<div class="outline-text-3" id="text-org1d7a2ef">
-<p>
-拠点メニューにはサブメニューがある。どうやるか考える。
-</p>
-
-<ul class="org-ul">
-<li>別stateでやる
-<ul class="org-ul">
-<li>大量にstateができるのどうなのという感じ。背景コンポーネントとかも同じ感じで準備しないといけない</li>
-</ul></li>
-<li>リファレンスではどうやっているのだろう。ポーズでは、後ろを透明に表示しつつ、メニューを表示している。あれと同じようなことができないか
-<ul class="org-ul">
-<li>ポーズメニューでは、OnStopでポーズメニューのエンティティのみを削除しているようだ。ほかのstateでは、すべてのエンティティを削除することが異なる</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org5f93ca0" class="outline-3">
-<h3 id="org5f93ca0"><a href="#org5f93ca0"><span class="done DONE">DONE</span> pauseステート作成</a></h3>
-<div class="outline-text-3" id="text-org5f93ca0">
-<p>
-デバッグで便利なので。
-</p>
-</div>
-</div>
-<div id="outline-container-orgfa81067" class="outline-3">
-<h3 id="orgfa81067"><a href="#orgfa81067"><span class="done DONE">DONE</span> アイテムを生成する</a></h3>
-<div class="outline-text-3" id="text-orgfa81067">
-<p>
-アイテムを追加する。
-</p>
-
-<ul class="org-ul">
-<li>item
-<ul class="org-ul">
-<li>consumable</li>
-<li>name</li>
-<li>description</li>
-</ul></li>
-</ul>
-
-<p>
-まずそれぞれのコンポーネントの雛形をファイルで作成する。
-</p>
-
-<ul class="org-ul">
-<li>items
-<ul class="org-ul">
-<li>entityA
-<ul class="org-ul">
-<li>componentA(consumable)</li>
-<li>componentB(weight)</li>
-</ul></li>
-<li>entityB
-<ul class="org-ul">
-<li>componentA(consumable)</li>
-<li>componentB(weight)</li>
-</ul></li>
-</ul></li>
-</ul>
-
-<p>
-で、そのデータを読み込んでエンティティとコンポーネントを生成する関数を作る。
-</p>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 2: </span>engineも作らないといけない</label><pre class="src src-go">componentList := loader.EntityComponentList{}
-// engineとgameは同数でなければならない。分割されているのが面倒だな…
-componentList.Engine = append(componentList.Engine, loader.EngineComponentList{})
-componentList.Game = append(componentList.Game, gloader.GameComponentList{
-	Item: &amp;gc.Item{},
-})
-loader.AddEntities(world, componentList)
-</pre>
-</div>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>元ネタ</label><pre class="src src-rust">pub fn spawn_named_item(
-</pre>
-</div>
-</div>
-</div>
-<div id="outline-container-orgfd05b48" class="outline-3">
-<h3 id="orgfd05b48"><a href="#orgfd05b48"><span class="done DONE">DONE</span> UI設計</a></h3>
-<div class="outline-text-3" id="text-orgfd05b48">
-<p>
-いちいちゲーム画面見るのもアレなので、書いておく。
-</p>
-</div>
-</div>
-<div id="outline-container-orge670511" class="outline-3">
-<h3 id="orge670511"><a href="#orge670511"><span class="done DONE">DONE</span> UIエンティティだけを消す</a></h3>
-<div class="outline-text-3" id="text-orge670511">
-<p>
-DeleteAllEntitiesでステート切り替え時のUIリセットをしている。entitiesが全部消えるので、困る。ほとんどの場合、UIだけをリセットすればよさそう。
-</p>
-
-<p>
-UIコンポーネントと、UIコンポーネントを消す関数を作ればよさそう。
-</p>
-</div>
-</div>
-<div id="outline-container-org1bd6a1c" class="outline-3">
-<h3 id="org1bd6a1c"><a href="#org1bd6a1c"><span class="done DONE">DONE</span> 各メニューを作成する</a></h3>
-<div class="outline-text-3" id="text-org1bd6a1c">
-<p>
-仮の内容で全部作る。
-</p>
-</div>
-</div>
-<div id="outline-container-orgf953350" class="outline-3">
-<h3 id="orgf953350"><a href="#orgf953350"><span class="done DONE">DONE</span> アイテムを使う</a></h3>
-<div class="outline-text-3" id="text-orgf953350">
-<ul class="org-ul">
-<li>キャラクタを作る</li>
-<li>ステータスを作る</li>
-<li>影響を与えられるようにする</li>
-<li>memo
-<ul class="org-ul">
-<li>可変のアイテムリストについて、選択中の印をつける必要がある</li>
-<li>選択中の座標をとってきて、選択印の位置を変化させればいいのかな</li>
-</ul></li>
-
-<li>ゲーム
-<ul class="org-ul">
-<li>戦車にしたいけど、戦闘システムがややこしくなる</li>
-<li>合成とかで各自の装備メインにしたいんだよな</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org9e3ecb6" class="outline-3">
-<h3 id="org9e3ecb6"><a href="#org9e3ecb6"><span class="done DONE">DONE</span> アイテムを選択して使えるようにする</a></h3>
-<div class="outline-text-3" id="text-org9e3ecb6">
-<p>
-今は固定にしている。
-</p>
-</div>
-</div>
-<div id="outline-container-org61d9f81" class="outline-3">
-<h3 id="org61d9f81"><a href="#org61d9f81"><span class="done DONE">DONE</span> アイテムリストをebitenUIで作る</a></h3>
-<div class="outline-text-3" id="text-org61d9f81">
-<p>
-いい感じに、スクロールできるようにする。
-</p>
-</div>
-</div>
-<div id="outline-container-org7149d8f" class="outline-3">
-<h3 id="org7149d8f"><a href="#org7149d8f"><span class="done DONE">DONE</span> サイドメニューを表示する</a></h3>
-<div class="outline-text-3" id="text-org7149d8f">
-<p>
-性能を表示するサイドパネル。
-</p>
-
-<ul class="org-ul">
-<li class="on"><input type='checkbox' checked='checked' /> メニューバーが太いのを直す</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org54b0497" class="outline-3">
-<h3 id="org54b0497"><a href="#org54b0497"><span class="done DONE">DONE</span> UIをリロードせずに反映できるようにする</a></h3>
-<div class="outline-text-3" id="text-org54b0497">
-<p>
-アイテムを使用したときにUIをリロードしているが、スクロール位置が元へ戻ってしまうのでリロードしないようにする。
-</p>
-
-<p>
-また、表示ジャンルの切替もあるので、リロードすると保持しなくて困る。
-</p>
-</div>
-</div>
-<div id="outline-container-orgefcb1e6" class="outline-3">
-<h3 id="orgefcb1e6"><a href="#orgefcb1e6"><span class="done DONE">DONE</span> ebitenUIを使う</a></h3>
-<div class="outline-text-3" id="text-orgefcb1e6">
-<p>
-使う。
-</p>
-</div>
-</div>
-<div id="outline-container-orgdac1261" class="outline-3">
-<h3 id="orgdac1261"><a href="#orgdac1261"><span class="done DONE">DONE</span> アイテムに対するアクションを選べるようにする</a></h3>
-<div class="outline-text-3" id="text-orgdac1261">
-<ul class="org-ul">
-<li class="on"><input type='checkbox' checked='checked' /> 使う</li>
-<li class="on"><input type='checkbox' checked='checked' /> 捨てる</li>
-<li class="on"><input type='checkbox' checked='checked' /> キャンセル</li>
-
-<li>ebitenUIを組み込もうとしている
-<ul class="org-ul">
-<li>うまくUpdateできてないからか、windowが開けない</li>
-<li>今の構造だと、作成したuiをDrawとUpdateの2つができない
-<ul class="org-ul">
-<li>UIもコンポーネント</li>
-</ul></li>
-</ul></li>
-<li>ebitenUIだとキーボード志向にしにくそう
-<ul class="org-ul">
-<li>いや対応できるか</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org2e5a1af" class="outline-3">
-<h3 id="org2e5a1af"><a href="#org2e5a1af"><span class="done DONE">DONE</span> メッセージシステムの命令追加</a></h3>
-<div class="outline-text-3" id="text-org2e5a1af">
-<p>
-背景とか。
-</p>
-
-<ul class="org-ul">
-<li>文字列に開始の合図がないから、識別子との判断ができてないみたい</li>
-<li>画像を重ねる順番を指定できない</li>
-<li>倉庫番のポーズではできてるからできそう
-<ul class="org-ul">
-<li>ただポーズは表示順が後なので&#x2026;。明らかにポーズ画面は後だ。メッセージシステムの場合は背景が後で変わる可能性がある。</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org66ca51e" class="outline-3">
-<h3 id="org66ca51e"><a href="#org66ca51e"><span class="done DONE">DONE</span> インベントリメニューでpanicになる</a></h3>
-<div class="outline-text-3" id="text-org66ca51e">
-<p>
-別のステートに遷移したあと、再び戻ってクリックするとエラーになる。
-</p>
-
-<ul class="org-ul">
-<li>アイテム選択</li>
-<li>「使う」クリックでpanic</li>
-<li>partyContainerの数が2つずつ増えているようだ</li>
-<li>1度しか付与されないようにしたら解決した</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org179b7aa" class="outline-3">
-<h3 id="org179b7aa"><a href="#org179b7aa"><span class="done DONE">DONE</span> アイテムを使う対象を選べるようにする</a></h3>
-<div class="outline-text-3" id="text-org179b7aa">
-<ul class="org-ul">
-<li>回復薬の場合は1人の味方を選ぶ</li>
-<li>回復スプレーの場合は全員を選択している画面になる</li>
-<li>ロケット弾の場合は1人の敵を選ぶ</li>
-<li>決めること
-<ul class="org-ul">
-<li>使う対象
-<ul class="org-ul">
-<li>敵</li>
-<li>味方</li>
-<li>なし</li>
-</ul></li>
-<li>対象数
-<ul class="org-ul">
-<li>単数</li>
-<li>複数</li>
-</ul></li>
-<li>使う場面
-<ul class="org-ul">
-<li>戦闘中のみと制限されるものがある</li>
-<li>戦闘中</li>
-<li>フィールド / 拠点</li>
-</ul></li>
-</ul></li>
-
-<li>パーティ一覧を表示する</li>
-<li>選択したときに適用する</li>
-<li>ProvidesHealingがあるものは自動で仲間対象でも良い、が</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgb99c254" class="outline-3">
-<h3 id="orgb99c254"><a href="#orgb99c254"><span class="done DONE">DONE</span> ゲーム設計</a></h3>
-<div class="outline-text-3" id="text-orgb99c254">
-<p>
-どうするか。
-</p>
-</div>
-</div>
-<div id="outline-container-orgc25012e" class="outline-3">
-<h3 id="orgc25012e"><a href="#orgc25012e"><span class="done DONE">DONE</span> UIのリファクタ</a></h3>
-<div class="outline-text-3" id="text-orgc25012e">
-<ul class="org-ul">
-<li class="on"><input type='checkbox' checked='checked' /> 統一感をもって扱えるようにする</li>
-<li class="on"><input type='checkbox' checked='checked' /> 説明文とメニューの間隔を空ける</li>
-<li>resourceに各UI(idle, hover, pressed)を初期化しておく</li>
-<li>参考コードを見てどうやっているかを調べる</li>
-<li>完璧でなくてよい。やっても成果が見えなくて辛いので、次をやるか</li>
-<li>UI間に依存があって、思ったよりきれいに書けなかった感</li>
-<li>まあ、アイテム画面と同じスタイルで別のメニューを表示したくなったら考えればいい</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org32ed820" class="outline-3">
-<h3 id="org32ed820"><a href="#org32ed820"><span class="done DONE">DONE</span> 武器を追加する</a></h3>
-<div class="outline-text-3" id="text-org32ed820">
-<p>
-使うアイテムとは別枠で表示できる。
-</p>
-
-<ul class="org-ul">
-<li>武器名</li>
-<li>元となった武器名</li>
-<li>攻撃力</li>
-<li>命中</li>
-<li>攻撃回数</li>
-<li>属性
-<ul class="org-ul">
-<li>拳銃</li>
-<li>小銃</li>
-<li>刀剣</li>
-</ul></li>
-</ul>
-
-<p>
-武器の性能にはばらつきがある。種類によってベースがある。ばらつきやすさが違う。
-</p>
-
-<p>
-メニューをトグルさせるためにどうするか。既存のchildを削除して、再度追加すればいいか。
-</p>
-</div>
-</div>
-<div id="outline-container-org276f65a" class="outline-3">
-<h3 id="org276f65a"><a href="#org276f65a"><span class="done DONE">DONE</span> 素材を追加する</a></h3>
-<div class="outline-text-3" id="text-org276f65a">
-<ul class="org-ul">
-<li>素材は表示が違う。個数を表示することになっている。どうするか</li>
-<li>素材はグローバルに個数カウントできればよい。そのへんはほかのエンティティと事情が違う</li>
-<li>表示方法を変えないといけないがどうするか
-<ul class="org-ul">
-<li>しょせん中のテキストが違うだけ</li>
-</ul></li>
-<li class="off"><input type='checkbox' /> 素材を追加する
-<ul class="org-ul">
-<li>素材は個数カウント。エンティティを追加する必要はあるか。単なるmapでもよい</li>
-<li>ただ、同じtomlで生成できるほうがわかりやすい。nameとdescriptionあるし</li>
-</ul></li>
-</ul>
-
-<p>
-インターフェースから考える。
-</p>
-
-<div class="org-src-container">
-<pre class="src src-go">// tomlにあるものはカウント0で初期化される
-
-material.GetCount("ガラクタ") // =&gt; 3
-material.IncCount("ガラクタ", 1)
-material.DeclCount("小さな花", 1)
-</pre>
-</div>
-</div>
-</div>
-<div id="outline-container-org3c8f340" class="outline-3">
-<h3 id="org3c8f340"><a href="#org3c8f340"><span class="done DONE">DONE</span> 合成画面を作る</a></h3>
-<div class="outline-text-3" id="text-org3c8f340">
-<p>
-まず画面を作って、そこから共通化していけばいいか。
-</p>
-
-<ul class="org-ul">
-<li>装備画面</li>
-<li>合成画面</li>
-<li>使用画面</li>
-</ul>
-
-<p>
-これらは似たようなUIを持つ。
-</p>
-
-<ul class="org-ul">
-<li>カテゴリ選択</li>
-<li>アイテムメニュー(左)
-<ul class="org-ul">
-<li>中身の取得ロジックは異なる</li>
-<li>中に入るデータの種類が違うということ</li>
-</ul></li>
-<li>性能メニュー(右)</li>
-</ul>
-
-<p>
-あたりは共通。ボタンのアクションが違うくらいか。
-</p>
-
-<p>
-合成に必要なもの。
-</p>
-
-<ul class="org-ul">
-<li>レシピ
-<ul class="org-ul">
-<li>素材の種類と個数</li>
-<li>鉄の剣 = <code>[{鉄くず,2}, {木の棒,1}]</code></li>
-</ul></li>
-<li class="on"><input type='checkbox' checked='checked' /> レシピを表示する</li>
-<li class="on"><input type='checkbox' checked='checked' /> 合成する関数を作成する
-<ul class="org-ul">
-<li>アイテム名からベースアイテムを作成する</li>
-<li>加工する</li>
-</ul></li>
-<li class="off"><input type='checkbox' /> レシピをもとに作成できるようにする
-<ul class="org-ul">
-<li>所持数量とレシピを比較して満たしていると合成が選択できる</li>
-<li>合成を選択すると、所持数量を減らし該当アイテムを追加する</li>
-</ul></li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-go">gc := Craft("ハンドガン", 4) ecs.Entity // 品名、合成オプション
-Spawn(gc, spawntype.OnBackpack)
-</pre>
-</div>
-</div>
-</div>
-<div id="outline-container-org7d72d61" class="outline-3">
-<h3 id="org7d72d61"><a href="#org7d72d61"><span class="done DONE">DONE</span> アイテムUIまわりをリファクタする</a></h3>
-<div class="outline-text-3" id="text-org7d72d61">
-<ul class="org-ul">
-<li class="on"><input type='checkbox' checked='checked' /> グローバル変数を構造体のフィールドに移す</li>
-</ul>
-
-<p>
-合成とか装備品変更とか、よく似たUIで別画面を作ることになる。別で作ってたら大変なことになる。再利用するためにはどうすればよいか。
-</p>
-</div>
-</div>
-<div id="outline-container-orgb328034" class="outline-3">
-<h3 id="orgb328034"><a href="#orgb328034"><span class="done DONE">DONE</span> 乗り物をどうするか</a></h3>
-<div class="outline-text-3" id="text-orgb328034">
-<p>
-結論、小さなSFチックな機械を導入する。戦闘には参加しないがサポートする。知能は持たない。
-</p>
-
-<p>
-パーティ全体を強化できるようなのがあると面白そうに思える。乗り物はそういう強化が自然にできて面白い。人だけだとつけ外し要素がない。ただし、戦車だとシステムが複雑になる可能性がある。アイテム合成が生きないような。
-</p>
-
-<ul class="org-ul">
-<li>ドローンやタレットとか、自律的な何か</li>
-<li>戦闘で交じるのはややこしくて困る</li>
-<li>非戦闘な乗り物ってないな</li>
-<li>歩数制限のもっともな理由がほしい
-<ul class="org-ul">
-<li>燃料とか食べ物の類</li>
-</ul></li>
-<li>小さなSFチックな機械を導入する。それがないと遺跡に入れない的な。いろいろ効果をつけられる</li>
-<li>戦車は逆に敵が強くなるとかの理由をつけて遺跡に入らない。戦闘が面倒になるので</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org8564072" class="outline-3">
-<h3 id="org8564072"><a href="#org8564072"><span class="done DONE">DONE</span> タイル移動でなくするか</a></h3>
-<div class="outline-text-3" id="text-org8564072">
-<p>
-いやでもアニメーションやリアルタイムとなると大変そうだから、タイル移動のままがよさそう。
-</p>
-
-<p>
-あまりローグライクさせる意味はなさそう。敵を避けにくい。banbandonを参考にして自由移動にするか。
-</p>
-</div>
-</div>
-<div id="outline-container-org06abfa0" class="outline-3">
-<h3 id="org06abfa0"><a href="#org06abfa0"><span class="done DONE">DONE</span> 一貫させるためインターフェースを定義する</a></h3>
-<div class="outline-text-3" id="text-org06abfa0">
-<p>
-stateごとにコードがバラバラで、直していくのが辛い。
-</p>
-
-<p>
-一部共通部分もあるが、違う部分も多いので、しょうがないところではある。
-</p>
-
-<p>
-インターフェース化して、ある程度同じにするか。とはいえ、アイテム画面がそこまで種類多いかと言われるとそうでもない。3、4個だからあまり神経質にならなくてもいい。
-</p>
-</div>
-</div>
-<div id="outline-container-orga3e8270" class="outline-3">
-<h3 id="orga3e8270"><a href="#orga3e8270"><span class="done DONE">DONE</span> 武器コンポーネントに属性を追加する</a></h3>
-<div class="outline-text-3" id="text-orga3e8270">
-<ul class="org-ul">
-<li>火炎(耐火)</li>
-<li>電気(耐電)</li>
-<li>光力(耐光)</li>
-</ul>
-
-<p>
-だとそのまますぎるか。光は異色だが、SFらしさを出すのに良い。ややこしいのであまり属性を増やしたくない。冷気(耐冷)を追加した。
-</p>
-
-<p>
-時代背景的に、SFではない。でも合成するとSFになるよな。SFよりの現代、でよいか。
-</p>
-</div>
-</div>
-<div id="outline-container-orgc4445d7" class="outline-3">
-<h3 id="orgc4445d7"><a href="#orgc4445d7"><span class="done DONE">DONE</span> アイテム種別に防具を追加する</a></h3>
-<div class="outline-text-3" id="text-orgc4445d7">
-<ul class="org-ul">
-<li>消耗品</li>
-<li>武器</li>
-<li>防具</li>
-<li>素材</li>
-</ul>
-
-<p>
-で、種別が揃う。
-</p>
-</div>
-</div>
-<div id="outline-container-orge5a570c" class="outline-3">
-<h3 id="orge5a570c"><a href="#orge5a570c"><span class="done DONE">DONE</span> 武器種別を追加する</a></h3>
-<div class="outline-text-3" id="text-orge5a570c">
-<p>
-剣とか銃とか。
-</p>
-</div>
-</div>
-<div id="outline-container-orgb2a1f4b" class="outline-3">
-<h3 id="orgb2a1f4b"><a href="#orgb2a1f4b"><span class="done DONE">DONE</span> 合成画面をリファクタする</a></h3>
-<div class="outline-text-3" id="text-orgb2a1f4b">
-<p>
-書き直す。
-</p>
-</div>
-</div>
-<div id="outline-container-org4fe84f2" class="outline-3">
-<h3 id="org4fe84f2"><a href="#org4fe84f2"><span class="done DONE">DONE</span> 装備画面を作る</a></h3>
-<div class="outline-text-3" id="text-org4fe84f2">
-<ul class="org-ul">
-<li class="on"><input type='checkbox' checked='checked' /> スロットを作成する
-<ul class="org-ul">
-<li>コードから装備させる</li>
-</ul></li>
-<li class="on"><input type='checkbox' checked='checked' /> 装備画面を作成する
-<ul class="org-ul">
-<li>スロット表示画面。各キャラごと</li>
-</ul></li>
-<li class="on"><input type='checkbox' checked='checked' /> 選択画面を作成する
-<ul class="org-ul">
-<li>ここで選択したものが前で選択したスロットに装備される</li>
-<li>モードをどう表現するか。これをstateとしてやるのはやりすぎな気もする</li>
-<li>選択モードとだけしとけばいいか</li>
-<li>選択モードだと、左側を武器リストにする。スライダーがあるから、全く同じにならなそうだな</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgb3c8808" class="outline-3">
-<h3 id="orgb3c8808"><a href="#orgb3c8808"><span class="done DONE">DONE</span> enumのバリデーション</a></h3>
-<div class="outline-text-3" id="text-orgb3c8808">
-<p>
-楽にバリデーションできる書き方にする。
-</p>
-</div>
-</div>
-<div id="outline-container-org9e1a73f" class="outline-3">
-<h3 id="org9e1a73f"><a href="#org9e1a73f"><span class="done DONE">DONE</span> カメラ追加</a></h3>
-<div class="outline-text-3" id="text-org9e1a73f">
-<p>
-今はそのまま表示してる。プレイヤーの位置に追従してステージの一部だけを表示したい。
-</p>
-
-<p>
-とりあえず、仮で追加した。
-</p>
-</div>
-</div>
-<div id="outline-container-orgffeccc6" class="outline-3">
-<h3 id="orgffeccc6"><a href="#orgffeccc6"><span class="done CLOSE">CLOSE</span> UIと分離したい</a></h3>
-<div class="outline-text-3" id="text-orgffeccc6">
-<p>
-完全にUIと一体化しているのでよくわからなくなる。
-</p>
-
-<ul class="org-ul">
-<li>UIを保持する構造体</li>
-<li>UIで表示されているボタンに設定されたイベントがトリガーされて、ECSクエリを実行して表示を切り替えたり追加したりする</li>
-<li>stateはviewだと考えてよさそうな感じがする</li>
-<li>データストアと直にやりとりしてるわけじゃないからいいのか。UIの変更だけだな</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org4a425c0" class="outline-3">
-<h3 id="org4a425c0"><a href="#org4a425c0"><span class="done DONE">DONE</span> 装備画面のリファクタ</a></h3>
-<div class="outline-text-3" id="text-org4a425c0">
-<p>
-汚いので直す。
-</p>
-
-<p>
-どこから直せばいいのかよくわからないな。
-</p>
-</div>
-</div>
-<div id="outline-container-orgebdf46c" class="outline-3">
-<h3 id="orgebdf46c"><a href="#orgebdf46c"><span class="done DONE">DONE</span> ステータスを追加する</a></h3>
-<div class="outline-text-3" id="text-orgebdf46c">
-<p>
-生命力とか、力とか。
-</p>
-</div>
-</div>
-<div id="outline-container-org7c69a93" class="outline-3">
-<h3 id="org7c69a93"><a href="#org7c69a93"><span class="done DONE">DONE</span> 装備でステータスを変更する</a></h3>
-<div class="outline-text-3" id="text-org7c69a93">
-<p>
-防具を装備すると防御力が上がるなど。
-</p>
-
-<ul class="org-ul">
-<li>キャラ固有のステータスは、Attributes
-<ul class="org-ul">
-<li>キャラごとに固有の値をもつ</li>
-<li>装備によって上がることがある</li>
-</ul></li>
-<li>防御力はどうするか
-<ul class="org-ul">
-<li>キャラごとに固有の値をもたない。装備がなければみんな0となる</li>
-</ul></li>
-<li>防御力以外が上がることもある。武器、防具どちらでも。
-<ul class="org-ul">
-<li>器用さ+1などのステータス値</li>
-<li>火耐性+20%などの属性耐性</li>
-<li>頑丈+1、貫通+2などのスキル</li>
-<li>「救護」「乱射」などの行動追加</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org1cd7e58" class="outline-3">
-<h3 id="org1cd7e58"><a href="#org1cd7e58"><span class="done DONE">DONE</span> 説明図を書く</a></h3>
-<div class="outline-text-3" id="text-org1cd7e58">
-<p>
-見返してみるとけっこういい図がある。概念整理する。
-</p>
-</div>
-</div>
-<div id="outline-container-org892a7b2" class="outline-3">
-<h3 id="org892a7b2"><a href="#org892a7b2"><span class="done DONE">DONE</span> 回復薬を割合回復にする</a></h3>
-<div class="outline-text-3" id="text-org892a7b2">
-<ul class="org-ul">
-<li>固定値ではないようにする</li>
-<li>割合回復の仕組みは作ったので、回復薬に適用する</li>
-<li>components, raw, effect をいい感じにしていく作業。大体同じ構造体になる</li>
-<li>直にeffectを追加するのはよくないかもな。アイテムと共通に、いったんcomponentsを渡してeffectに変換させるようにする</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgdfa1aa0" class="outline-3">
-<h3 id="orgdfa1aa0"><a href="#orgdfa1aa0"><span class="done DONE">DONE</span> 戦闘部分の設計</a></h3>
-<div class="outline-text-3" id="text-orgdfa1aa0">
-<p>
-未知の部分。どうするか。
-</p>
-
-<ul class="org-ul">
-<li>デッキ型にすると面白そうだなあ
-<ul class="org-ul">
-<li>取れる行動が毎回異なる</li>
-<li>マイナス行動は手札を圧迫する</li>
-<li>カードには消費コストが設定されているから、強いものを選べばいいというわけでもない</li>
-<li>ターンに行動カードは1枚選ぶ</li>
-<li>デッキに1枚しか設定されてないと、それしか出なくないか。10枚登録固定にすればいいか</li>
-</ul></li>
-
-<li>白瀬
-<ul class="org-ul">
-<li>行動カード
-<ul class="org-ul">
-<li>マシンガン(sp2) by 装備武器</li>
-<li>防御(シールド装備, sp1)</li>
-<li>回復(体力回復, アイテム消費) by 所持スキル</li>
-<li>乱射(攻撃回数1.5倍, sp1) by 装備</li>
-<li>狙撃(待ち時間1.5倍+攻撃力2倍, sp2) by 所持スキル</li>
-</ul></li>
-<li>パッシブスキル
-<ul class="org-ul">
-<li>連携LV2(連携率1.4倍) by 所持スキル</li>
-<li>射撃LV1(命中率1.1倍, 射撃武器の攻撃力1.1倍) by 所持スキル</li>
-</ul></li>
-</ul></li>
-<li>ピエロ
-<ul class="org-ul">
-<li>行動カード
-<ul class="org-ul">
-<li>レーザーブレード(装備武器, sp2)</li>
-<li>高出力(炎属性, sp2) by 装備</li>
-<li>応援 by 固有行動</li>
-</ul></li>
-</ul></li>
-<li>選択
-<ul class="org-ul">
-<li>基本攻撃(白瀬)</li>
-<li>基本攻撃(ピエロ)</li>
-</ul></li>
-</ul>
-
-<p>
-デッキ。
-</p>
-
-<p>
-参考。
-</p>
-
-<ul class="org-ul">
-<li>デッキは共通のことが多いようだ
-<ul class="org-ul">
-<li>特定の人ばかり攻撃することにならないのだろうか</li>
-<li>チームとは別に、人ごとの行動力もある</li>
-<li>同じターンで複数行動はコスト増加する</li>
-<li>コスト増加しないものもある</li>
-<li>ドローしなくても使えるものがある</li>
-</ul></li>
-<li>ターンごとに行動力が回復する。戦闘ごとにリセット</li>
-<li>カードのストックはできない
-<ul class="org-ul">
-<li>毎回同じにならない</li>
-</ul></li>
-<li>カードの入手はランダム</li>
-<li>装備が2枠ある</li>
-<li>戦闘と関係ないサポートキャラが1人いる</li>
-</ul>
-
-<p>
-それをふまえて。
-</p>
-
-<ul class="org-ul">
-<li>調整が難しいので、もっとシンプルなルールがよさそう</li>
-<li>ランダム制はそこまでなくてよい</li>
-<li>頭脳や運というよりはRPG的な、レベル上げて準備すれば勝てる要素強めにしたい</li>
-<li>カスタム性を高めたい</li>
-<li>アイテムのアップグレード要素はなし</li>
-<li>特殊攻撃がついたカードはどう扱うか。あるなしどっちもほしい
-<ul class="org-ul">
-<li>2枚生成させるか</li>
-<li>合成結果は複数になることがある</li>
-<li>アイテム取得全般が、複数あるのを考慮しておく</li>
-<li>ある武器に対して、アクションが複数選べるというのが自然だ</li>
-<li>アクションは、他のカードを強化するカードでよさそう</li>
-</ul></li>
-<li>カードとアクションは変えたいんだよな</li>
-<li>防具とかどうする
-<ul class="org-ul">
-<li>基本パラメータは変わらないでいいのか</li>
-<li>デッキに含めるとパラメータUPでよさそう</li>
-</ul></li>
-<li>カードは直に入手できるのか、合成で入手するのか
-<ul class="org-ul">
-<li>ダンジョン内で入手したやつを試せたほうがよさそう</li>
-<li>制限ともいえるが&#x2026;</li>
-<li>入手は完全ランダム。1度入手すると合成で複数手に入れやすい</li>
-</ul></li>
-</ul>
-
-<p>
-実装。
-</p>
-
-<ul class="org-ul">
-<li>じつはEffectと同じように、組み合わせてエンティティにしておけばいいだけか
-<ul class="org-ul">
-<li>アクションカードは攻撃を与える性質や、回復する性質がついていればよい。あと対象が敵か味方か、単数か</li>
-<li>ブーストカードは、変化させる内容を保持していればよい。あと対象が敵か味方か、単数か</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org82aa185" class="outline-3">
-<h3 id="org82aa185"><a href="#org82aa185"><span class="done DONE">DONE</span> UpdateSpecに渡すComponentsの更新を忘れる</a></h3>
-<div class="outline-text-3" id="text-org82aa185">
-<p>
-オートで全コンポーネントを対象にすればよさそう。
-</p>
-
-<p>
-componentListに渡せばよい。
-</p>
-</div>
-</div>
-
-<div id="outline-container-orgc37cef0" class="outline-3">
-<h3 id="orgc37cef0"><a href="#orgc37cef0"><span class="done DONE">DONE</span> 防具ジャンルを消す</a></h3>
-<div class="outline-text-3" id="text-orgc37cef0">
-<p>
-あまり区分けする必要はなさそうか。あの正方形のUIにすれば、混ざって入っていてもあまり違和感はない。
-</p>
-
-<p>
-ただ、合成のときは分けたい感じも。
-</p>
-
-<ul class="org-ul">
-<li>アイテム
-<ul class="org-ul">
-<li>消耗品</li>
-<li>売却アイテム</li>
-<li>防具</li>
-</ul></li>
-<li>手札
-<ul class="org-ul">
-<li>アクションカード</li>
-<li>サポートカード</li>
-</ul></li>
-</ul>
-
-<p>
-メモ。
-</p>
-
-<ul class="org-ul">
-<li>なぜかInBackpackの条件で、結果に入らない
-<ul class="org-ul">
-<li>装備してるせいだった&#x2026;</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org264c3f7" class="outline-3">
-<h3 id="org264c3f7"><a href="#org264c3f7"><span class="done CLOSE">CLOSE</span> アイテム以外でeffectをトリガーする方法</a></h3>
-<div class="outline-text-3" id="text-org264c3f7">
-<p>
-今はまだ、アイテムトリガーしかない。AddItemで、コンポーネントに分解されてそれぞれEffectのキューに入り、実行される。
-</p>
-
-<p>
-ただ、今後全回復とか、アイテム以外で何かしたいときが増える。そのときはどうするか。
-</p>
-</div>
-</div>
-<div id="outline-container-org1ab9653" class="outline-3">
-<h3 id="org1ab9653"><a href="#org1ab9653"><span class="done DONE">DONE</span> メインメニューを開いているとCPU使用率が爆増する</a></h3>
-<div class="outline-text-3" id="text-org1ab9653">
-<p>
-リークしている。
-</p>
-
-<ul class="org-ul">
-<li>フィールド画面でも起こるな</li>
-<li>ほかの画面では起こらない。どうもメニューの仕組みを使っているところで起きてそう</li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-shell">ps aux | head -n 1
-</pre>
-</div>
-
-<pre class="example">
-USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-</pre>
-
-<ul class="org-ul">
-<li>ほかの画面でも、タブを切り替えたときなどに発生する。生成した画面を生成できてないんだろうな</li>
-<li>RemoveChildren()で、表示されなくはなっているけど、それがガベージコレクションされてない</li>
-<li>プロファイラの設定した</li>
-<li>LoadFont()設定があると、残り続けるな。ないと、残らない</li>
-<li>ずっとコンテナの親子関係に問題があると考えていた(RemoveChildrenまわり)けど、そうではなかった</li>
-<li>Faceまわりを毎回初期化してたのを、リソース構造体に保存して、それを使うようにしたら解決した</li>
-<li>なんだかよくわからないな</li>
-<li>相変わらず微妙に増えてるように見えるが、freeされてるようにも見える</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgedd845e" class="outline-3">
-<h3 id="orgedd845e"><a href="#orgedd845e"><span class="done DONE">DONE</span> 画像回帰テスト</a></h3>
-<div class="outline-text-3" id="text-orgedd845e">
-<p>
-コマンドで各ステートの画像を取れるようにする。
-</p>
-</div>
-</div>
-<div id="outline-container-org723e9a5" class="outline-3">
-<h3 id="org723e9a5"><a href="#org723e9a5"><span class="done DONE">DONE</span> メモリリークをCIで検知したい</a></h3>
-<div class="outline-text-3" id="text-org723e9a5">
-<p>
-まあパフォーマンスを画面表示してるし、わかるだろう。
-</p>
-
-<p>
-一定期間起動して、一定になるか確かめるとよさそう。
-</p>
-</div>
-</div>
-<div id="outline-container-org7f7e5d9" class="outline-3">
-<h3 id="org7f7e5d9"><a href="#org7f7e5d9"><span class="done DONE">DONE</span> ホーム画面をクリック対応する</a></h3>
-<div class="outline-text-3" id="text-org7f7e5d9">
-<p>
-キーボードはとりあえずなくした。
-</p>
-
-<p>
-今はキーボードでしか移動できない。
-</p>
-
-<p>
-でもキーボード移動も残したい。
-</p>
-</div>
-</div>
-<div id="outline-container-org8a74b02" class="outline-3">
-<h3 id="org8a74b02"><a href="#org8a74b02"><span class="done DONE">DONE</span> Ray Castingを参考にしてフィールドの原型を作る</a></h3>
-<div class="outline-text-3" id="text-org8a74b02">
-<ul class="org-ul">
-<li>Ray Castingを原型に動くものを作る</li>
-<li>やりたいことに近い。<a href="https://al-ro.github.io/projects/raycasting/">2D Ray Casting</a></li>
-<li>ban-ban-donを参考にして各システムを実装する</li>
-<li>特に目新しいことはなく、移動に関しては完全に参考にして作成できるように見える</li>
-</ul>
-
-<p>
-ゲーム的。
-</p>
-
-<ul class="org-ul">
-<li>動かしてみて、難易度的に難しい割に、そんなに移動にゲーム性生まれなくないかと感じた</li>
-<li>不可視の範囲を作るのがそこまで面白いかと言われるとビミョー</li>
-<li>ほかのサンプルでは興味深く見えた。距離をつけてないから、明るすぎるためか</li>
-<li>シューティング要素はないからな。単なる追いかけっこが面白いかというと…ミンサガとかのイメージが近い。避けるためのスキルを使う</li>
-<li>お宝探し感は楽しい</li>
-<li>リアルタイムだと、シューティングの劣化版にしかならない。自分が動くと相手も動く形式であればよさそう。じっくり考えて駆け引きにする</li>
-</ul>
-
-<p>
-実装。
-</p>
-
-<ul class="org-ul">
-<li>三角形をグラデーションにすればよさそう</li>
-<li>jsの方ではどうやってるか
-<ul class="org-ul">
-<li>単にfillをグラデーションで設定してるだけに見える</li>
-</ul></li>
-<li>画像
-<ul class="org-ul">
-<li>背景</li>
-<li>影</li>
-<li>三角</li>
-</ul></li>
-</ul>
-
-<p>
-ECSとの兼ね合い。
-</p>
-
-<ul class="org-ul">
-<li>システムにしていきたいが、描画とかは厳しそうに見える。少なくとも1タイルごとに1エンティティとかにはできない</li>
-<li>描画以外はECSにしていく</li>
-<li>なんだか難しすぎるように見えるけど、どうなのだろう</li>
-<li>たくさんの構造体をstateに書くのは違う。が、いじりたい状態フィールドがある</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgbfadac1" class="outline-3">
-<h3 id="orgbfadac1"><a href="#orgbfadac1"><span class="done DONE">DONE</span> フィールドの背景を全体に設定する</a></h3>
-<div class="outline-text-3" id="text-orgbfadac1">
-<p>
-敷き詰めたい。
-</p>
-
-<ul class="org-ul">
-<li>やっぱりVRTで失敗するな</li>
-<li>手元で動かすと発生しないのはなぜなんだろうな</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgc3b29b3" class="outline-3">
-<h3 id="orgc3b29b3"><a href="#orgc3b29b3"><span class="done DONE">DONE</span> コンポーネントを移動する</a></h3>
-<div class="outline-text-3" id="text-orgc3b29b3">
-<p>
-移動する。
-</p>
-
-<ul class="org-ul">
-<li>メニューを透過できないな。真っ暗になる。fieldだとできるのはなぜだろう</li>
-<li>スプライトを表示できない。何も表示されない
-<ul class="org-ul">
-<li>geoMで位置を指定してないせいだった</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgecc5388" class="outline-3">
-<h3 id="orgecc5388"><a href="#orgecc5388"><span class="done DONE">DONE</span> 影描画をsystemでやる</a></h3>
-<div class="outline-text-3" id="text-orgecc5388">
-<p>
-元の仕組みとは異なるため、調整が必要。
-</p>
-
-<ul class="org-ul">
-<li>真っ黒になるな</li>
-<li>レイも見えないので、間違ってるようだ</li>
-<li>視点と同じ位置にあるために、全部真っ暗になっている説</li>
-<li>外すと、いくつかのrayがおかしくなっていて失敗する
-<ul class="org-ul">
-<li>特定の点がおかしいようだ</li>
-</ul></li>
-<li>外周の壁がなくて、交点がないrayがあったせいだった</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgb0bc149" class="outline-3">
-<h3 id="orgb0bc149"><a href="#orgb0bc149"><span class="done DONE">DONE</span> フィールド描画をECS化する</a></h3>
-<div class="outline-text-3" id="text-orgb0bc149">
-<ul class="org-ul">
-<li>まず影は置いておく</li>
-<li>プレイヤー部分を色塗りできた</li>
-<li>スプライトを表示するにはどうすればいいのだろう</li>
-</ul>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 4: </span><a href="https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367">https://github.com/kijimaD/ruins/blob/aa3088cfd9b52885ee6c5cd71cc7d2bed8495027/lib/loader/level.go#L358-L367</a> ワープホールのsprite</label><pre class="src src-go">func createWarpNextEntity(componentList *loader.EntityComponentList, gameSpriteSheet *ec.SpriteSheet, line, col int) {
-	componentList.Engine = append(componentList.Engine, loader.EngineComponentList{
-		SpriteRender: &amp;ec.SpriteRender{SpriteSheet: gameSpriteSheet, SpriteNumber: warpNextSpriteNumber},
-		Transform:    &amp;ec.Transform{},
-	})
-	componentList.Game = append(componentList.Game, GameComponentList{
-		Warp:        &amp;gc.Warp{Mode: gc.WarpModeNext},
-		GridElement: &amp;gc.GridElement{Line: line, Col: col},
-	})
-}
-</pre>
-</div>
-
-<ul class="org-ul">
-<li>スプライトシートは、起動時にtomlがロードされResourceの構造体に入れられる。ステート名をキーにして別々になっている
-<ul class="org-ul">
-<li>フィールドは &ldquo;field&rdquo; に、まとめて入っている</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orge9efe90" class="outline-3">
-<h3 id="orge9efe90"><a href="#orge9efe90"><span class="done DONE">DONE</span> とりあえずの背景を設定する</a></h3>
-<div class="outline-text-3" id="text-orge9efe90">
-<p>
-Menuをなくしたとき、非表示にしてた。戻す。
-</p>
-</div>
-</div>
-<div id="outline-container-org119b568" class="outline-3">
-<h3 id="org119b568"><a href="#org119b568"><span class="done DONE">DONE</span> 壁を通過できないようにする</a></h3>
-<div class="outline-text-3" id="text-org119b568">
-<ul class="org-ul">
-<li>rectの中に入れないようにする。</li>
-<li>線として持っておく必要はなくて、点4つだけを持っていればいい</li>
-<li>ただそれだとステージの壁を自動生成しづらくなるのだが&#x2026;</li>
-<li>範囲内のオブジェクトに対して衝突判定する</li>
-<li>すべてのフィールド上オブジェクトは、中心のx, yをもつ。その中心と合わせてスプライトを配置し、4つの点を衝突判定に使う
-<ul class="org-ul">
-<li>この方式はキャラクターや敵、飾りオブジェクトには良いが、壁を配置するときには不適当だ。1点ではなくて、4点を指定したいだろう</li>
-<li>ピクセル単位で配置できなくてもよくて、50ピクセルごととかでよさそう。こうするとテキストファイルでマップを作成できる。壁は50ピクセル正方形で囲って表現する</li>
-<li>オブジェクト数が大変なことになりそうな懸念。視界をもつキャラごとにあるわけで。とはいえ、視界を限ればそんなでもなさそうな気も。オブジェクト数は多くなるが、そういうもんだろう。</li>
-<li>2次元配列の問題に落とし込めることは重要に見える</li>
-<li>壁は近傍8タイルで座標を変化させればいい。縦に並んでいれば横は細くするみたいな</li>
-</ul></li>
-</ul>
-
-<pre class="example">
-spawnWall(1, 1) // (1, 1)に壁を生成
-spawnPlayer(2, 2)
-spawnObject("岩", 20, 20)
-spawnObject("花", 30, 30)
-spawnWarp(40, 50)
-</pre>
-
-<pre class="example">
-############
-#          #
-#          #
-/          #
-############
-</pre>
-
-<ul class="org-ul">
-<li>現状のraycastの構造を、1点だけ保持するように修正しようとしているが、よくわからない</li>
-<li>プレイヤーや壁の描画を先にやればよいのでは。影は一度忘れる</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org54034e9" class="outline-3">
-<h3 id="org54034e9"><a href="#org54034e9"><span class="done DONE">DONE</span> 壁テクスチャが影で隠れないようにする</a></h3>
-<div class="outline-text-3" id="text-org54034e9">
-<p>
-今は影に隠されている。影側で表示しようとすると、影の中にあるときもテクスチャが表示されてしまって微妙。
-</p>
-
-<ul class="org-ul">
-<li>視界側でブレンドするとよさそう。いやでも、視界に入れば影になっていても見えてしまうのは同じか</li>
-<li>テクスチャ 影 ほかのテクスチャ 影</li>
-<li>テクスチャの描画優先度が距離によって変わればいいのかな。大変そうだ</li>
-<li>rayブレンド時に、スプライトも追加してやればいいかな</li>
-<li>ぐちゃぐちゃになったのでいったんもどす</li>
-</ul>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 5: </span>memo(できてない)</label><pre class="src src-go">// rayが命中しているかで、分岐させないといけない
-// raysのindex 2,3をrectに含んでいれば命中しているということになる
-world.Manager.Join(
-	gameComponents.Position,
-	gameComponents.SpriteRender,
-	gameComponents.BlockView,
-).Visit(ecs.Visit(func(entity ecs.Entity) {
-	oPos := gameComponents.Position.Get(entity).(*gc.Position)
-	oSprite := gameComponents.SpriteRender.Get(entity).(*ec.SpriteRender)
-	spriteWidth := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Width
-	spriteHeight := oSprite.SpriteSheet.Sprites[oSprite.SpriteNumber].Height
-
-	if !entity.HasComponent(gameComponents.Player) {
-		x1 := float64(oPos.X - spriteWidth/2)
-		x2 := float64(oPos.X + spriteWidth/2)
-		y1 := float64(oPos.Y - spriteHeight/2)
-		y2 := float64(oPos.Y + spriteHeight/2)
-		for _, r := range rays {
-			// x1 == r.X2
-			if (x1 &lt; r.X2 &amp;&amp; x2 &lt; r.X2) || (y1 &lt; r.Y2 &amp;&amp; y2 &lt; r.Y2) {
-				drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
-			}
-
-			// if x1 &lt; r.X2 || x2 == r.X2 || y1 == r.Y2 || y2 == r.Y2 {
-			// drawRect(shadowImage, blackImage, float32(oPos.X-16), float32(oPos.Y-16), 32, 32, opt)
-			// }
-		}
-	}
-}))
-</pre>
-</div>
-
-<ul class="org-ul">
-<li>rayを飛ばして判定しているところで、エンティティにフラグを立てればよさそう
-<ul class="org-ul">
-<li>とすると、エンティティ単位でしか影を切り替えられなくなるな。ちょっと見えていてもテクスチャを全部表示するか、全部視界に入れないと表示しなくなる。微妙</li>
-</ul></li>
-<li>近づいた影を消せばよさそう</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org1c8bfca" class="outline-3">
-<h3 id="org1c8bfca"><a href="#org1c8bfca"><span class="done DONE">DONE</span> 旧フィールドまわりを消す</a></h3>
-<div class="outline-text-3" id="text-org1c8bfca">
-<ul class="org-ul">
-<li>componentsもいらないものがある</li>
-<li>prefabもいらなくなる</li>
-<li>levelまわりうつすのは、新しいものができてからでよさそう。参考になるからな</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org7f1826c" class="outline-3">
-<h3 id="org7f1826c"><a href="#org7f1826c"><span class="done DONE">DONE</span> state名のフィールドという名前をリネームする</a></h3>
-<div class="outline-text-3" id="text-org7f1826c">
-<p>
-構造体のフィールドとかと同じになるので、あまりよくない命名に思えてきた。dungeonとかだろうか。
-</p>
-</div>
-</div>
-<div id="outline-container-org4b2668e" class="outline-3">
-<h3 id="org4b2668e"><a href="#org4b2668e"><span class="done DONE">DONE</span> カメラ移動を追加する</a></h3>
-<div class="outline-text-3" id="text-org4b2668e">
-<p>
-後からやると大変そうなので今のうちにやっておく。
-</p>
-
-<ul class="org-ul">
-<li>置物はgrid elementにしたほうが楽そうな感じがしてきた。いちいち座標で持っているのが扱いにくい。また別の問題は起きそうだが&#x2026;</li>
-<li>グリッドの方が生成もしやすいしな</li>
-<li>でもグリッドだと、グリッドごとでしか配置できない。壁とかはそれでいいが、プレイヤーや敵はそうではない。描画で2つ必要になるのは微妙そうな</li>
-<li>カメラはコンポーネント化したほうがいいのだろうか。リソースでよさそうな感じもするが
-<ul class="org-ul">
-<li>1つしかない想定なのでコンポーネント化はおおげさな感じ</li>
-<li>頻繁に変わる値だが、リソースだと不適当な感じ</li>
-<li>Playerと同一でよさそうな。いやでも今たまたま同じというだけで、効果によっては変えたいこともありそう。カメラを自分以外に動かしたいこともあるだろ。分けたほうがよさそう</li>
-<li>ズーム率とかも持ちたいから、そこは別にしたい</li>
-</ul></li>
-<li>cameraはutilsでなくresourcesにあるべきなのでは</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org254f186" class="outline-3">
-<h3 id="org254f186"><a href="#org254f186"><span class="done DONE">DONE</span> ズームを追加する</a></h3>
-<div class="outline-text-3" id="text-org254f186">
-<p>
-追加する。
-</p>
-</div>
-</div>
-<div id="outline-container-org119a810" class="outline-3">
-<h3 id="org119a810"><a href="#org119a810"><span class="done DONE">DONE</span> 方向を追加する</a></h3>
-<div class="outline-text-3" id="text-org119a810">
-<p>
-追加する。
-</p>
-
-<ul class="org-ul">
-<li>方向による回転描画</li>
-<li>方向転換</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org9b481f4" class="outline-3">
-<h3 id="org9b481f4"><a href="#org9b481f4"><span class="done DONE">DONE</span> 描画の優先順を指定できるようにする</a></h3>
-<div class="outline-text-3" id="text-org9b481f4">
-<p>
-ワープパッドとキャラでは、キャラを上に表示する。
-</p>
-
-<ul class="org-ul">
-<li>キャラクター
-<ul class="org-ul">
-<li>キャラクター同士は重ならない</li>
-</ul></li>
-<li>ワープパッド
-<ul class="org-ul">
-<li>同士は重ならない</li>
-</ul></li>
-<li>フィールドのアイテム
-<ul class="org-ul">
-<li>同士は重ならない</li>
-</ul></li>
-<li>これは、SpriteRenderに設定してよさそうか。タイルの種別ごとに設定できれば問題ないよな</li>
-<li>SpriteRenderはengineにあるので、移動させてからいじるか&#x2026;</li>
-<li>Positionに置くのもよさそう。描画の優先順位なので、単なる描画に使う要素なのだが、まあいいのかな</li>
-<li>depthはあまり種類は多くない。重なる組み合わせは少ない</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org18839d5" class="outline-3">
-<h3 id="org18839d5"><a href="#org18839d5"><span class="done DONE">DONE</span> フィードバックをもらうためにどうするか</a></h3>
-<div class="outline-text-3" id="text-org18839d5">
-<p>
-いったん最低限で完成させて、フィードバックをもらうのを優先する。
-</p>
-</div>
-</div>
-<div id="outline-container-orgb2016bc" class="outline-3">
-<h3 id="orgb2016bc"><a href="#orgb2016bc"><span class="done DONE">DONE</span> 視界範囲外を描画しない</a></h3>
-<div class="outline-text-3" id="text-orgb2016bc">
-<p>
-カメラ外も描画して重くなっている。と考えて描画しないようにしたら、逆に重くなった。キャッシュされているのだろうか。まだ別に必要ではなさそうなので、必要なときにやる。
-</p>
-</div>
-</div>
-<div id="outline-container-org92e7441" class="outline-3">
-<h3 id="org92e7441"><a href="#org92e7441"><span class="done DONE">DONE</span> 階層を追加する</a></h3>
-<div class="outline-text-3" id="text-org92e7441">
-<p>
-ステージの初期化と、階層移動できるようにする。
-</p>
-
-<ul class="org-ul">
-<li>現状はフロアの概念がない。ステートに入ったときに1フロア分初期化してるだけ</li>
-<li><a href="https://ebitengine.org/ja/examples/isometric.html">https://ebitengine.org/ja/examples/isometric.html</a> が参考になりそう</li>
-<li>階を移動するごとにフロアを生成する</li>
-<li>今の仕組みだと、オブジェクトが莫大な数になる
-<ul class="org-ul">
-<li>影描画はしなくてよさそう</li>
-<li>見えてる部分のオブジェクトとタイルにフラグをもたせて、そこだけ表示すればいい</li>
-<li>衝突判定が多いのは同じなのでは</li>
-<li>衝突判定範囲を限れば、そう問題にはならないか</li>
-</ul></li>
-<li>マップ構造物がオブジェクトだと、マップ生成がしにくい</li>
-<li>絵の描画と、座標がどのタイルにあたるかがわかればいい。わざわざオブジェクトにしなくてもいい</li>
-<li>視界の衝突判定はどうするか
-<ul class="org-ul">
-<li>diggerではfield_of_viewという便利関数があった</li>
-</ul></li>
-<li>壁はオブジェクトではなく、タイルにする。変わることはないのと、数が多くて大変だから
-<ul class="org-ul">
-<li>タイルも、見えてる部分しか描画しない</li>
-</ul></li>
-<li>現状は、見える部分をすべてポリゴンで表示する必要がある。このポリゴンを作るために、周囲を囲ってrayが命中しなければならない</li>
-</ul>
-
-<pre class="example">
-##############
-###        @ #
-###o ##      #
-##############
-</pre>
-</div>
-</div>
-<div id="outline-container-org2565ebc" class="outline-3">
-<h3 id="org2565ebc"><a href="#org2565ebc"><span class="done DONE">DONE</span> タイル位置と座標位置の変換が煩雑</a></h3>
-<div class="outline-text-3" id="text-org2565ebc">
-<p>
-これが全部コンポーネントであれば楽なのだが。まあ、タイルだと衝突判定とかは楽になるから&#x2026;。
-</p>
-
-<ul class="org-ul">
-<li>タイルコンポーネントにするのはありか</li>
-<li>タイルに沿わせたいものと、そうでないものがある</li>
-<li>壁とかワープホールはタイルに沿わせたい</li>
-<li>移動体はタイルに沿わせたくない</li>
-<li>配置方法は共通化したい</li>
-<li>衝突判定は別でよさそう。タイルに沿わないのは計算が多く必要で、タイルに沿うのは計算が簡単</li>
-<li>resources と GridElement の使い分けがわからない。どちらもタイルを保持しているように見える
-<ul class="org-ul">
-<li>resourcesのほうはタイルの幅と高さか</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orgd0b3787" class="outline-3">
-<h3 id="orgd0b3787"><a href="#orgd0b3787"><span class="done DONE">DONE</span> levelを消す</a></h3>
-<div class="outline-text-3" id="text-orgd0b3787">
-<p>
-普通のgameComponent(engineではないほう)でlevelを実装してから、消す感じでいいか。参考になりそうだから消してない。
-</p>
-</div>
-</div>
-<div id="outline-container-org1c54713" class="outline-3">
-<h3 id="org1c54713"><a href="#org1c54713"><span class="done DONE">DONE</span> レイキャスト範囲を狭くする</a></h3>
-<div class="outline-text-3" id="text-org1c54713">
-<p>
-今後オブジェクトを増やすたびに重くなるので。
-</p>
-
-<p>
-ある程度狭い範囲に、範囲を制限する矩形を置くようにした。
-</p>
-
-<ul class="org-ul">
-<li>NPCを追加したときに、競合しないか。つまりほかの視界をもつオブジェクトとの兼ね合いをどうするかの問題はある
-<ul class="org-ul">
-<li>それぞれのエンティティごとに競合しない形であれば、よさそうか</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org2272d17" class="outline-3">
-<h3 id="org2272d17"><a href="#org2272d17"><span class="done DONE">DONE</span> 階層設計</a></h3>
-<div class="outline-text-3" id="text-org2272d17">
-<p>
-ランダムだと難しそうなのでとりあえずは手動か。
-</p>
-
-<p>
-どうやって内外を判定すればいいのだろう。
-</p>
-</div>
-</div>
-<div id="outline-container-org2579a93" class="outline-3">
-<h3 id="org2579a93"><a href="#org2579a93"><span class="done DONE">DONE</span> タイルを追加する</a></h3>
-<div class="outline-text-3" id="text-org2579a93">
-<ul class="org-ul">
-<li>まだタイルがない。壁はタイルにしたい</li>
-<li>タイルで視界判定をするには</li>
-<li>タイルは、正方形に沿うもの。オブジェクトは沿わないもの
-<ul class="org-ul">
-<li>今はオブジェクトだけで、タイルベースでなく扱いにくい。タイルは大量に生成するものなので</li>
-</ul></li>
-<li>タイル保持の方法をどうするか。メリットデメリットがあまりよくわからない
-<ul class="org-ul">
-<li>ban-ban-don</li>
-<li>digger</li>
-<li>sokoban</li>
-</ul></li>
-<li>いったんdigger方式でやるか。生成とかしやすそうだし</li>
-<li>影はややこしいので、とりあえず忘れる</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org7827072" class="outline-3">
-<h3 id="org7827072"><a href="#org7827072"><span class="done CLOSE">CLOSE</span> engine コンポーネントを移す</a></h3>
-<div class="outline-text-3" id="text-org7827072">
-<p>
-分かれてるのがやりづらい。分け方が利用側からすると不明瞭。ただloaderまわりが大変そう。
-</p>
-
-<ul class="org-ul">
-<li>うむむ、共通のものはengine部分にあったほうがよい感じもしてきた</li>
-<li>依存しないためにinterfaceになるが</li>
-<li>SpriteSheet componentsは移せない。engineのResourceで定義されているから。依存してしまう
-<ul class="org-ul">
-<li>resourceごと移動するか&#x2026;</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org40397bd" class="outline-3">
-<h3 id="org40397bd"><a href="#org40397bd"><span class="done CLOSE">CLOSE</span> いったんクリアできるようにする</a></h3>
-<div class="outline-text-3" id="text-org40397bd">
-<p>
-戦闘抜きで、全体を作る。
-</p>
-
-<ul class="org-ul">
-<li>ステージ移動
-<ul class="org-ul">
-<li>ステージは手動で作っておき、それをランダムに選ぶ</li>
-<li>将来的に複数のステージ生成手法から選べるようにしておく</li>
-</ul></li>
-<li>クリアイベント
-<ul class="org-ul">
-<li>20階でクリアできるようにする(仮)</li>
-</ul></li>
-<li>戦闘を作成する</li>
-<li>エンカウントする</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org66d9114" class="outline-3">
-<h3 id="org66d9114"><a href="#org66d9114"><span class="done CLOSE">CLOSE</span> キャラクタを生成する</a></h3>
-<div class="outline-text-3" id="text-org66d9114">
-<p>
-味方/敵を生成する。
-</p>
-</div>
-</div>
-<div id="outline-container-org64e7e03" class="outline-3">
-<h3 id="org64e7e03"><a href="#org64e7e03"><span class="done CLOSE">CLOSE</span> 階の生成方法を考える</a></h3>
-<div class="outline-text-3" id="text-org64e7e03">
-<ul class="org-ul">
-<li>ランダム選択の一般階層
-<ul class="org-ul">
-<li>ダンジョンによって選ばれやすさに偏りがある</li>
-<li>5の倍数の場合は帰還ワープも出す</li>
-<li>すべてのマップに帰還ワープを設定しておく</li>
-</ul></li>
-<li>ボスの階層
-<ul class="org-ul">
-<li>特殊マップ</li>
-<li>固定</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-orge5242bd" class="outline-3">
-<h3 id="orge5242bd"><a href="#orge5242bd"><span class="done DONE">DONE</span> 書き換え</a></h3>
-<div class="outline-text-3" id="text-orge5242bd">
-<p>
-<code>gameComponents != nil</code> で検索して、HasComponentで書き換える。
-</p>
-</div>
-</div>
-<div id="outline-container-org1a0f978" class="outline-3">
-<h3 id="org1a0f978"><a href="#org1a0f978"><span class="done DONE">DONE</span> 階層移動できるようにする</a></h3>
-<div class="outline-text-3" id="text-org1a0f978">
-<ul class="org-ul">
-<li>触れた判定できるようにする</li>
-<li>触れたときにイベントを発火する
-<ul class="org-ul">
-<li>とりあえずタイル。どのタイルにいるか取得する</li>
-<li>オブジェクトでイベントが発生する場合もある(エンカウント)</li>
-</ul></li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/ruins/blob/c633001385e79d4ecb783f7fd89ba306730fc3c4/lib/resources/move.go#L70-L74
-</pre>
-</div>
-
-<pre class="example">
-if oneFrontTile.Contains(TileWarpEscape) {
-	gameResources := world.Resources.Game.(*Game)
-	gameResources.StateEvent = StateEventWarpEscape
-	return
-}
-</pre>
-
-<p>
-field stateの Updateにて。
-</p>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/ruins/blob/c633001385e79d4ecb783f7fd89ba306730fc3c4/lib/states/field.go#L45-L50
-</pre>
-</div>
-
-<pre class="example">
-gameResources := world.Resources.Game.(*resources.Game)
-switch gameResources.StateEvent {
-case resources.StateEventWarpEscape:
-	gameResources.StateEvent = resources.StateEventNone
-	return states.Transition{Type: states.TransSwitch, NewStates: []states.State{&amp;MainMenuState{}}}
-}
-</pre>
-
-<ul class="org-ul">
-<li>ワープタイルが表示されない
-<ul class="org-ul">
-<li>座標を正しく指定してなかった。タイル座標を指定する</li>
-</ul></li>
-<li>Componentに保存するだけだと、1つだけその座標のタイルを取れない。全部ループして探す必要がある</li>
-<li>Tileは複数階層が存在しうるので、タイル座標だけでは一意に定まるわけではない</li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/resources/game.go#L157
-</pre>
-</div>
-
-<pre class="example">
-grid, levelComponentList := utils.Try2(gloader.LoadLevel(gameResources.Package, levelNum, gridLayout.Width, gridLayout.Height, &amp;gameSpriteSheet))
-</pre>
-
-<ul class="org-ul">
-<li>gridスライスとコンポーネントを返している。gridはResourceに加えられる</li>
-<li>GridElementのままだと、座標で1つだけ取り出して、ということがしづらい。全体にクエリをかけなければいけない。あらかじめスライスで座標順に並んでいれば、一発で取れるのに</li>
-<li>階層を生成するときに、Resourceに保存しておけばよさそう</li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-shell"><span class="org-comment-delimiter">####</span>
-<span class="org-comment-delimiter">#</span><span class="org-comment">..#</span>
-....
-</pre>
-</div>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 6: </span>gridの初期化</label><pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/loader/level.go#L315
-</pre>
-</div>
-
-<pre class="example">
-gameGrid := utils.Try(gutils.NewVec2d(gridHeight, gridWidth, tiles))
-</pre>
-
-<ul class="org-ul">
-<li>ComponentとResourceの2重管理にならないか
-<ul class="org-ul">
-<li>2つあっても、初回に生成するだけなら問題ない</li>
-<li>タイル判定必要なのだろうか</li>
-<li>ワープパッドはタイルに沿うので、判定のために必要</li>
-<li>タイルの状態が変わった場合はどうするか。ドアとか、罠とか、スイッチとかはタイルだろうが、状態がある</li>
-<li>状態によってスプライトを切り替え、複数回起動しないようにする必要がある。このへんはコンポーネントがやりやすい</li>
-</ul></li>
-<li>Component: 全ループする処理用。描画とか</li>
-<li>Resource: 位置を指定して特定のタイルを処理する用。現在タイルの確認とか</li>
-<li>タイルが情報を持たないのが原因なのでは。entityを入れればよいのでは</li>
-</ul>
-
-<p>
-階層移動したとき、ワープホールが消えない。
-</p>
-
-<ul class="org-ul">
-<li>既存のワープホールが消えない</li>
-<li>新しいワープホールに乗っても機能しない
-<ul class="org-ul">
-<li>描画はされている</li>
-<li>生成時、座標の縦と横を逆にしていた</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org5ba4838" class="outline-3">
-<h3 id="org5ba4838"><a href="#org5ba4838"><span class="done DONE">DONE</span> 階数をどこに保持するか</a></h3>
-<div class="outline-text-3" id="text-org5ba4838">
-<ul class="org-ul">
-<li>階層移動したときに、階数までリセットされてしまう</li>
-<li>便利なのでResourceに保存しておきたい</li>
-<li>いつ階数を初期化するか
-<ul class="org-ul">
-<li>現状はstateのonstartで実行してるが、これだと移動したときに毎回リセットがかかる</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org0973c8c" class="outline-3">
-<h3 id="org0973c8c"><a href="#org0973c8c"><span class="done DONE">DONE</span> WASMローディング表示がほしい</a></h3>
-<div class="outline-text-3" id="text-org0973c8c">
-<p>
-3秒くらい真っ白画面になるのがよくない。
-</p>
-</div>
-</div>
-<div id="outline-container-org7da9db2" class="outline-3">
-<h3 id="org7da9db2"><a href="#org7da9db2"><span class="done DONE">DONE</span> ランダムに部屋を生成する</a></h3>
-<div class="outline-text-3" id="text-org7da9db2">
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/rect.rs#L4-L9
-</pre>
-</div>
-
-<pre class="example">
-pub struct Rect {
-    pub x1: i32,
-    pub x2: i32,
-    pub y1: i32,
-    pub y2: i32,
-}
-</pre>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/x-hgg-x/sokoban-go/blob/e9d204aeebe393d730fb4bdcb060d249f1470485/lib/utils/vec2d.go#L5-L9
-</pre>
-</div>
-
-<pre class="example">
-type Vec2d[T any] struct {
-	NRows int
-	NCols int
-	Data  []T
-}
-</pre>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/mod.rs#L14-L26
-</pre>
-</div>
-
-<pre class="example">
-pub struct Map {
-    pub tiles: Vec&lt;TileType&gt;,
-    pub width: i32,
-    pub height: i32,
-    pub revealed_tiles: Vec&lt;bool&gt;,
-    pub visible_tiles: Vec&lt;bool&gt;,
-    pub depth: i32,
-    pub bloodstains: HashSet&lt;usize&gt;,
-    pub view_blocked: HashSet&lt;usize&gt;,
-    pub name: String,
-    pub outdoors: bool,
-    pub light: Vec&lt;rltk::RGB&gt;,
-}
-</pre>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L66-L75
-</pre>
-</div>
-
-<pre class="example">
-pub struct BuilderMap {
-    pub spawn_list: Vec&lt;(usize, String)&gt;,
-    pub map: Map,
-    pub starting_position: Option&lt;Position&gt;,
-    pub rooms: Option&lt;Vec&lt;Rect&gt;&gt;,
-    pub corridors: Option&lt;Vec&lt;Vec&lt;usize&gt;&gt;&gt;,
-    pub history: Vec&lt;Map&gt;,
-    pub width: i32,
-    pub height: i32,
-}
-</pre>
-
-<ul class="org-ul">
-<li>マップ生成時はタイルのスライスを保持する。したがってマップ生成は単にスライスをいじくる処理となる</li>
-<li>生成したタイルマップは、配置するときエンティティ化する
-<ul class="org-ul">
-<li>例: 壁タイルは BlockPass, SpriteRender, GridElement コンポーネントを持つEntityとなる</li>
-</ul></li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L89-L93
-</pre>
-</div>
-
-<pre class="example">
-pub struct BuilderChain {
-    starter: Option&lt;Box&lt;dyn InitialMapBuilder&gt;&gt;,
-    builders: Vec&lt;Box&lt;dyn MetaMapBuilder&gt;&gt;,
-    pub build_data: BuilderMap,
-}
-</pre>
-
-<ul class="org-ul">
-<li>tileをエンティティ化しなくてもいいような気もしてきた</li>
-<li>tileとして、まとめて判定したいのか、〜の性質、で部分で判定したいのかとちらか。タイル判定だとわかりにくいと感じるけどな</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org19f4aba" class="outline-3">
-<h3 id="org19f4aba"><a href="#org19f4aba"><span class="done DONE">DONE</span> 生成を部屋化する</a></h3>
-<div class="outline-text-3" id="text-org19f4aba">
-<p>
-廊下、道に分けて作る。
-</p>
-
-<ul class="org-ul">
-<li>参考実装がどういう流れで使っているかよくわからないな</li>
-</ul>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 7: </span>level_builderで階層によって使うbuilderを決めている</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/mod.rs#L290
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-go">pub fn level_builder(
-</pre>
-</div>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 8: </span>決定したbuilderを呼び出している箇所</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map/dungeon.rs#L33-L36
-</pre>
-</div>
-
-<div class="org-src-container">
-<pre class="src src-go">fn transition_to_new_map(ecs: &amp;mut World, new_depth: i32) -&gt; Vec&lt;Map&gt; {
-    let mut rng = ecs.write_resource::&lt;rltk::RandomNumberGenerator&gt;();
-    let mut builder = level_builder(new_depth, &amp;mut rng, 80, 50);
-    builder.build_map(&amp;mut rng);
-</pre>
-</div>
-
-<ul class="org-ul">
-<li>rooms とか corridor をどうやってタイルにしているか</li>
-</ul>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 9: </span>draw系でやっている</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/common.rs#L105
-</pre>
-</div>
-
-<pre class="example">
-pub fn draw_corridor(map: &amp;mut Map, x1: i32, y1: i32, x2: i32, y2: i32) -&gt; Vec&lt;usize&gt; {
-</pre>
-
-<ul class="org-ul">
-<li>↑引数のmapのtileを変更しつつ、corridor(tile indexのスライス)を返す</li>
-<li>NewLevel を消して、 builderに置き換えればいいのかな</li>
-</ul>
-
-<div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 10: </span>部屋ビルダー</label><pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/room_draw.rs#L11
-</pre>
-</div>
-
-<pre class="example">
-impl RoomDrawer {
-</pre>
-
-<ul class="org-ul">
-<li>廊下がけっこう大変な件
-<ul class="org-ul">
-<li>部屋ごとの距離を求めて、最短距離を結ぶ</li>
-</ul></li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-git-permalink">https://github.com/kijimaD/digger_rs/blob/5804eb99182f3f21b733a7d0d0e34ca610b286c6/src/map_builders/rooms_corridors_lines.rs#L20
-</pre>
-</div>
-
-<pre class="example">
-fn corridors(&amp;mut self, _rng: &amp;mut RandomNumberGenerator, build_data: &amp;mut BuilderMap) {
-</pre>
-</div>
-</div>
-<div id="outline-container-org1368665" class="outline-3">
-<h3 id="org1368665"><a href="#org1368665"><span class="done DONE">DONE</span> 廊下を追加する</a></h3>
-<div class="outline-text-3" id="text-org1368665">
-<p>
-廊下をつなぐ。
-</p>
-</div>
-</div>
-<div id="outline-container-org5a75145" class="outline-3">
-<h3 id="org5a75145"><a href="#org5a75145"><span class="done DONE">DONE</span> 衝突判定を軽量化する</a></h3>
-<div class="outline-text-3" id="text-org5a75145">
-<ul class="org-ul">
-<li>中心距離の近いものだけを接触判定するようにするとよさそう</li>
-<li>フロアを50x50にすると、激しく重くなった</li>
-<li>フロアと接触している壁だけを、影や視線判定の対象にするとよさそう</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org8f3d9b6" class="outline-3">
-<h3 id="org8f3d9b6"><a href="#org8f3d9b6"><span class="done DONE">DONE</span> 脱出ワープホールを配置する</a></h3>
-<div class="outline-text-3" id="text-org8f3d9b6">
-<p>
-今は次の階層しかない。
-</p>
-</div>
-</div>
-<div id="outline-container-org5ce013c" class="outline-3">
-<h3 id="org5ce013c"><a href="#org5ce013c"><span class="done DONE">DONE</span> 壁の影を軽量化する</a></h3>
-<div class="outline-text-3" id="text-org5ce013c">
-<p>
-先に影画像を生成しておいて、軽くする。
-</p>
-</div>
-</div>
-<div id="outline-container-org707cfcc" class="outline-3">
-<h3 id="org707cfcc"><a href="#org707cfcc"><span class="done DONE">DONE</span> シナリオジャンプを実装する</a></h3>
-<div class="outline-text-3" id="text-org707cfcc">
-<p>
-<a href="https://krkrz.github.io/krkr2doc/kag3doc/contents/Tags.html#jump">吉里吉里タグリファレンス</a>を調べた。
-</p>
-
-<ul class="org-ul">
-<li>ファイルをまたぐ外部ジャンプ</li>
-<li>ファイル内の内部ジャンプ</li>
-<li>ファイルごとでメモリに読み込まれている雰囲気</li>
-<li>外部ジャンプはとりあえずいらない
-<ul class="org-ul">
-<li>外部ジャンプは、ファイルごとで名前空間が切れるとかの理由だろうか。整理されそう</li>
-</ul></li>
-<li>関数みたいにパースすればよさそうな</li>
-</ul>
-
-<pre class="example">
-; ラベル定義
-*extraflagend
-
-; ジャンプ
-[jump target=*sel02_loop]
-</pre>
-
-<pre class="example">
-*label1
-...
-...
-*label2
-...
-...
-</pre>
-
-<ul class="org-ul">
-<li>ラベル1
-<ul class="org-ul">
-<li>文字列</li>
-<li>コマンド</li>
-<li>文字列</li>
-<li>文字列</li>
-</ul></li>
-<li>ラベル2
-<ul class="org-ul">
-<li>文字列</li>
-<li>コマンド</li>
-<li>コマンド</li>
-<li>文字列</li>
-</ul></li>
-</ul>
-
-<p>
-的な構造となる。
-</p>
-
-<ul class="org-ul">
-<li>ラベル
-<ul class="org-ul">
-<li>文1</li>
-<li>文2</li>
-</ul></li>
-</ul>
-
-<p>
-ラベルテーブルに登録する。
-</p>
-
-<pre class="example">
-*start
-開始
-[jmp dest="sample1"]
-*sample1
-終了
-*sample2
-</pre>
-
-<ul class="org-ul">
-<li>一連のイベントが終了したらどうなるんだ。とりあえず今のように止まるでよい</li>
-<li>jmpしたあとは戻ってこないものとする</li>
-<li>ほかのステートとの連携とか考えると全然わからない。いったん忘れる</li>
-<li>サンプルでは、関数名の登録とかどうやっているか
-<ul class="org-ul">
-<li><code>変数 = fn(){}</code> 形式だから、変数と同じ仕組みになっている</li>
-<li>evalはオブジェクトを返す。オブジェクトは即値を返すメソッドを持っていて、計算もしくは表示に使える</li>
-</ul></li>
-<li>先にlabel名を登録する必要があるような
-<ul class="org-ul">
-<li>jumpEvent{dest: &ldquo;aaa&rdquo;}</li>
-<li>いや、別にやらなくてもいいのか。イベント実行時に解釈すればいい</li>
-</ul></li>
-<li>投入した時点で、イベントオブジェクトが一意に定まる
-<ul class="org-ul">
-<li>label1: &#x2026;</li>
-<li>label2: &#x2026;</li>
-<li>label3: &#x2026;</li>
-<li>内部jumpだけでなく、どこから開始する、という命令も使える</li>
-<li>start(&ldquo;label1&rdquo;)</li>
-<li>選択肢が実装できると、メニューも実装できるのか</li>
-</ul></li>
-<li>通常のコードは、1つの値を返す。途中のコードはすべて評価される</li>
-<li>ノベルエンジンは、評価はない。途中も必要である</li>
-</ul>
-
-<p>
-一連の流れ。
-</p>
-
-<pre class="example">
-p := parse()
-e := Eval(p)
-events1 := e("sample1")
-events2 := e("sample2")
-</pre>
-</div>
-</div>
-<div id="outline-container-org2077bc3" class="outline-3">
-<h3 id="org2077bc3"><a href="#org2077bc3"><span class="done DONE">DONE</span> 改行とか直す</a></h3>
-<div class="outline-text-3" id="text-org2077bc3">
-<ul class="org-ul">
-<li>現状、改行があるたびに別イベントとなっている。なのでクリックが必要である。これを1つにまとめてしまう
-<ul class="org-ul">
-<li>どこまでひとまとめとするか</li>
-</ul></li>
-<li>見たままが改行となる</li>
-<li>自動改行があれば問題ないような</li>
-<li>そんなに手動で改行入れたいことないしな</li>
-</ul>
-
-<div class="org-src-container">
-<pre class="src src-shell">*start
-&#12354;&#12354;&#12354;&#12354;
-&#12356;&#12356;&#12356;&#12356;[p]
-&#12363;&#12363;&#12363;&#12363;
-&#12365;&#12365;&#12365;&#12365;[p]
-</pre>
-</div>
-
-<ul class="org-ul">
-<li>[l]を実行した待ちにしたいときに、自動改行が無視されて飛び出す。待ったあとは強制改行でよいだろう</li>
-</ul>
-</div>
-</div>
-
-<div id="outline-container-org707fc99" class="outline-3">
-<h3 id="org707fc99"><a href="#org707fc99"><span class="done DONE">DONE</span> メッセージエンジンのサンプル実装を作る</a></h3>
-<div class="outline-text-3" id="text-org707fc99">
-<p>
-まだGUIで見られないのでよくわからないため。
-</p>
-</div>
-</div>
-
-<div id="outline-container-org6758132" class="outline-3">
-<h3 id="org6758132"><a href="#org6758132"><span class="done DONE">DONE</span> メッセージシステムのパッケージを切り出す</a></h3>
-<div class="outline-text-3" id="text-org6758132">
-<p>
-今は1パッケージに入っていてわかりにくい。
-</p>
-
-<ul class="org-ul">
-<li>テキストを解釈してイベントとし、キューに入れる</li>
-<li>呼び出し側で解釈してイベントごとに処理していく</li>
-<li>Pop() キューからイベントを取り出す。呼び出し側から実行される。クリック時などを想定
-<ul class="org-ul">
-<li>イベントを通知する。呼び出し側での処理が必要なものもある</li>
-<li>animText 現在表示中としたいテキスト。allとbufを持つ。bufはアニメーション用に1文字ずつ入っていく
-<ul class="org-ul">
-<li>1文字ずつ送っていくのをどうするか。時間実行だとテストが面倒だからやりたくない。1文字ずつAPIを叩くか、一気に表示するAPIによって文字表示を再現できるようにしたい</li>
-<li>1文字ずつループにどうやって割り込めばいいのか。キューにskipフラグを持てばよいか</li>
-<li>animTextは状態を持つ、ということになる</li>
-<li>なのでPopしても次のイベントに進まないことがある</li>
-</ul></li>
-<li>changeBG &lt;呼び出し側での処理が必要&gt;</li>
-<li>clickWait クリック待ち</li>
-<li>sleep &lt;呼び出し側での処理が必要&gt;</li>
-</ul></li>
-<li>呼び出し側からエンジンに作用できないといけないのか
-<ul class="org-ul">
-<li>メッセージスキップとか</li>
-</ul></li>
-<li>Head()</li>
-<li>Popしたときに先頭のやつを実行するのか
-<ul class="org-ul">
-<li>キューを食うのが2つあることが混乱の原因になっている。テキストエンジンと呼び出し側</li>
-</ul></li>
-<li>queue.Pop()
-<ul class="org-ul">
-<li>先頭のEventの状態が未完了であればSkip()するだけにする</li>
-</ul></li>
-<li>queue.Display()
-<ul class="org-ul">
-<li>勝手に増えていく</li>
-<li>呼び出し側ではメッセージを表示する。メッセージはどのイベントでも常に表示するものだから</li>
-</ul></li>
-<li>もう1つキューを追加するのはどうだろう
-<ul class="org-ul">
-<li>全体バッファと現在バッファがあって、追いつかせるように非同期実行する</li>
-</ul></li>
-<li>キューの終了もeventとする</li>
-<li>実行中 -&gt; (強制スキップ) -&gt; 終了 -&gt; 次のタスク
-<ul class="org-ul">
-<li>テキスト送り中にボタン押すと全部文章が表示されるような感じ</li>
-<li>スキップ操作など用のキューも別で用意しておくとよさそう</li>
-</ul></li>
-<li>Pop()とSkip()を状況に合わせて使い分けたい
-<ul class="org-ul">
-<li>現在のタスクが終わっていればPop()</li>
-<li>現在のタスクが終わってなければSkip()</li>
-</ul></li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org8339d9d" class="outline-3">
-<h3 id="org8339d9d"><a href="#org8339d9d"><span class="done DONE">DONE</span> クリック待ち状態を表示できるようにする</a></h3>
-<div class="outline-text-3" id="text-org8339d9d">
-<ul class="org-ul">
-<li>待ち</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org7d9aa9e" class="outline-3">
-<h3 id="org7d9aa9e"><a href="#org7d9aa9e"><span class="done DONE">DONE</span> 戻れるようにする</a></h3>
-<div class="outline-text-3" id="text-org7d9aa9e">
-<p>
-popの逆を辿れるようにしたい。今消しちゃってるのをインデックスにすればよいだろう。
-</p>
-
-<p>
-1つ戻るのは、意外に面倒だ。一気に最初に戻るだけにした。
-</p>
-</div>
-</div>
-<div id="outline-container-org81527fb" class="outline-3">
-<h3 id="org81527fb"><a href="#org81527fb"><span class="done DONE">DONE</span> イベント捕捉</a></h3>
-<div class="outline-text-3" id="text-org81527fb">
-<p>
-今のところテキストだけで、背景変更などを捕捉できていない。
-</p>
-
-<ul class="org-ul">
-<li>テキストまわりのインターフェースはbufでやっている。これによって、呼び出し側はそれを画面に表示すればいいだけになっている</li>
-<li>イベントは、チャネルなどに流すのがよさそうか</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org2821d45" class="outline-3">
-<h3 id="org2821d45"><a href="#org2821d45"><span class="done DONE">DONE</span> 『坊っちゃん』でサンプルを作る</a></h3>
-<div class="outline-text-3" id="text-org2821d45">
-<p>
-作る。
-</p>
-
-<ul class="org-ul">
-<li>任意の場所での改行ができない</li>
-</ul>
-
-<pre class="example">
-「おい」
-「おい」
-「来たぜ」
-「とうとう来た」
-「これでようやく安心した」
-
-これは1行ずつ表示したい
-</pre>
-
-<p>
-改行して、次の行に何もないと、自動改行のカウンタがリセットされてないので横に文字が表示されてしまう。
-</p>
-
-<pre class="example">
-あいうえお
-かきくけこ
-たちつてと&lt;なにぬねの&gt;
-</pre>
-
+<div id="outline-container-orgd2a45f0" class="outline-3">
+<h3 id="orgd2a45f0"><a href="#orgd2a45f0"><span class="done DONE">DONE</span> 似たようなUI関数を統合する</a></h3>
+<div class="outline-text-3" id="text-orgd2a45f0">
 <p>
-この場合、「なにぬねの」を改行してほしい。
+オプションをちゃんと使ってないのを直す。
 </p>
-</div>
 </div>
-<div id="outline-container-org1e1bb21" class="outline-3">
-<h3 id="org1e1bb21"><a href="#org1e1bb21"><span class="done DONE">DONE</span> シナリオを一覧できるようにする</a></h3>
-<div class="outline-text-3" id="text-org1e1bb21">
-<ul class="org-ul">
-<li>一覧すれば、ジャンプは簡単にできる</li>
-</ul>
 </div>
-</div>
-<div id="outline-container-orgaa57984" class="outline-3">
-<h3 id="orgaa57984"><a href="#orgaa57984"><span class="done CLOSE">CLOSE</span> 視覚影でスプライトが隠れているのを直す</a></h3>
-<div class="outline-text-3" id="text-orgaa57984">
+<div id="outline-container-org40f79e7" class="outline-3">
+<h3 id="org40f79e7"><a href="#org40f79e7"><span class="done DONE">DONE</span> UIをまともにする</a></h3>
+<div class="outline-text-3" id="text-org40f79e7">
 <p>
-近くのライトで見られるようにしたが、微妙だ。
+凝る必要はないが、あまりにデバッグ感がある。
 </p>
 
-<ul class="org-ul">
-<li>壁の向こう側が見える
-<ul class="org-ul">
-<li>対策のため1マス分だけ照らすようにしたが、変だ</li>
-</ul></li>
-<li>やはり、直接視界が当たった部分はフラグをもたせて表示するのがよさそう
-<ul class="org-ul">
-<li>個別のタイルごとにあるので、新しくコンポーネントを作ったほうがよさそう</li>
-<li><code>IsHide</code> とか</li>
-</ul></li>
-<li>ここに時間かけてもしょうがないから後回しか</li>
-</ul>
-</div>
-</div>
-<div id="outline-container-org1917667" class="outline-3">
-<h3 id="org1917667"><a href="#org1917667"><span class="done CLOSE">CLOSE</span> raycastを高速化する</a></h3>
-<div class="outline-text-3" id="text-org1917667">
 <ul class="org-ul">
-<li>もっとも近い壁を記憶することで、高速化できるという</li>
-<li><a href="https://www.redblobgames.com/articles/visibility/#wall-tracking">https://www.redblobgames.com/articles/visibility/#wall-tracking</a></li>
+<li>verticalContainerを簡単にしたい</li>
+<li>共通のパラメータをもたせたい</li>
 </ul>
-</div>
-</div>
-<div id="outline-container-orgad032d8" class="outline-3">
-<h3 id="orgad032d8"><a href="#orgad032d8"><span class="done DONE">DONE</span> 移動時に画像を回転させる</a></h3>
-<div class="outline-text-3" id="text-orgad032d8">
-<p>
-Angleを設定すればよい。
-</p>
-</div>
-</div>
-<div id="outline-container-org912e527" class="outline-3">
-<h3 id="org912e527"><a href="#org912e527"><span class="done DONE">DONE</span> カードを装備できるようにする</a></h3>
-<div class="outline-text-3" id="text-org912e527">
-<p>
-防具だけが対象なのを直す。
-</p>
 </div>
 </div>
 </div>
 
 
-<div id="outline-container-org0bf5330" class="outline-2">
-<h2 id="org0bf5330"><a href="#org0bf5330">Backlinks</a></h2>
-<div class="outline-text-2" id="text-org0bf5330">
+<div id="outline-container-org161acd4" class="outline-2">
+<h2 id="org161acd4"><a href="#org161acd4">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org161acd4">
 <ul class="org-ul">
 <li><a href="./20240106T092116--kdoc-64-バトルディッガー編のゲームデザインメモ__project.html">KDOC 64: バトルディッガー編のゲームデザインメモ</a></li>
 <li><a href="./20240212T104959--kdoc-90-『ゲームシナリオ入門』__book.html">KDOC 90: 『ゲームシナリオ入門』</a></li>
@@ -2903,7 +2999,7 @@ Angleを設定すればよい。
 <li><a href="./20240421T010312--kdoc-138-goプロファイラの使いかた__code.html">KDOC 138: Goプロファイラの使いかた</a></li>
 <li><a href="./20240504T020747--kdoc-159-テクスチャとスプライトの違い__code.html">KDOC 159: テクスチャとスプライトの違い</a></li>
 <li><a href="./20240504T102310--kdoc-160-見下ろし型2dゲームにおけるレイキャティングの例__code.html">KDOC 160: 見下ろし型2Dゲームにおけるレイキャティングの例</a></li>
-<li><a href="./20241010T004623--kdoc-253-2段階に可変長引数を渡す__draft_code.html">KDOC 253: Goで2段階に可変長引数を渡す</a></li>
+<li><a href="./20241010T004623--kdoc-253-goでn段階に可変長引数を渡す__draft_code.html">KDOC 253: GoでN段階に可変長引数を渡す</a></li>
 </ul>
 </div>
 </div>
