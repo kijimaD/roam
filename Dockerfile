@@ -72,7 +72,7 @@ COPY --from=build /roam/public /roam/public
 CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # textlint ================
-FROM node:22 AS textlint
+FROM node:23 AS textlint
 
 WORKDIR /work
 
