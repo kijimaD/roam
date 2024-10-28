@@ -44,13 +44,16 @@
 * Tasks
 ** TODO 接触でイベント発火させる
 :LOGBOOK:
+CLOCK: [2024-10-27 Sun 19:27]--[2024-10-27 Sun 19:52] =>  0:25
+CLOCK: [2024-10-27 Sun 18:40]--[2024-10-27 Sun 19:05] =>  0:25
+CLOCK: [2024-10-27 Sun 17:57]--[2024-10-27 Sun 18:22] =>  0:25
 CLOCK: [2024-06-02 Sun 21:17]--[2024-06-02 Sun 21:42] =>  0:25
 CLOCK: [2024-06-02 Sun 17:56]--[2024-06-02 Sun 18:21] =>  0:25
 CLOCK: [2024-06-02 Sun 17:28]--[2024-06-02 Sun 17:53] =>  0:25
 CLOCK: [2024-06-02 Sun 16:56]--[2024-06-02 Sun 17:21] =>  0:25
 :END:
 
-敵エンカウントとは異なる。
+敵シンボルとのエンカウントとは異なる。
 
 - 接触したときに、テキストをいくつか表示したあとに、クリアにして、メインメニューに戻す
 - テキスト表示と、ステート遷移
@@ -59,35 +62,20 @@ CLOCK: [2024-06-02 Sun 16:56]--[2024-06-02 Sun 17:21] =>  0:25
 #+begin_src go
   winEvent()
 
-  func finishEvent() {
-          msg(`
-  <bg='treasure'>
-  黒く輝く珠を発見した。
-  <bg='black'>
-  願いを叶え、幸せに暮らした。
-  `)
-          switch(MainMenuState)
-  }
-
-  # 将来的
-  # ボスとの戦闘
+  // ボスとの戦闘
   func bossEvent() {
-          events := []eventFunc{
-                  msg(`
-  美しい庭園が広がっている。中心には鏡のような水面を湛えた池がある。ほかの階層より気温が低い。雰囲気が変わったので、ここが最下層だろう。
-  庭園の中心に浮かぶ島には、青白い炎に囲まれた、ローブを着た骸骨が待ち受けている。
-  `),
-                  battle('Elder Witch'),
-                  msg('宝を入手した'),
-                  flag(TowerFinish),
-          }
-          submit(events, HomeMenuState)
+          msg(`美しい庭園が広がっている。襲いかかってきた`)
+          battle('Elder Witch') // 敵グループを選ぶ
+          msg('宝を入手した')
+          get('黒い珠')
+          flag(TowerFinish)
+          state(HomeState)
   }
 
-  # フィールドでの汎用イベント
+  // フィールドでの汎用イベント
   func itemEvent() {
           msg(`何か落ちているぞ`)
-          getRandomItem()
+          getRandomItem("field1") // プリセットのテーブルから選ぶ
           pop(DungeonState)
   }
 #+end_src
@@ -98,11 +86,11 @@ CLOCK: [2024-06-02 Sun 16:56]--[2024-06-02 Sun 17:21] =>  0:25
 - フラグ管理とかアイテム入手とかあるから、コード形式なのが望ましい
 - どうやって戻ってきて再開するか。キューをポップしてから実行してやればいいのかな。実行したものは消えて、戻ると新しいイベントを実行して遷移する、という
 
-#+begin_src shell
-  func (s State) Update() {
-      event := s.Queue.Pop()
-      event() # 遷移が実行される。キューにない場合は、ステートを終了する
-  }
+#+begin_src
+- eventName: "塔の遺跡 最深部イントロ"
+- evnetName: "塔の遺跡 ボス"
+- eventName: "森の遺跡 最深部イントロ"
+- eventName: "森の遺跡 ボス"
 #+end_src
 
 ** TODO 死亡を状態化する
