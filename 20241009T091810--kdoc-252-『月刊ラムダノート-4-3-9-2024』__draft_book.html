@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-10-31 -->
+<!-- 2024-11-01 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 252: 『月刊ラムダノート 4-3-9-2024』</title>
@@ -16,17 +16,14 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 252: 『月刊ラムダノート 4-3-9-2024』</h1>
 
-<div id="outline-container-org8b416a4" class="outline-2">
-<h2 id="org8b416a4"><a href="#org8b416a4">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org8b416a4">
+<div id="outline-container-orgdde4ff1" class="outline-2">
+<h2 id="orgdde4ff1"><a href="#orgdde4ff1">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgdde4ff1">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-01 貴島</li>
 </ul></li>
-</ul>
-
-<ul class="org-ul">
 <li>レビュー
 <ul class="org-ul">
 <li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
@@ -34,9 +31,9 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org57b0407" class="outline-2">
-<h2 id="org57b0407"><a href="#org57b0407">概要</a></h2>
-<div class="outline-text-2" id="text-org57b0407">
+<div id="outline-container-orgfc03ff8" class="outline-2">
+<h2 id="orgfc03ff8"><a href="#orgfc03ff8">概要</a></h2>
+<div class="outline-text-2" id="text-orgfc03ff8">
 <p>
 <a href="https://www.lambdanote.com/collections/frontpage/products/n-vol-4-no-3-2024-ebook">n月刊ラムダノート Vol.4, No.3(2024)</a>は以下の章で構成される。
 </p>
@@ -49,21 +46,90 @@
 </div>
 </div>
 
-<div id="outline-container-org81a3f53" class="outline-2">
-<h2 id="org81a3f53"><a href="#org81a3f53">メモ</a></h2>
-<div class="outline-text-2" id="text-org81a3f53">
+<div id="outline-container-orge6f027e" class="outline-2">
+<h2 id="orge6f027e"><a href="#orge6f027e">メモ</a></h2>
+<div class="outline-text-2" id="text-orge6f027e">
 <ul class="org-ul">
 <li>たとえば処理系ではプログラムを実行するたびに「値がnullでないか」をチェックする。こうしたチェックには、計算機性能や用途次第では無視できないほどのオーバーヘッドがかかる。そこで歴史的に、動作保証しようとしたら実行時オーバーヘッドがかかってしまうような動作は「未定義」であるとし、その対処を言語の責任ではなくプログラマの責任としたCやC++といったプログラミング言語が、特に実行速度が求められるプログラムでは使われてきた。しかし未定義動作は、その回避に対して責任があるプログラマにとっては不便であったり間違いの原因になったりする。このように未定義動作に陥る問題を解決する方法のひとつが型システムである。未定義動作に陥る可能性のあるプログラムを実行前に型検査器で判定し、OKとされたプログラムは未定義動作にならない、ということが保証できる(p5)</li>
 <li><a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>のプログラムは未定義動作に陥ることがない。なので<a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>の型システムは型安全性を厳密に保証する必要がない(p5)</li>
 <li>&ldquo;argument&rdquo; と &ldquo;parameter&rdquo; を使い分けることもある。&ldquo;argument&rdquo; を実引数、 &ldquo;parameter&rdquo; を仮引数として使い分けたりする。言語やコミュニティによって異なる(p19)</li>
 <li>型の等価判定をするための関数と、変数がどういう型を持っているかの情報を保持する仕組みを実装する(p22)</li>
+<li>TAPLの11.3節のタイトルにある「派生」は、型システムにおいて逐次実行や変数参照が「関数という基本的な操作から派生的に得られるもの」ということを意味している、という(p35)</li>
+</ul>
+
+<p>
+以下のTypeScriptのコードは型エラーにならないが、実行時に失敗する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>初期化前のxを参照する</label><pre class="src src-typescript">const f = () =&gt; x;
+f(); // 初期化前の x を参照する
+const x = 1;
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ビジネスロジックを代数的データ型により表現するという考え方や、状態遷移を全域関数として記述することで異常な処理を防ぐ手法がある、という(p39)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>このようにステータスごとに型を分けると実装ミスを型システムで防げる</label><pre class="src src-scala">class ConfirmedOrder(
+  val orderId: OrderId,
+  val customerId: CustomerId,
+  val shippingAddress: Address,
+  val lines: List[OrderLine],
+  val confirmedAt: LocalDateTime,
+)
+
+class CancelledOrder(
+  val orderId: OrderId,
+  val customerId: CustomerId,
+  val shippingAddress: Address,
+  val lines: List[OrderLine],
+  val confirmedAt: LocalDateTime,
+  val cancelledAt: LocalDateTime,
+  val cancelReason: String,
+)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>↑その代わりにorderとして共通の処理が書きにくくなるので、各ステータスのクラスをサブクラスとする(p46)</li>
+<li>直積型と直和型を組み合わせる「代数的データ型」</li>
+<li>直和型はinterfaceとかtraitなど、異なる型を同じように扱うもの
+<ul class="org-ul">
+<li>Order は、 ConfirmedOrder + CancelOrder + ShippingOrder</li>
+</ul></li>
+<li>直積型は各フィールド
+<ul class="org-ul">
+<li>CanceledOrder は、OrderID x DateTime(キャンセル日時) x String(キャンセル日時)</li>
+</ul></li>
+<li>状態遷移をそれぞれの型にメソッドとして実装すれば、そもそもメソッドが定義されていない型に対して処理を呼び出すことはできなくなる(p56)</li>
+<li>全域関数(total function)は、「すべての入力値に対して必ず出力値が1つ存在する関数」である。いっぽう、一部の入力値に対して出力値が存在しない関数のことを部分関数という(p56)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>0以外の値の型を作る</label><pre class="src src-scala">class NonZeroInt(val value: Int) {
+  require(value != 0, "0 以外の整数を入力してください ")
+}
+
+def divideTwelveBy(n: NonZeroInt): Int = 12 / n.value
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>divideTwelveByは、NonZeroInt型に対して全域関数である。いっぽう、nの型をintにすると0が入る可能性があるので部分関数となっている(p57)</li>
+<li>開発において何かしら例外を投げる関数を書く必要が生じたときは、その仕様を型で表現することにより全域関数として定義できないかを意識するとよい、という(p59)</li>
+<li>コンストラクタの可視性をコントロールすることで、「あるインスタンスは特定の箇所からのみ作成可能」という状態を作り出せる。不正な状態のインスタンスを作るのを防げる(p63)</li>
+<li>リレーショナルDBなど外部システムは、アプリケーション上の型より「広い」型を持つ。そのため外部から内部の変換(DBからは読み込み)では失敗することがある。いっぽう内部から外部の変換(DBからは書き込み)は「狭い」型からの変換なので失敗することがないケースが多い(p72)</li>
+<li>本稿の執筆に際し、「2011年当時はどうだったか？」を確認するためにさまざまな情報源を参照した、という。昔書いた原稿や当時の記事などを読み返すうちに、非常に多くの記事がインターネット上から消えてしまっている事実を改めて思い知らされた、という(p92)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org9ef9c92" class="outline-2">
-<h2 id="org9ef9c92"><a href="#org9ef9c92">関連</a></h2>
-<div class="outline-text-2" id="text-org9ef9c92">
+<div id="outline-container-org9bfaad3" class="outline-2">
+<h2 id="org9bfaad3"><a href="#org9bfaad3">関連</a></h2>
+<div class="outline-text-2" id="text-org9bfaad3">
 </div>
 </div>
 </div>
