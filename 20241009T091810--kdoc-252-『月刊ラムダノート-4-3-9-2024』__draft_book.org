@@ -39,12 +39,14 @@
 
 * この文書のステータス
 :LOGBOOK:
+CLOCK: [2024-10-31 Thu 20:23]--[2024-10-31 Thu 20:48] =>  0:25
+CLOCK: [2024-10-31 Thu 19:58]--[2024-10-31 Thu 20:23] =>  0:25
+CLOCK: [2024-10-31 Thu 19:29]--[2024-10-31 Thu 19:54] =>  0:25
 CLOCK: [2024-10-28 Mon 20:56]--[2024-10-28 Mon 21:21] =>  0:25
 CLOCK: [2024-10-09 Wed 16:54]--[2024-10-09 Wed 17:19] =>  0:25
 :END:
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2024-11-01 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -59,7 +61,9 @@ CLOCK: [2024-10-09 Wed 16:54]--[2024-10-09 Wed 17:19] =>  0:25
 # すべてのコメントを削除した。
 * 概要
 :LOGBOOK:
+CLOCK: [2024-11-01 Fri 23:20]
 CLOCK: [2024-10-28 Mon 23:44]--[2024-10-29 Tue 00:09] =>  0:25
+CLOCK: [2024-10-31 Thu 21:18]--[2024-10-31 Thu 21:44] =>  0:26
 :END:
 # 本文(タイトルをつける)。
 [[https://www.lambdanote.com/collections/frontpage/products/n-vol-4-no-3-2024-ebook][n月刊ラムダノート Vol.4, No.3(2024)]]は以下の章で構成される。
@@ -73,6 +77,63 @@ CLOCK: [2024-10-28 Mon 23:44]--[2024-10-29 Tue 00:09] =>  0:25
 - [[id:a6980e15-ecee-466e-9ea7-2c0210243c0d][JavaScript]]のプログラムは未定義動作に陥ることがない。なので[[id:ad1527ee-63b3-4a9b-a553-10899f57c234][TypeScript]]の型システムは型安全性を厳密に保証する必要がない(p5)
 - "argument" と "parameter" を使い分けることもある。"argument" を実引数、 "parameter" を仮引数として使い分けたりする。言語やコミュニティによって異なる(p19)
 - 型の等価判定をするための関数と、変数がどういう型を持っているかの情報を保持する仕組みを実装する(p22)
+- TAPLの11.3節のタイトルにある「派生」は、型システムにおいて逐次実行や変数参照が「関数という基本的な操作から派生的に得られるもの」ということを意味している、という(p35)
+
+以下のTypeScriptのコードは型エラーにならないが、実行時に失敗する。
+
+#+caption: 初期化前のxを参照する
+#+begin_src typescript
+const f = () => x;
+f(); // 初期化前の x を参照する
+const x = 1;
+#+end_src
+
+- ビジネスロジックを代数的データ型により表現するという考え方や、状態遷移を全域関数として記述することで異常な処理を防ぐ手法がある、という(p39)
+
+#+caption: このようにステータスごとに型を分けると実装ミスを型システムで防げる
+#+begin_src scala
+  class ConfirmedOrder(
+    val orderId: OrderId,
+    val customerId: CustomerId,
+    val shippingAddress: Address,
+    val lines: List[OrderLine],
+    val confirmedAt: LocalDateTime,
+  )
+
+  class CancelledOrder(
+    val orderId: OrderId,
+    val customerId: CustomerId,
+    val shippingAddress: Address,
+    val lines: List[OrderLine],
+    val confirmedAt: LocalDateTime,
+    val cancelledAt: LocalDateTime,
+    val cancelReason: String,
+  )
+#+end_src
+
+- ↑その代わりにorderとして共通の処理が書きにくくなるので、各ステータスのクラスをサブクラスとする(p46)
+- 直積型と直和型を組み合わせる「代数的データ型」
+- 直和型はinterfaceとかtraitなど、異なる型を同じように扱うもの
+  - Order は、 ConfirmedOrder + CancelOrder + ShippingOrder
+- 直積型は各フィールド
+  - CanceledOrder は、OrderID x DateTime(キャンセル日時) x String(キャンセル日時)
+- 状態遷移をそれぞれの型にメソッドとして実装すれば、そもそもメソッドが定義されていない型に対して処理を呼び出すことはできなくなる(p56)
+- 全域関数(total function)は、「すべての入力値に対して必ず出力値が1つ存在する関数」である。いっぽう、一部の入力値に対して出力値が存在しない関数のことを部分関数という(p56)
+
+#+caption: 0以外の値の型を作る
+#+begin_src scala
+  class NonZeroInt(val value: Int) {
+    require(value != 0, "0 以外の整数を入力してください ")
+  }
+
+  def divideTwelveBy(n: NonZeroInt): Int = 12 / n.value
+#+end_src
+
+- divideTwelveByは、NonZeroInt型に対して全域関数である。いっぽう、nの型をintにすると0が入る可能性があるので部分関数となっている(p57)
+- 開発において何かしら例外を投げる関数を書く必要が生じたときは、その仕様を型で表現することにより全域関数として定義できないかを意識するとよい、という(p59)
+- コンストラクタの可視性をコントロールすることで、「あるインスタンスは特定の箇所からのみ作成可能」という状態を作り出せる。不正な状態のインスタンスを作るのを防げる(p63)
+- リレーショナルDBなど外部システムは、アプリケーション上の型より「広い」型を持つ。そのため外部から内部の変換(DBからは読み込み)では失敗することがある。いっぽう内部から外部の変換(DBからは書き込み)は「狭い」型からの変換なので失敗することがないケースが多い(p72)
+- 本稿の執筆に際し、「2011年当時はどうだったか？」を確認するためにさまざまな情報源を参照した、という。昔書いた原稿や当時の記事などを読み返すうちに、非常に多くの記事がインターネット上から消えてしまっている事実を改めて思い知らされた、という(p92)
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
