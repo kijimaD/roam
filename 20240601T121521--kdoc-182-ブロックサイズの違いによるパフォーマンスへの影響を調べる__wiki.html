@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-11-03 -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 182: ブロックサイズの違いによるパフォーマンスへの影響を調べる</title>
+<meta name="author" content="root" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 182: ブロックサイズの違いによるパフォーマンスへの影響を調べる</h1>
+
+<div id="outline-container-org4d10498" class="outline-2">
+<h2 id="org4d10498"><a href="#org4d10498">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org4d10498">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-06 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-10 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+
+<div id="outline-container-orgd31db9c" class="outline-2">
+<h2 id="orgd31db9c"><a href="#orgd31db9c">概要</a></h2>
+<div class="outline-text-2" id="text-orgd31db9c">
+<p>
+すべてのディスクI/Oは、ブロックごとに処理される。本だけ見てもあまりわからないので、コマンドでミニマルに試して理解を深める。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org5e0da30" class="outline-2">
+<h2 id="org5e0da30"><a href="#org5e0da30">方法</a></h2>
+<div class="outline-text-2" id="text-org5e0da30">
+<ul class="org-ul">
+<li><code>dd</code> はファイルをコピーするコマンド。オプションを細かく指定できる</li>
+<li><code>/dev/zero</code> は、0を無限に返す仮想デバイス</li>
+</ul>
+
+<p>
+↓まず、ブロックサイズ1で保存してみる。8秒かかった。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">dd <span class="org-variable-name">bs</span>=1 <span class="org-variable-name">count</span>=2097152 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp
+</pre>
+</div>
+
+<pre class="example">
+2097152+0 records in
+2097152+0 records out
+2097152 bytes (2.1 MB, 2.0 MiB) copied, 8.1858 s, 256 kB/s
+</pre>
+
+<p>
+↓ブロックサイズ1024にして、コピーしてみる。↑と同じサイズだが、とても早い。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>アラインメントされているブロックサイズ</label><pre class="src src-shell">dd <span class="org-variable-name">bs</span>=1024 <span class="org-variable-name">count</span>=2048 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp
+</pre>
+</div>
+
+<pre class="example">
+2048+0 records in
+2048+0 records out
+2097152 bytes (2.1 MB, 2.0 MiB) copied, 0.0131229 s, 160 MB/s
+</pre>
+
+<p>
+↓アラインメントしないバージョン。これで遅くなるはずなのだが、↑とあまり変わらなかった。サイズの問題だろうか。もっと大きなサイズにすると差が見えてくるとか。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>アラインメントしないブロックサイズ</label><pre class="src src-shell">dd <span class="org-variable-name">bs</span>=1025 <span class="org-variable-name">count</span>=2048 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp
+</pre>
+</div>
+
+<pre class="example">
+2048+0 records in
+2048+0 records out
+2099200 bytes (2.1 MB, 2.0 MiB) copied, 0.0131522 s, 160 MB/s
+</pre>
+
+<p>
+というわけで、パフォーマンスが改善した理由。
+</p>
+
+<ul class="org-ul">
+<li>システムコールの回数が減った</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>システムコールの回数の比較</label><pre class="src src-shell">strace dd <span class="org-variable-name">bs</span>=1 <span class="org-variable-name">count</span>=2097152 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp 2&gt;&amp;1 | wc -l
+strace dd <span class="org-variable-name">bs</span>=1024 <span class="org-variable-name">count</span>=2048 <span class="org-variable-name">if</span>=/dev/zero <span class="org-variable-name">of</span>=tmp 2&gt;&amp;1 | wc -l
+</pre>
+</div>
+
+<pre class="example">
+4194377
+4169
+</pre>
+
+<p>
+確かめられた。
+</p>
+</div>
+</div>
+
+<div id="outline-container-org116e539" class="outline-2">
+<h2 id="org116e539"><a href="#org116e539">関連</a></h2>
+<div class="outline-text-2" id="text-org116e539">
+<ul class="org-ul">
+<li><a href="20240225T174224--kdoc-109-発行システムコールを調べる__wiki.html#ID-20240225T174224">KDOC 109: 発行システムコールを調べる</a>。straceの使い方</li>
+<li><a href="20240601T120632--kdoc-181-『linuxシステムプログラミング』__book.html#ID-20240601T120632">KDOC 181: 『Linuxシステムプログラミング』</a>。例を試した</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
