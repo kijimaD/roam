@@ -1,6 +1,6 @@
 :properties:
 :ID: 20240612T133312
-:mtime:    20241102180330 20241028101410
+:mtime:    20241104004243
 :ctime:    20241028101410
 :end:
 #+title:      KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』
@@ -14,6 +14,8 @@ CLOSED: [2024-07-19 Fri 00:16]
 :Effort:   20:00
 :END:
 :LOGBOOK:
+CLOCK: [2024-11-03 Sun 19:55]--[2024-11-03 Sun 20:20] =>  0:25
+CLOCK: [2024-11-03 Sun 17:26]--[2024-11-03 Sun 17:51] =>  0:25
 CLOCK: [2024-07-10 Wed 19:30]--[2024-07-10 Wed 19:55] =>  0:25
 CLOCK: [2024-07-07 Sun 19:59]--[2024-07-07 Sun 20:24] =>  0:25
 CLOCK: [2024-06-26 Wed 22:40]--[2024-06-26 Wed 23:05] =>  0:25
@@ -82,7 +84,7 @@ CLOCK: [2024-06-12 Wed 15:12]--[2024-06-12 Wed 15:37] =>  0:25
   - [X] 2024-07-20 貴島
 
 * 概要
-[[https://tatsu-zine.com/books/ruby-under-a-microscope-ja][Rubyのしくみ Ruby Under a Microscope]]は、[[id:cfd092c4-1bb2-43d3-88b1-9f647809e546][Ruby]]の言語処理系を解説する本。
+[[https://tatsu-zine.com/books/ruby-under-a-microscope-ja][Rubyのしくみ Ruby Under a Microscope]]は、Rubyの言語処理系を解説する本。
 * メモ
 - ~RubyVM::InstructionSequence~ を使うと、プログラム中からRubyのYARVエンジンにアクセスできる(p48)
 
@@ -133,7 +135,7 @@ puts RubyVM::InstructionSequence.compile('1 + 2').disasm
 0006 leave                                                            (   1)
 #+end_src
 
-- 一度Rubyコンパイラが実行されると、ブロックパラメータに関する情報はASTの外、ローカルテーブルと呼ばれる別のデータ構造にコピーされ、新しく生成されたYARV命令列の近くに保存される。書くYARV命令、つまりRubyプログラムの各スコープは専用のローカルスコープを持つ(p50)
+- 一度Rubyコンパイラが実行されると、ブロックパラメータに関する情報はASTの外、ローカルテーブルと呼ばれる別のデータ構造にコピーされ、新しく生成されたYARV命令列の近くに保存される。各YARV命令、つまりRubyプログラムの各スコープは専用のローカルスコープを持つ(p50)
 
 #+caption: メソッド定義の処理
 #+begin_src ruby :results output
@@ -233,7 +235,7 @@ local table (size: 4, argc: 1 [opts: 0, rest: -1, post: 0, block: -1, kw: 1@0, k
 
 - Rubyは新しいプログラムを開始する際、まずはじめにTOPフレームを生成する。EVALというタイプのフレームは、Rubyスクリプトのトップレベルのスコープに対応している(p67)
 - Rubyは ~pubobject~ や ~send~ といったすべてのYARV命令をCを使って実装している。しかしCソースファイル内に各YARV命令のコードはない。そのかわり、 ~insns.def~ (define instruction)という単一の巨大なファイル内にYARV命令のCソースコードを記述している、という。ほとんどの部分はCではない。ビルド処理の中で ~insns.def~ の内容をCコードへと変換する(p68)
-  - YARNV命令定義(~insns.def~ ファイル) -> プリプロセス -> YARV Cコード(~vm.inc~ ファイル)
+  - YARV命令定義(~insns.def~ ファイル) -> プリプロセス -> YARV Cコード(~vm.inc~ ファイル)
   - RubyはRubyを使って ~insns.def~ を処理し、 ~vm.inc~ というCソースコードを生成する。そして生成したCソースコードとあわせて、まずは小さなminirubyというコマンドをビルドし、これを用いて大きなRubyコマンドを作っていく
 
 #+caption: YARV命令putself
@@ -1193,7 +1195,7 @@ decrementing from 2 to 1
 - doを加えてクロージャを導入することは、新しいメソッド内のコードは外側の環境へのアクセス権を持つことを意味している。これはdefキーワードにはない特徴である(p276)
 - Rubyにおいてクロージャはブロックやラムダ、Procオブジェクトを動作する中心的な概念である。レキシカルスコープの概念は、Rubyでメソッドを作成してそれをクラスに割り当てるすべての方法を支えている(p278)
 - Rubyの内部を学習することはメタプログラミングの概念を確認し、それが何を意味するのかを教えてくれる(p278)
-- MRIでは組み込みクラスを[[id:656a0aa4-e5d3-416f-82d5-f909558d0639][C言語]]で実装している。一方JRubyはすべての組み込みクラスを[[id:9fa3711b-a22e-4cf5-ae97-5c057083674a][Java]]を使って実装している(p287)
+- MRIでは組み込みクラスをC言語で実装している。一方JRubyはすべての組み込みクラスをJavaを使って実装している(p287)
 - 処理系によって、性能特性が変化する。コードを長く実行するほど、JVMはコードを最適化し、コードは高速に実行されるものになっていく(p295)
 
 #+caption: MRIは文字列リテラルを使用する際にYARV命令のdupを使う
