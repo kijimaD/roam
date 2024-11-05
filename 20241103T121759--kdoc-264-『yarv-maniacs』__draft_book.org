@@ -1,6 +1,6 @@
 :properties:
 :ID: 20241103T121759
-:mtime:    20241103203156
+:mtime:    20241105165605
 :ctime:    20241103121812
 :end:
 #+title:      KDOC 264: 『YARV Maniacs』
@@ -47,6 +47,12 @@
 # 3. 追加すべきものだけ追加する
 
 * この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-11-04 Mon 23:54]--[2024-11-05 Tue 00:19] =>  0:25
+CLOCK: [2024-11-04 Mon 22:48]--[2024-11-04 Mon 23:13] =>  0:25
+CLOCK: [2024-11-04 Mon 21:56]--[2024-11-04 Mon 22:21] =>  0:25
+CLOCK: [2024-11-04 Mon 21:31]--[2024-11-04 Mon 21:56] =>  0:25
+:END:
 - 作成
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -67,6 +73,209 @@
 # 内容を端的に説明する短い文
 [[https://magazine.rubyist.net/articles/0006/0006-YarvManiacs.html][『YARV Maniacs』]]はRubyのVM、YARVの作者であるささだこういちが書いた記事。
 * メモ
+
+- もっとも単純なディスパッチ処理はswitch/caseで分岐させること。つぎに関数ポインタを使った例がある。命令配列に関数ポインタを入れておいて命令を取り出す
+
+#+caption: 関数ポインタの例。そのままコピペしてきた
+#+begin_src c
+  #define Ia 0
+  //...
+
+  static const InsnFuncType InsnInstruction_bodies[] = {
+    Ia_body, Ib_body, ..., Iz_body,
+  };
+
+  while(1){
+    Instruction_bodies[iseq[pc]]();
+   }
+#+end_src
+
+- switch/caseによる分岐は実際の機械語としてはif文の並びのようになる。たくさん分岐することになる。そこで、飛び先をテーブルにして、関数ポインタによる命令ディスパッチの例のように飛び先をテーブルに格納してジャンプできるようにする
+
+#+caption: 最終的にこうなる。ダイレクトスレッデッドコードという。コピペしてきた
+#+begin_src c
+  loop_start:
+    goto *iseq_ptr[PC];
+  Ia:
+    Ia_body();
+    goto *iseq_ptr[PC];
+  Ib:
+    Ib_body();
+    goto *iseq_ptr[PC];
+  ...
+  Iz:
+    Iz_body();
+    goto *iseq_ptr[PC];
+#+end_src
+
+- こういう命令ディスパッチをするプログラムをスレッデッドコードという
+- ~&&ラベル名~ でラベルを値として扱う。その値としてのラベルにジャンプするには ~goto *value~ と記述する
+- スレッデッドコードの利点はgotoが1個減っただけ。1命令減っただけに見えるが、さらにうれしいことがある。プロセッサの分岐予測の成功率が高くなる。switch/caseの場合は分岐予測が毎回外れるため遅い
+- JITコンパイルは、VM命令の命令ディスパッチを必要としなくなる。でも実装が大変である、という
+- YARVでは Rubyプログラム -> YARV命令列 -> C と変換するコンパイラを用意している。そのため命令ディスパッチ自体のオーバーヘッドは無い
+- switch/case を利用した命令ディスパッチとスレッデッドコードを利用したプログラムはあまり見かけは変わらないのでマクロで書いておけば切り替えは簡単にできる。そうしているVMや処理系は多い、という
+
+#+caption: YARV命令列
+#+begin_src ruby
+0003 send            :puts, 1, false, 0, <ic>
+#+end_src
+
+- puts: putsメソッドの起動を表す
+- 1: 引数を1つで起動
+- send命令は、引数の数分だけの値と、レシーバをスタックから取ってメソッドを起動する、という意味になる
+
+#+caption: 何もしないプログラムは変換されない
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('true;false;123;:sym;/abc/;nil').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,29)> (catch: FALSE)
+0000 putnil                                                           (   1)[Li]
+0001 leave
+#+end_src
+
+#+caption: stringはputstring命令を使う
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('a = "abc"').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,9)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putstring                              "abc"                     (   1)[Li]
+0002 dup
+0003 setlocal_WC_0                          a@0
+0005 leave
+#+end_src
+
+- 文字列オブジェクトは破壊的な変更が可能なのでmuutableといえる。たとえばプログラム上同じ位置にあっても文字列リテラルが返すオブジェクトは毎回異なる
+- putobjectは毎回同じオブジェクトをスタックトップに置く。なので文字列ではputobject命令は使えない。代わりにputstringを使う
+
+#+caption: 要素が文字列の場合はputstring
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('["a", "b", "c"]').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,15)> (catch: FALSE)
+0000 putstring                              "a"                       (   1)[Li]
+0002 putstring                              "b"
+0004 putstring                              "c"
+0006 newarray                               3
+0008 leave
+#+end_src
+
+#+caption: 要素がFixnumの場合
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('[1, 2, 3]').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,9)> (catch: FALSE)
+0000 duparray                               [1, 2, 3]                 (   1)[Li]
+0002 leave
+#+end_src
+
+- 要素がすべてリテラル(putobject命令で済むもの)だった場合、毎回各要素をスタックに積まなくても作るものが決まっている。duparray命令1つ、配列オブジェクトをdupしてスタックトップに積む、でよくなる
+
+#+caption: インスタンス変数。専用の命令がある
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('@a = 1; a = @a').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,14)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 setinstancevariable                    :@a, <is:0>
+0004 getinstancevariable                    :@a, <is:0>
+0007 dup
+0008 setlocal_WC_0                          a@0
+0010 leave
+#+end_src
+
+#+caption: グローバル変数。専用の命令がある
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('$global = 1; a = $global').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,24)> (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 setglobal                              :$global
+0003 getglobal                              :$global
+0005 dup
+0006 setlocal_WC_0                          a@0
+0008 leave
+#+end_src
+
+#+caption: 現在のクラスを起点に探る
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('C').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,1)> (catch: FALSE)
+0000 opt_getinlinecache                     9, <is:0>                 (   1)[Li]
+0003 putobject                              true
+0005 getconstant                            :C
+0007 opt_setinlinecache                     <is:0>
+0009 leave
+#+end_src
+
+#+caption: Object(トップレベル)のCを探る
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('::C').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,3)> (catch: FALSE)
+0000 opt_getinlinecache                     12, <is:0>                (   1)[Li]
+0003 pop
+0004 putobject                              Object
+0006 putobject                              true
+0008 getconstant                            :C
+0010 opt_setinlinecache                     <is:0>
+0012 leave
+#+end_src
+
+#+caption: Cを探り、Cの中のDを探る
+#+begin_src ruby :results output
+puts RubyVM::InstructionSequence.compile('C::D').disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,4)> (catch: FALSE)
+0000 opt_getinlinecache                     13, <is:0>                (   1)[Li]
+0003 putobject                              true
+0005 getconstant                            :C
+0007 putobject                              false
+0009 getconstant                            :D
+0011 opt_setinlinecache                     <is:0>
+0013 leave
+#+end_src
+
+- 定数の検索は、処理系実装者から見るとかなり作るのが面倒な部分になっている。コンパイル時に定数検索パスが定まらないため
+
+* 用語
+
+- メソッドディスパッチ :: オブジェクト指向でいうメソッドを実際に起動する機能。Rubyだとレシーバオブジェクトがあって、メソッド名があったとき、実際にメソッドを起動するときに処理をさせること
+- 命令ディスパッチ :: 命令によってそれに応じて処理をさせること
+
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
 # この事実は自分のこのアイデアとどう整合するか。
