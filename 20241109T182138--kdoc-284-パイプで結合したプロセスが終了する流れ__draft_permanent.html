@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2024-11-09 -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 284: パイプで結合したプロセスが終了する流れ</title>
+<meta name="author" content="root" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' /><link rel='stylesheet' href='../roam/css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 284: パイプで結合したプロセスが終了する流れ</h1>
+
+<div id="outline-container-org87d9658" class="outline-2">
+<h2 id="org87d9658"><a href="#org87d9658">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org87d9658">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf5c7ffb" class="outline-2">
+<h2 id="orgf5c7ffb"><a href="#orgf5c7ffb">概要</a></h2>
+<div class="outline-text-2" id="text-orgf5c7ffb">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>この例で説明する。catは終了コード141、headは終了コード0で終了する</label><pre class="src src-shell">cat /dev/random | head
+</pre>
+</div>
+
+
+<div id="org4fb34cb" class="figure">
+<p><img src="images/20241109-rw.drawio.svg" alt="20241109-rw.drawio.svg" class="org-svg">
+</p>
+</div>
+
+<ol class="org-ol">
+<li>cat と head が非同期で実行開始する</li>
+<li>catがパイプのバッファにランダムなバイト列を書き込む</li>
+<li>headがパイプのバッファに書き込まれた内容を読み取る。入力のうち先頭10行を読み込み、実行終了する</li>
+<li>head終了に伴って読み込み用のファイルディスクリプタがクローズされる</li>
+<li>catはまだ動いている</li>
+<li>catがパイプバッファへ書き込みしようとすると、読み込み側のファイルディスクリプタがクローズされているので書き込みがブロックされる。OSからcatのプロセスにSIGPIPEが送られる</li>
+<li>catプロセスはSIGPIPEによって終了させられる。終了コード141を返す。SIGPIPEによって終了したことを示すコード</li>
+</ol>
+</div>
+</div>
+
+<div id="outline-container-org65555d7" class="outline-2">
+<h2 id="org65555d7"><a href="#org65555d7">関連</a></h2>
+<div class="outline-text-2" id="text-org65555d7">
+<ul class="org-ul">
+<li><a href="20241109T174614--kdoc-282-単体だと終了しないプロセスでパイプを使うと終了するのはなぜか__draft_permanent.html#ID-20241109T174614">KDOC 282: パイプで結合すると実行終了するのはなぜか?</a>。メモを書くきっかけとなった問い</li>
+<li><a href="20241109T180827--kdoc-283-パイプはファイルディスクリプタがクローズされると終了する__draft_permanent.html#ID-20241109T180827">KDOC 283: パイプはファイルディスクリプタがクローズされると終了する</a>。マニュアルの該当箇所</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer><script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"/>
+</div>
+</body>
+</html>
