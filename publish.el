@@ -148,7 +148,7 @@
        "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' />"
 
        ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。仕方ないので両方読み込む
-       "<link rel='stylesheet' href='../css/site.css' />"
+       "<link rel='stylesheet' href='../roam/css/site.css' />"
        "<link rel='stylesheet' href='../roam/css/code.css' />"
        "<link rel='stylesheet' href='css/site.css' />"
        "<link rel='stylesheet' href='css/code.css' />"
