@@ -1,6 +1,6 @@
 :properties:
 :ID: 20241103T121759
-:mtime:    20241110095656
+:mtime:    20241110202247
 :ctime:    20241103121812
 :end:
 #+title:      KDOC 264: 『YARV Maniacs』
@@ -272,6 +272,35 @@ puts RubyVM::InstructionSequence.compile('C::D').disasm
 
 - 定数の検索は、処理系実装者から見るとかなり作るのが面倒な部分になっている。コンパイル時に定数検索パスが定まらないため
 - メソッド定義の探索が計算負荷が大きい。そのためキャッシュを使う。グローバルメソッドキャッシュやインラインメソッドキャッシュ
+
+#+begin_src
+# YARV 命令列
+
+# a = b = c = nil
+
+0000 putnil             # スタックトップにnilを積む
+0001 dup                # スタックトップを複製する (c = nil用)
+0002 setlocal         c # スタックトップのnilをcに代入する
+0004 dup                # スタックトップを複製する (c = b用)
+0005 setlocal         b # スタックトップのnilをbに代入する
+0007 setlocal         a # スタックトップのnilをaに代入する
+
+# a and b and c
+
+# if __tmp__ = a
+0009 getlocal         a # aをスタックに積む
+0011 dup                # スタックトップを複製する
+0012 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0014 pop                # 片付ける
+# if __tmp__ = b
+0015 getlocal         b # bをスタックに積む
+0017 dup                # スタックトップを複製する
+0018 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0020 pop                # 片付ける
+# c
+0021 getlocal         c # cはスタックに積むだけ
+0023 end
+#+end_src
 
 * 用語
 
