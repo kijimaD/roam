@@ -16,9 +16,9 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 264: 『YARV Maniacs』</h1>
 
-<div id="outline-container-org964b0a3" class="outline-2">
-<h2 id="org964b0a3"><a href="#org964b0a3">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org964b0a3">
+<div id="outline-container-orgaa300a1" class="outline-2">
+<h2 id="orgaa300a1"><a href="#orgaa300a1">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgaa300a1">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org62950ad" class="outline-2">
-<h2 id="org62950ad"><a href="#org62950ad">概略</a></h2>
-<div class="outline-text-2" id="text-org62950ad">
+<div id="outline-container-orga3f185d" class="outline-2">
+<h2 id="orga3f185d"><a href="#orga3f185d">概略</a></h2>
+<div class="outline-text-2" id="text-orga3f185d">
 <p>
 <a href="https://magazine.rubyist.net/articles/0006/0006-YarvManiacs.html">『YARV Maniacs』</a>はRubyのVM、YARVの作者であるささだこういちが書いた記事。
 </p>
 </div>
 </div>
-<div id="outline-container-org48abf95" class="outline-2">
-<h2 id="org48abf95"><a href="#org48abf95">メモ</a></h2>
-<div class="outline-text-2" id="text-org48abf95">
+<div id="outline-container-org26f5c2b" class="outline-2">
+<h2 id="org26f5c2b"><a href="#org26f5c2b">メモ</a></h2>
+<div class="outline-text-2" id="text-org26f5c2b">
 <ul class="org-ul">
 <li>もっとも単純なディスパッチ処理はswitch/caseで分岐させること。つぎに関数ポインタを使った例がある。命令配列に関数ポインタを入れておいて命令を取り出す</li>
 </ul>
@@ -247,12 +247,41 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
 <li>定数の検索は、処理系実装者から見るとかなり作るのが面倒な部分になっている。コンパイル時に定数検索パスが定まらないため</li>
 <li>メソッド定義の探索が計算負荷が大きい。そのためキャッシュを使う。グローバルメソッドキャッシュやインラインメソッドキャッシュ</li>
 </ul>
+
+<pre class="example">
+# YARV 命令列
+
+# a = b = c = nil
+
+0000 putnil             # スタックトップにnilを積む
+0001 dup                # スタックトップを複製する (c = nil用)
+0002 setlocal         c # スタックトップのnilをcに代入する
+0004 dup                # スタックトップを複製する (c = b用)
+0005 setlocal         b # スタックトップのnilをbに代入する
+0007 setlocal         a # スタックトップのnilをaに代入する
+
+# a and b and c
+
+# if __tmp__ = a
+0009 getlocal         a # aをスタックに積む
+0011 dup                # スタックトップを複製する
+0012 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0014 pop                # 片付ける
+# if __tmp__ = b
+0015 getlocal         b # bをスタックに積む
+0017 dup                # スタックトップを複製する
+0018 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0020 pop                # 片付ける
+# c
+0021 getlocal         c # cはスタックに積むだけ
+0023 end
+</pre>
 </div>
 </div>
 
-<div id="outline-container-org52da8a1" class="outline-2">
-<h2 id="org52da8a1"><a href="#org52da8a1">用語</a></h2>
-<div class="outline-text-2" id="text-org52da8a1">
+<div id="outline-container-orgbeb39bc" class="outline-2">
+<h2 id="orgbeb39bc"><a href="#orgbeb39bc">用語</a></h2>
+<div class="outline-text-2" id="text-orgbeb39bc">
 <dl class="org-dl">
 <dt>メソッドディスパッチ</dt><dd>オブジェクト指向でいうメソッドを実際に起動する機能。Rubyだとレシーバオブジェクトがあって、メソッド名があったとき、実際にメソッドを起動するときに処理をさせること</dd>
 <dt>命令ディスパッチ</dt><dd>命令によってそれに応じて処理をさせること</dd>
@@ -260,9 +289,9 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
 </div>
 </div>
 
-<div id="outline-container-orgfb0f11f" class="outline-2">
-<h2 id="orgfb0f11f"><a href="#orgfb0f11f">関連</a></h2>
-<div class="outline-text-2" id="text-orgfb0f11f">
+<div id="outline-container-org5f516de" class="outline-2">
+<h2 id="org5f516de"><a href="#org5f516de">関連</a></h2>
+<div class="outline-text-2" id="text-org5f516de">
 </div>
 </div>
 </div>
