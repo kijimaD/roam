@@ -37,9 +37,6 @@
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
 
-;; RSS
-(load-file "./ox-rss.el")
-
 (use-package emacsql
   :ensure t)
 
@@ -164,41 +161,25 @@
       :recursive t
       :base-extension "org"
       :base-directory "./"
-      :exclude "NEWS.org" ;; FIXME: can't specify .packages directory...
+      :exclude "NEWS.org"               ;; FIXME: can't specify .packages directory...
       ;; :publishing-function #'org-html-publish-to-html
       :publishing-function org-html-publish-to-html
       :publishing-directory "./public"
 
-      :html-link-up ""
-      :html-link-home ""
-      :html-head nil ;; cleans up anything that would have been in there.
+      :html-link-home "/"
+      :html-head nil  ;; cleans up anything that would have been in there.
       :html-head-extra ,my-blog-extra-head
       :html-head-include-default-style nil
       :html-head-include-scripts nil
 
+      :html-link-up ""
+      :html-link-home ""
       :with-timestamps nil
       :with-toc nil
 
       :sitemap-title "Sitemap"
-      :auto-sitemap t ;; generate sitemap.org automatically
+      :auto-sitemap t             ;; generate sitemap.org automatically
       )))
-
-(add-to-list
- 'org-publish-project-alist
- '("kijima:rss"
-   :base-extension "org"
-   :base-directory "./"
-   :rss-image-url ""
-   :html-link-home ""
-   :html-link-use-abs-url t
-   :rss-extension "xml"
-   :publishing-directory "./public"
-   :publishing-function (org-rss-publish-to-rss)
-   :section-numbers nil
-   :table-of-contents nil
-   :exclude ".*"
-   :include ("sitemap.org")
-   ))
 
 (defun generate-org-roam-db ()
   (interactive)
