@@ -130,10 +130,7 @@
                           (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD")) "@kijimaD")))
                 (div (@ (class "col-md-4")) "")))))
    (sxml-to-xml
-    `(script (@ (defer "defer")
-                 (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))
-              ;; Empty string to cause a closing </script> tag
-              ""))))
+    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
 
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
