@@ -64,6 +64,7 @@
   :ensure t)
 
 (use-package webfeeder
+  :straight (:host github :repo "emacsmirror/webfeeder")
   :ensure t)
 
 (require 'ox-publish)
