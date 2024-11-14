@@ -136,7 +136,7 @@
                           (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD")) "@kijimaD")))
                 (div (@ (class "col-md-4")) "")))))
    (sxml-to-xml
-    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
+    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"))))))
 
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
@@ -157,7 +157,7 @@
        ;; PageSpeed Insights で指摘された項目
        ;; link要素にはasync属性やdefer属性がない
        ;; 記法の参考: https://qiita.com/rana_kualu/items/95a7adf8420ea2b9f657
-       "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' media='print' onload='this.media=\"all\"' />"
+       "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media=\"all\"' />"
        "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' media='print' onload='this.media=\"all\"' />"
 
        ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。
