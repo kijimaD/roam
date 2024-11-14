@@ -102,6 +102,11 @@
       org-export-with-tags 'not-in-toc
       org-export-with-toc nil)
 
+(defvar kd/site-url (if (string-equal (getenv "PRODUCTION") "true")
+                        "https://kijimad.github.io/roam"
+                      "http://localhost:8005")
+  "The URL for the site being generated.")
+
 (defun dw/site-header (info)
   (let* ((file (plist-get info :output-file)))
     (concat
@@ -146,10 +151,7 @@
       (concat
        ;; ブラウザは、そのサイトのホスト直下に favicon.ico が 設置されていることを期待する。
        ;; GitHub Pagesにデプロイすると、リポジトリ名の下で配信するのでルートパスではfaviconが配置されていないことになる。
-       ;; なのでリポジトリ名をハードコーディングして指定する。
-       "<link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' />"
-
-       ;; <link rel="stylesheet" href="/path/to/my.css" media="print" onload="this.media='all'">
+       (format "<link rel='shortcut icon' type='image/x-icon' href='%s/favicon.ico' />" kd/site-url)
 
        ;; サイズが比較的大きいので非同期に読み込ませる
        ;; PageSpeed Insights で指摘された項目
@@ -158,11 +160,9 @@
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' media='print' onload='this.media=\"all\"' />"
        "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' media='print' onload='this.media=\"all\"' />"
 
-       ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。仕方ないので両方読み込む
-       "<link rel='stylesheet' href='../roam/css/site.css' />"
-       "<link rel='stylesheet' href='../roam/css/code.css' />"
-       "<link rel='stylesheet' href='css/site.css' />"
-       "<link rel='stylesheet' href='css/code.css' />"
+       ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。
+       (format "<link rel='stylesheet' href='%s/css/site.css' />" kd/site-url)
+       (format "<link rel='stylesheet' href='%s/css/code.css' />" kd/site-url)
        ))
 
 ;; Compile
@@ -251,11 +251,6 @@
          (match-beginning 1)
          (match-end 1))
       "")))
-
-(defvar kd/site-url (if (string-equal (getenv "CI") "true")
-                        "https://kijimad.github.io/roam/"
-                      "http://localhost:8005/")
-  "The URL for the site being generated.")
 
 (defun kd/update-index-table ()
   "update index.org table"

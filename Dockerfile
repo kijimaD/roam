@@ -48,6 +48,9 @@ ENV LANG ja_JP.UTF-8
 ENV LC_ALL ja_JP.UTF-8
 ENV TZ Asia/Tokyo
 
+# この環境変数でURLや相対パスを、本番用(GitHub Pages)かローカル用かを切り替える
+ENV PRODUCTION true
+
 WORKDIR /roam
 
 COPY publish.el ox-slimhtml.el ./
