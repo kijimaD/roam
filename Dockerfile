@@ -19,7 +19,8 @@ RUN apt -y update && \
     gnuplot \
     emacs \
     language-pack-ja \
-    fonts-ipafont # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
+    fonts-ipafont \ # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
+    libxml2-dev # feed作成用
 
 RUN apt -y install \
     xvfb \
