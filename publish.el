@@ -63,6 +63,9 @@
 (use-package htmlize
   :ensure t)
 
+(use-package webfeeder
+  :ensure t)
+
 (require 'ox-publish)
 
 (setq make-backup-files nil)
@@ -251,6 +254,11 @@
          (match-end 1))
       "")))
 
+(defvar kd/site-url (if (string-equal (getenv "CI") "true")
+                        "https://kijimad.github.io/roam/"
+                      "http://localhost:8005/")
+  "The URL for the site being generated.")
+
 (defun kd/update-index-table ()
   "update index.org table"
   (let ((org-agenda-files '("./")))
@@ -271,7 +279,16 @@
   (org-publish-all t)
   ;; (org-agenda nil "Future") ;; test
   ;; (org-agenda nil "Past") ;; test
-  (org-batch-store-agenda-views))
+  (org-batch-store-agenda-views)
+
+  (webfeeder-build "feed.xml"
+                   "./public"
+                   kd/site-url
+                   (directory-files (expand-file-name "./public/") nil ".html$")
+                   :builder 'webfeeder-make-rss
+                   :title "Insomnia"
+                   :description "Insomnia"
+                   :author "Kijima Daigo"))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
