@@ -110,6 +110,7 @@
                                      ;; (a (@ (class "nav-link text-dark") (href "/roam")) "Insomnia")
                                      ))))))))))
 
+;; 参考 https://github.com/SystemCrafters/systemcrafters.github.io/blob/master/publish.el
 (defun dw/site-footer (info)
   (concat
    ;; "</div></div>"
@@ -126,7 +127,10 @@
                           (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD")) "@kijimaD")))
                 (div (@ (class "col-md-4")) "")))))
    (sxml-to-xml
-    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))))))
+    `(script (@ (defer "defer")
+                 (src "https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"))
+              ;; Empty string to cause a closing </script> tag
+              ""))))
 
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
@@ -281,7 +285,7 @@
       (when (> (length backlinks) 0)
         (insert "\n\n* Backlinks\n")
         (dolist (backlink backlinks)
-          (message (concat "backlink: " (org-roam-node-title (org-roam-backlink-source-node backlink))))
+          (message (concat "-> backlink: " (org-roam-node-title (org-roam-backlink-source-node backlink))))
           (let* ((source-node (org-roam-backlink-source-node backlink))
                  (node-file (org-roam-node-file source-node))
                  (file-name (file-name-nondirectory node-file))
