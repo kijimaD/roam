@@ -1,0 +1,44 @@
+:properties:
+:ID: 20241109T180827
+:mtime:    20241114213008
+:ctime:    20241109180832
+:end:
+#+title:      KDOC 283: パイプはファイルディスクリプタがクローズされると終了する
+#+date:       [2024-11-09 Sat 18:08]
+#+filetags:   :permanent:
+#+identifier: 20241109T180827
+
+* この文書のステータス
+:LOGBOOK:
+CLOCK: [2024-11-09 Sat 18:18]--[2024-11-09 Sat 18:43] =>  0:25
+:END:
+- 作成
+  - [X] 2024-11-09 貴島
+- レビュー
+  - [X] 2024-11-14 貴島
+
+* 概要
+
+パイプの読み込み側を参照しているファイルディスクリプタがクローズされている場合、 パイプバッファへのwrite(2) は SIGPIPEシグナルを生成する。
+
+[[file:images/20241109-rw.drawio.svg]]
+
+#+caption: マニュアルの該当の箇所
+#+begin_src shell
+  man "pipe(7)" | grep -A 6 "If all file"
+#+end_src
+
+#+RESULTS:
+#+begin_src
+       (read(2) will return 0).  If all file descriptors referring to the read
+       end of a pipe have been closed, then a write(2) will  cause  a  SIGPIPE
+       signal to be generated for the calling process.  If the calling process
+       is ignoring this signal, then write(2) fails with the error EPIPE.   An
+       application  that uses pipe(2) and fork(2) should use suitable close(2)
+       calls to close unnecessary duplicate  file  descriptors;  this  ensures
+       that end-of-file and SIGPIPE/EPIPE are delivered when appropriate.
+#+end_src
+
+* 関連
+なし。
+- [[id:20241109T174614][KDOC 282: パイプで結合すると実行終了するのはなぜか?]]。このメモを書くきっかけとなった疑問
