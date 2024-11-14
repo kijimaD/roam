@@ -4,7 +4,7 @@
 <!-- 2024-11-14 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KDOC 276: なぜパッケージマネージャに実行速度の違いがあるのか?</title>
+<title>KDOC 279: パイプのバッファはいっぱいになるとwriteをブロックする</title>
 <meta name="author" content="root" />
 <meta name="generator" content="Org Mode" />
 <link rel='shortcut icon' type='image/x-icon' href='/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='../roam/css/site.css' /><link rel='stylesheet' href='../roam/css/code.css' /><link rel='stylesheet' href='css/site.css' /><link rel='stylesheet' href='css/code.css' />
@@ -14,11 +14,11 @@
 <div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
 </div>
 <div id="content" class="content">
-<h1 class="title">KDOC 276: なぜパッケージマネージャに実行速度の違いがあるのか?</h1>
+<h1 class="title">KDOC 279: パイプのバッファはいっぱいになるとwriteをブロックする</h1>
 
-<div id="outline-container-org45e879a" class="outline-2">
-<h2 id="org45e879a"><a href="#org45e879a">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org45e879a">
+<div id="outline-container-org70769bf" class="outline-2">
+<h2 id="org70769bf"><a href="#org70769bf">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org70769bf">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -26,39 +26,42 @@
 </ul></li>
 <li>レビュー
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-14 貴島</li>
 </ul></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org282842c" class="outline-2">
-<h2 id="org282842c"><a href="#org282842c">概要</a></h2>
-<div class="outline-text-2" id="text-org282842c">
+
+<div id="outline-container-orgfcf91b9" class="outline-2">
+<h2 id="orgfcf91b9"><a href="#orgfcf91b9">概要</a></h2>
+<div class="outline-text-2" id="text-orgfcf91b9">
 <p>
-プログラミング言語や、OSごとにパッケージマネージャがある。1つのエコシステムに、有力な複数のパッケージマネージャが存在することもある。お決まりのフレーズは、「これは既存のパッケージマネージャよりも実行がN倍速い」というものである。
+パイプのバッファはいっぱいになるとwriteをブロックする。マニュアルの該当箇所を示す。
 </p>
 
-<p>
-パッケージマネージャはパッケージをダウンロードしているだけに見えるが、なぜ実行速度の違いがあるのだろうか。
-</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>該当箇所</label><pre class="src src-shell">man <span class="org-string">"pipe(7)"</span> | grep -A 7 <span class="org-string">"Pipe capacity"</span>
+</pre>
+</div>
+
+<pre class="example">
+Pipe capacity
+    A  pipe  has  a limited capacity.  If the pipe is full, then a write(2)
+    will block or fail, depending on whether the  O_NONBLOCK  flag  is  set
+    (see  below).   Different implementations have different limits for the
+    pipe capacity.  Applications should not rely on a particular  capacity:
+    an  application  should  be designed so that a reading process consumes
+    data as soon as it is available, so that a writing process does not re‐
+    main blocked.
+</pre>
 </div>
 </div>
 
-<div id="outline-container-org9d4e34b" class="outline-2">
-<h2 id="org9d4e34b"><a href="#org9d4e34b">関連</a></h2>
-<div class="outline-text-2" id="text-org9d4e34b">
-<p>
-なし。
-</p>
-</div>
-</div>
-
-
-<div id="outline-container-org3201dfc" class="outline-2">
-<h2 id="org3201dfc"><a href="#org3201dfc">Backlinks</a></h2>
-<div class="outline-text-2" id="text-org3201dfc">
+<div id="outline-container-orgdda0ddf" class="outline-2">
+<h2 id="orgdda0ddf"><a href="#orgdda0ddf">関連</a></h2>
+<div class="outline-text-2" id="text-orgdda0ddf">
 <ul class="org-ul">
-<li><a href="./20241109T113144--kdoc-277-パッケージマネージャの依存関係解決には計算コストがかかる__draft_permanent.html">KDOC 277: パッケージマネージャの依存関係解決には計算コストがかかる</a></li>
+<li><a href="20241109T134521--kdoc-278-パイプの詰まりを再現する__permanent.html#ID-20241109T134521">KDOC 278: パイプの詰まりを再現する</a>。マニュアルの通りか挙動を確かめた</li>
 </ul>
 </div>
 </div>
