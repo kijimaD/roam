@@ -125,18 +125,20 @@
    ;; "</div></div>"
    (sxml-to-xml
     `(footer (@ (class "footer py-3"))
-      (div (@ (class "container"))
-           (div (@ (class "row "))
-                (div (@ (class "col-md-4")) "")
-                (div (@ (class "col-sm col-md"))
-                     (nav (@ (class "navbar"))
-                          (a (@ (class "nav-link text-secondary small px-0") (href "./index.html")) "Insomnia")
-                          (a (@ (class "nav-link text-secondary small px-0") (href "./sitemap.html")) "Sitemap")
-                          (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD/roam")) "Repository")
-                          (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD")) "@kijimaD")))
-                (div (@ (class "col-md-4")) "")))))
-   (sxml-to-xml
-    `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"))))))
+             (div (@ (class "container"))
+                  (div (@ (class "row "))
+                       (div (@ (class "col-md-4")) "")
+                       (div (@ (class "col-sm col-md"))
+                            (nav (@ (class "navbar"))
+                                 (a (@ (class "nav-link text-secondary small px-0") (href "./index.html")) "Insomnia")
+                                 (a (@ (class "nav-link text-secondary small px-0") (href "./sitemap.html")) "Sitemap")
+                                 (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD/roam")) "Repository")
+                                 (a (@ (class "nav-link text-secondary small px-0") (href "https://github.com/kijimaD")) "@kijimaD")))
+                       (div (@ (class "col-md-4")) "")))))
+   ;; 今のところBootstrapのJS箇所は使っていない
+   ;; (sxml-to-xml
+   ;;  `(script (@ (src "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"))))
+   ))
 
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
