@@ -160,11 +160,14 @@
        ;; link要素にはasync属性やdefer属性がない
        ;; 記法の参考: https://qiita.com/rana_kualu/items/95a7adf8420ea2b9f657
        "<link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media=\"all\"' />"
-       "<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css' media='print' onload='this.media=\"all\"' />"
 
        ;; ルートディレクトリにないorgファイルをエクスポートした場合、相対パスが変わる。絶対パスにするとGH pagesのルートディレクトリがpublicの一つ上の階層になる(/リポジトリ名/public)ため、ローカル環境で使えなくなる。つまりローカルでは`/`でokなのに、本番では`/roam`としないといけない。
        (format "<link rel='stylesheet' href='%s/css/site.css' />" kd/site-url)
        (format "<link rel='stylesheet' href='%s/css/code.css' />" kd/site-url)
+
+       "<link rel='preconnect' href='https://fonts.googleapis.com'>"
+       "<link rel='preconnect' href='https://fonts.gstatic.com' crossorigin>"
+       "<link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>"
        ))
 
 ;; Compile
