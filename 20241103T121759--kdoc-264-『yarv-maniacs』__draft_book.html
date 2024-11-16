@@ -16,9 +16,9 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 264: 『YARV Maniacs』</h1>
 
-<div id="outline-container-org61fa72f" class="outline-2">
-<h2 id="org61fa72f"><a href="#org61fa72f">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org61fa72f">
+<div id="outline-container-org5b9f8a1" class="outline-2">
+<h2 id="org5b9f8a1"><a href="#org5b9f8a1">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org5b9f8a1">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,17 +34,17 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org7dc4321" class="outline-2">
-<h2 id="org7dc4321"><a href="#org7dc4321">概略</a></h2>
-<div class="outline-text-2" id="text-org7dc4321">
+<div id="outline-container-org393813d" class="outline-2">
+<h2 id="org393813d"><a href="#org393813d">概略</a></h2>
+<div class="outline-text-2" id="text-org393813d">
 <p>
 <a href="https://magazine.rubyist.net/articles/0006/0006-YarvManiacs.html">『YARV Maniacs』</a>はRubyのVM、YARVの作者であるささだこういちが書いた記事。
 </p>
 </div>
 </div>
-<div id="outline-container-org2d039b7" class="outline-2">
-<h2 id="org2d039b7"><a href="#org2d039b7">メモ</a></h2>
-<div class="outline-text-2" id="text-org2d039b7">
+<div id="outline-container-org3e3ae02" class="outline-2">
+<h2 id="org3e3ae02"><a href="#org3e3ae02">メモ</a></h2>
+<div class="outline-text-2" id="text-org3e3ae02">
 <ul class="org-ul">
 <li>もっとも単純なディスパッチ処理はswitch/caseで分岐させること。つぎに関数ポインタを使った例がある。命令配列に関数ポインタを入れておいて命令を取り出す</li>
 </ul>
@@ -276,12 +276,54 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
 0021 getlocal         c # cはスタックに積むだけ
 0023 end
 </pre>
+
+<ul class="org-ul">
+<li>InstructionSequence(iseq) は、命令列</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby">str = &lt;&lt;<span class="org-string">"EOF"</span>
+<span class="org-string">  class C</span>
+<span class="org-string">    def m</span>
+<span class="org-string">    end</span>
+<span class="org-string">  end</span>
+<span class="org-string">EOF</span>
+<span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(str).disasm
+</pre>
+</div>
+
+<pre class="example">
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(4,5)&gt; (catch: FALSE)
+0000 putspecialobject                       3                         (   1)[Li]
+0002 putnil
+0003 defineclass                            :C, &lt;class:C&gt;, 0
+0007 leave
+
+== disasm: #&lt;ISeq:&lt;class:C&gt;@&lt;compiled&gt;:1 (1,2)-(4,5)&gt; (catch: FALSE)
+0000 definemethod                           :m, m                     (   2)[LiCl]
+0003 putobject                              :m
+0005 leave                                                            (   4)[En]
+
+== disasm: #&lt;ISeq:m@&lt;compiled&gt;:2 (2,4)-(3,7)&gt; (catch: FALSE)
+0000 putnil                                                           (   2)[Ca]
+0001 leave                                                            (   3)[Re]
+</pre>
+
+<ul class="org-ul">
+<li>算術メソッドは高速化した特化命令にコンパイルされる。 <code>opt_plus</code> など
+<ul class="org-ul">
+<li>レシーバと引数がFixnumのとき、のように型の条件がある</li>
+<li><code>opt_plus</code> で実行するとメソッド呼び出し処理(メソッドフレームの準備、破棄)が起きず、早くなる</li>
+<li>チェックのオーバーヘッドがあるので、なんでもやればいいわけではない。よくある組み合わせに対して用意する</li>
+</ul></li>
+<li>C言語などでは1+2のような式はコンパイル時に3に変換する。この最適化を定数畳み込みという。YARVでは定数畳み込みをしていない。メソッドの再定義に対応するため。再定義はいつ起こるかコンパイル時にはわからない</li>
+</ul>
 </div>
 </div>
 
-<div id="outline-container-org1e75ccb" class="outline-2">
-<h2 id="org1e75ccb"><a href="#org1e75ccb">用語</a></h2>
-<div class="outline-text-2" id="text-org1e75ccb">
+<div id="outline-container-org934f251" class="outline-2">
+<h2 id="org934f251"><a href="#org934f251">用語</a></h2>
+<div class="outline-text-2" id="text-org934f251">
 <dl class="org-dl">
 <dt>メソッドディスパッチ</dt><dd>オブジェクト指向でいうメソッドを実際に起動する機能。Rubyだとレシーバオブジェクトがあって、メソッド名があったとき、実際にメソッドを起動するときに処理をさせること</dd>
 <dt>命令ディスパッチ</dt><dd>命令によってそれに応じて処理をさせること</dd>
@@ -289,9 +331,19 @@ local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1,
 </div>
 </div>
 
-<div id="outline-container-org90d05fc" class="outline-2">
-<h2 id="org90d05fc"><a href="#org90d05fc">関連</a></h2>
-<div class="outline-text-2" id="text-org90d05fc">
+<div id="outline-container-org8649afa" class="outline-2">
+<h2 id="org8649afa"><a href="#org8649afa">関連</a></h2>
+<div class="outline-text-2" id="text-org8649afa">
+</div>
+</div>
+
+
+<div id="outline-container-org63c274b" class="outline-2">
+<h2 id="org63c274b"><a href="#org63c274b">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org63c274b">
+<ul class="org-ul">
+<li><a href="./20241116T131247--kdoc-290-なぜjitコンパイラが必要なのか__draft_permanent.html">KDOC 290: なぜJITコンパイラが必要なのか?</a></li>
+</ul>
 </div>
 </div>
 </div>
