@@ -1,6 +1,6 @@
 :properties:
 :ID: 20241103T121759
-:mtime:    20241110202247
+:mtime:    20241116135019
 :ctime:    20241103121812
 :end:
 #+title:      KDOC 264: 『YARV Maniacs』
@@ -47,7 +47,13 @@
 # 3. 追加すべきものだけ追加する
 
 * この文書のステータス
+:PROPERTIES:
+:Effort:   2:00
+:END:
 :LOGBOOK:
+CLOCK: [2024-11-16 Sat 13:25]--[2024-11-16 Sat 13:50] =>  0:25
+CLOCK: [2024-11-16 Sat 08:56]--[2024-11-16 Sat 09:21] =>  0:25
+CLOCK: [2024-11-16 Sat 00:36]--[2024-11-16 Sat 01:01] =>  0:25
 CLOCK: [2024-11-10 Sun 09:31]--[2024-11-10 Sun 09:56] =>  0:25
 CLOCK: [2024-11-04 Mon 23:54]--[2024-11-05 Tue 00:19] =>  0:25
 CLOCK: [2024-11-04 Mon 22:48]--[2024-11-04 Mon 23:13] =>  0:25
@@ -301,6 +307,42 @@ puts RubyVM::InstructionSequence.compile('C::D').disasm
 0021 getlocal         c # cはスタックに積むだけ
 0023 end
 #+end_src
+
+- InstructionSequence(iseq) は、命令列
+
+#+begin_src ruby :results output
+  str = <<"EOF"
+    class C
+      def m
+      end
+    end
+  EOF
+  puts RubyVM::InstructionSequence.compile(str).disasm
+#+end_src
+
+#+RESULTS:
+#+begin_src
+== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(4,5)> (catch: FALSE)
+0000 putspecialobject                       3                         (   1)[Li]
+0002 putnil
+0003 defineclass                            :C, <class:C>, 0
+0007 leave
+
+== disasm: #<ISeq:<class:C>@<compiled>:1 (1,2)-(4,5)> (catch: FALSE)
+0000 definemethod                           :m, m                     (   2)[LiCl]
+0003 putobject                              :m
+0005 leave                                                            (   4)[En]
+
+== disasm: #<ISeq:m@<compiled>:2 (2,4)-(3,7)> (catch: FALSE)
+0000 putnil                                                           (   2)[Ca]
+0001 leave                                                            (   3)[Re]
+#+end_src
+
+- 算術メソッドは高速化した特化命令にコンパイルされる。 ~opt_plus~ など
+  - レシーバと引数がFixnumのとき、のように型の条件がある
+  - ~opt_plus~ で実行するとメソッド呼び出し処理(メソッドフレームの準備、破棄)が起きず、早くなる
+  - チェックのオーバーヘッドがあるので、なんでもやればいいわけではない。よくある組み合わせに対して用意する
+- C言語などでは1+2のような式はコンパイル時に3に変換する。この最適化を定数畳み込みという。YARVでは定数畳み込みをしていない。メソッドの再定義に対応するため。再定義はいつ起こるかコンパイル時にはわからない
 
 * 用語
 

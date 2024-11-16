@@ -1,6 +1,6 @@
 :properties:
 :ID: 20231108T131646
-:mtime:    20241111125712
+:mtime:    20241116095302
 :ctime:    20241028101410
 :end:
 #+title:      KDOC 55: giteaのコードを読んだメモ
@@ -26,10 +26,10 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 $(EXECUTABLE): $(GO_SOURCES) $(TAGS_PREREQ)
 	CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
-#+end_results
+#+end_src
 
 ** routerを起動している部分
 
@@ -38,9 +38,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	webRoutes := routers.NormalRoutes()
-#+end_results
+#+end_src
 
 ** DB設定部分
 
@@ -52,10 +52,10 @@ https://github.com/go-gitea/gitea/blob/0999721c7b4d124c1f14bbd067acdcf767542abb/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	// Database holds the database settings
 	Database = struct {
-#+end_results
+#+end_src
 
 変数はグローバル変数にしつつ↑、セットはパッケージ内の関数でやる。
 
@@ -64,7 +64,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 func loadDBSetting(rootCfg ConfigProvider) {
 	sec := rootCfg.Section("database")
 	Database.Type = DatabaseType(sec.Key("DB_TYPE").String())
@@ -72,7 +72,7 @@ func loadDBSetting(rootCfg ConfigProvider) {
 	Database.Host = sec.Key("HOST").String()
 	Database.Name = sec.Key("NAME").String()
 	Database.User = sec.Key("USER").String()
-#+end_results
+#+end_src
 
 ** DB初期化部分
 
@@ -83,10 +83,10 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // InitEngine initializes the xorm.Engine and sets it as db.DefaultContext
 func InitEngine(ctx context.Context) error {
-#+end_results
+#+end_src
 
 InitEngineの中でデータベースを初期化する。
 
@@ -96,9 +96,9 @@ InitEngineの中でデータベースを初期化する。
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	xormEngine, err := newXORMEngine()
-#+end_results
+#+end_src
 
 InitEngineの中でSetDefaultEngine()して初期化したデータベースをDefaultContextに設定する。
 
@@ -107,7 +107,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // SetDefaultEngine sets the default engine for db
 func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
 	x = eng
@@ -116,7 +116,7 @@ func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
 		e:       x,
 	}
 }
-#+end_results
+#+end_src
 
 セットできているかの確認文。
 
@@ -125,9 +125,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	mustInitCtx(ctx, common.InitDBEngine)
-#+end_results
+#+end_src
 
 ** 変数default contextに設定する
 
@@ -138,7 +138,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // SetDefaultEngine sets the default engine for db
 func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
 	x = eng
@@ -147,7 +147,7 @@ func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
 		e:       x,
 	}
 }
-#+end_results
+#+end_src
 
 テストとかではdefault contextを使って、dbを簡単に起動している。そうでない部分では、起動時に明示して上書きしているようだ。
 
@@ -161,10 +161,10 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // APIContext is a specific context for API service
 type APIContext struct {
-	*Base
+	,*Base
 
 	Cache cache.Cache
 
@@ -178,7 +178,7 @@ type APIContext struct {
 	Org     *APIOrganization
 	Package *Package
 }
-#+end_results
+#+end_src
 
 Baseにはcontext.Contextが埋め込まれている。
 
@@ -188,7 +188,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 type Base struct {
 	originCtx     context.Context
 	contextValues []contextValuePair
@@ -203,14 +203,14 @@ type Base struct {
 	// Locale is mainly for Web context, although the API context also uses it in some cases: message response, form validation
 	Locale translation.Locale
 }
-#+end_results
+#+end_src
 
 #+begin_src git-permalink
 https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/context/api.go#L213-L223
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // APIContexter returns apicontext as middleware
 func APIContexter() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -222,7 +222,7 @@ func APIContexter() func(http.Handler) http.Handler {
 				Repo:  &Repository{PullRequest: &PullRequest{}},
 				Org:   &APIOrganization{},
 			}
-#+end_results
+#+end_src
 
 ** contextからdbインスタンスを取り出す
 
@@ -231,9 +231,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	has, err := db.GetEngine(ctx).ID(task.RepoID).Get(&repo)
-#+end_results
+#+end_src
 
 ** DBコンテキストは異なる
 
@@ -244,14 +244,14 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // Context represents a db context
 type Context struct {
 	context.Context
 	e           Engine
 	transaction bool
 }
-#+end_results
+#+end_src
 
 #+caption: クエリを走らせるためのcontext
 #+begin_src git-permalink
@@ -259,11 +259,11 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // DefaultContext is the default context to run xorm queries in
 // will be overwritten by Init with HammerContext
 var DefaultContext context.Context
-#+end_results
+#+end_src
 
 context.Contextはインターフェースなので、DefaultContextにはdb.Contextが入る。
 
@@ -274,7 +274,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // Engined structs provide an Engine
 type Engined interface {
 	Engine() Engine
@@ -299,19 +299,19 @@ func getEngine(ctx context.Context) Engine {
 	}
 	return nil
 }
-#+end_results
+#+end_src
 
 #+begin_src git-permalink
 https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/context.go#L49-L52
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // Engine returns db engine
 func (ctx *Context) Engine() Engine {
 	return ctx.e
 }
-#+end_results
+#+end_src
 
 ** DBオブジェクト宣言
 
@@ -323,9 +323,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 		engine, err = xorm.NewEngine("postgresschema", connStr)
-#+end_results
+#+end_src
 
 ** テストで、どうやってDefaultContextをセットしているか
 
@@ -338,11 +338,11 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	assert.NoError(t, unittest.PrepareTestDatabase())
 	token := unittest.AssertExistsAndLoadBean(t, &ActionRunnerToken{ID: 3})
 	expectedToken, err := GetLatestRunnerToken(db.DefaultContext, 1, 0)
-#+end_results
+#+end_src
 
 dbはcontextのvalueで持つべきじゃないらしい。リクエストスコープでないから。ダメじゃんと思ったけれども、contextの内部で持ってるわけではなく構造体で持ってるからいいのか。
 
@@ -354,7 +354,7 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 // APIContexter returns apicontext as middleware
 func APIContexter() func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -386,7 +386,7 @@ func APIContexter() func(http.Handler) http.Handler {
 		})
 	}
 }
-#+end_results
+#+end_src
 
 ミドルウェアとして登録されている。
 
@@ -395,9 +395,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 	m.Use(context.APIContexter())
-#+end_results
+#+end_src
 
 DB関係なくないか。どこでセットされているか。
 
@@ -412,9 +412,9 @@ https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 func runMigrate(ctx *cli.Context) error {
-#+end_results
+#+end_src
 
 ** テスト時にどうやってDB初期化されているか
 
@@ -433,6 +433,6 @@ unittest.PrepareTestDatabase() を見るが、そのときにはすでにDefault
 #+end_src
 
 #+RESULTS:
-#+begin_results
+#+begin_src
 func MainTest(m *testing.M, testOpts ...*TestOptions) {
-#+end_results
+#+end_src
