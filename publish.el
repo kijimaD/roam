@@ -37,8 +37,10 @@
 ;; Unfortunately this is necessary for now...
 (load-file "./ox-slimhtml.el")
 
+;; https://github.com/org-roam/org-roam/issues/2485 の対応
 (use-package emacsql
-  :ensure t)
+  :ensure t
+  :straight (:host github :repo "magit/emacsql" :commit "491105a01f58bf0b346cbc0254766c6800b229a2"))
 
 ;; Install other dependencies
 (use-package esxml
