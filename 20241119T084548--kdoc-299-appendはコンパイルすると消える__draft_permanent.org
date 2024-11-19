@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241115T154906
-:mtime:    20241117093528
-:ctime:    20241115154910
+:ID: 20241119T084548
+:mtime:    20241119090313
+:ctime:    20241119084551
 :end:
-#+title:      KDOC 287: バイトコードにメモリサイズが書かれていないことを確認する
-#+date:       [2024-11-15 Fri 15:49]
+#+title:      KDOC 299: appendはコンパイルすると消える
+#+date:       [2024-11-19 Tue 08:45]
 #+filetags:   :draft:permanent:
-#+identifier: 20241115T154906
+#+identifier: 20241119T084548
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,7 +48,7 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2024-11-15 貴島
+  - [X] 2024-11-19 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -65,30 +65,26 @@
 * 概要
 # 本文(見出しも設定する)
 
-仮想マシンの機械語をバイトコードと呼ぶ。バイトコードは抽象的なマシンなので、メモリを番地レベルで考えない。メモリサイズが書かれてないのを実際のバイトコードを見て確認する。
+Go言語の ~append~ が、コンパイルされるとどうなるかを見てみる。
 
-#+caption: Rubyで配列をバイトコードに変換する
-#+begin_src ruby :results output
-puts RubyVM::InstructionSequence.compile('[1, 2, 3, "a", "b"]').disasm
+#+begin_export html
+<iframe width="800px" height="500px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,selection:(endColumn:18,endLineNumber:7,positionColumn:18,positionLineNumber:7,selectionStartColumn:18,selectionStartLineNumber:7,startColumn:18,startLineNumber:7),source:'//+Type+your+code+here,+or+load+an+example.%0A//+Your+function+name+should+start+with+a+capital+letter.%0Apackage+main%0A%0Afunc+main()+%7B%0A%09a+:%3D+%5B%5Dint%7B1,+2%7D%0A%09a+%3D+append(a,+3)%0A%7D%0A'),l:'5',n:'0',o:'Go+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:gl1232,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+x86-64+gc+1.23.2+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+#+end_export
+
+#+caption: a = append(a, 3) に相当するアセンブリ
+#+begin_src asm
+          LEAQ main..autotmp_2+64(SP), AX
+          MOVL $3, BX
+          MOVL $2, CX
+          MOVL $1, DI
+          LEAQ type:int(SB), SI
+          PCDATA $1, $0
+          NOP
+          CALL runtime.growslice(SB)
+          MOVQ $3, 16(AX)
 #+end_src
 
-#+RESULTS:
-#+begin_src
-== disasm: #<ISeq:<compiled>@<compiled>:1 (1,0)-(1,19)> (catch: FALSE)
-0000 putobject_INT2FIX_1_                                             (   1)[Li]
-0001 putobject                              2
-0003 putobject                              3
-0005 putstring                              "a"
-0007 putstring                              "b"
-0009 newarray                               5
-0011 leave
-#+end_src
-
-単純にスタックに積むことだけが書かれている。
-
-* 参考
-
-- [[https://ja.wikipedia.org/wiki/%E3%83%90%E3%82%A4%E3%83%88%E3%82%B3%E3%83%BC%E3%83%89][バイトコード - Wikipedia]]
+つまり、 ~append~ はコンパイル時に ~runtime.growslice(SB)~ へ変わっているように見える。デバッガで ~append~ にステップインできないのは、コンパイル後の実行時に関数自体がなく、相当するソースコードを参照できないから、に見える。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -97,4 +93,4 @@ puts RubyVM::InstructionSequence.compile('[1, 2, 3, "a", "b"]').disasm
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-- [[id:20241104T143835][KDOC 272: バイトコード変換は型情報が必須ではない]]。これを確かめた
+- [[id:20241119T004907][KDOC 296: appendにステップインできないのはなぜか?]]。調べるきっかけになった疑問

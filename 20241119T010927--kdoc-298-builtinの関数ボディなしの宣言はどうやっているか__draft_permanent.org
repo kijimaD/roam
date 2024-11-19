@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241117T232525
-:mtime:    20241118002418
-:ctime:    20241117232533
+:ID: 20241119T010927
+:mtime:    20241119084215
+:ctime:    20241119010933
 :end:
-#+title:      KDOC 294: errorsは標準ライブラリと外部ライブラリで異なる
-#+date:       [2024-11-17 Sun 23:25]
-#+filetags:   :draft:wiki:
-#+identifier: 20241117T232525
+#+title:      KDOC 298: builtinの関数ボディなしの宣言はどうやっているか?
+#+date:       [2024-11-19 Tue 01:09]
+#+filetags:   :draft:permanent:
+#+identifier: 20241119T010927
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,7 +48,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2024-11-18 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -65,114 +66,22 @@
 * 概要
 # 本文(見出しも設定する)
 
-Go言語で、標準ライブラリ ~errors~ と外部ライブラリ ~github.com/pkg/errors~ は、パッケージ名は同じであるが、異なる。今まで、 ~errors~ で自動インポートされたほうを使っていた。
+Go言語の ~builtin~ packageはドキュメントのためにあり、処理は書かれていない。関数ボディがないのに書けているのは、コンパイル時に無視しているとか、そういうのだろうか。通常、関数ボディがないとコンパイルエラーになる。
 
-違いをかんたんに確認した。
-
-#+caption: 標準ライブラリ
-#+begin_src go
-  package main
-  import (
-          "fmt"
-          "errors"
-  )
-  func main() {
-          err := fmt.Errorf("wrapした: %w", errors.New("wrappedされた"))
-          fmt.Printf("Error: %+v\n", err)
-  }
+#+caption: builtinパッケージドキュメント
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/builtin/builtin.go#L5-L10
 #+end_src
 
 #+RESULTS:
-#+begin_src
-Error: wrapした: wrappedされた
-#+end_src
-
-標準ライブラリ。
-
-- ラップは ~fmt.Errorf~ とフォーマット指定子 ~%w~ で行う
-- 取り出しは ~As~ や ~Is~ で行う
-- スタックトレースは自動で保存してくれない
-
-#+caption: 外部ライブラリ
 #+begin_src go
-package main
-
-import (
-	"fmt"
-
-	"github.com/pkg/errors"
-)
-
-func main() {
-	// ラップあり
-	if err := level1(); err != nil {
-		fmt.Printf("Error: %+v\n", err)
-	}
-
-	fmt.Println("================")
-
-	// ラップなし
-	if err := doSomething(); err != nil {
-		fmt.Printf("Error: %+v\n", err)
-	}
-
-}
-
-func level1() error {
-	return level2()
-}
-
-func level2() error {
-	return errors.Wrap(doSomething(), "level2 failed")
-}
-
-func doSomething() error {
-	return errors.New("something went wrong")
-}
+/*
+Package builtin provides documentation for Go's predeclared identifiers.
+The items documented here are not actually in package builtin
+but their descriptions here allow godoc to present documentation
+for the language's special identifiers.
+,*/
 #+end_src
-
-#+begin_src
-Error: something went wrong
-main.doSomething
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:43
-main.level2
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:39
-main.level1
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:35
-main.main
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:21
-runtime.main
-	/usr/local/go/src/runtime/proc.go:272
-runtime.goexit
-	/usr/local/go/src/runtime/asm_amd64.s:1700
-level2 failed
-main.level2
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:39
-main.level1
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:35
-main.main
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:21
-runtime.main
-	/usr/local/go/src/runtime/proc.go:272
-runtime.goexit
-	/usr/local/go/src/runtime/asm_amd64.s:1700
-================
-Error: something went wrong
-main.doSomething
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:43
-main.main
-	/home/orange/go/src/playground/at-2024-11-17-231508/snippet.go:28
-runtime.main
-	/usr/local/go/src/runtime/proc.go:272
-runtime.goexit
-	/usr/local/go/src/runtime/asm_amd64.s:1700
-#+end_src
-
-外部ライブラリ。
-
-- ラップは ~Wrap~ で行う
-- 取り出しは ~Cause~ で行う
-- ~fmt.Printf~ で ~%+v~ フォーマットを使うとスタックトレースを表示できる
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -181,4 +90,4 @@ runtime.goexit
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-なし。
+- [[id:20241119T005803][KDOC 297: builtin packageの定義はダミーである]]。で見ていて疑問に感じた
