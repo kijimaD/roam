@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-11-19 -->
+<!-- 2024-11-21 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 293: 『超例解Linuxカーネルプログラミング』</title>
@@ -16,9 +16,9 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 293: 『超例解Linuxカーネルプログラミング』</h1>
 
-<div id="outline-container-org6801bff" class="outline-2">
-<h2 id="org6801bff"><a href="#org6801bff">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org6801bff">
+<div id="outline-container-org28bf8d4" class="outline-2">
+<h2 id="org28bf8d4"><a href="#org28bf8d4">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org28bf8d4">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,18 +34,18 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org8a93290" class="outline-2">
-<h2 id="org8a93290"><a href="#org8a93290">概要</a></h2>
-<div class="outline-text-2" id="text-org8a93290">
+<div id="outline-container-org816aeff" class="outline-2">
+<h2 id="org816aeff"><a href="#org816aeff">概要</a></h2>
+<div class="outline-text-2" id="text-org816aeff">
 <p>
 <a href="https://www.c-r.com/book/detail/1321">『超例解Linuxカーネルプログラミング』</a>は、カーネル開発を解説する本。
 </p>
 </div>
 </div>
 
-<div id="outline-container-org0ac97b1" class="outline-2">
-<h2 id="org0ac97b1"><a href="#org0ac97b1">メモ</a></h2>
-<div class="outline-text-2" id="text-org0ac97b1">
+<div id="outline-container-orgff57f68" class="outline-2">
+<h2 id="orgff57f68"><a href="#orgff57f68">メモ</a></h2>
+<div class="outline-text-2" id="text-orgff57f68">
 <ul class="org-ul">
 <li>1章: Linuxカーネルの開発フロー</li>
 <li><a href="https://lwn.net/">LWN.net</a>は、Linux開発のニュースサイト(p29)</li>
@@ -65,22 +65,82 @@
 <li>実際の修正例をもとに、起こしがちなバグを解説している</li>
 <li>ワークキューというカーネルの仕組みを利用すると、指定した関数を遅延実行させられる(p62)</li>
 <li>割り込みハンドラは登録したあとはいつ呼び出されるかわからない。登録する前に必要な初期設定をしておかないといけない(p80)</li>
+<li>ネットワークインターフェースが有効かどうかは、ipコマンドで見たときに「stateがUP」であるという意味。以前はifconfigが使われていたが、現在では非推奨となっている、という(p85)</li>
+<li>ネットワークカードから発生する割り込みを禁止する処理は、ネットワークカードのレジスタにゼロを書き込んでいる(p86)</li>
+<li>ポーリングモードの欠点はパケットの受信処理が遅くなること。割り込みモードとポーリングモードのどちらを選択するかは、カーネルへの負荷とネットワーク性能のトレードオフとなる</li>
+<li>SystemTapという仕組みを利用するのが手軽。SystemTap専用のスクリプト言語を使って簡単なコードを書くことで、自動的にカーネルコードが生成され、動作中のカーネルに組み込める(p89)
+<ul class="org-ul">
+<li><code>apt install systemtap</code></li>
+<li>手順: p90</li>
+</ul></li>
+<li>ネットワークインターフェイスをUPからダウンに変更中にネットワークから割り込みがきた場合が問題であるコード例(p95)</li>
+<li>ネットワークのパケットはいつ外部から入ってくるかわからないので、完全にネットワークドライバが停止していない限り、割り込みハンドラが呼び出されてしまう。割り込みはネットワークカードというハードウェアから上がってくるものなので、ソフトウェアで割り込み禁止にしない限り、延々と割り込みがくる。ハードウェアから見るといつまでも割り込みが処理されていないように見える。そして割り込みが無限に上がってくるとCPU1つを使い続けることになり、負荷が上がる(p95)</li>
+<li>ポインタはメモリ空間を指し示すアドレスなので、メモリ空間が4GBなのであれば、0から(4G-1)の数値を表現できる必要がある。32bitだとポインタのサイズが4バイト</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-comment-delimiter"># </span><span class="org-comment">32bit&#12395;&#26684;&#32013;&#12391;&#12365;&#12427;&#25972;&#25968;&#12398;&#25968;&#12434;GB&#12395;&#30452;&#12377;</span>
+2**32 / 1000 / 1000 / 1000.0
+</pre>
+</div>
+
+<pre class="example">
+4.294
+</pre>
+
+<ul class="org-ul">
+<li>5章: 32bit/64bitに関する落とし穴</li>
+<li>カーネル関数の <code>printk()</code> は、C言語の <code>printf()</code> に似せて作られているという。従来、 <code>printk()</code> の「%p」はポインタのアドレスを表示していたが、セキュリュティ上があるということで、でたらめな値が表示されるように実装が変更された。ポインタのアドレスをハッシュ化して、元の値がいくつかをわからなくする。「%px」では本当のポインタアドレスを表示する(p101)</li>
+<li>Kprobesは、Linuxカーネルの動作中に任意の箇所にブレークポイントを仕掛けられ、そのブレークポイントにデバッグ用コードを設定できる仕組みのこと。SystemTapはKprovesの仕組みを利用したツールである(p103)</li>
+<li>Kprovesではデバッグしたい関数にブレークを設定するには関数のアドレス、つまり関数ポインタのアドレスが必要である(p104)</li>
+<li>ドライバをビルドして、 <code>insmod</code> でドライブを組み込む。不要になったドライバは <code>rmmod</code> で取り外せる(p106)
+<ul class="org-ul">
+<li>ドライバをロードしたことが <code>/var/log/syslog</code> にログ保存される</li>
+</ul></li>
+<li>6章: 処理終了の待ち合わせ</li>
+<li>I2Cとはシリアルバスのこと。組み込み分野ではよく用いられる</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgf6a432a" class="outline-2">
-<h2 id="orgf6a432a"><a href="#orgf6a432a">感想</a></h2>
-<div class="outline-text-2" id="text-orgf6a432a">
+<div id="outline-container-org94ffdd8" class="outline-2">
+<h2 id="org94ffdd8"><a href="#org94ffdd8">感想</a></h2>
+<div class="outline-text-2" id="text-org94ffdd8">
 <ul class="org-ul">
 <li>今のメジャーな文字列形式はなんだろうか。ヌル終端で合っているか</li>
+<li>Linux開発文脈でifconfigは非推奨となっている、ということか、ユーザ全体で非推奨となっているのか</li>
+<li>32bit CPUって、一度に処理できるデータサイズ&#x2026;つまりポインタサイズが32bit(4バイト)ということなのか。命令の長さなどは関係ない
+<ul class="org-ul">
+<li><a href="https://www.weblio.jp/content/64-bit+CPU">64-bit CPUとは何？ わかりやすく解説 Weblio辞書</a></li>
+</ul></li>
+<li>汎整数拡張
+<ul class="org-ul">
+<li>intが元の型のすべての値を表現できる場合はintに変換され、そうでない場合はunsigned intに変換される</li>
+</ul></li>
 </ul>
+
+<div class="org-src-container">
+<pre class="src src-C"><span class="org-type">signed</span> <span class="org-type">char</span> <span class="org-variable-name">result1</span>, <span class="org-variable-name">c1</span>, <span class="org-variable-name">c2</span>, <span class="org-variable-name">c3</span>;
+<span class="org-type">signed</span> <span class="org-type">int</span> <span class="org-variable-name">result2</span>;
+c1 = 100;
+c2 = 3;
+result1 = c1 * c2;
+result2 = c1 * c2;
+printf(<span class="org-string">"char: %d\n"</span>, result1);
+printf(<span class="org-string">"int: %d\n"</span>, result2);
+</pre>
+</div>
+
+<pre class="example">
+char: 44
+int: 300
+</pre>
 </div>
 </div>
 
-<div id="outline-container-org1489af6" class="outline-2">
-<h2 id="org1489af6"><a href="#org1489af6">関連</a></h2>
-<div class="outline-text-2" id="text-org1489af6">
+<div id="outline-container-orgc3d5a5f" class="outline-2">
+<h2 id="orgc3d5a5f"><a href="#orgc3d5a5f">関連</a></h2>
+<div class="outline-text-2" id="text-orgc3d5a5f">
 <p>
 なし。
 </p>
