@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241119T231512
-:mtime:    20241120120924
-:ctime:    20241119231519
+:ID: 20241121T225809
+:mtime:    20241122222904
+:ctime:    20241121225825
 :end:
-#+title:      KDOC 300: スライスのcapacityが伸長する様子を見る
-#+date:       [2024-11-19 Tue 23:15]
+#+title:      KDOC 301: なぜReact Queryを挟むのか?
+#+date:       [2024-11-21 Thu 22:58]
 #+filetags:   :draft:permanent:
-#+identifier: 20241119T231512
+#+identifier: 20241121T225809
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,7 +48,7 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2024-11-19 貴島
+  - [X] 2024-11-22 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -64,48 +64,9 @@
 # すべてのコメントを削除した。
 * 概要
 # 本文(見出しも設定する)
+フロントエンド開発において、HTTPリクエストのライブラリ ~axios~ を直接呼び出すようなことはしないことが多い。React Queryの ~useQuery~ 関数にコールバック関数を渡して、 ~useQuery~ を介してリクエストを行う。
 
-Go言語でスライスが伸長する様子をデバッガで確認する。
-
-#+caption: main.go
-#+begin_src go
-  func main() {
-          // 要素数0, 容量1
-          s := make([]string, 0, 1)
-          for i := 0; i < 100; i++ {
-                  print("for break")
-                  s = append(s, "a")
-          }
-  }
-#+end_src
-
-#+RESULTS:
-#+begin_src
-#+end_src
-
-↑このコードは要素数が0、capacityが1なのでループの2回めでcapacityの増加処理が発生するはずである。
-
-Goのデバッガdlvを使って、見る。
-
-#+caption: dlvでの操作。途中の出力は省略している
-#+begin_src shell
-  $ dlv debug main.go
-  # 初期化処理でのgrowsliceにブレークするので、printまで飛ばす
-
-  # 組み込み関数printはコンパイル後はprintstringになっている
-  (dlv) b runtime.printstring
-
-  # 飛ばす
-  (dlv) n
-
-  # printまで飛ばした時点で仕掛ける
-  (dlv) b runtime.growslice
-
-  # cap1のスライスなので、ループの最初の1回は引っかからない
-  # ループの2回目ではgrowsliceで止まる
-#+end_src
-
-要素数がcapacityを超えた2回目のループでは、growsliceが呼ばれてcapacityの伸長が行われることを確認できた。
+そうする理由は何だろうか。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -114,4 +75,4 @@ Goのデバッガdlvを使って、見る。
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-- [[id:20241119T084548][KDOC 299: appendはコンパイルすると消える]]。growsliceが確かに呼ばれているのを確認した
+なし。
