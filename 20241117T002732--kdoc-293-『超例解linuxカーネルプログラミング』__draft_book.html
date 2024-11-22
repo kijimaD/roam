@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-11-21 -->
+<!-- 2024-11-22 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 293: 『超例解Linuxカーネルプログラミング』</title>
@@ -16,9 +16,9 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 293: 『超例解Linuxカーネルプログラミング』</h1>
 
-<div id="outline-container-org28bf8d4" class="outline-2">
-<h2 id="org28bf8d4"><a href="#org28bf8d4">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org28bf8d4">
+<div id="outline-container-org6d7cb14" class="outline-2">
+<h2 id="org6d7cb14"><a href="#org6d7cb14">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org6d7cb14">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,18 +34,18 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org816aeff" class="outline-2">
-<h2 id="org816aeff"><a href="#org816aeff">概要</a></h2>
-<div class="outline-text-2" id="text-org816aeff">
+<div id="outline-container-org20b2c39" class="outline-2">
+<h2 id="org20b2c39"><a href="#org20b2c39">概要</a></h2>
+<div class="outline-text-2" id="text-org20b2c39">
 <p>
 <a href="https://www.c-r.com/book/detail/1321">『超例解Linuxカーネルプログラミング』</a>は、カーネル開発を解説する本。
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgff57f68" class="outline-2">
-<h2 id="orgff57f68"><a href="#orgff57f68">メモ</a></h2>
-<div class="outline-text-2" id="text-orgff57f68">
+<div id="outline-container-orgdbdacb0" class="outline-2">
+<h2 id="orgdbdacb0"><a href="#orgdbdacb0">メモ</a></h2>
+<div class="outline-text-2" id="text-orgdbdacb0">
 <ul class="org-ul">
 <li>1章: Linuxカーネルの開発フロー</li>
 <li><a href="https://lwn.net/">LWN.net</a>は、Linux開発のニュースサイト(p29)</li>
@@ -99,13 +99,28 @@
 </ul></li>
 <li>6章: 処理終了の待ち合わせ</li>
 <li>I2Cとはシリアルバスのこと。組み込み分野ではよく用いられる</li>
+<li>DNA(Direct Memory Access)。I/OデバイスがCPUを介さずに直接メモリにアクセスできる(p116)</li>
+<li>Linuxカーネルのコンプリージョン機能。コンプリージョンを使うと処理完了まで待ち合わせできる。具体的にはユーザープロセスの状態を「割り込み不可なスリープ状態」にして通知を受けたら起動する。待ち合わせ中はユーザープロセスにSIGKILLを送ってもプロセスを強制終了できない(p118)</li>
+<li>ハードウェア割り込みは割り込みハンドラの登録解除しない限りいつ発生するかわからない。割り込みハンドラを登録解除してからメモリ解放しなければならない(p127)</li>
+<li>7章: シンプルなミス</li>
+<li>マイクロコード: CPUの命令コードの塊のようなもので、CPUのバグ修正をソフトウェアレベルで行える仕組み。CPUのメーカーからベンダーに提供され、BIOSやOSに組み込まれる(p146)</li>
+<li>8章: セキュリティ</li>
+<li>CPUの投機的実行を悪用した脆弱性。投機的実行はプログラムを先読みして実行していく仕組み。同時に実行することで範囲外アクセスが可能になったりする。1つのプロセスで読み込まれたデータはCPUのキャッシュに載るが、そのキャッシュデータを別のプロセスから読み出すことで本来読まれてはならないデータを読み出せるというもの(p153)</li>
+<li>CPU脆弱性問題
+<ul class="org-ul">
+<li>スペクターv1</li>
+<li>スペクターv2</li>
+<li>メルトダウン</li>
+</ul></li>
+<li>Linuxの端末実装は3つのレイヤーで構成される。最上位はキャラクタデバイスのインターフェースを提供し、中間層がldisc、最下位層はハードウェアおよび疑似端末と通信するドライバになる(p155)</li>
+<li>kfreeなどでメモリが解放されてもメモリの内容はそのままになっている。なので、情報漏えいしたらまずい内容をメモリに乗せる場合はメモリを解放する前にメモリをゼロクリアするのが定石である(p156)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org94ffdd8" class="outline-2">
-<h2 id="org94ffdd8"><a href="#org94ffdd8">感想</a></h2>
-<div class="outline-text-2" id="text-org94ffdd8">
+<div id="outline-container-org103973c" class="outline-2">
+<h2 id="org103973c"><a href="#org103973c">感想</a></h2>
+<div class="outline-text-2" id="text-org103973c">
 <ul class="org-ul">
 <li>今のメジャーな文字列形式はなんだろうか。ヌル終端で合っているか</li>
 <li>Linux開発文脈でifconfigは非推奨となっている、ということか、ユーザ全体で非推奨となっているのか</li>
@@ -135,12 +150,23 @@ printf(<span class="org-string">"int: %d\n"</span>, result2);
 char: 44
 int: 300
 </pre>
+
+<ul class="org-ul">
+<li>階層で関数呼び出しを示す書き方、良い</li>
+</ul>
+
+<pre class="example">
+i2c_transfer
+  __i2c_transfer
+    adap-&gt;algo-&gt;master_xfer
+      i2c_imx_xfer
+</pre>
 </div>
 </div>
 
-<div id="outline-container-orgc3d5a5f" class="outline-2">
-<h2 id="orgc3d5a5f"><a href="#orgc3d5a5f">関連</a></h2>
-<div class="outline-text-2" id="text-orgc3d5a5f">
+<div id="outline-container-org45d4ec3" class="outline-2">
+<h2 id="org45d4ec3"><a href="#org45d4ec3">関連</a></h2>
+<div class="outline-text-2" id="text-org45d4ec3">
 <p>
 なし。
 </p>
