@@ -84,7 +84,7 @@ dockle:
 
 .PHONY: server
 server: ## webサーバを起動する
-	docker run --rm -d -v "$(PWD)/public":/usr/share/nginx/html -w /usr/share/nginx/html -p 8005:80 --name roam-server docker.io/nginx:1.27
+	docker run -d -v "$(PWD)/public":/usr/share/nginx/html -w /usr/share/nginx/html -p 8005:80 --name roam-server --restart always docker.io/nginx:1.27
 
 .PHONY: watch
 watch: ## 自動更新する
