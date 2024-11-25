@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2024-11-22 -->
+<!-- 2024-11-25 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 293: 『超例解Linuxカーネルプログラミング』</title>
@@ -16,9 +16,9 @@
 <div id="content" class="content">
 <h1 class="title">KDOC 293: 『超例解Linuxカーネルプログラミング』</h1>
 
-<div id="outline-container-org1a62b81" class="outline-2">
-<h2 id="org1a62b81"><a href="#org1a62b81">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org1a62b81">
+<div id="outline-container-orgfe6fc02" class="outline-2">
+<h2 id="orgfe6fc02"><a href="#orgfe6fc02">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgfe6fc02">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -34,18 +34,18 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-orge0ae2fd" class="outline-2">
-<h2 id="orge0ae2fd"><a href="#orge0ae2fd">概要</a></h2>
-<div class="outline-text-2" id="text-orge0ae2fd">
+<div id="outline-container-orge7ed80d" class="outline-2">
+<h2 id="orge7ed80d"><a href="#orge7ed80d">概要</a></h2>
+<div class="outline-text-2" id="text-orge7ed80d">
 <p>
 <a href="https://www.c-r.com/book/detail/1321">『超例解Linuxカーネルプログラミング』</a>は、カーネル開発を解説する本。
 </p>
 </div>
 </div>
 
-<div id="outline-container-orgb891bc3" class="outline-2">
-<h2 id="orgb891bc3"><a href="#orgb891bc3">メモ</a></h2>
-<div class="outline-text-2" id="text-orgb891bc3">
+<div id="outline-container-orgeeaa92e" class="outline-2">
+<h2 id="orgeeaa92e"><a href="#orgeeaa92e">メモ</a></h2>
+<div class="outline-text-2" id="text-orgeeaa92e">
 <ul class="org-ul">
 <li>1章: Linuxカーネルの開発フロー</li>
 <li><a href="https://lwn.net/">LWN.net</a>は、Linux開発のニュースサイト(p29)</li>
@@ -114,13 +114,26 @@
 </ul></li>
 <li>Linuxの端末実装は3つのレイヤーで構成される。最上位はキャラクタデバイスのインターフェースを提供し、中間層がldisc、最下位層はハードウェアおよび疑似端末と通信するドライバになる(p155)</li>
 <li>kfreeなどでメモリが解放されてもメモリの内容はそのままになっている。なので、情報漏えいしたらまずい内容をメモリに乗せる場合はメモリを解放する前にメモリをゼロクリアするのが定石である(p156)</li>
+<li>C言語によるプログラミングでは、文字列を表現するために終端にヌルが必要である。 <code>char buf[128]</code> という配列は大きさが128バイトであるから、最大127文字しか格納できない。なので文字列を127文字で切って、終端にヌルを入れるのが一般的である、という(p165)</li>
+<li>無条件にヌルを書き込む方式はセキュリティ的によくない。ユーザーが意図した文字列が意図せずに切り詰められ、別の文字列として実行される可能性がある(p165)</li>
+<li>shebang行が127文字で切り詰められることを前提にしたコードが使われている部分があり、後にrevertされた(p166)</li>
+<li><code>/proc/kallsyms</code> を参照してLinuxカーネルの全シンボル情報がわかる(p172)</li>
+<li>inotifyはファイルシステムの一種として実装されている(p172)</li>
+<li>intは-2147483648~2147483647まで扱える。argに2147483648以上の値を渡すと、以下のif文の条件が負になる。intにキャストして負数になるから(p182)
+<ul class="org-ul">
+<li><code>if (((int)arg &gt;= cdi-&gt;capacity))</code></li>
+<li>チェックをすり抜けたargは以降の処理で使われる。配列アクセスなどしていると、バッファオーバーフローできてしまう</li>
+</ul></li>
+<li>メモリのゼロクリア処理は、コンパイラの最適化で削除される可能性がある。削除されると困る場合は明示的にゼロクリアする関数を使う(p196)</li>
+<li>Linuxカーネルにはガベージコレクタの仕組みがない(p196)</li>
+<li>カーネル開発においては、関数の早期リターンは避けたほうがよい。メモリの解放漏れなどのバグを作り込むことになるから。代わりにgotoで関数の末尾に呼び、最後にまとめてリソース解放するとよい(p196)</li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-orgf60d0c1" class="outline-2">
-<h2 id="orgf60d0c1"><a href="#orgf60d0c1">感想</a></h2>
-<div class="outline-text-2" id="text-orgf60d0c1">
+<div id="outline-container-org01b7271" class="outline-2">
+<h2 id="org01b7271"><a href="#org01b7271">感想</a></h2>
+<div class="outline-text-2" id="text-org01b7271">
 <ul class="org-ul">
 <li>今のメジャーな文字列形式はなんだろうか。ヌル終端で合っているか</li>
 <li>Linux開発文脈でifconfigは非推奨となっている、ということか、ユーザ全体で非推奨となっているのか</li>
@@ -161,12 +174,16 @@ i2c_transfer
     adap-&gt;algo-&gt;master_xfer
       i2c_imx_xfer
 </pre>
+
+<ul class="org-ul">
+<li>カーネルモジュールを作成して、マウントして動作確認するとよい</li>
+</ul>
 </div>
 </div>
 
-<div id="outline-container-orgaf03082" class="outline-2">
-<h2 id="orgaf03082"><a href="#orgaf03082">関連</a></h2>
-<div class="outline-text-2" id="text-orgaf03082">
+<div id="outline-container-orgb656061" class="outline-2">
+<h2 id="orgb656061"><a href="#orgb656061">関連</a></h2>
+<div class="outline-text-2" id="text-orgb656061">
 <p>
 なし。
 </p>
