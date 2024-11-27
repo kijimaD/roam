@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241122T231155
-:mtime:    20241123090237
-:ctime:    20241122231156
+:ID: 20241127T213905
+:mtime:    20241127215123
+:ctime:    20241127213920
 :end:
-#+title:      KDOC 304: 加算と乗算どちらが早いか?
-#+date:       [2024-11-22 Fri 23:11]
+#+title:      KDOC 310: なぜ文字列だけnull終端なのか?
+#+date:       [2024-11-27 Wed 21:39]
 #+filetags:   :draft:permanent:
-#+identifier: 20241122T231155
+#+identifier: 20241127T213905
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,7 +48,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2024-11-23 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -64,17 +65,27 @@
 # すべてのコメントを削除した。
 * 概要
 # 本文(見出しも設定する)
+C言語では文字列はchar型の配列である。配列は単なるポインタのオフセットであるから、サイズ情報を持っていない。
 
-Goランタイムのコードで、同じ値を足して2倍にしている箇所がある。2倍にするとき、同じ値を足すのを不思議に感じた。加算のほうが早いということはありうるだろうかと考えた。
-
-#+begin_src git-permalink
-https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/runtime/slice.go#L291
+#+caption: charのサイズは1バイトなので、添字のバイトずつオフセットする
+#+begin_src C
+  char arr[3] = {1, 2, 3};
+  printf("h %p\n", arr);
+  printf("0 %p\n", &arr[0]);
+  printf("1 %p\n", &arr[1]);
+  printf("2 %p\n", &arr[2]);
 #+end_src
 
 #+RESULTS:
 #+begin_src
-	doublecap := newcap + newcap
+h 0x7ffdd2ee2fe5
+0 0x7ffdd2ee2fe5
+1 0x7ffdd2ee2fe6
+2 0x7ffdd2ee2fe7
 #+end_src
+
+なのでnull終端が必要、というのだが、なぜ文字列だけなのだろうかと考えた。
+
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
 # この事実は自分のこのアイデアとどう整合するか。
