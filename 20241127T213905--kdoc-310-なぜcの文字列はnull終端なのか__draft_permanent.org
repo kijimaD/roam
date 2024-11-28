@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241123T090824
-:mtime:    20241129004219
-:ctime:    20241123090826
+:ID: 20241127T213905
+:mtime:    20241128225725
+:ctime:    20241127213920
 :end:
-#+title:      KDOC 307: 乗算と左ビットシフトの実行速度を計測する
-#+date:       [2024-11-23 Sat 09:08]
+#+title:      KDOC 310: なぜCの文字列はnull終端なのか?
+#+date:       [2024-11-27 Wed 21:39]
 #+filetags:   :draft:permanent:
-#+identifier: 20241123T090824
+#+identifier: 20241127T213905
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -65,61 +65,30 @@
 # すべてのコメントを削除した。
 * 概要
 # 本文(見出しも設定する)
+C言語では文字列はchar型の配列である。配列は単なるポインタであるから、サイズ情報を持っていない。
 
-#+begin_export html
-<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,selection:(endColumn:20,endLineNumber:15,positionColumn:20,positionLineNumber:15,selectionStartColumn:20,selectionStartLineNumber:15,startColumn:20,startLineNumber:15),source:'//+Type+your+code+here,+or+load+an+example.%0A//+Your+function+name+should+start+with+a+capital+letter.%0Apackage+main%0A%0Afunc+main()+%7B%0A%09_+%3D+shl(42)%0A%09_+%3D+mul(42)%0A%7D%0A%0A//go:noinline%0Afunc+shl(a+int)+int+%7B%0A%09return+a+*+4%0A%7D%0A%0A//+%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB%E5%A4%89%E6%95%B0%E3%81%AB%E3%81%97%E3%81%A6%E6%9C%80%E9%81%A9%E5%8C%96%E3%82%92%E9%98%B2%E3%81%90%0Avar+num+%3D+4%0A%0A//go:noinline%0Afunc+mul(a+int)+int+%7B%0A%09return+a+*+num%0A%7D'),l:'5',n:'0',o:'Go+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:gl1232,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+x86-64+gc+1.23.2+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
-#+end_export
+なのでnull終端が必要、というのだが、なぜ文字列だけなのだろうかと考えた。ほかのデータ型の配列でそう扱わないのはなぜだろうか。
 
-計測するコードを書く。
-
-#+caption: bench_test.go
-#+begin_src go
-package main
-
-import "testing"
-
-func BenchmarkShl(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = shl(42)
-	}
-}
-
-func BenchmarkMultiply(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = mul(42)
-	}
-}
-
-//go:noinline
-func shl(a int) int {
-	return a * 4
-}
-
-// グローバル変数にしないと最適化される
-var num = 4
-
-//go:noinline
-func mul(a int) int {
-	return a * num
-}
+#+caption: charのサイズは1バイトなので、添字のバイトずつオフセットする
+#+begin_src C
+  char arr[3] = {1, 2, 3};
+  printf("h\t%p\n", arr);
+  printf("0\t%p\n", &arr[0]);
+  printf("1\t%p\n", &arr[1]);
+  printf("2\t%p\n", &arr[2]);
+  printf("16\t%p\n", &arr[16]);
+  printf("-16\t%p\n", &arr[-16]);
 #+end_src
 
-[[id:20241123T012402][KDOC 305: 加算と左ビットシフトの実行速度を計測する]]と同様の方法で計測する。
-
-#+caption: 計測する
-#+begin_src shell
-  $ go test -bench . -benchmem -count 100 > exec.log
-  $ benchstat exec.log
-  (略)
-              │   exec.log   │
-              │    sec/op    │
-  Shl-16        0.4839n ± 0%
-  Multiply-16   0.5117n ± 1%
-  geomean       0.4976n
-  (略)
+#+RESULTS:
+#+begin_src
+h	0x7ffdc766b455
+0	0x7ffdc766b455
+1	0x7ffdc766b456
+2	0x7ffdc766b457
+16	0x7ffdc766b465
+-16	0x7ffdc766b445
 #+end_src
-
-ということで、0.03ナノ秒ほど左ビットシフト演算のほうが早い。だから左ビットシフトに最適化するわけだ。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -128,5 +97,4 @@ func mul(a int) int {
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-
-- [[id:20241122T231155][KDOC 304: 加算と乗算どちらが早いか?]]。調べるきっかけとなった疑問
+なし。
