@@ -290,7 +290,8 @@ d3.json("js/graph.json").then(function(data) {
         function dragstarted(event) {
             if (!event.active) simulation.alphaTarget(0.3).restart();
             event.subject.fx = event.subject.x;
-            event.subject.fy = event.subject.y;        }
+            event.subject.fy = event.subject.y;
+        }
 
         function dragged(event) {
             event.subject.fx = event.x;
@@ -304,41 +305,41 @@ d3.json("js/graph.json").then(function(data) {
         }
 
         return d3.drag()
-            .subject(dragsubject)
-            .on("start", dragstarted)
-            .on("drag", dragged)
-            .on("end", dragended);
+                 .subject(dragsubject)
+                 .on("start", dragstarted)
+                 .on("drag", dragged)
+                 .on("end", dragended);
     };
     // Make nodes interactive to hovering
     handleMouseOver = (d, i) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", "#999")
-            .attr("r", nde.attr("r") * 1.4);
+           .attr("r", nde.attr("r") * 1.4);
 
         d3.selectAll("text")
-            .filter('#' + CSS.escape(d.currentTarget.id))
-            .style("font-size", "2em");
+          .filter('#' + CSS.escape(d.currentTarget.id))
+          .style("font-size", "2em");
 
         d3.selectAll("line")
-            .attr("stroke-width", 1);
+          .attr("stroke-width", 1);
 
         d3.selectAll("line")
-            .filter((l, _) => {
-                return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
-            })
-            .attr("stroke-width", 8);
+          .filter((l, _) => {
+              return l && l.source && l.source.index == i.index || l && l.target && l.target.index == i.index
+          })
+          .attr("stroke-width", 8);
     };
     handleMouseOut = (d, _) => {
         nde = d3.select(d.currentTarget);
         nde.attr("fill", nodeColor)
-            .attr("r", nde.attr("r") / 1.4);
+           .attr("r", nde.attr("r") / 1.4);
 
         d3.selectAll("text")
-            .filter('#' + CSS.escape(d.currentTarget.id))
-            .style("font-size", "1em");
+          .filter('#' + CSS.escape(d.currentTarget.id))
+          .style("font-size", "1em");
 
         d3.selectAll("line")
-            .attr("stroke-width", 1);
+          .attr("stroke-width", 1);
     };
 
     // Graph data
@@ -347,50 +348,50 @@ d3.json("js/graph.json").then(function(data) {
 
     // Force simulation for the graph
     simulation = d3.forceSimulation(nodes)
-        .alpha(0.9)
-        .velocityDecay(0.6)
-        .force("link", d3.forceLink(links).id(d => d.id).strength(.1))
-        .force("charge", d3.forceManyBody()
-               .strength(-500))
-        .force('collision',
-               d3.forceCollide().radius(d => radius(d) * 1.2).strength(1.5))
-        .force('x', d3.forceX().x(function(d) {
-            return width / 2 +  (width / 4) * centersx[d.communityLabel];
-        }).strength(0.25))
-        .force('y', d3.forceY().y(function(d) {
-            return height / 2 +  (height / 8) * centersy[d.communityLabel];
-        }).strength(0.25));
+                   .alpha(0.9)
+                   .velocityDecay(0.6)
+                   .force("link", d3.forceLink(links).id(d => d.id).strength(.1))
+                   .force("charge", d3.forceManyBody()
+                                      .strength(-500))
+                   .force('collision',
+                          d3.forceCollide().radius(d => radius(d) * 1.2).strength(1.5))
+                   .force('x', d3.forceX().x(function(d) {
+                       return width / 2 +  (width / 4) * centersx[d.communityLabel];
+                   }).strength(0.25))
+                   .force('y', d3.forceY().y(function(d) {
+                       return height / 2 +  (height / 8) * centersy[d.communityLabel];
+                   }).strength(0.25));
 
     // Create all the graph elements
     const svg = d3.select("svg")
-          .attr('max-width', '60%')
-          .attr('class', 'node-graph')
-          .attr("viewBox", [0, 0, width, height]);
+                  .attr('max-width', '60%')
+                  .attr('class', 'node-graph')
+                  .attr("viewBox", [0, 0, width, height]);
 
     const link = svg.append("g")
-          .attr("stroke", "#888")
-          .attr("stroke-opacity", 0.6)
-          .selectAll("line")
-          .data(links)
-          .join("line")
-          .attr("stroke-dasharray", d => (d.predicted? "5,5": "0,0"))
-          .attr("stroke-width", 1);
+                    .attr("stroke", "#888")
+                    .attr("stroke-opacity", 0.6)
+                    .selectAll("line")
+                    .data(links)
+                    .join("line")
+                    .attr("stroke-dasharray", d => (d.predicted? "5,5": "0,0"))
+                    .attr("stroke-width", 1);
 
     const node = svg.append("g")
-          .selectAll("circle")
-          .data(nodes)
-          .join("a")
-          .attr("xlink:href", d => {
-              return "./" + d.lnk;
-          })
-          .attr("id", d => "circle_" + d.lnk)
-          .append("circle")
-          .attr("id", d => d.id.toLowerCase())
-          .attr("r", radius)
-          .attr("fill", nodeColor)
-          .on("mouseover", handleMouseOver)
-          .on("mouseout", handleMouseOut)
-          .call(drag(simulation));
+                    .selectAll("circle")
+                    .data(nodes)
+                    .join("a")
+                    .attr("xlink:href", d => {
+                        return "./" + d.lnk;
+                    })
+                    .attr("id", d => "circle_" + d.lnk)
+                    .append("circle")
+                    .attr("id", d => d.id.toLowerCase())
+                    .attr("r", radius)
+                    .attr("fill", nodeColor)
+                    .on("mouseover", handleMouseOver)
+                    .on("mouseout", handleMouseOut)
+                    .call(drag(simulation));
 
     node.append("title")
         .text(d => d.label.replace(/"/g, ''));
@@ -398,26 +399,26 @@ d3.json("js/graph.json").then(function(data) {
     // Nodes have a label that is visible on hover
     // They have two layers a rectangle "background" and the text on top
     const label = svg.append("g")
-          .selectAll("text")
-          .data(nodes)
-          .join("g");
+                     .selectAll("text")
+                     .data(nodes)
+                     .join("g");
     const label_background = label.append("text")
-          .style("font-size", "45px")
-          .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -30)
-          .attr("id", d => d.id.toLowerCase())
-          .attr("class", "node_label")
-          .style("display", "none")
-          .style("pointer-events", "none")
-          .style("alignment-baseline", "middle")
+                                  .style("font-size", "45px")
+                                  .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
+                                  .attr("dy", -30)
+                                  .attr("id", d => d.id.toLowerCase())
+                                  .attr("class", "node_label")
+                                  .style("display", "none")
+                                  .style("pointer-events", "none")
+                                  .style("alignment-baseline", "middle")
     // .attr("filter", "url(#solid)");
     const label_text = label.append("text")
-          .style("fill", "#222")
-          .style("font-size", "15px")
-          .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
-          .attr("dy", -12)
-          .attr("id", d => d.id.toLowerCase())
-          .attr("class", "node_label")
+                            .style("fill", "#222")
+                            .style("font-size", "15px")
+                            .text(function (d) { return "  "+ d.label.replace(/"/g, '') + "  "; })
+                            .attr("dy", -12)
+                            .attr("id", d => d.id.toLowerCase())
+                            .attr("class", "node_label")
 
     // Run the simulation
     simulation.on("tick", () => {
@@ -430,9 +431,9 @@ d3.json("js/graph.json").then(function(data) {
             .attr("cy", d => d.y);
 
         label_text.attr("x", d => d.x)
-            .attr("y", d => d.y);
+                  .attr("y", d => d.y);
 
         label_background.attr("x", d => d.x)
-            .attr("y", d => d.y);
+                        .attr("y", d => d.y);
     });
 });
