@@ -4,7 +4,7 @@
 <!-- 2024-11-30 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>KDOC 317: Goの文字列は長さを保持している</title>
+<title>KDOC 316: Goのスライスは長さを保持している</title>
 <meta name="author" content="root" />
 <meta name="generator" content="Org Mode" />
 <link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
@@ -14,11 +14,11 @@
 <div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
 </div>
 <div id="content" class="content">
-<h1 class="title">KDOC 317: Goの文字列は長さを保持している</h1>
+<h1 class="title">KDOC 316: Goのスライスは長さを保持している</h1>
 
-<div id="outline-container-orgce64801" class="outline-2">
-<h2 id="orgce64801"><a href="#orgce64801">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orgce64801">
+<div id="outline-container-org975be20" class="outline-2">
+<h2 id="org975be20"><a href="#org975be20">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org975be20">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -26,37 +26,47 @@
 </ul></li>
 <li>レビュー
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-30 貴島</li>
 </ul></li>
 </ul>
 </div>
 </div>
-<div id="outline-container-org19cae61" class="outline-2">
-<h2 id="org19cae61"><a href="#org19cae61">概要</a></h2>
-<div class="outline-text-2" id="text-org19cae61">
+
+<div id="outline-container-orgb5ba9e5" class="outline-2">
+<h2 id="orgb5ba9e5"><a href="#orgb5ba9e5">概要</a></h2>
+<div class="outline-text-2" id="text-orgb5ba9e5">
 <p>
-Go言語の文字列(string)は長さを保持したポインタである。イミュータブルであり、つまり内容が変わることはないので、スライスと違って容量は保持していない。
+Go言語のスライスでは、容量と実長を管理している。多めに容量を確保しておいて、満杯になったら新しいスライスの領域を確保してコピーする。これによって実際の配列は固定長で伸ばしたりはできないのだが、プログラマからは動的な配列のように扱える。
+</p>
+
+<p>
+配列長(終端)を保持しているので、null終端などのマーカーは必要ない。
+</p>
+
+<p>
+長さを保持するのでその分のメモリを使い、配列を載せ替える仕組みやオーバヘッドもあるが、昨今のメモリやCPU事情だと問題にならないことが多い。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>stringの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/runtime/string.go#L276-L279
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>sliceの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/runtime/slice.go#L15-L19
 </pre>
 </div>
 
 <pre class="example">
-type stringStruct struct {
-	str unsafe.Pointer
-	len int
+type slice struct {
+	array unsafe.Pointer
+	len   int
+	cap   int
 }
 </pre>
 </div>
 </div>
 
-<div id="outline-container-org4463681" class="outline-2">
-<h2 id="org4463681"><a href="#org4463681">関連</a></h2>
-<div class="outline-text-2" id="text-org4463681">
+<div id="outline-container-org3cffb31" class="outline-2">
+<h2 id="org3cffb31"><a href="#org3cffb31">関連</a></h2>
+<div class="outline-text-2" id="text-org3cffb31">
 <ul class="org-ul">
-<li><a href="20241127T213905--kdoc-310-なぜcの文字列はnull終端なのか__draft_permanent.html#ID-20241127T213905">KDOC 310: なぜCの文字列はnull終端なのか?</a>。ほかと比較して考えることにした</li>
+<li><a href="20241127T213905--kdoc-310-なぜcの文字列はnull終端なのか__permanent.html#ID-20241127T213905">KDOC 310: なぜCの文字列はnull終端なのか?</a>。ほかと比較して考えることにした</li>
 </ul>
 </div>
 </div>
