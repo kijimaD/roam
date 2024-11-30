@@ -1,0 +1,40 @@
+:properties:
+:ID: 20241128T230339
+:mtime:    20241130220419
+:ctime:    20241128230348
+:end:
+#+title:      KDOC 316: Goのスライスは長さを保持している
+#+date:       [2024-11-28 Thu 23:03]
+#+filetags:   :permanent:
+#+identifier: 20241128T230339
+
+* この文書のステータス
+- 作成
+  - [X] 2024-11-29 貴島
+- レビュー
+  - [X] 2024-11-30 貴島
+
+* 概要
+
+Go言語のスライスでは、容量と実長を管理している。多めに容量を確保しておいて、満杯になったら新しいスライスの領域を確保してコピーする。これによって実際の配列は固定長で伸ばしたりはできないのだが、プログラマからは動的な配列のように扱える。
+
+配列長(終端)を保持しているので、null終端などのマーカーは必要ない。
+
+長さを保持するのでその分のメモリを使い、配列を載せ替える仕組みやオーバヘッドもあるが、昨今のメモリやCPU事情だと問題にならないことが多い。
+
+#+caption: sliceの定義
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/runtime/slice.go#L15-L19
+#+end_src
+
+#+RESULTS:
+#+begin_src
+type slice struct {
+	array unsafe.Pointer
+	len   int
+	cap   int
+}
+#+end_src
+
+* 関連
+- [[id:20241127T213905][KDOC 310: なぜCの文字列はnull終端なのか?]]。ほかと比較して考えることにした
