@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241127T225529
-:mtime:    20241130220204
-:ctime:    20241127225532
+:ID: 20241219T093738
+:mtime:    20250113112058
+:ctime:    20241219093742
 :end:
-#+title:      KDOC 313: CPUのビット数はレジスタのサイズである
-#+date:       [2024-11-27 Wed 22:55]
-#+filetags:   :draft:wiki:
-#+identifier: 20241127T225529
+#+title:      KDOC 329: Replacerで便利に置換する
+#+date:       [2024-12-19 Thu 09:37]
+#+filetags:   :draft:code:
+#+identifier: 20241219T093738
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,9 +48,10 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2024-11-27 貴島
+  - [X] 2025-01-13 貴島
 - レビュー
-  - [X] 2024-11-30 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 
 # チェックリスト ================
 # 関連をつけた。
@@ -64,9 +65,33 @@
 * 概要
 # 本文(見出しも設定する)
 
-「32bit CPU」とか「64bit CPU」という。これはレジスタのサイズである。そしてCPUが1度に表現できる状態の数が、扱えるメモリの数となる。32bit CPUではメモリ数が4GBに制限されている。CPUが表現できる状態の数が増えれば、指定できる番地が増える。
+Go言語で、マップによって複数置換するとき、Replacerを使うと簡単にできる。
 
-番地が増えるのにあわせて、ソフトウェアのポインタサイズの大きさも決まる。32bit CPUむけのソフトウェアではポインタ型のサイズは4バイトであり、64bit CPUむけのソフトウェアであれば8バイトである。
+#+begin_src go
+  import (
+          "fmt"
+          "strings"
+  )
+  var dnaReplacer *strings.Replacer = strings.NewReplacer(
+          "A", "T",
+          "T", "A",
+          "C", "G",
+          "G", "C",
+  )
+
+  func DNAStrand(dna string) string {
+          return dnaReplacer.Replace(dna)
+  }
+
+  func main() {
+          fmt.Println(DNAStrand("ATCG"))
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_src
+TAGC
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -75,4 +100,4 @@
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-- [[id:20241117T002732][KDOC 293: 『超例解Linuxカーネルプログラミング』]]。で32bit/64bit CPUに起因するバグについて知ったのがきっかけ
+なし。
