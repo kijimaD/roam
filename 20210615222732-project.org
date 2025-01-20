@@ -1,7 +1,7 @@
 :PROPERTIES:
 :ID:       a9fab970-2057-48ce-95ee-19964d639a38
 :header-args+: :wrap :results raw
-:mtime:    20241209220719
+:mtime:    20250120014245
 :ctime:    20210615222732
 :END:
 #+title: project
@@ -39,6 +39,193 @@ Well-grounded rubyistで、 最期の章はテストの原形をつくった。�
 ** ゲーム作りの問題点
 ゲームの問題点。遊ぶ人が自分だけであること。ゼロからやるのは楽しいが、自分の望むものが大きすぎて途中で飽きる。小さいツール類だと完全に自分用でも達成できる。どこかに提出する前提でやるのがいいか。最初にそういう会を見つけておいて、そのレギュレーションに合う形でやると。
 * Tasks
+** go buildしたときにテストライブラリは含まれるのか
+testfyなどはテスト時にしか使われないが、それは依存ライブラリとしてバイナリに含まれることはないのか。それとも、go.modに書かれていれば含まれるのか。
+** TODO goimportsを読む
+:PROPERTIES:
+:Effort:   20:00
+:END:
+:LOGBOOK:
+CLOCK: [2025-01-19 Sun 21:51]--[2025-01-19 Sun 22:16] =>  0:25
+CLOCK: [2025-01-19 Sun 21:26]--[2025-01-19 Sun 21:51] =>  0:25
+CLOCK: [2025-01-19 Sun 20:26]--[2025-01-19 Sun 20:51] =>  0:25
+CLOCK: [2025-01-19 Sun 20:00]--[2025-01-19 Sun 20:25] =>  0:25
+CLOCK: [2025-01-19 Sun 19:27]--[2025-01-19 Sun 19:52] =>  0:25
+CLOCK: [2025-01-19 Sun 18:51]--[2025-01-19 Sun 19:16] =>  0:25
+CLOCK: [2025-01-19 Sun 18:08]--[2025-01-19 Sun 18:33] =>  0:25
+CLOCK: [2025-01-19 Sun 17:36]--[2025-01-19 Sun 18:01] =>  0:25
+CLOCK: [2025-01-19 Sun 16:06]--[2025-01-19 Sun 16:31] =>  0:25
+CLOCK: [2025-01-19 Sun 14:55]--[2025-01-19 Sun 15:20] =>  0:25
+:END:
+
+[[https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/fix.go][tools/internal/imports/fix.go]]あたりを読む。
+
+
+#+begin_src shell
+go-callvis -nostd -group pkg,type -focus golang.org/x/tools/internal/imports ./cmd/goimports
+#+end_src
+*** デバッグ手順
+
+#+begin_src shell
+  # go/tools/cmd/goimports にて--
+  # goimportsにはファイルの指定が必要である
+  # dlv debug -- /home/orange/ProjectOrg/go/tools/internal/imports
+
+  # visitFileにブレークポイントをかける。ディレクトリ・ファイルごとに実行されるので、ディレクトリが来たらスキップする
+  (dlv) break goimports.go:186
+#+end_src
+
+*** データ
+- ImportFix
+  - タイプ(加工・削除・セット)をフィールドに持っている
+  - passはImportFixをLoadして作られる
+*** 構造
+
+*** 流れ
+
+#+begin_src shell
+  # 各ファイルに適用
+  - gofmtMain
+    - walkDir(path)
+      - visitFile -- 各ファイルごとに実行する処理。関数を渡す
+        - processFile -- 処理本体。ソースコードのファイルを開く
+          - Process -- parserModeで挙動を変えつつ、parse, fixImports, formatFileを実行する
+
+  # 本処理
+  - Process
+    - parse
+      - parser.ParseFile -- ast.Fileを生成する。構文情報を得られる
+        - readSource -- 引数のsrcが非nilの場合は単に[]byteに変換をするだけ
+        - (parser).init -- レシーバーのparserを初期化する
+        - (parser).parseFile
+      - fset.File().SetLinesForContent
+    - fixImports(=fixImportsDefault())
+      - getFixes -- 環境変数を取得など
+        - NewProcessEnvSource (引数のProcessEnvをラップする)
+        - getFixesWithSource -- 長くて重要そう。pass{}を初期化し、この時点で判明しているものだけ入れる
+          - (p *pass) load(ctx context.Context) ([]*ImportFix, bool) -- passの中身 を返す
+            - collectReferences(f *ast.File) References -- ソースコードから依存を探索する(importを使わずに)
+              - 	ast.Walk(v Visitor, node Node) -- Visitorは関数。関数渡して探索するこのパターン
+            - collectImports(f *ast.File) []*ImportInfo -- 解決する
+          - parseOtherFiles
+      - apply
+#+end_src
+
+*** 概念
+
+FileSet。
+
+#+caption: FileSet定義
+#+begin_src git-permalink
+https://github.com/kd-collective/go/blob/19e923182e590ae6568c2c714f20f32512aeb3e3/src/go/token/position.go#L426-L431
+#+end_src
+
+#+RESULTS:
+#+begin_results
+type FileSet struct {
+	mutex sync.RWMutex         // protects the file set
+	base  int                  // base offset for the next file
+	files []*File              // list of files in the order added to the set
+	last  atomic.Pointer[File] // cache of last file looked up
+}
+#+end_results
+
+#+caption: 使われ方。なぜファイル名などと一緒にFileSetが必要なのだろうか
+#+begin_src git-permalink
+https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/imports.go#L182
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	file, err := parser.ParseFile(fset, filename, src, parserMode)
+#+end_results
+
+*** メモ
+
+#+caption: main関数を含むか判定する
+#+begin_src git-permalink
+https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/imports.go#L254
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func containsMainFunc(file *ast.File) bool {
+#+end_results
+
+#+caption: 引数がないと標準入力から受け取る。なのでデバッグ時にファイル(ディレクトリ)を指定する
+#+begin_src git-permalink
+https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/cmd/goimports/goimports.go#L271-L276
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	if len(paths) == 0 {
+		if err := processFile("<standard input>", os.Stdin, os.Stdout, fromStdin); err != nil {
+			report(err)
+		}
+		return
+	}
+#+end_results
+
+#+caption: parseにブレークする用
+#+begin_src git-permalink
+https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/imports.go#L176
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func parse(fset *token.FileSet, filename string, src []byte, parserMode parser.Mode, fragment bool) (*ast.File, func(orig, src []byte) []byte, error) {
+#+end_results
+
+#+begin_src git-permalink
+https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/fix.go#L152-L186
+#+end_src
+
+#+RESULTS:
+#+begin_results
+func collectReferences(f *ast.File) References {
+	refs := References{}
+
+	var visitor visitFn
+	visitor = func(node ast.Node) ast.Visitor {
+		if node == nil {
+			return visitor
+		}
+		switch v := node.(type) {
+		case *ast.SelectorExpr:
+			xident, ok := v.X.(*ast.Ident)
+			if !ok {
+				break
+			}
+			if xident.Obj != nil {
+				// If the parser can resolve it, it's not a package ref.
+				break
+			}
+			if !ast.IsExported(v.Sel.Name) {
+				// Whatever this is, it's not exported from a package.
+				break
+			}
+			pkgName := xident.Name
+			r := refs[pkgName]
+			if r == nil {
+				r = make(map[string]bool)
+				refs[pkgName] = r
+			}
+			r[v.Sel.Name] = true
+		}
+		return visitor
+	}
+	ast.Walk(visitor, f)
+	return refs
+}
+#+end_results
+
+*** API
+** オリジナルのカルタ遊び
+クラウド上でオリジナルのカルタを作って遊ぶ。
+
+- Gitサブコマンドカルタ
+- AWSサービスカルタ
 ** org idリンクの修正ツール
 
 タイトルをリネームしたときに、ドキュメント全体のリンクもなおしてほしい。idがあるのだから、検索でわかるはずである。
