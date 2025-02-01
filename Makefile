@@ -51,12 +51,6 @@ gen-file-table: ## ファイルの情報を書き込む
 	git config --global core.quotepath false
 	ruby ./file-count/table.rb >> ./index.org
 
-.PHONY: export-pdfs-dev
-export-pdfs-dev: ## drawio SVGたちをPDFにエクスポートする。ローカル用
-	which drawio
-	cd ./pdfs && ls | grep 'pdf.drawio.svg' | xargs -I {} drawio -f pdf -x {} --no-sandbox
-	cp -r ./pdfs ./public/
-
 # development ================
 
 .PHONY: lint-run

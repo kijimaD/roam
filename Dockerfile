@@ -19,18 +19,8 @@ RUN apt -y update && \
     gnuplot \
     emacs \
     language-pack-ja \
-    # なぜかどのフォント指定しても、TakaoPGothicとして表示・エクスポートされている
-    fonts-ipafont \
     # feed作成用
     libxml2-dev
-
-RUN apt -y install \
-    xvfb \
-    libnss3 \
-    libxss1 \
-    xdg-utils \
-    libsecret-1-0
-RUN wget https://github.com/jgraph/drawio-desktop/releases/download/v24.7.5/drawio-amd64-24.7.5.deb && dpkg -i drawio-amd64-24.7.5.deb && rm drawio-amd64-24.7.5.deb
 
 COPY Gemfile* ./
 RUN gem install bundler && bundle install
