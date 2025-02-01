@@ -52,6 +52,11 @@ gen-file-table: ## ファイルの情報を書き込む
 	git config --global core.quotepath false
 	ruby ./file-count/table.rb >> ./index.org
 
+.PHONY: odp2pdf
+odp2pdf: ## ODPスライドをPDFに変換する
+	cd ./pdfs && \
+	libreoffice --convert-to pdf *.odp
+
 # development ================
 
 .PHONY: lint-run
