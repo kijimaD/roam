@@ -24,6 +24,7 @@ org2html: ## org projectをhtmlに一括変換する
 	emacs --batch -l ./publish.el --funcall kd/publish
 	cp -r ./images ./public/
 	cp -r ./buseum ./public/
+	cp -r ./pdfs ./public/
 
 .PHONY: node-graph
 node-graph: ## ファイルの関係性グラフを描画する
