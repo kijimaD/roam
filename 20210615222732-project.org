@@ -1,7 +1,7 @@
 :PROPERTIES:
 :ID:       a9fab970-2057-48ce-95ee-19964d639a38
 :header-args+: :wrap :results raw
-:mtime:    20250129230730
+:mtime:    20250203010139
 :ctime:    20210615222732
 :END:
 #+title: project
@@ -41,7 +41,8 @@ Well-grounded rubyistで、 最期の章はテストの原形をつくった。�
 * Tasks
 ** go buildしたときにテストライブラリは含まれるのか
 testfyなどはテスト時にしか使われないが、それは依存ライブラリとしてバイナリに含まれることはないのか。それとも、go.modに書かれていれば含まれるのか。
-** TODO goimportsを読む
+** DONE goimportsを読む
+CLOSED: [2025-02-02 Sun 21:04]
 :PROPERTIES:
 :Effort:   20:00
 :END:
@@ -304,6 +305,55 @@ https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4a
 - 候補の一覧を出してから、消していく
 - https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4ad777/internal/imports/fix.go#L1522 パッケージの全シンボルを取り出す。定数・型・変数・関数
 
+*** おもしろポイント
+- 標準ライブラリの全シグネチャを出すスクリプトがある
+- インポートパスの末尾がパッケージ名である
+- go.modから使っているパスを取得する
+- universeで全シグネチャを取得できる。go.modの情報と合わせて外部ライブラリがどのパッケージに属するかを推定する
+
+** gormを読む
+
+#+caption: 現在
+#+begin_src
+2a20e55 Possible to specify table name
+#+end_src
+
+#+caption: 複数形、こんなもので大丈夫なのか
+#+begin_src git-permalink
+https://github.com/kd-collective/gorm/blob/f4aa43544632181c095eb31bdae29ab0dd65339c/model.go#L126-L132
+#+end_src
+
+#+RESULTS:
+#+begin_results
+	pluralMap := map[string]string{"ch": "ches", "ss": "sses", "sh": "shes", "day": "days", "y": "ies", "x": "xes", "s?": "s"}
+	for key, value := range pluralMap {
+		reg := regexp.MustCompile(key + "$")
+		if reg.MatchString(str) {
+			return reg.ReplaceAllString(str, value), err
+		}
+	}
+#+end_results
+
+#+caption: フィールド名をスネークケースにしてカラム名にしている
+#+begin_src git-permalink
+https://github.com/kd-collective/gorm/blob/2a20e551ed0df2956ca6328cd928039c7942d350/do.go#L230-L233
+#+end_src
+
+#+RESULTS:
+#+begin_results
+			field := dest.FieldByName(snakeToUpperCamel(value))
+			if field.IsValid() {
+				values = append(values, dest.FieldByName(snakeToUpperCamel(value)).Addr().Interface())
+			}
+#+end_results
+
+*** 教訓
+- まずAPIを考えて空の関数として列挙する
+- 最初は雑でいい
+- こまめにコミットする
+- エラーハンドリングはあとでいい
+- privateにするのはあとでいい
+
 ** オリジナルのカルタ遊び
 クラウド上でオリジナルのカルタを作って遊ぶ。
 
@@ -311,7 +361,7 @@ https://github.com/kd-collective/tools/blob/1261a24ceb1867ea7439eda244e53e7ace4a
 - AWSサービスカルタ
 ** org idリンクの修正ツール
 
-タイトルをリネームしたときに、ドキュメント全体のリンクもなおしてほしい。idがあるのだから、検索でわかるはずである。
+タイトルをリネームしたときに、ドキュメント全体のリンクもなおしてほしい。idがあるのだから、検索でわかるはずだ。
 
 ** ブラウザでシェルの実行結果を見る
 
