@@ -13,8 +13,13 @@
 ## development
 
 ```shell
+# start server
 make org2html
 make server
+# go to http://localhost:8005
+
+# auto build
+make watch
 ```
 
 ## submodule

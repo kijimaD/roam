@@ -1,12 +1,12 @@
 :properties:
-:ID: 20241219T093738
-:mtime:    20250113112058
-:ctime:    20241219093742
+:ID: 20250211T092202
+:mtime:    20250211221413
+:ctime:    20250211092212
 :end:
-#+title:      KDOC 329: Replacerで便利に置換する
-#+date:       [2024-12-19 Thu 09:37]
+#+title:      KDOC 335: 消しても新しいバージョンがダウンロードされていた
+#+date:       [2025-02-11 Tue 09:22]
 #+filetags:   :draft:code:
-#+identifier: 20241219T093738
+#+identifier: 20250211T092202
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,7 +48,7 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-01-13 貴島
+  - [X] 2025-02-11 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -65,32 +65,24 @@
 * 概要
 # 本文(見出しも設定する)
 
-Go言語で、マップによって複数置換するとき、Replacerを使うと簡単にできる。
+Emacsでパッケージのバージョンを固定する必要があった。 ~use-package~ でインストールするのをやめて、コミットしておいて直接ファイルを読み込むようにしたかった。
 
-#+begin_src go
-  import (
-          "fmt"
-          "strings"
-  )
-  var dnaReplacer *strings.Replacer = strings.NewReplacer(
-          "A", "T",
-          "T", "A",
-          "C", "G",
-          "G", "C",
-  )
-
-  func DNAStrand(dna string) string {
-          return dnaReplacer.Replace(dna)
-  }
-
-  func main() {
-          fmt.Println(DNAStrand("ATCG"))
-  }
+#+caption: 変更内容
+#+begin_src diff
+- (use-package denote
+-   :straight (:host github :repo "protesilaos/denote"))
++ (add-to-list 'load-path "~/.emacs.d/vendor/denote-2.0.0")
++ (require 'denote)
 #+end_src
 
-#+RESULTS:
-#+begin_src
-TAGC
+が、denoteが復活してしまうことに気づいた。削除してもインストールが走って新しいバージョンが読まれてしまう。
+
+原因はdenoteに依存しているパッケージがあるからだった。依存元パッケージも自動でインストールされるようだ。
+
+#+caption: 削除したら復活しなくなった
+#+begin_src emacs-lisp
+(use-package denote-menu
+  :straight (:host github :repo "namilus/denote-menu"))
 #+end_src
 
 * 関連
