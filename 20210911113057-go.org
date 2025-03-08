@@ -1,7 +1,7 @@
 :PROPERTIES:
 :ID:       7cacbaa3-3995-41cf-8b72-58d6e07468b1
 :header-args+: :wrap :results raw
-:mtime:    20250119130622
+:mtime:    20250222172814
 :ctime:    20210911113057
 :END:
 #+title: Go
@@ -1343,41 +1343,6 @@ https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136ba
 #+RESULTS:
 #+begin_resultsg go
 func make(t Type, size ...IntegerType) Type
-#+end_results
-
-** TODO Len()の仕組み                                            :DontKnow:
-:LOGBOOK:
-CLOCK: [2023-06-28 Wed 00:15]--[2023-06-28 Wed 00:40] =>  0:25
-CLOCK: [2023-06-27 Tue 23:46]--[2023-06-28 Wed 00:11] =>  0:25
-CLOCK: [2023-06-27 Tue 23:11]--[2023-06-27 Tue 23:36] =>  0:25
-CLOCK: [2023-06-26 Mon 00:20]--[2023-06-26 Mon 00:45] =>  0:25
-CLOCK: [2023-06-25 Sun 21:48]--[2023-06-25 Sun 22:13] =>  0:25
-CLOCK: [2023-06-25 Sun 21:15]--[2023-06-25 Sun 21:40] =>  0:25
-CLOCK: [2023-06-25 Sun 20:48]--[2023-06-25 Sun 21:13] =>  0:25
-CLOCK: [2023-06-25 Sun 20:18]--[2023-06-25 Sun 20:43] =>  0:25
-CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
-:END:
-スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。組み込みだから、ほかの関数とは異なりそう。
-
-#+begin_src git-permalink
-  https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L161-L173
-#+end_src
-
-#+RESULTS:
-#+begin_results go
-// The len built-in function returns the length of v, according to its type:
-//
-//	Array: the number of elements in v.
-//	Pointer to array: the number of elements in *v (even if v is nil).
-//	Slice, or map: the number of elements in v; if v is nil, len(v) is zero.
-//	String: the number of bytes in v.
-//	Channel: the number of elements queued (unread) in the channel buffer;
-//	         if v is nil, len(v) is zero.
-//
-// For some arguments, such as a string literal or a simple array expression, the
-// result can be a constant. See the Go language specification's "Length and
-// capacity" section for details.
-func len(v Type) int
 #+end_results
 
 ** TODO [[https://zenn.dev/hsaki/books/golang-context/viewer/intro][よくわかるcontextの使い方]]
@@ -4272,3 +4237,38 @@ CLOCK: [2024-03-14 Thu 23:59]--[2024-03-15 Fri 00:24] =>  0:25
 :END:
 
 前回途中でわからなくなったので、また読み始めた。
+** CLOSE Len()の仕組み                                           :DontKnow:
+CLOSED: [2025-02-22 Sat 17:28]
+:LOGBOOK:
+CLOCK: [2023-06-28 Wed 00:15]--[2023-06-28 Wed 00:40] =>  0:25
+CLOCK: [2023-06-27 Tue 23:46]--[2023-06-28 Wed 00:11] =>  0:25
+CLOCK: [2023-06-27 Tue 23:11]--[2023-06-27 Tue 23:36] =>  0:25
+CLOCK: [2023-06-26 Mon 00:20]--[2023-06-26 Mon 00:45] =>  0:25
+CLOCK: [2023-06-25 Sun 21:48]--[2023-06-25 Sun 22:13] =>  0:25
+CLOCK: [2023-06-25 Sun 21:15]--[2023-06-25 Sun 21:40] =>  0:25
+CLOCK: [2023-06-25 Sun 20:48]--[2023-06-25 Sun 21:13] =>  0:25
+CLOCK: [2023-06-25 Sun 20:18]--[2023-06-25 Sun 20:43] =>  0:25
+CLOCK: [2023-02-12 Sun 00:26]--[2023-02-12 Sun 00:51] =>  0:25
+:END:
+スライスなどの長さを調べるLen()はどういう実装になっているのだろうか。組み込みだから、ほかの関数とは異なりそう。
+
+#+begin_src git-permalink
+  https://github.com/kd-collective/go/blob/9b8750f53ed89fb326e4d811524e647683136bac/src/builtin/builtin.go#L161-L173
+#+end_src
+
+#+RESULTS:
+#+begin_results go
+// The len built-in function returns the length of v, according to its type:
+//
+//	Array: the number of elements in v.
+//	Pointer to array: the number of elements in *v (even if v is nil).
+//	Slice, or map: the number of elements in v; if v is nil, len(v) is zero.
+//	String: the number of bytes in v.
+//	Channel: the number of elements queued (unread) in the channel buffer;
+//	         if v is nil, len(v) is zero.
+//
+// For some arguments, such as a string literal or a simple array expression, the
+// result can be a constant. See the Go language specification's "Length and
+// capacity" section for details.
+func len(v Type) int
+#+end_results
