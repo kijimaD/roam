@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-03-08 -->
+<!-- 2025-03-14 -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 188: 『Visual Guide to Slices in Go』</title>
@@ -15,10 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 188: 『Visual Guide to Slices in Go』</h1>
-
-<div id="outline-container-org16fb800" class="outline-2">
-<h2 id="org16fb800"><a href="#org16fb800">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org16fb800">
+<div id="outline-container-orgc806760" class="outline-2">
+<h2 id="orgc806760"><a href="#orgc806760">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgc806760">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -31,19 +30,17 @@
 </ul>
 </div>
 </div>
-
-<div id="outline-container-org20d8c7b" class="outline-2">
-<h2 id="org20d8c7b"><a href="#org20d8c7b">概要</a></h2>
-<div class="outline-text-2" id="text-org20d8c7b">
+<div id="outline-container-org89b7aed" class="outline-2">
+<h2 id="org89b7aed"><a href="#org89b7aed">概要</a></h2>
+<div class="outline-text-2" id="text-org89b7aed">
 <p>
 <a href="https://sazak.io/articles/visual-guide-to-slices-in-go-2024-03-25">Visual Guide to Slices in Go — Ozan Sazak</a>は、<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>のスライスを解説した記事。
 </p>
 </div>
 </div>
-
-<div id="outline-container-orgfc80b24" class="outline-2">
-<h2 id="orgfc80b24"><a href="#orgfc80b24">メモ</a></h2>
-<div class="outline-text-2" id="text-orgfc80b24">
+<div id="outline-container-orgb749c0b" class="outline-2">
+<h2 id="orgb749c0b"><a href="#orgb749c0b">メモ</a></h2>
+<div class="outline-text-2" id="text-orgb749c0b">
 <ul class="org-ul">
 <li>スライスは配列を抽象化したもの。扱うときに実際に割り当てられているメモリについて考えなくてよくするため。たとえばCでは、当初のメモリ割当よりも配列が大きくなった場合、手動でメモリの再割り当てとコピーが必要であった</li>
 </ul>
@@ -53,13 +50,14 @@
 </pre>
 </div>
 
-<pre class="example">
-type slice struct {
+<div class="org-src-container">
+<pre class="src src-nil">type slice struct {
 	array unsafe.Pointer
 	len   int
 	cap   int
 }
 </pre>
+</div>
 
 <ul class="org-ul">
 <li>capは基底配列の長さ。再メモリ確保せずに保存できる領域の長さ</li>
@@ -83,10 +81,11 @@ fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
 </pre>
 </div>
 
-<pre class="example">
-s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
+<div class="org-src-container">
+<pre class="src src-nil">s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
 s2: 0xc0000120e1 [32 48] len: 2 cap: 4
 </pre>
+</div>
 
 <p>
 同じ基底配列を使っているのを確認する。
@@ -102,10 +101,11 @@ fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
 </pre>
 </div>
 
-<pre class="example">
-s1: 0xc0000120e0 [16 32 48 100 101] len: 5 cap: 5
+<div class="org-src-container">
+<pre class="src src-nil">s1: 0xc0000120e0 [16 32 48 100 101] len: 5 cap: 5
 s2: 0xc0000120e1 [32 48 100 101] len: 4 cap: 4
 </pre>
+</div>
 
 <p>
 capを超えた場合、再割り当てされるので、s1, s2は同じ基底配列ではなくなる。
@@ -126,10 +126,11 @@ fmt.Printf("s2: %p %v len: %d cap: %d\n", s2, s2, len(s2), cap(s2))
 </pre>
 </div>
 
-<pre class="example">
-s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
+<div class="org-src-container">
+<pre class="src src-nil">s1: 0xc0000120e0 [16 32 48 64 80] len: 5 cap: 5
 s2: 0xc0000120e8 [32 48 100 101 102] len: 5 cap: 8
 </pre>
+</div>
 
 <p>
 スライス記法の3番目の引数で、新しいスライスの容量を制限できる。これによって、同じ基底配列に意図せず変更を加えるのを防げる。
@@ -145,26 +146,24 @@ fmt.Printf("s3: %v, len: %d, cap: %d\n", s3, len(s3), cap(s3))
 </pre>
 </div>
 
-<pre class="example">
-s1: [16 32 48 64 80], len: 5, cap: 5
+<div class="org-src-container">
+<pre class="src src-nil">s1: [16 32 48 64 80], len: 5, cap: 5
 s3: [32 48 200 201], len: 4, cap: 8
 </pre>
 </div>
 </div>
-
-<div id="outline-container-org8b8dc37" class="outline-2">
-<h2 id="org8b8dc37"><a href="#org8b8dc37">関連</a></h2>
-<div class="outline-text-2" id="text-org8b8dc37">
+</div>
+<div id="outline-container-orgde90aed" class="outline-2">
+<h2 id="orgde90aed"><a href="#orgde90aed">関連</a></h2>
+<div class="outline-text-2" id="text-orgde90aed">
 <p>
 なし。
 </p>
 </div>
 </div>
-
-
-<div id="outline-container-org76665ae" class="outline-2">
-<h2 id="org76665ae"><a href="#org76665ae">Backlinks</a></h2>
-<div class="outline-text-2" id="text-org76665ae">
+<div id="outline-container-org3de8010" class="outline-2">
+<h2 id="org3de8010"><a href="#org3de8010">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org3de8010">
 <ul class="org-ul">
 <li><a href="./20240612T011737--kdoc-189-goでスライスがどのように保存されているか調べる__wiki.html">KDOC 189: Goでスライスがどのように保存されているか調べる</a></li>
 </ul>
