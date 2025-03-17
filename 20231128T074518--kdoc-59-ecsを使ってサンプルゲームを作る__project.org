@@ -1,6 +1,6 @@
 :properties:
 :ID: 20231128T074518
-:mtime:    20250308150532
+:mtime:    20250314004425
 :ctime:    20241028174234
 :end:
 #+title:      KDOC 59: ECSを使ってサンプルゲームを作る
@@ -60,8 +60,40 @@ CLOSED: [2025-02-13 Thu 21:55]
 - https://www.pixilart.com/art/mayon-sr21881399e91aws3
   - 火山の背景
 * Tasks
+** TODO 敵とエンカウントする
+:LOGBOOK:
+CLOCK: [2025-03-14 Fri 00:18]--[2025-03-14 Fri 00:43] =>  0:25
+CLOCK: [2025-03-13 Thu 23:43]--[2025-03-14 Fri 00:08] =>  0:25
+CLOCK: [2025-03-09 Sun 18:32]--[2025-03-09 Sun 18:57] =>  0:25
+CLOCK: [2025-03-09 Sun 11:19]--[2025-03-09 Sun 11:45] =>  0:26
+CLOCK: [2025-03-09 Sun 10:54]--[2025-03-09 Sun 11:19] =>  0:25
+CLOCK: [2025-03-09 Sun 10:29]--[2025-03-09 Sun 10:54] =>  0:25
+:END:
+
+- 敵シンボルと接触すると、シンボルに応じて戦闘を開始する
+- 敵を移動させるのが先か
+- 基本的に既存のやつを流用できるように見える。移動はタイルベースでないので
+- とりあえず、一定ロジックで巡回するやつだけでいい
+  - 敵によって移動ロジックは変える
+  - 巡回型
+  - 追跡型
+- characterMotionState は継承元で、その子として各stateがある
+- 旋回が必要なやつと必要でないやつがある
+  - 見た目上滑らかに回転させないと変なものと、変でないものがある
+  - 2つあると面倒なので回転が必要に統一する
+- 画像の回転ってどこでやってるんだ
+  - Positionのangleフィールドが持っているので描画時に
 ** TODO 参考になりそうな実装を調べる
 :LOGBOOK:
+CLOCK: [2025-03-08 Sat 22:18]--[2025-03-08 Sat 22:43] =>  0:25
+CLOCK: [2025-03-08 Sat 21:52]--[2025-03-08 Sat 22:18] =>  0:26
+CLOCK: [2025-03-08 Sat 21:27]--[2025-03-08 Sat 21:52] =>  0:25
+CLOCK: [2025-03-08 Sat 21:02]--[2025-03-08 Sat 21:27] =>  0:25
+CLOCK: [2025-03-08 Sat 20:37]--[2025-03-08 Sat 21:02] =>  0:25
+CLOCK: [2025-03-08 Sat 18:59]--[2025-03-08 Sat 19:24] =>  0:25
+CLOCK: [2025-03-08 Sat 17:52]--[2025-03-08 Sat 18:17] =>  0:25
+CLOCK: [2025-03-08 Sat 16:42]--[2025-03-08 Sat 17:07] =>  0:25
+CLOCK: [2025-03-08 Sat 16:07]--[2025-03-08 Sat 16:32] =>  0:25
 CLOCK: [2025-03-08 Sat 14:40]--[2025-03-08 Sat 15:05] =>  0:25
 CLOCK: [2025-03-08 Sat 14:15]--[2025-03-08 Sat 14:40] =>  0:25
 CLOCK: [2025-03-08 Sat 13:49]--[2025-03-08 Sat 14:14] =>  0:25
@@ -69,13 +101,19 @@ CLOCK: [2025-03-08 Sat 13:49]--[2025-03-08 Sat 14:14] =>  0:25
 フィールドがパフォーマンスの問題があったり、これからどうすればいいのかがわからない。参考になりそうな実装を探す。
 
 - アニメーションどうやってるんだ
+  - https://github.com/divVerent/aaaaxy/blob/d505d271c4e45a80b61ad4cce7c3ab44b9d30e29/internal/game/player/player.go#L209
+  - https://github.com/divVerent/aaaaxy/blob/d505d271c4e45a80b61ad4cce7c3ab44b9d30e29/internal/game/misc/movinganimation.go#L31-L32 移動・フェードをミックスインする
 - タイルベースと自由座標移動が混じっているので、わかりづらくなっている
-- どちらかでいいのではないか
+  - どちらかでいいのではないか
 - 衝突判定が重い
   - https://github.com/DTLP/mini_tanks/blob/26fa1399ce63d28a383d280e36428ad10e3bd7d0/internal/actors/collision.go#L133
   - これだけでよい
+- 画像生成が重い
+  - 毎回生成しているっぽい
 - 視界判定が重い
-- [[https://github.com/divVerent/aaaaxy][divVerent/aaaaxy: A nonlinear 2D puzzle platformer taking place in impossible spaces.]] 視界判定の参考になりそう
+  - [[https://github.com/divVerent/aaaaxy][divVerent/aaaaxy: A nonlinear 2D puzzle platformer taking place in impossible spaces.]] 視界判定の参考になりそう
+  - どこに書いてあるのかわからない
+  - https://github.com/divVerent/aaaaxy/blob/d505d271c4e45a80b61ad4cce7c3ab44b9d30e29/internal/engine/world.go#L644-L645 見えないタイルは非表示にする
 - たまにワープゲートが到達不可能な場所にある
   - とりあえず自動生成はあとでにしたほうがよい
 
@@ -3196,3 +3234,72 @@ CLOSED: [2024-11-16 Sat 21:28]
 CLOCK: [2024-11-16 Sat 12:48]--[2024-11-16 Sat 13:13] =>  0:25
 :END:
 なぜか手元とCIで数バイトレベルの差分が出るようになっている。一度CIでダウンロードしてからコミットしている。面倒なのでコミットまでしてもらう。
+** DONE 移動を回転方式にする
+CLOSED: [2025-03-09 Sun 13:41]
+:LOGBOOK:
+CLOCK: [2025-03-09 Sun 11:45]--[2025-03-09 Sun 12:10] =>  0:25
+:END:
+
+- w,sでアクセル
+- a,dで回転
+- このほうが斜め移動が便利であるし、ゲーム性もリアルな感じがする
+** DONE 敵を移動させる
+CLOSED: [2025-03-13 Thu 01:07]
+:LOGBOOK:
+CLOCK: [2025-03-09 Sun 18:07]--[2025-03-09 Sun 18:32] =>  0:25
+CLOCK: [2025-03-09 Sun 17:42]--[2025-03-09 Sun 18:07] =>  0:25
+CLOCK: [2025-03-09 Sun 15:30]--[2025-03-09 Sun 15:55] =>  0:25
+CLOCK: [2025-03-09 Sun 13:42]--[2025-03-09 Sun 14:07] =>  0:25
+:END:
+
+- 状態遷移させる
+- chase
+  - 視界を実装する
+  - 敵をどう認識するか
+  - 一定距離に入るとEntityを認識する
+  - そのEntityの方向に向かって直進する
+- roam
+  - 壁を認識する
+- シンボルのなかでも、移動パターンが違うものがある
+  - 赤玉A: ランダム移動
+  - 赤玉B: 規則移動(壁伝い)
+  - 赤玉C: ランダム移動 + 追跡
+
+#+begin_src go
+  // Component
+  type AIInput struct {
+          FSM MotionFSM
+          Vision AIVision
+  }
+
+  type MotionFSM struct {
+          CurrentState AIMoveState
+          Vision       AIVision
+  }
+
+  // AIInput ================
+  func Update() {
+          fsm.Update()
+          vision.Update()
+  }
+
+  // fsm ================
+  // fsm でパターン遷移を管理する
+
+  // 初期化する
+  // 最初にroam stateを設定する
+  NewMover()
+  // stateを選ぶ。全状態遷移を記載する
+  mover.ChooseState()
+  // moverから現在stateをUpdate
+  mover.Update() // currentState.Update
+  // 状態を設定する
+  mover.SetState()
+
+  // 移動パターンの実装 ================
+  // 実際に実行される移動パターン
+  movepattern.Update()
+#+end_src
+
+- 最初から複雑すぎることをやろうとしている。少しづつやろう
+- ミニマルな実装が完了した
