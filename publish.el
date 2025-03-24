@@ -52,7 +52,7 @@
   :straight (:host github :repo "protesilaos/denote")
   :custom ((denote-directory "./")
            (denote-file-type 'org)))
-(require 'denote-org-dblock)
+(require 'denote-org-extras)
 
 (use-package org-roam
   :ensure t)
