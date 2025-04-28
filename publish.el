@@ -46,13 +46,14 @@
 (use-package esxml
   :ensure t)
 
-;; denote v2.0.0
 (use-package denote
   :ensure t
   :straight (:host github :repo "protesilaos/denote")
   :custom ((denote-directory "./")
            (denote-file-type 'org)))
-(require 'denote-org-dblock)
+
+(use-package denote-org
+  :ensure t)
 
 (use-package org-roam
   :ensure t)
