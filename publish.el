@@ -87,6 +87,7 @@
 ;; CIでNo org-babel-execute function for bash!と出るので
 (org-babel-do-load-languages 'org-babel-load-languages
                              '((shell . t)
+                               (emacs-lisp . t)
                                ))
 
 ;; ignore org-babel warning
