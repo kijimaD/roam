@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250315T132844
-:mtime:    20250315133747
-:ctime:    20250315132855
+:ID: 20250315T133728
+:mtime:    20250428165353
+:ctime:    20250315133816
 :end:
-#+title:      KDOC 345: 中間要素の作成に便利なstrings.Join
-#+date:       [2025-03-15 Sat 13:28]
-#+filetags:   :draft:code:
-#+identifier: 20250315T132844
+#+title:      KDOC 346: appendで先頭に追加する
+#+date:       [2025-03-15 Sat 13:37]
+#+filetags:   :draft:wiki:
+#+identifier: 20250315T133728
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,8 +48,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2025-04-28 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -64,29 +63,33 @@
 # タグを適切にした。
 # すべてのコメントを削除した。
 * 概要
-「最初と最後を除いて、要素を足したい」というケースは多い。
 
-#+begin_src
-"ABC" => "A B C"
-#+end_src
-
-みたいなとき。何も考えずにforループで書くと、先頭や末尾にも半角スペースを足してしまったりする。このように真ん中の要素だけ要素を足したい場合は、 ~strings.Joins~ を使うと便利である。
+Go言語の組み込み関数 ~append~ にはさまざまな利用法がある。スライスの末尾でなく前に追加するにはこうする。
 
 #+begin_src go :results output
-  import (
-          "strings"
-          "fmt"
-  )
-  func main() {
-          alpha := []string{"this", "is", "hello", "world"}
-          fmt.Print(strings.Join(alpha, "★"))
+  import "fmt"
+    func main() {
+          origin := []string{"world"}
+          origin = append([]string{"hello"}, origin...)
+          fmt.Print(origin)
   }
 #+end_src
 
 #+RESULTS:
 #+begin_src
-this★is★hello★world
+[hello world]
 #+end_src
+
+#+begin_src git-permalink
+https://github.com/golang/go/blob/3c3b8dd4f0590881f7010014985d05cce1c9e943/src/builtin/builtin.go#L149
+#+end_src
+
+#+RESULTS:
+#+begin_src
+func append(slice []Type, elems ...Type) []Type
+#+end_src
+
+appendは最初にスライス、次に要素を指定する。最初に追加するには最初のスライスを新しく作り、その後ろに既存のスライスの要素を指定する、というようにする。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -95,4 +98,4 @@ this★is★hello★world
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-なし。
+- [[id:20241010T004623][KDOC 253: GoでN段階に可変長引数を渡す]]。appendの利用法つながり

@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250320T110200
-:mtime:    20250428141802
-:ctime:    20250320110210
+:ID: 20250315T132844
+:mtime:    20250428165224
+:ctime:    20250315132855
 :end:
-#+title:      KDOC 348: インデックスとスライス式は違う
-#+date:       [2025-03-20 Thu 11:02]
-#+filetags:   :draft:code:
-#+identifier: 20250320T110200
+#+title:      KDOC 345: 中間要素の作成に便利なstrings.Join
+#+date:       [2025-03-15 Sat 13:28]
+#+filetags:   :draft:wiki:
+#+identifier: 20250315T132844
 
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
@@ -48,8 +48,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2025-04-28 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -64,54 +63,28 @@
 # タグを適切にした。
 # すべてのコメントを削除した。
 * 概要
-# 本文(見出しも設定する)
+「最初と最後を除いて、要素を足したい」というケースは多い。
 
-Go言語のスライス式。インデックスの表記と外見は似ているのだが、数字が意味するものは違う。
-
-#+caption: インデックス。順番を指定する(->元ポインタからのオフセット)
-#+begin_src code
-  0 1 2
-  a b c
-  ^
-      ^
+#+begin_src
+"ABC" => "A B C"
 #+end_src
 
-#+caption: スライス式。両端がある分、インデックスの意味とはずれがある
-#+begin_src code
- 0 1 2 3
-  a b c
- ^-----^
-   ^---^
-       ^
-#+end_src
+みたいなとき。何も考えずにforループで書くと、先頭や末尾にも半角スペースを足してしまったりする。このように真ん中の要素だけ要素を足したい場合は、 ~strings.Joins~ を使うと便利である。
 
-
-#+begin_src go
-  import "fmt"
+#+begin_src go :results output
+  import (
+          "strings"
+          "fmt"
+  )
   func main() {
-          arr := []string{"a", "b", "c"}
-          fmt.Println(arr[0:])
-          fmt.Println(arr[1:])
-          fmt.Println(arr[2:])
-          fmt.Println(arr[3:])
-
-          fmt.Println(arr[:0])
-          fmt.Println(arr[:1])
-          fmt.Println(arr[:2])
-          fmt.Println(arr[:3])
+          alpha := []string{"this", "is", "hello", "world"}
+          fmt.Print(strings.Join(alpha, "★"))
   }
 #+end_src
 
 #+RESULTS:
 #+begin_src
-[a b c]
-[b c]
-[c]
-[]
-[]
-[a]
-[a b]
-[a b c]
+this★is★hello★world
 #+end_src
 
 * 関連
@@ -121,4 +94,4 @@ Go言語のスライス式。インデックスの表記と外見は似ている
 # ふたつのアイデアは互いに矛盾するか、互いを補っているか。
 # いま聞いた内容は以前に聞いたことがなかったか。
 # メモ y についてメモ x はどういう意味か。
-- [[id:20241217T221749][KDOC 326: スライス式の後ろは含まない]]の訂正。含まないというよりは、違うものとして認識するべきだった
+なし。
