@@ -1,13 +1,14 @@
 :properties:
-:ID: 20250501T235421
-:mtime:    20250502072059
-:ctime:    20250501235422
+:ID: 20250503T091848
+:mtime:    20250505135040
+:ctime:    20250503091849
 :end:
-#+title:      KDOC 358: 楽しいからいつまでも没頭できる、は誤り
-#+date:       [2025-05-01 Thu 23:54]
-#+filetags:   :draft:book:
-#+identifier: 20250501T235421
+#+title:      KDOC 365: toolchainを実際に試す
+#+date:       [2025-05-03 Sat 09:18]
+#+filetags:   :draft:wiki:
+#+identifier: 20250503T091848
 
+# (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
 # (flush-lines "^\\#\s.+?")
@@ -48,7 +49,7 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-05-02 貴島
+  - [X] 2025-05-05 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -65,7 +66,49 @@
 * 概要
 # 本文(見出しも設定する)
 
-「楽しいことだから、いつまでも没頭して練習を続けられる」というのは誤りである。どんなトップパフォーマンスを弾き出す人でも、限界的練習は苦しい。
+Go言語のtoolchainで指定バージョンがダウンロードされるのを試す。
+
+#+caption: go.mod
+#+begin_src code
+module playground/at-2025-05-03-083600
+
+go 1.21.1
+
+toolchain go1.23.1
+#+end_src
+
+#+caption: 実行に使うGoのバージョンが古くないと試せないので、少し古めのGoバージョンの環境を用意する(現時点の最新はgo1.24.2)。
+#+begin_src shell
+  docker run --rm -it -v $PWD:/work -w /work golang:1.21 /bin/sh
+  # このイメージでは、デフォルトでGOTOOLCHAINがlocalになっている
+  $ go env GOTOOLCHAIN
+  local
+#+end_src
+
+#+caption: GOTOOLCHAINがlocalだと、go.modに書いてあるバージョンは無視され、ローカルのGoのバージョンが使われる
+#+begin_src shell
+  $ go version
+  go version go1.21.13 linux/amd64
+#+end_src
+
+#+caption: GOTOOLCHAINをautoにすると、toolchainで指定したバージョンがインストールされた
+#+begin_src shell
+  $ GOTOOLCHAIN=auto
+  $ go version
+  go: downloading go1.23.1 (linux/amd64)
+  go version go1.23.1 linux/amd64
+#+end_src
+
+- toolchainにローカルより古いバージョンを指定すると無視された(ローカルのバージョンになった)
+
+#+caption: go.modでgoディレクティブのバージョンを新しくすると、1.24.1がインストールされた
+#+begin_src shell
+module playground/at-2025-05-03-083600
+
+go 1.24.1
+
+toolchain go1.22.1
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -80,4 +123,4 @@
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-- [[id:20250501T235510][KDOC 359: 『超一流になるのは才能か努力か?』]]から。
+- [[id:20250502T001229][KDOC 360: goとtoolchainの違いは何か?]]。toolchainを実際に動かしてみて試す
