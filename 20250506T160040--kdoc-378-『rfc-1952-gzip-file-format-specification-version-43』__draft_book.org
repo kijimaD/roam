@@ -1,0 +1,200 @@
+:properties:
+:ID: 20250506T160040
+:mtime:    20250506233101
+:ctime:    20250506160042
+:end:
+#+title:      KDOC 378: 『RFC 1952: GZIP file format specification version 4.3』
+#+date:       [2025-05-06 Tue 16:00]
+#+filetags:   :draft:book:
+#+identifier: 20250506T160040
+
+# (kd/denote-kdoc-rename)
+# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
+# (flush-lines "^\\#\s.+?")
+
+# ====ポリシー。
+# 1ファイル1アイデア。
+# 1ファイルで内容を完結させる。
+# 常にほかのエントリとリンクする。
+# 自分の言葉を使う。
+# 参考文献を残しておく。
+# 文献メモの場合は、感想と混ぜないこと。1つのアイデアに反する
+# ツェッテルカステンの議論に寄与するか。それで本を書けと言われて書けるか
+# 頭のなかやツェッテルカステンにある問いとどのようにかかわっているか
+# エントリ間の接続を発見したら、接続エントリを追加する。カード間にあるリンクの関係を説明するカード。
+# アイデアがまとまったらアウトラインエントリを作成する。リンクをまとめたエントリ。
+# エントリを削除しない。古いカードのどこが悪いかを説明する新しいカードへのリンクを追加する。
+# 恐れずにカードを追加する。無意味の可能性があっても追加しておくことが重要。
+# 個人の感想・意思表明ではない。事実や書籍情報に基づいている
+
+# ====永久保存メモのルール。
+# 自分の言葉で書く。
+# 後から読み返して理解できる。
+# 他のメモと関連付ける。
+# ひとつのメモにひとつのことだけを書く。
+# メモの内容は1枚で完結させる。
+# 論文の中に組み込み、公表できるレベルである。
+
+# ====水準を満たす価値があるか。
+# その情報がどういった文脈で使えるか。
+# どの程度重要な情報か。
+# そのページのどこが本当に必要な部分なのか。
+# 公表できるレベルの洞察を得られるか
+
+# ====フロー。
+# 1. 「走り書きメモ」「文献メモ」を書く
+# 2. 1日1回既存のメモを見て、自分自身の研究、思考、興味にどのように関係してくるかを見る
+# 3. 追加すべきものだけ追加する
+
+* この文書のステータス
+- 作成
+  - [X] 2025-05-06 貴島
+- レビュー
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+
+# チェックリスト ================
+# 関連をつけた。
+# タイトルがフォーマット通りにつけられている。
+# 内容をブラウザに表示して読んだ(作成とレビューのチェックは同時にしない)。
+# 文脈なく読めるのを確認した。
+# おばあちゃんに説明できる。
+# いらない見出しを削除した。
+# タグを適切にした。
+# すべてのコメントを削除した。
+* 概要
+:LOGBOOK:
+CLOCK: [2025-05-06 Tue 17:16]--[2025-05-06 Tue 17:41] =>  0:25
+CLOCK: [2025-05-06 Tue 16:45]--[2025-05-06 Tue 17:10] =>  0:25
+CLOCK: [2025-05-06 Tue 16:19]--[2025-05-06 Tue 16:44] =>  0:25
+:END:
+# 本文(見出しも設定する)
+
+[[https://www.rfc-editor.org/rfc/rfc1952.html][RFC 1952: GZIP file format specification version 4.3]]はgzipファイルの仕様を示した文書。
+
+* メモ
+
+- gzipファイルフォーマットは一連の「メンバ」、圧縮データのセットで構成される。
+- データ仕様のアスキーアートにも仕様がある。1つの箱は1バイトを示す
+- least significant: 最下位ビット
+- significant bit: 最上位ビット
+- 先頭はgzipファイルであることを示すID
+  - ID1 = 31(0x1f, \037)
+  - ID2 = 139(0x8b, \213)
+
+#+caption: 先頭2バイトがIDの1f 8bになっている
+#+begin_src shell
+  echo "xxx" > aaa
+  gzip aaa
+  xxd aaa.gz
+  rm aaa.gz
+#+END_SRC
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 d6bc 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+#+end_src
+
+- 誤り検出符号(CRC) [[https://ja.wikipedia.org/wiki/%E5%B7%A1%E5%9B%9E%E5%86%97%E9%95%B7%E6%A4%9C%E6%9F%BB][巡回冗長検査 - Wikipedia]]
+
+#+caption: FNAMEで元のファイル名を保持する。"aaa"の、0x61 0x61 0x61が見える。また、ゼロ終端になっている
+#+begin_src shell
+  echo "xxx" > aaa
+  gzip aaa
+  xxd aaa.gz
+  rm aaa.gz
+#+END_SRC
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 35be 1968 0003 6161 6100 aba8  ....5..h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+#+end_src
+
+#+caption:
+#+begin_src shell case-sensitiveなファイルシステムなので、大文字のファイル名は大文字のままで保存される
+  echo "xxx" > AAA
+  gzip AAA
+  xxd AAA.gz
+  file AAA.gz
+  rm AAA.gz
+#+END_SRC
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 27c2 1968 0003 4141 4100 aba8  ....'..h..AAA...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+AAA.gz: gzip compressed data, was "AAA", last modified: Tue May  6 08:02:47 2025, from Unix, original size modulo 2^32 4
+#+end_src
+
+
+#+caption: ファイル名はUTF-8で符号化された。"あ": e3 81 82。3バイト文字なので、その分データが増えている
+#+begin_src shell
+  echo "xxx" > あああ
+  gzip あああ
+  xxd あああ.gz
+  rm あああ.gz
+#+END_SRC
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 39c1 1968 0003 e381 82e3 8182  ....9..h........
+00000010: e381 8200 aba8 a8e0 0200 6774 1ed2 0400  ..........gt....
+00000020: 0000                                     ..
+#+end_src
+
+#+caption: そのまま追記しても有効な形式であり、展開できる
+#+begin_src shell
+  echo "xxx" > aaa
+  gzip aaa
+  echo "yyy" | gzip -c >> aaa.gz
+  xxd aaa.gz
+  echo "================"
+  gzip -c -d aaa.gz
+  rm aaa.gz
+#+end_src
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 cdbd 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000 1f8b 0800  ....gt..........
+00000020: 0000 0000 0003 abac ace4 0200 7448 7b72  ............tH{r
+00000030: 0400 0000                                ....
+================
+xxx
+yyy
+#+end_src
+
+#+caption: OS情報にはUNIX: 03が入っている
+#+begin_src shell
+  echo "xxx" > aaa
+  gzip aaa
+  xxd aaa.gz
+  file aaa.gz
+  rm aaa.gz
+#+END_SRC
+
+#+RESULTS:
+#+begin_src
+00000000: 1f8b 0808 02ca 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+aaa.gz: gzip compressed data, was "aaa", last modified: Tue May  6 08:36:18 2025, from Unix, original size modulo 2^32 4
+#+end_src
+
+
+* 関連
+# 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
+# - この事実は自分のこのアイデアとどう整合するか。
+# - この現象はあの理論でどう説明できるか。
+# - ふたつのアイデアは互いに矛盾するか、互いを補っているか。
+# - いま聞いた内容は以前に聞いたことがなかったか。
+# - メモ y についてメモ x はどういう意味か。
+# - 対立する
+# - 修正する
+# - 補足する
+# - 付け加えるもの
+# - アイデア同士を組み合わせて新しいものを生み出せないか
+# - どんな疑問が浮かんだか
+なし。
