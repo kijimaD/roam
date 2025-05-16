@@ -1,5 +1,5 @@
 # builder ================
-FROM ubuntu:25.04 AS builder
+FROM ubuntu:25.10 AS builder
 
 WORKDIR /roam
 
@@ -61,7 +61,7 @@ COPY --from=build /roam/pdfs /roam/public/pdfs
 COPY --from=builder /usr/bin/sleep /usr/bin/sleep
 
 # Heroku(staging)
-FROM ubuntu:25.04 AS staging
+FROM ubuntu:25.10 AS staging
 
 COPY --from=build /roam/public /roam/public
 
@@ -97,7 +97,7 @@ COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
 RUN sh dockle-installer.sh
 
 # pandoc ================
-FROM ubuntu:25.04 AS pandoc
+FROM ubuntu:25.10 AS pandoc
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
