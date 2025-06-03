@@ -46,10 +46,9 @@
 (use-package esxml
   :ensure t)
 
-(add-to-list 'load-path "~/roam/vendor/denote-2.0.0")
+(add-to-list 'load-path "./vendor/denote-2.0.0")
 (require 'denote)
 (require 'denote-org-dblock)
-
 (setq denote-directory ".")
 (setq denote-file-type 'org)
 
