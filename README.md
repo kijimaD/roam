@@ -26,4 +26,5 @@ make watch
 
 ```shell
 git submodule update --init
+git submodule update --remote
 ```
