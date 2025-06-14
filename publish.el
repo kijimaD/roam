@@ -76,6 +76,13 @@
 (use-package webfeeder
   :straight (:host github :repo "emacsmirror/webfeeder")
   :ensure t)
+(defun kd/webfeeder-limit-summary-length (summary)
+  "Limit SUMMARY length to 300 characters."
+  (let ((max-length 300))
+    (if (> (length summary) max-length)
+        (concat (substring summary 0 max-length) "…")
+      summary)))
+(advice-add 'webfeeder--html-summary :filter-return #'kd/webfeeder-limit-summary-length)
 
 (require 'ox-publish)
 
@@ -299,7 +306,7 @@
    :title "Insomnia"
    :description "Insomnia"
    :author "Kijima Daigo"
-   :max-entries 100))
+   :max-entries 50))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
