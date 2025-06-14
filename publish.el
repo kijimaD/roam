@@ -295,7 +295,7 @@
    "./public"
    kd/site-url
    (directory-files (expand-file-name "./public/") nil ".html$")
-   :builder 'webfeeder-make-rss
+   :builder 'webfeeder-make-atom
    :title "Insomnia"
    :description "Insomnia"
    :author "Kijima Daigo"))
