@@ -39,6 +39,7 @@
 - [[denote:20250614T012819][KDOC 391: 1対1のテーブルを維持する]]
 - [[denote:20250614T103239][KDOC 392: 絞ってからJOINすることでパフォーマンスを改善する]]
 - [[denote:20250614T104010][KDOC 393: デプロイ時に生まれる秘孔を考慮する]]
+- [[denote:20250614T125259][KDOC 394: manのシステムコールセクションがインストールされてないことがある]]
 #+END:
 
 * 📖 文献メモ
@@ -484,6 +485,7 @@
 - [[denote:20250614T012819][KDOC 391: 1対1のテーブルを維持する]]
 - [[denote:20250614T103239][KDOC 392: 絞ってからJOINすることでパフォーマンスを改善する]]
 - [[denote:20250614T104010][KDOC 393: デプロイ時に生まれる秘孔を考慮する]]
+- [[denote:20250614T125259][KDOC 394: manのシステムコールセクションがインストールされてないことがある]]
 #+END:
 
 * 📚 すべて
@@ -875,6 +877,7 @@
 - [[denote:20250614T012819][KDOC 391: 1対1のテーブルを維持する]]
 - [[denote:20250614T103239][KDOC 392: 絞ってからJOINすることでパフォーマンスを改善する]]
 - [[denote:20250614T104010][KDOC 393: デプロイ時に生まれる秘孔を考慮する]]
+- [[denote:20250614T125259][KDOC 394: manのシステムコールセクションがインストールされてないことがある]]
 #+END:
 
 * Slides
@@ -915,7 +918,7 @@ PDFスライド集。
 | "name":                | "Kijima                     | Daigo", |
 | "honor":               | 356,                        |         |
 | "clan":                | "",                         |         |
-| "leaderboardPosition": | 210297,                     |         |
+| "leaderboardPosition": | 210300,                     |         |
 | "skills":              | [],                         |         |
 | "ranks":               | {                           |         |
 | "overall":             | {                           |         |
@@ -1116,62 +1119,49 @@ PDFスライド集。
 このページにプレビュー機能を埋め込む用。非表示にしたい。
 
 #+begin_export html
-<iframe id="preview-frame" src=""></iframe>
+  <p>
+    <a href="/sample.html" class="preview-link">ローカルリンク（/sample.html）</a>
+  </p>
 
-<style>
-iframe {
-    width: 30%;
-    height: 60%;
-    border: 1px solid var(--bs-gray);
-    position: absolute;
-    z-index: 100;
-    display: none;
+.preview {
+  margin-top: 4px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  background: #f9f9f9;
 }
-</style>
 
-<script>
-const currentHost = location.host;
-const currentPath = location.pathname;
+ <script>
+    document.querySelectorAll('a').forEach(link => {
+      if (link.hostname !== location.hostname) return;
 
-let overLink = false;
-let overIframe = false;
-const iframe = document.getElementById('preview-frame');
+      let previewEl;
 
-// リンクのマウスイベント
-document.querySelectorAll('a').forEach(link => {
-    link.addEventListener('mouseenter', function(event) {
-        const linkURL = new URL(this.href, location.href);
-        // サイト内リンクだけiframeに表示
-        if (linkURL.host === currentHost && linkURL.pathname != currentPath) {
-            overLink = true;
-            iframe.src = linkURL.pathname + linkURL.search + linkURL.hash;
+      link.addEventListener('mouseenter', async () => {
+        if (previewEl) return;
 
-            iframe.style.display = 'block';
-            iframe.style.left = `${event.pageX+10}px`;
-            iframe.style.top = `${event.pageY+2}px`;
+        previewEl = document.createElement('div');
+        previewEl.className = 'preview';
+        previewEl.textContent = '読み込み中...';
+        link.insertAdjacentElement('afterend', previewEl);
+
+        try {
+          const res = await fetch(link.href);
+          const html = await res.text();
+          const match = html.match(/<body[^>]*>((.|[\n\r])*)<\/body>/i);
+          previewEl.innerHTML = match ? match[1] : html;
+        } catch (e) {
+          previewEl.textContent = 'プレビューを取得できませんでした';
         }
-    });
-    link.addEventListener("mouseleave", () => {
-        overLink = false;
-    });
-});
+      });
 
-// iframeのマウスイベント
-iframe.addEventListener('mouseenter', () => {
-    overIframe = true;
-});
-iframe.addEventListener('mouseleave', () => {
-    overIframe = false;
-    maybeHideIframe();
-});
-
-// どちらにもいなければiframeを隠す
-function maybeHideIframe() {
-    if (!overLink && !overIframe) {
-        iframe.style.display = 'none';
-    }
-}
-</script>
+      link.addEventListener('mouseleave', () => {
+        if (previewEl) {
+          previewEl.remove();
+          previewEl = null;
+        }
+      });
+    });
+  </script>
 #+end_export
 * Footnotes
 [fn:1] トップページはいろいろdblockがあってビルドが遅い。ローカルで一覧を確認するのに不便なので一覧はこのファイルで見る。
