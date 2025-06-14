@@ -298,7 +298,8 @@
    :builder 'webfeeder-make-atom
    :title "Insomnia"
    :description "Insomnia"
-   :author "Kijima Daigo"))
+   :author "Kijima Daigo"
+   :max-entries 100))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
