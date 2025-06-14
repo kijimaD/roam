@@ -290,14 +290,15 @@
   ;; (org-agenda nil "Past") ;; test
   (org-batch-store-agenda-views)
 
-  (webfeeder-build "feed.xml"
-                   "./public"
-                   kd/site-url
-                   (directory-files (expand-file-name "./public/") nil ".html$")
-                   :builder 'webfeeder-make-rss
-                   :title "Insomnia"
-                   :description "Insomnia"
-                   :author "Kijima Daigo"))
+  (webfeeder-build
+   "atom.xml"
+   "./public"
+   kd/site-url
+   (directory-files (expand-file-name "./public/") nil ".html$")
+   :builder 'webfeeder-make-rss
+   :title "Insomnia"
+   :description "Insomnia"
+   :author "Kijima Daigo"))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
