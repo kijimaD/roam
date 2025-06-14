@@ -76,10 +76,8 @@
 (use-package webfeeder
   :straight (:host github :repo "emacsmirror/webfeeder")
   :ensure t)
-(defun kd/webfeeder-empty-summary (_)
-  "Empty summary."
-  "")
-(advice-add 'webfeeder--html-summary :filter-return #'kd/webfeeder-empty-summary)
+;; デフォルトの webfeeder-body-libxml を使うと正しくないXMLを吐いてしまうのでフォールバックで用意されている関数を使う
+(setq webfeeder-body-function 'webfeeder-body-default)
 
 (require 'ox-publish)
 
