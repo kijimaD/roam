@@ -158,7 +158,7 @@
 
 (setq org-html-preamble  #'dw/site-header
       org-html-postamble #'dw/site-footer
-      org-html-metadata-timestamp-format "%Y-%m-%d"
+      org-html-metadata-timestamp-format "%Y-%m-%dT%H:%M:%SZ"
       org-html-html5-fancy nil
       org-html-htmlize-output-type 'css
       org-html-self-link-headlines t
@@ -285,7 +285,7 @@
                     ;; ファイル名だけのリスト
                     (directory-files (expand-file-name "./public/") nil ".+?--.+?\\.html$")
                     #'string>)
-                   0 50))
+                   0 20))
 
     (webfeeder-build
      "atom.xml"
@@ -295,7 +295,8 @@
      :builder 'webfeeder-make-atom
      :title "Insomnia"
      :description "Insomnia"
-     :author "Kijima Daigo")))
+     :author "Kijima Daigo"
+     )))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
