@@ -256,7 +256,7 @@
       "")))
 
 (defun kd/update-index-table ()
-  "update index.org table"
+  "Update index.org table."
   (let ((org-agenda-files '("./")))
     (find-file "index.org")
     (org-dblock-update t)
@@ -264,7 +264,7 @@
     (save-buffer)))
 
 (defun kd/update-dlinks-table ()
-  "update kdoc.org table"
+  "Update kdoc.org table."
   (let ((org-agenda-files '("./")))
     (find-file "dlinks.org")
     (org-dblock-update t)
@@ -272,18 +272,27 @@
     (save-buffer)))
 
 (defun kd/publish ()
+  "Execute publish."
   (org-publish-all t)
   (org-batch-store-agenda-views)
 
-  (webfeeder-build
-   "atom.xml"
-   "./public"
-   kd/site-url
-   (directory-files (expand-file-name "./public/") nil ".html$")
-   :builder 'webfeeder-make-atom
-   :title "Insomnia"
-   :description "Insomnia"
-   :author "Kijima Daigo"))
+  (let ((entries))
+    ;; 直近のエントリだけを載せる
+    (setq entries (cl-subseq
+                   (sort
+                    (directory-files (expand-file-name "./public/") t ".+?--.+?\\.html$")
+                    #'string>)
+                   0 50))
+
+    (webfeeder-build
+     "atom.xml"
+     "./public"
+     kd/site-url
+     entries
+     :builder 'webfeeder-make-atom
+     :title "Insomnia"
+     :description "Insomnia"
+     :author "Kijima Daigo")))
 
 ;; バックリンクをつける
 ;; https://www.takeokunn.org/posts/permanent/20231219122351-how_to_manage_blog_by_org_roam/
