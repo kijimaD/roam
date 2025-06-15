@@ -76,8 +76,11 @@
 (use-package webfeeder
   :straight (:host github :repo "emacsmirror/webfeeder")
   :ensure t)
-;; デフォルトの webfeeder-body-libxml を使うと正しくないXMLを吐いてしまうのでフォールバックで用意されている関数を使う
-(setq webfeeder-body-function 'webfeeder-body-default)
+
+;; libxmlが利用できるときは webfeeder-body-libxml を使う。フォールバックの関数 webfeeder-body-default は<article>で囲まれているかで判定するようである。現時点では<article>で囲われてないので、フォールバックの関数を使うとcontentは空になる
+;; 記事内容の中に特定のパターンが含まれていると壊れたXMLになってしまう。変換時のエラーというわけではない
+;; TODO: 有効かのチェックをやる
+;; (setq webfeeder-body-function 'webfeeder-body-default)
 
 (require 'ox-publish)
 
@@ -191,7 +194,6 @@
          :base-extension "org"
          :base-directory "./"
          :exclude "NEWS.org" ;; FIXME: can't specify .packages directory...
-         ;; :publishing-function #'org-html-publish-to-html
          :publishing-function org-html-publish-to-html
          :publishing-directory "./public"
 
@@ -256,7 +258,7 @@
       "")))
 
 (defun kd/update-index-table ()
-  "update index.org table"
+  "Update index.org table."
   (let ((org-agenda-files '("./")))
     (find-file "index.org")
     (org-dblock-update t)
@@ -264,7 +266,7 @@
     (save-buffer)))
 
 (defun kd/update-dlinks-table ()
-  "update kdoc.org table"
+  "Update kdoc.org table."
   (let ((org-agenda-files '("./")))
     (find-file "dlinks.org")
     (org-dblock-update t)
