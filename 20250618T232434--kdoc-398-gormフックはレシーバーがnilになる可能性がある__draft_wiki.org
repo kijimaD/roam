@@ -1,15 +1,15 @@
 :properties:
-:ID: 20250614T012819
-:mtime:    20250619084835
-:ctime:    20250614012820
+:ID: 20250618T232434
+:mtime:    20250619080139
+:ctime:    20250618232436
 :end:
-#+title:      KDOC 391: 1対1のテーブルを維持する
-#+date:       [2025-06-14 Sat 01:28]
+#+title:      KDOC 398: GORMフックはレシーバーがnilになる可能性がある
+#+date:       [2025-06-18 Wed 23:24]
 #+filetags:   :draft:wiki:
-#+identifier: 20250614T012819
+#+identifier: 20250618T232434
 
 # (kd/denote-kdoc-rename)
-# (denote-rename-file-using-front-matter (buffer-file-name) 0)
+# (denote-rename-file-usidng-front-matter (buffer-file-name) 0)
 # (save-excursion (while (re-search-backward ":draft" nil t) (replace-match "")))
 # (flush-lines "^\\#\s.+?")
 
@@ -66,37 +66,18 @@
 * 概要
 # 本文(見出しも設定する)
 
-親テーブルと子テーブルのレコードが1対1の対応であることを保ちたい場面がある。親だけ、あるいは子だけが消された状態はデータ不整合である。防ぎたい。
+GORMでは[[https://gorm.io/ja_JP/docs/hooks.html][Hooks]]を使用できる。これによってCRUD操作の前後の処理を挿入できる。
 
-たとえばこのような、必ず「ユーザ」は「個人ユーザ」か「会社ユーザ」である、ようなケース。
+#+caption: Userを削除する前に実行される
+#+begin_src go
+func (u *User) BeforeDelete(tx *gorm.DB) (err error) {
+  return
+}
+#+end_src
 
-users。
+もし ~Delete()~ にスライスのUserを渡し一括で削除しようとすると、フックは1度だけ実行され、レシーバはnilになる。
 
-| フィールド |
-|----------|
-| id       |
-
-user_individuals。
-
-| フィールド |
-|----------|
-| id       |
-| user_id  |
-
-user_companies。
-
-| フィールド |
-|----------|
-| id       |
-| user_id  |
-
-データベース制約によって、親が消されたら子を削除する、は簡単にできる。いっぽう、親子が1対1で子だけの削除を禁止する、というのはデータベース上では表現できないように見える。
-
-この場合、アプリケーション側でガードする、しか方法を知らない。いまのところの方法で、ベストではないと考えている。
-
-- 消すときは親テーブルを消し、関連削除によって子を削除するルールにする
-- ORMのフックで、子テーブルの直接削除は禁止する
-- アプリケーションに整合チェックを入れて確認する
+直感的ではないが、こうなっていなければ1件1件削除するたびにモデル情報を取得する必要があり、パフォーマンスの問題になるだろう。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
