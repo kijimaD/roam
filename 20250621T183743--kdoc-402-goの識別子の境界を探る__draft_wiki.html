@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-06-23T19:41:06Z -->
+<!-- 2025-06-24T22:58:15Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 402: Goの識別子の境界を探る</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 402: Goの識別子の境界を探る</h1>
-<div id="outline-container-org8639b85" class="outline-2">
-<h2 id="org8639b85"><a href="#org8639b85">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-org8639b85">
+<div id="outline-container-org21c0902" class="outline-2">
+<h2 id="org21c0902"><a href="#org21c0902">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org21c0902">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -30,28 +30,28 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-orgaeda389" class="outline-2">
-<h2 id="orgaeda389"><a href="#orgaeda389">概要</a></h2>
-<div class="outline-text-2" id="text-orgaeda389">
+<div id="outline-container-orgaafd6e8" class="outline-2">
+<h2 id="orgaafd6e8"><a href="#orgaafd6e8">概要</a></h2>
+<div class="outline-text-2" id="text-orgaafd6e8">
 <p>
-多くの現代的なプログラミング言語では識別子にUnicodeの文字列を使えるということを知っていたが、ちゃんとGoの仕様を調べたことはなかった。確認する。
+多くの現代的なプログラミング言語では識別子にUnicodeの文字(コードポイント)を使えるということを知っていたが、ちゃんとGoの仕様を調べたことはなかった。確認する。
 </p>
 
 <p>
-実行してみて確かめてみる。違和感がすごいが、英語ネイティブが見ているのはこういう景色なのだろう。
+最初に、何も調べずに実行してみて確かめてみる。違和感がすごいが、英語ネイティブが見ているのはこういう景色なのだろう。
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>すべて正しいシンタックス</label><pre class="src src-go">import "fmt"
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>すべて正しいシンタックス。ビルド、実行できる</label><pre class="src src-go">import "fmt"
 func main() {
-        // 変数名
+        // 変数名に日本語が使える
         あ := "a"
         fmt.Println(あ)
 
-        // 関数名
+        // 関数名に日本語が使える
         漢字()
 
-        // 型名
+        // 型名に日本語が使える
         type 地名 struct {}
         var 江戸川橋 地名
         fmt.Println(江戸川橋)
@@ -66,6 +66,10 @@ func 漢字() {}
 {}
 </pre>
 </div>
+
+<p>
+調べてみる。
+</p>
 
 <p>
 <a href="https://go.dev/ref/spec#letter">言語仕様書</a>によると、識別子(<code>identifier</code>)の定義はこうだ。出てきた <code>letter</code>, <code>unicode_letter</code> も辿って調べた。
@@ -83,12 +87,13 @@ unicode_letter = /* a Unicode code point categorized as "Letter" */ .
 </p>
 
 <ul class="org-ul">
-<li>Unicodeにはカテゴリという概念がある。letter, mark, number, punctuation, &#x2026;
+<li>Unicodeにはカテゴリという概念がある。letter(文字), mark(結合記号), number(数字), punctuation(句読点), &#x2026;
 <ul class="org-ul">
+<li>結合記号はアクセント記号のように、ほかの文字と組み合わせて使う記号のことである</li>
 <li>たとえば漢字はletterのサブカテゴリotherに属する</li>
 </ul></li>
-<li>最初にletterカテゴリがあれば、あとはなんでもいい。逆にいえば、マーク、数字、句読点、&#x2026;から開始できない</li>
-<li>アンダースコア <code>_</code> は句読点カテゴリである。例外的に許容されているのであって、ほかの句読点は不可
+<li>識別子の先頭にletterカテゴリの文字があれば、あとはなんでもいい。逆にいえば、結合記号、数字、句読点、&#x2026;から開始できない</li>
+<li>アンダースコア <code>_</code> は句読点カテゴリの文字である。例外的にletterとして許容されている
 <ul class="org-ul">
 <li>自然に使っていて、全く意識してなかった</li>
 </ul></li>
@@ -99,13 +104,13 @@ unicode_letter = /* a Unicode code point categorized as "Letter" */ .
 </p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 3: </span>マーク、数字、句読点、&#x2026;から開始できない</label><pre class="src src-shell"><span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmpgo.XXXXXX.go)
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>結合記号、数字、句読点、&#x2026;から開始できない</label><pre class="src src-shell"><span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmpgo.XXXXXX.go)
 
 cat &gt; $<span class="org-variable-name">tmpfile</span> &lt;&lt;EOF
 <span class="org-sh-heredoc">package main</span>
 
 <span class="org-sh-heredoc">func main() {</span>
-<span class="org-sh-heredoc">  // &#20808;&#38957;&#12398;&#12510;&#12540;&#12463;(&#12450;&#12463;&#12475;&#12531;&#12488;&#35352;&#21495;&#12394;&#12393;)&#12399;&#19981;&#21487;</span>
+<span class="org-sh-heredoc">  // &#20808;&#38957;&#12398;&#12450;&#12463;&#12475;&#12531;&#12488;&#35352;&#21495;&#12399;&#19981;&#21487;</span>
 <span class="org-sh-heredoc">  &#9676;&#768; := "&#12354;"</span>
 <span class="org-sh-heredoc">  print(&#9676;&#768;)</span>
 
@@ -134,17 +139,17 @@ rm $<span class="org-variable-name">tmpfile</span>
 
 <div class="org-src-container">
 <pre class="src src-nil"># command-line-arguments
-/tmp/tmpgo.jBwftD.go:5:3: invalid character U+25CC '◌' in identifier
-/tmp/tmpgo.jBwftD.go:5:6: invalid character U+0300 '̀' in identifier
-/tmp/tmpgo.jBwftD.go:6:9: invalid character U+25CC '◌' in identifier
-/tmp/tmpgo.jBwftD.go:6:12: invalid character U+0300 '̀' in identifier
-/tmp/tmpgo.jBwftD.go:9:3: identifier cannot begin with digit U+FF19 '９'
-/tmp/tmpgo.jBwftD.go:10:9: identifier cannot begin with digit U+FF19 '９'
-/tmp/tmpgo.jBwftD.go:17:3: invalid character U+3001 '、' in identifier
-/tmp/tmpgo.jBwftD.go:18:9: invalid character U+3001 '、' in identifier
-/tmp/tmpgo.jBwftD.go:22:3: invalid character U+FF3F '＿' in identifier
-/tmp/tmpgo.jBwftD.go:23:9: invalid character U+FF3F '＿' in identifier
-/tmp/tmpgo.jBwftD.go:23:9: too many errors
+/tmp/tmpgo.FO1KQz.go:5:3: invalid character U+25CC '◌' in identifier
+/tmp/tmpgo.FO1KQz.go:5:6: invalid character U+0300 '̀' in identifier
+/tmp/tmpgo.FO1KQz.go:6:9: invalid character U+25CC '◌' in identifier
+/tmp/tmpgo.FO1KQz.go:6:12: invalid character U+0300 '̀' in identifier
+/tmp/tmpgo.FO1KQz.go:9:3: identifier cannot begin with digit U+FF19 '９'
+/tmp/tmpgo.FO1KQz.go:10:9: identifier cannot begin with digit U+FF19 '９'
+/tmp/tmpgo.FO1KQz.go:17:3: invalid character U+3001 '、' in identifier
+/tmp/tmpgo.FO1KQz.go:18:9: invalid character U+3001 '、' in identifier
+/tmp/tmpgo.FO1KQz.go:21:3: invalid character U+1F44D '👍' in identifier
+/tmp/tmpgo.FO1KQz.go:22:9: invalid character U+1F44D '👍' in identifier
+/tmp/tmpgo.FO1KQz.go:22:9: too many errors
 </pre>
 </div>
 
@@ -153,9 +158,9 @@ rm $<span class="org-variable-name">tmpfile</span>
 </p>
 </div>
 </div>
-<div id="outline-container-org6e1b8e3" class="outline-2">
-<h2 id="org6e1b8e3"><a href="#org6e1b8e3">関連</a></h2>
-<div class="outline-text-2" id="text-org6e1b8e3">
+<div id="outline-container-org1eddf20" class="outline-2">
+<h2 id="org1eddf20"><a href="#org1eddf20">関連</a></h2>
+<div class="outline-text-2" id="text-org1eddf20">
 <ul class="org-ul">
 <li><a href="https://en.wikipedia.org/wiki/Unicode_character_property">Unicode character property - Wikipedia</a>。カテゴリ表を参考にした</li>
 <li><a href="https://go.dev/ref/spec#letter">The Go Programming Language Specification</a>。Goの言語仕様書</li>
@@ -167,7 +172,7 @@ rm $<span class="org-variable-name">tmpfile</span>
 <div id="text-footnotes">
 
 <div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
-org-babelで標準エラーを出すため変則的な書き方になった。
+org-babelで標準エラーを出すためシェルスクリプトから実行している。
 </p></div></div>
 
 
