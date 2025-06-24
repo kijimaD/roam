@@ -1,6 +1,6 @@
 :properties:
 :ID: 20250621T183743
-:mtime:    20250621194355
+:mtime:    20250622075806
 :ctime:    20250621183747
 :end:
 #+title:      KDOC 402: Goの識別子の境界を探る
@@ -66,22 +66,22 @@
 * 概要
 # 本文(見出しも設定する)
 
-多くの現代的なプログラミング言語では識別子にUnicodeの文字列を使えるということを知っていたが、ちゃんとGoの仕様を調べたことはなかった。確認する。
+多くの現代的なプログラミング言語では識別子にUnicodeの文字(コードポイント)を使えるということを知っていたが、ちゃんとGoの仕様を調べたことはなかった。確認する。
 
-実行してみて確かめてみる。違和感がすごいが、英語ネイティブが見ているのはこういう景色なのだろう。
+最初に、何も調べずに実行してみて確かめてみる。違和感がすごいが、英語ネイティブが見ているのはこういう景色なのだろう。
 
-#+caption: すべて正しいシンタックス
+#+caption: すべて正しいシンタックス。ビルド、実行できる
 #+begin_src go
   import "fmt"
   func main() {
-          // 変数名
+          // 変数名に日本語が使える
           あ := "a"
           fmt.Println(あ)
 
-          // 関数名
+          // 関数名に日本語が使える
           漢字()
 
-          // 型名
+          // 型名に日本語が使える
           type 地名 struct {}
           var 江戸川橋 地名
           fmt.Println(江戸川橋)
@@ -96,6 +96,8 @@ a
 {}
 #+end_src
 
+調べてみる。
+
 [[https://go.dev/ref/spec#letter][言語仕様書]]によると、識別子(~identifier~)の定義はこうだ。出てきた ~letter~, ~unicode_letter~ も辿って調べた。
 
 #+caption: identifierの定義
@@ -107,15 +109,16 @@ a
 
 ここからわかること、考察。
 
-- Unicodeにはカテゴリという概念がある。letter, mark, number, punctuation, ...
+- Unicodeにはカテゴリという概念がある。letter(文字), mark(結合記号), number(数字), punctuation(句読点), ...
+  - 結合記号はアクセント記号のように、ほかの文字と組み合わせて使う記号のことである
   - たとえば漢字はletterのサブカテゴリotherに属する
-- 最初にletterカテゴリがあれば、あとはなんでもいい。逆にいえば、マーク、数字、句読点、...から開始できない
-- アンダースコア ~_~ は句読点カテゴリである。例外的に許容されているのであって、ほかの句読点は不可
+- 識別子の先頭にletterカテゴリの文字があれば、あとはなんでもいい。逆にいえば、結合記号、数字、句読点、...から開始できない
+- アンダースコア ~_~ は句読点カテゴリの文字である。例外的にletterとして許容されている
   - 自然に使っていて、全く意識してなかった
 
 以上から、無効なパターンを試した[fn:1]。
 
-#+caption: マーク、数字、句読点、...から開始できない
+#+caption: 結合記号、数字、句読点、...から開始できない
 #+begin_src shell :results output
   tmpfile=$(mktemp /tmp/tmpgo.XXXXXX.go)
 
@@ -123,7 +126,7 @@ a
   package main
 
   func main() {
-    // 先頭のマーク(アクセント記号など)は不可
+    // 先頭のアクセント記号は不可
     ◌̀ := "あ"
     print(◌̀)
 
@@ -152,17 +155,17 @@ a
 #+RESULTS:
 #+begin_src
 # command-line-arguments
-/tmp/tmpgo.jBwftD.go:5:3: invalid character U+25CC '◌' in identifier
-/tmp/tmpgo.jBwftD.go:5:6: invalid character U+0300 '̀' in identifier
-/tmp/tmpgo.jBwftD.go:6:9: invalid character U+25CC '◌' in identifier
-/tmp/tmpgo.jBwftD.go:6:12: invalid character U+0300 '̀' in identifier
-/tmp/tmpgo.jBwftD.go:9:3: identifier cannot begin with digit U+FF19 '９'
-/tmp/tmpgo.jBwftD.go:10:9: identifier cannot begin with digit U+FF19 '９'
-/tmp/tmpgo.jBwftD.go:17:3: invalid character U+3001 '、' in identifier
-/tmp/tmpgo.jBwftD.go:18:9: invalid character U+3001 '、' in identifier
-/tmp/tmpgo.jBwftD.go:22:3: invalid character U+FF3F '＿' in identifier
-/tmp/tmpgo.jBwftD.go:23:9: invalid character U+FF3F '＿' in identifier
-/tmp/tmpgo.jBwftD.go:23:9: too many errors
+/tmp/tmpgo.FO1KQz.go:5:3: invalid character U+25CC '◌' in identifier
+/tmp/tmpgo.FO1KQz.go:5:6: invalid character U+0300 '̀' in identifier
+/tmp/tmpgo.FO1KQz.go:6:9: invalid character U+25CC '◌' in identifier
+/tmp/tmpgo.FO1KQz.go:6:12: invalid character U+0300 '̀' in identifier
+/tmp/tmpgo.FO1KQz.go:9:3: identifier cannot begin with digit U+FF19 '９'
+/tmp/tmpgo.FO1KQz.go:10:9: identifier cannot begin with digit U+FF19 '９'
+/tmp/tmpgo.FO1KQz.go:17:3: invalid character U+3001 '、' in identifier
+/tmp/tmpgo.FO1KQz.go:18:9: invalid character U+3001 '、' in identifier
+/tmp/tmpgo.FO1KQz.go:21:3: invalid character U+1F44D '👍' in identifier
+/tmp/tmpgo.FO1KQz.go:22:9: invalid character U+1F44D '👍' in identifier
+/tmp/tmpgo.FO1KQz.go:22:9: too many errors
 #+end_src
 
 調べる前の認識は、正確ではなかったのがわかった。
@@ -185,4 +188,4 @@ a
 
 * Footnotes
 
-[fn:1] org-babelで標準エラーを出すため変則的な書き方になった。
+[fn:1] org-babelで標準エラーを出すためシェルスクリプトから実行している。
