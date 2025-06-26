@@ -62,7 +62,6 @@ odp2pdf: ## ODPスライドをPDFに変換する
 .PHONY: lint-run
 lint-run: ## lintを実行する
 	export COMPOSE_DOCKER_CLI_BUILD=1 && docker-compose run lint make textlint
-	export COMPOSE_DOCKER_CLI_BUILD=1 && docker-compose run lint make dockle
 	make hadolint
 
 .PHONY: textlint
@@ -77,10 +76,6 @@ fix:
 .PHONY: hadolint
 hadolint:
 	docker run --rm -i hadolint/hadolint < Dockerfile
-
-.PHONY: dockle
-dockle:
-	dockle ghcr.io/kijimad/roam:master
 
 .PHONY: server
 server: ## webサーバを起動する
