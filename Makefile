@@ -85,6 +85,10 @@ server: ## webサーバを起動する
 watch: ## 自動更新する
 	./scripts/watch.sh
 
+.PHONY: relink
+relink: ## リンクのタイトルを更新する
+	find . -name '*.org' | xargs -n1 ./scripts/relink.sh
+
 .PHONY: prune
 prune: ## 不要なファイルを消す
 	./scripts/prune.sh

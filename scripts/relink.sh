@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 ##############################
 # サイト内リンクのタイトルを更新する
@@ -30,9 +30,8 @@ find . -name '*.org' | while read LINK_FILE; do
     continue
   fi
 
-  TMP_FILE=$(mktemp)
-  # TODO: マッチしたときだけ書かせたい
-  sed -E "s|\[\[id:$ID\]\[.*\]\]|[[id:$ID][$TITLE]]|g" $LINK_FILE > "$TMP_FILE"
-  mv "$TMP_FILE" "$LINK_FILE"
-  echo "置換完了: $LINK_FILE の id:${ID} リンクタイトルを更新"
+  if grep -q "\[\[id:$ID\]\[" "$LINK_FILE"; then
+    sed -i -E "s|\[\[id:$ID\]\[[^]]*\]\]|[[id:$ID][$TITLE]]|g" "$LINK_FILE"
+    echo "置換完了: $LINK_FILE の id:$ID リンクタイトルを更新"
+  fi
 done
