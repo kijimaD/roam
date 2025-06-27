@@ -1,5 +1,5 @@
-[![textlint](https://github.com/kijimaD/roam/actions/workflows/lint.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/lint.yml)
 [![Publish to GitHub Pages](https://github.com/kijimaD/roam/actions/workflows/publish.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/publish.yml)
+[![Check](https://github.com/kijimaD/roam/actions/workflows/check.yml/badge.svg)](https://github.com/kijimaD/roam/actions/workflows/check.yml)
 
 <img src="https://user-images.githubusercontent.com/11595790/192126280-7078c271-d0ca-4c7b-9aa8-ed4e5a4bccb6.png" width="40%" align=right>
 
