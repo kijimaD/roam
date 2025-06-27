@@ -80,22 +80,6 @@ RUN --mount=type=cache,target=/root/.npm \
 COPY .textlintrc ./
 COPY prh.yml ./
 
-# ci ================
-FROM build AS ci
-
-RUN yum -y update && \
-    yum -y install \
-        make
-
-COPY --from=node /usr/local/bin/ /usr/local/bin/
-COPY --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
-COPY --from=node /roam/node_modules /roam/node_modules
-
-WORKDIR /roam
-
-COPY ./scripts/dockle-installer.sh ./dockle-installer.sh
-RUN sh dockle-installer.sh
-
 # pandoc ================
 FROM ubuntu:25.10 AS pandoc
 ENV DEBIAN_FRONTEND=noninteractive
