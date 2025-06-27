@@ -273,6 +273,17 @@
     (org-babel-execute-buffer)
     (save-buffer)))
 
+(defun kd/denote-batch-rename-in-current-directory ()
+    "Rename denote files."
+    (interactive)
+    (let ((files (directory-files "." t ".*T.*--.*__.*\\.org")))
+      (dolist (file files)
+        (message file)
+        (when (denote-file-is-note-p file)
+          (message "Renaming: %s" file)
+          (denote-rename-file-using-front-matter file 0))
+        )))
+
 (defun kd/publish ()
   "Execute publish."
   (org-publish-all t)

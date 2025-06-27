@@ -67,7 +67,15 @@ lint-run: ## lintを実行する
 .PHONY: textlint
 textlint:
 	docker build . --target textlint -t roam_textlint
-	docker run -v $(PWD):/work/roam -w /work --rm roam_textlint bash -c "npx textlint --fix -c ./.textlintrc ./roam/*.org"
+	docker run -v $(PWD):/work/roam -w /work/roam --rm roam_textlint bash -c "npx textlint --fix -c ./.textlintrc ./*.org"
+
+.PHONY: relink
+relink: ## リンクのタイトルをすべて更新する
+	find . -name '*.org' | xargs -n1 ./scripts/relink.sh
+
+.PHONY: rename
+rename: ## denoteファイルをすべて更新する
+	emacs --batch -l ./publish.el --funcall kd/denote-batch-rename-in-current-directory
 
 .PHONY: fix
 fix:
@@ -84,10 +92,6 @@ server: ## webサーバを起動する
 .PHONY: watch
 watch: ## 自動更新する
 	./scripts/watch.sh
-
-.PHONY: relink
-relink: ## リンクのタイトルを更新する
-	find . -name '*.org' | xargs -n1 ./scripts/relink.sh
 
 .PHONY: prune
 prune: ## 不要なファイルを消す
