@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250630T185540
-:mtime:    20250701104305
-:ctime:    20250630185543
+:ID: 20250701T174437
+:mtime:    20250701190625
+:ctime:    20250701174456
 :end:
-#+title:      KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?
-#+date:       [2025-06-30 Mon 18:55]
-#+filetags:   :draft:permanent:
-#+identifier: 20250630T185540
+#+title:      KDOC 413: ローカル変数がエスケープされるのを見る
+#+date:       [2025-07-01 Tue 17:44]
+#+filetags:   :draft:wiki:
+#+identifier: 20250701T174437
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -49,7 +49,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-06-30 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -66,18 +67,37 @@
 * 概要
 # 本文(見出しも設定する)
 
-スタックとヒープについて聞かれた。
+関数を抜けた後も使うようなケースでは、消されないようにスタックからヒープに移す必要がある。ローカル変数として宣言されていても、ヒープに移動させる。
 
-スタック領域は関数呼び出しとともに積み重ねてローカル変数を保存していき、抜けるとともに解放できる明確なイメージがあった。しかし、ヒープはどう使われているかを答えられなくて凹んだ。
+#+caption: ローカル変数がヒープにエスケープされる様子を見る
+#+begin_src shell :results output
+  tmpfile=$(mktemp /tmp/tmpgo.XXXXXX.go)
 
------
------
+  cat > $tmpfile <<EOF
+  package main
 
-逆になぜ、スタックの使用方法は明確なイメージがあったのだろうか。それはよくコードとアセンブリを比較していたからだ。スタックベースの操作が頻繁に登場し、関数呼び出し時にメモリを確保し、抜けるときに破棄する流れをよく見た。
+  func main() {}
 
-多くのCPUの命令セットアーキテクチャは ~push~ / ~pop~ / ~ret~ などのスタック操作をサポートしている。これらの命令は「一番上に積む」「一番上から取る」という制限された動きしかできず柔軟性はない。だからコンパイル時にサイズを決めて機械的に変換でき、どの領域が使われているかは明確である。スタックは、CPUレベルで使っていると言える。
+  func this_is_func() *int {
+          x := 42
+          return &x // ヒープへ
+  }
 
-いっぽう、アセンブリでヒープ確保は、 ~malloc~ のようなライブラリ関数の呼び出し(~call~)として現れる。そのさきで何が行われているかは、OSや言語処理系レベルの話だ。スタックより柔軟に使えるが複雑なために、上のレイヤーに任せているといえる。
+  EOF
+
+  go build -gcflags="-m" -o bin $tmpfile 2>&1
+  rm bin
+  rm $tmpfile
+#+end_src
+
+#+RESULTS:
+#+begin_src
+# command-line-arguments
+/tmp/tmpgo.MLmLjV.go:3:6: can inline main
+/tmp/tmpgo.MLmLjV.go:5:6: can inline this_is_func
+/tmp/tmpgo.MLmLjV.go:6:9: moved to heap: x
+#+end_src
+
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -92,6 +112,4 @@
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-
-- [[https://ja.wikipedia.org/wiki/%E3%83%92%E3%83%BC%E3%83%97%E9%A0%98%E5%9F%9F][ヒープ領域 - Wikipedia]]
-- [[id:20240427T120833][KDOC 141: Cのポインタ操作をアセンブリで見る]]。アセンブラを見ていた例
+なし。
