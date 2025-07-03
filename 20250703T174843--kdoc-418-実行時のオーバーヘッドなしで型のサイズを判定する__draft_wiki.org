@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250702T194815
-:mtime:    20250703075825
-:ctime:    20250702194819
+:ID: 20250703T174843
+:mtime:    20250703185549
+:ctime:    20250703174853
 :end:
-#+title:      KDOC 416: Goのエスケープ解析における2つの不変条件を見る
-#+date:       [2025-07-02 Wed 19:48]
-#+filetags:   :draft:permanent:
-#+identifier: 20250702T194815
+#+title:      KDOC 418: 実行時のオーバーヘッドなしで型のサイズを判定する
+#+date:       [2025-07-03 Thu 17:48]
+#+filetags:   :draft:wiki:
+#+identifier: 20250703T174843
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -67,42 +67,61 @@
 * 概要
 # 本文(見出しも設定する)
 
-Goのドキュメントにヒープエスケープの「不変条件」が書かれていたので、見る。
+CPUアーキテクチャによって、型のサイズは異なることがある。実行時のオーバーヘッドなしで判定しているのをGo言語自体のソースコードで見かけた。
 
+#+caption: uint型のビットサイズを判定する
 #+begin_src git-permalink
-https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/compile/internal/escape/escape.go#L20-L29
+https://github.com/golang/go/blob/0f8ab2db177baee7b04182f5641693df3b212aa9/src/math/bits/bits.go#L17
 #+end_src
 
 #+RESULTS:
 #+begin_src
-// Escape analysis.
-//
-// Here we analyze functions to determine which Go variables
-// (including implicit allocations such as calls to "new" or "make",
-// composite literals, etc.) can be allocated on the stack. The two
-// key invariants we have to ensure are: (1) pointers to stack objects
-// cannot be stored in the heap, and (2) pointers to a stack object
-// cannot outlive that object (e.g., because the declaring function
-// returned and destroyed the object's stack frame, or its space is
-// reused across loop iterations for logically distinct variables).
+const uintSize = 32 << (^uint(0) >> 63) // 32 or 64
 #+end_src
 
-2つの不変条件。
+ビット演算に慣れてないので、一瞬でわからない。確認する。
 
-- (1)スタックオブジェクトへのポインタはヒープに保存できない
-- (2)スタックオブジェクトへのポインタはそのオブジェクトより長生きできない
-  - 関数を抜けるとオブジェクトのスタックフレームは解放される。もしくは解放されたスペースがループ内で論理的に異なる変数として再利用される
+- ~^~ でビット反転する
+- >> で右ビット演算する
+- << で左ビット演算する
 
-つまり、保存場所とポインタ先の関係、スタックオブジェクトとスタックオブジェクトのライフタイムの関係、に関する原則と解釈した。
+中心になるアイデアは、すべてのビットに1が立つとビットサイズの違いが現れるということだ。分解して見る。
 
-- (1) 保存場所とポインタ先の問題(空間)
-  - ルール: スタックオブジェクトへのポインタは、ヒープ領域に保存してはならない。
-  - 理由: ヒープにあるデータは、関数呼び出しを超えて長生きする可能性がある。しかし、それが指し示す先のスタックオブジェクトは、関数を抜けると解放される。結果、ヒープ上には実体のないポインタ（ダングリングポインタ）が残る
-  - 解決策: コンパイラは、ヒープに保存されるポインタが指す先のオブジェクトもヒープにエスケープさせる。これによってヒープからヒープを指す状態にする
-- (2) ポインタ「寿命」の問題(時間)
-  - ルール: スタックオブジェクトへのポインタは、そのオブジェクトのライフタイムを超えて存在してはならない
-  - 理由: 関数を抜けるとスタックオブジェクトは消える。そのポインタが残るとダングリングポインタとなる
-  - 解決策: コンパイラは、ポインタがオブジェクトのライフタイムを超えて使われる可能性を検知したら、そのオブジェクト自体を最初からヒープに確保する
+#+caption: それぞれ見る(64bitアーキテクチャで実行した)
+#+begin_src go
+  import "fmt"
+  func main() {
+    fmt.Printf("%b\n", uint(0))
+    fmt.Printf("%b\n", ^uint(0))
+
+    fmt.Printf("%d\n", 32 << 0) // 32bitの場合、すべてシフトされて0になっている。移動しない
+    fmt.Printf("%d\n", 32 << 1) // 64bitの場合、シフトして1が残る。1だけ左シフトする
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_src
+0
+1111111111111111111111111111111111111111111111111111111111111111
+32
+64
+#+end_src
+
+ビットシフト演算子のどちらが移動量かわからなくなるので確認する。移動元と移動量の位置は同じで、向きでシフトの向きが異なると覚える。
+
+#+begin_src go
+  import "fmt"
+  func main() {
+    fmt.Printf("%b\n", 0b0010 << 1)
+    fmt.Printf("%b\n", 0b0010 >> 1)
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_src
+100
+1
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -117,6 +136,4 @@ https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/c
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-
-- [[id:20250630T185540][KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?]]。調べるきっかけになった
-- [[id:20250701T174437][KDOC 413: ローカル変数がヒープにエスケープされるのを見る]]。エスケープする具体例
+なし。

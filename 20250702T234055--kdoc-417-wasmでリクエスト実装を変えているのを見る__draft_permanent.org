@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250702T194815
-:mtime:    20250703075825
-:ctime:    20250702194819
+:ID: 20250702T234055
+:mtime:    20250703080349
+:ctime:    20250702234056
 :end:
-#+title:      KDOC 416: Goのエスケープ解析における2つの不変条件を見る
-#+date:       [2025-07-02 Wed 19:48]
+#+title:      KDOC 417: WASMでリクエスト実装を変えているのを見る
+#+date:       [2025-07-02 Wed 23:40]
 #+filetags:   :draft:permanent:
-#+identifier: 20250702T194815
+#+identifier: 20250702T234055
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -67,42 +67,16 @@
 * 概要
 # 本文(見出しも設定する)
 
-Goのドキュメントにヒープエスケープの「不変条件」が書かれていたので、見る。
+WASMはブラウザのサンドボックス化された環境で実行される。外部機能にアクセスするには、JavaScriptのAPIを経由する。
 
 #+begin_src git-permalink
-https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/compile/internal/escape/escape.go#L20-L29
+https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/net/http/roundtrip_js.go#L129
 #+end_src
 
 #+RESULTS:
 #+begin_src
-// Escape analysis.
-//
-// Here we analyze functions to determine which Go variables
-// (including implicit allocations such as calls to "new" or "make",
-// composite literals, etc.) can be allocated on the stack. The two
-// key invariants we have to ensure are: (1) pointers to stack objects
-// cannot be stored in the heap, and (2) pointers to a stack object
-// cannot outlive that object (e.g., because the declaring function
-// returned and destroyed the object's stack frame, or its space is
-// reused across loop iterations for logically distinct variables).
+	fetchPromise := js.Global().Call("fetch", req.URL.String(), opt)
 #+end_src
-
-2つの不変条件。
-
-- (1)スタックオブジェクトへのポインタはヒープに保存できない
-- (2)スタックオブジェクトへのポインタはそのオブジェクトより長生きできない
-  - 関数を抜けるとオブジェクトのスタックフレームは解放される。もしくは解放されたスペースがループ内で論理的に異なる変数として再利用される
-
-つまり、保存場所とポインタ先の関係、スタックオブジェクトとスタックオブジェクトのライフタイムの関係、に関する原則と解釈した。
-
-- (1) 保存場所とポインタ先の問題(空間)
-  - ルール: スタックオブジェクトへのポインタは、ヒープ領域に保存してはならない。
-  - 理由: ヒープにあるデータは、関数呼び出しを超えて長生きする可能性がある。しかし、それが指し示す先のスタックオブジェクトは、関数を抜けると解放される。結果、ヒープ上には実体のないポインタ（ダングリングポインタ）が残る
-  - 解決策: コンパイラは、ヒープに保存されるポインタが指す先のオブジェクトもヒープにエスケープさせる。これによってヒープからヒープを指す状態にする
-- (2) ポインタ「寿命」の問題(時間)
-  - ルール: スタックオブジェクトへのポインタは、そのオブジェクトのライフタイムを超えて存在してはならない
-  - 理由: 関数を抜けるとスタックオブジェクトは消える。そのポインタが残るとダングリングポインタとなる
-  - 解決策: コンパイラは、ポインタがオブジェクトのライフタイムを超えて使われる可能性を検知したら、そのオブジェクト自体を最初からヒープに確保する
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -117,6 +91,4 @@ https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/c
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-
-- [[id:20250630T185540][KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?]]。調べるきっかけになった
-- [[id:20250701T174437][KDOC 413: ローカル変数がヒープにエスケープされるのを見る]]。エスケープする具体例
+なし。

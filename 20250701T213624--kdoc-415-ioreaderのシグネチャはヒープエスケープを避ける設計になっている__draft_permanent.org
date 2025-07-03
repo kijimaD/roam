@@ -1,6 +1,6 @@
 :properties:
 :ID: 20250701T213624
-:mtime:    20250701224651
+:mtime:    20250702082844
 :ctime:    20250701213627
 :end:
 #+title:      KDOC 415: io.Readerのシグネチャはヒープエスケープを避ける設計になっている
@@ -87,17 +87,17 @@ io.Reader, io.Writerのインターフェース設計には、ヒープのエス
   package main
 
   func main() {
-    // スタックで渡せる
+    // スタックに置いたまま
     buf := make([]byte, 2)
     Read2(buf)
   }
 
-  // Read側で初期化して返すと、ヒープに置かなければならない
+  // Read側で初期化して返すと、ヒープにエスケープしなければならない
   func Read1() []byte {
     return make([]byte, 1)
   }
 
-  // 呼び出し側で初期化してもらうようにすると、スタックに置ける
+  // 呼び出し側で初期化してもらうようにすると、ヒープにエスケープする必要がない
   func Read2([]byte) {}
 
   EOF
@@ -132,5 +132,5 @@ io.Reader, io.Writerのインターフェース設計には、ヒープのエス
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
 
-- [[https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis][Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance]]。io.Readerとio.Writerインターフェースの設計について言及していた
-- [[id:20250701T193212][KDOC 414: インターフェースがヒープにエスケープされるのを見る]]。調べている中で記事を見かけ、調べるきっかけになった
+- [[https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis][Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance]]。調べている中でio.Readerとio.Writerインターフェースの設計について言及していたのを見つけた
+- [[id:20250701T193212][KDOC 414: インターフェースがヒープにエスケープされるのを見る]]。調べるきっかけになった
