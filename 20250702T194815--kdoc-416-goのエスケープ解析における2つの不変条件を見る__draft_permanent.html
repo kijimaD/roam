@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-07-03T07:18:33Z -->
+<!-- 2025-07-04T07:51:41Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 416: Goのエスケープ解析における2つの不変条件を見る</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 416: Goのエスケープ解析における2つの不変条件を見る</h1>
-<div id="outline-container-orga2f8b22" class="outline-2">
-<h2 id="orga2f8b22"><a href="#orga2f8b22">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orga2f8b22">
+<div id="outline-container-org90757de" class="outline-2">
+<h2 id="org90757de"><a href="#org90757de">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org90757de">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -33,11 +33,11 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org6ec2dce" class="outline-2">
-<h2 id="org6ec2dce"><a href="#org6ec2dce">概要</a></h2>
-<div class="outline-text-2" id="text-org6ec2dce">
+<div id="outline-container-orgdb6a961" class="outline-2">
+<h2 id="orgdb6a961"><a href="#orgdb6a961">概要</a></h2>
+<div class="outline-text-2" id="text-orgdb6a961">
 <p>
-Goのドキュメントにヒープエスケープの不変条件が書かれていたので、見る。
+Goのドキュメントにヒープエスケープの「不変条件」が書かれていたので、見る。
 </p>
 
 <div class="org-src-container">
@@ -64,28 +64,39 @@ Goのドキュメントにヒープエスケープの不変条件が書かれて
 </p>
 
 <ul class="org-ul">
-<li>(1)スタックオブジェクトへのポインタはヒープに保存できない
-<ul class="org-ul">
-<li>スタックオブジェクトは関数を抜けると同時に解放される。解放されるとポインタは不明な値を指すことになる(ダングリングポインタ)</li>
-<li>したがってスタックに割り当てられた変数のアドレスがヒープにエスケープしないようにする。スタック変数をヒープに移す。</li>
-</ul></li>
+<li>(1)スタックオブジェクトへのポインタはヒープに保存できない</li>
 <li>(2)スタックオブジェクトへのポインタはそのオブジェクトより長生きできない
 <ul class="org-ul">
 <li>関数を抜けるとオブジェクトのスタックフレームは解放される。もしくは解放されたスペースがループ内で論理的に異なる変数として再利用される</li>
-<li>スタック変数のライフタイムが、その変数へのポインタへのライフタイムより短くならないようにする。必要に応じてスタック変数をヒープに移す</li>
 </ul></li>
 </ul>
 
 <p>
-つまり、(1)スタックにあるとオブジェクトが開放されてしまうのでヒープに保存しない、(2)スタックオブジェクトとスタックオブジェクトのポインタの関係性。
+つまり、保存場所とポインタ先の関係、スタックオブジェクトとスタックオブジェクトのライフタイムの関係、に関する原則と解釈した。
 </p>
-</div>
-</div>
-<div id="outline-container-orgc43b25e" class="outline-2">
-<h2 id="orgc43b25e"><a href="#orgc43b25e">関連</a></h2>
-<div class="outline-text-2" id="text-orgc43b25e">
+
 <ul class="org-ul">
-<li><a href="20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__draft_wiki.html#ID-20250701T174437">KDOC 413: ローカル変数がヒープにエスケープされるのを見る</a>。エスケープされる具体例。「スタックオブジェクトへのポインタはヒープに保存しない」を守るためにスタックオブジェクトをエスケープする例</li>
+<li>(1) 保存場所とポインタ先の問題(空間)
+<ul class="org-ul">
+<li>ルール: スタックオブジェクトへのポインタは、ヒープ領域に保存してはならない。</li>
+<li>理由: ヒープにあるデータは、関数呼び出しを超えて長生きする可能性がある。しかし、それが指し示す先のスタックオブジェクトは、関数を抜けると解放される。結果、ヒープ上には実体のないポインタ（ダングリングポインタ）が残る</li>
+<li>解決策: コンパイラは、ヒープに保存されるポインタが指す先のオブジェクトもヒープにエスケープさせる。これによってヒープからヒープを指す状態にする</li>
+</ul></li>
+<li>(2) ポインタ「寿命」の問題(時間)
+<ul class="org-ul">
+<li>ルール: スタックオブジェクトへのポインタは、そのオブジェクトのライフタイムを超えて存在してはならない</li>
+<li>理由: 関数を抜けるとスタックオブジェクトは消える。そのポインタが残るとダングリングポインタとなる</li>
+<li>解決策: コンパイラは、ポインタがオブジェクトのライフタイムを超えて使われる可能性を検知したら、そのオブジェクト自体を最初からヒープに確保する</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org64365bb" class="outline-2">
+<h2 id="org64365bb"><a href="#org64365bb">関連</a></h2>
+<div class="outline-text-2" id="text-org64365bb">
+<ul class="org-ul">
+<li><a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__draft_permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?</a>。調べるきっかけになった</li>
+<li><a href="20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__draft_wiki.html#ID-20250701T174437">KDOC 413: ローカル変数がヒープにエスケープされるのを見る</a>。エスケープする具体例</li>
 </ul>
 </div>
 </div>
