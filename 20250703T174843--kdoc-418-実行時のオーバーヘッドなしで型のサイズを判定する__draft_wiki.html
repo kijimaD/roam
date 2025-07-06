@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-07-04T07:51:34Z -->
+<!-- 2025-07-07T08:37:49Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 418: 実行時のオーバーヘッドなしで型のサイズを判定する</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 418: 実行時のオーバーヘッドなしで型のサイズを判定する</h1>
-<div id="outline-container-orgd053454" class="outline-2">
-<h2 id="orgd053454"><a href="#orgd053454">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orgd053454">
+<div id="outline-container-org04bdac9" class="outline-2">
+<h2 id="org04bdac9"><a href="#org04bdac9">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org04bdac9">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -33,11 +33,15 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-orgb6d086d" class="outline-2">
-<h2 id="orgb6d086d"><a href="#orgb6d086d">概要</a></h2>
-<div class="outline-text-2" id="text-orgb6d086d">
+<div id="outline-container-org608cd58" class="outline-2">
+<h2 id="org608cd58"><a href="#org608cd58">概要</a></h2>
+<div class="outline-text-2" id="text-org608cd58">
 <p>
 CPUアーキテクチャによって、型のサイズは異なることがある。実行時のオーバーヘッドなしで判定しているのをGo言語自体のソースコードで見かけた。
+</p>
+
+<p>
+constなのでコンパイル時に、ビルド成果物へ値が埋め込まれる。実行時のオーバーヘッドがない。
 </p>
 
 <div class="org-src-container">
@@ -70,8 +74,9 @@ func main() {
   fmt.Printf("%b\n", uint(0))
   fmt.Printf("%b\n", ^uint(0))
 
-  fmt.Printf("%d\n", 32 &lt;&lt; 0) // 32bitの場合、すべてシフトされて0になっている。移動しない
-  fmt.Printf("%d\n", 32 &lt;&lt; 1) // 64bitの場合、シフトして1が残る。1だけ左シフトする
+  // ^uint(0) &gt;&gt; 63 の結果、32bit環境では 0 に、64bit環境では 1 になる
+  fmt.Printf("%d\n", 32 &lt;&lt; 0) // 移動しないので32のまま
+  fmt.Printf("%d\n", 32 &lt;&lt; 1) // 1だけ左シフトする。つまり32(2の5乗)から64(2の6乗)になる
 }
 </pre>
 </div>
@@ -85,7 +90,7 @@ func main() {
 </div>
 
 <p>
-ビットシフト演算子のどちらが移動量かわからなくなるので確認する。移動元と移動量の位置は同じで、向きでシフトの向きが異なると覚える。
+ビットシフト演算子の両辺どちらが移動量かわからなくなるので確認する。移動元と移動量の位置は同じで、向きでシフトの向きが異なると覚える。
 </p>
 
 <div class="org-src-container">
@@ -104,9 +109,9 @@ func main() {
 </div>
 </div>
 </div>
-<div id="outline-container-org029125a" class="outline-2">
-<h2 id="org029125a"><a href="#org029125a">関連</a></h2>
-<div class="outline-text-2" id="text-org029125a">
+<div id="outline-container-orge57feec" class="outline-2">
+<h2 id="orge57feec"><a href="#orge57feec">関連</a></h2>
+<div class="outline-text-2" id="text-orge57feec">
 <p>
 なし。
 </p>

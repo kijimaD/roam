@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-07-04T07:51:41Z -->
+<!-- 2025-07-07T08:37:55Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 415: io.Readerのシグネチャはヒープエスケープを避ける設計になっている</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 415: io.Readerのシグネチャはヒープエスケープを避ける設計になっている</h1>
-<div id="outline-container-orgcfba9ed" class="outline-2">
-<h2 id="orgcfba9ed"><a href="#orgcfba9ed">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orgcfba9ed">
+<div id="outline-container-org4c6ade9" class="outline-2">
+<h2 id="org4c6ade9"><a href="#org4c6ade9">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org4c6ade9">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -30,9 +30,9 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org6f57eb1" class="outline-2">
-<h2 id="org6f57eb1"><a href="#org6f57eb1">概要</a></h2>
-<div class="outline-text-2" id="text-org6f57eb1">
+<div id="outline-container-org97a2a97" class="outline-2">
+<h2 id="org97a2a97"><a href="#org97a2a97">概要</a></h2>
+<div class="outline-text-2" id="text-org97a2a97">
 <p>
 io.Reader, io.Writerのインターフェース設計には、ヒープのエスケープも関係しているという。
 </p>
@@ -55,25 +55,25 @@ io.Reader, io.Writerのインターフェース設計には、ヒープのエス
 <div class="org-src-container">
 <label class="org-src-name"><span class="listing-number">Listing 2: </span>Read1だけがヒープのエスケープが発生する</label><pre class="src src-shell"><span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmpgo.XXXXXX.go)
 
-cat &gt; $<span class="org-variable-name">tmpfile</span> &lt;&lt;EOF
-<span class="org-sh-heredoc">package main</span>
+cat &gt; $<span class="org-variable-name">tmpfile</span> &lt;&lt;EOF<span class="org-sh-heredoc">
+package main
 
-<span class="org-sh-heredoc">func main() {</span>
-<span class="org-sh-heredoc">  // &#12473;&#12479;&#12483;&#12463;&#12395;&#32622;&#12356;&#12383;&#12414;&#12414;</span>
-<span class="org-sh-heredoc">  buf := make([]byte, 2)</span>
-<span class="org-sh-heredoc">  Read2(buf)</span>
-<span class="org-sh-heredoc">}</span>
+func main() {
+  // &#12473;&#12479;&#12483;&#12463;&#12395;&#32622;&#12356;&#12383;&#12414;&#12414;
+  buf := make([]byte, 2)
+  Read2(buf)
+}
 
-<span class="org-sh-heredoc">// Read&#20596;&#12391;&#21021;&#26399;&#21270;&#12375;&#12390;&#36820;&#12377;&#12392;&#12289;&#12498;&#12540;&#12503;&#12395;&#12456;&#12473;&#12465;&#12540;&#12503;&#12375;&#12394;&#12369;&#12428;&#12400;&#12394;&#12425;&#12394;&#12356;</span>
-<span class="org-sh-heredoc">func Read1() []byte {</span>
-<span class="org-sh-heredoc">  return make([]byte, 1)</span>
-<span class="org-sh-heredoc">}</span>
+// Read&#20596;&#12391;&#21021;&#26399;&#21270;&#12375;&#12390;&#36820;&#12377;&#12392;&#12289;&#12498;&#12540;&#12503;&#12395;&#12456;&#12473;&#12465;&#12540;&#12503;&#12375;&#12394;&#12369;&#12428;&#12400;&#12394;&#12425;&#12394;&#12356;
+func Read1() []byte {
+  return make([]byte, 1)
+}
 
-<span class="org-sh-heredoc">// &#21628;&#12403;&#20986;&#12375;&#20596;&#12391;&#21021;&#26399;&#21270;&#12375;&#12390;&#12418;&#12425;&#12358;&#12424;&#12358;&#12395;&#12377;&#12427;&#12392;&#12289;&#12498;&#12540;&#12503;&#12395;&#12456;&#12473;&#12465;&#12540;&#12503;&#12377;&#12427;&#24517;&#35201;&#12364;&#12394;&#12356;</span>
-<span class="org-sh-heredoc">func Read2([]byte) {}</span>
+// &#21628;&#12403;&#20986;&#12375;&#20596;&#12391;&#21021;&#26399;&#21270;&#12375;&#12390;&#12418;&#12425;&#12358;&#12424;&#12358;&#12395;&#12377;&#12427;&#12392;&#12289;&#12498;&#12540;&#12503;&#12395;&#12456;&#12473;&#12465;&#12540;&#12503;&#12377;&#12427;&#24517;&#35201;&#12364;&#12394;&#12356;
+func Read2([]byte) {}
 
-<span class="org-sh-heredoc">EOF</span>
-
+EOF
+</span>
 go build -gcflags=<span class="org-string">"-m"</span> -o bin $<span class="org-variable-name">tmpfile</span> 2&gt;&amp;1
 rm bin
 rm $<span class="org-variable-name">tmpfile</span>
@@ -92,9 +92,9 @@ rm $<span class="org-variable-name">tmpfile</span>
 </div>
 </div>
 </div>
-<div id="outline-container-orgcf9ff0c" class="outline-2">
-<h2 id="orgcf9ff0c"><a href="#orgcf9ff0c">関連</a></h2>
-<div class="outline-text-2" id="text-orgcf9ff0c">
+<div id="outline-container-orge5a4958" class="outline-2">
+<h2 id="orge5a4958"><a href="#orge5a4958">関連</a></h2>
+<div class="outline-text-2" id="text-orge5a4958">
 <ul class="org-ul">
 <li><a href="https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis">Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance</a>。調べている中でio.Readerとio.Writerインターフェースの設計について言及していたのを見つけた</li>
 <li><a href="20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__draft_wiki.html#ID-20250701T193212">KDOC 414: インターフェースがヒープにエスケープされるのを見る</a>。調べるきっかけになった</li>
