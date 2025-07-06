@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250703T174843
-:mtime:    20250704083424
-:ctime:    20250703174853
+:ID: 20250706T135040
+:mtime:    20250707083205
+:ctime:    20250706135046
 :end:
-#+title:      KDOC 418: 実行時のオーバーヘッドなしで型のサイズを判定する
-#+date:       [2025-07-03 Thu 17:48]
-#+filetags:   :draft:wiki:
-#+identifier: 20250703T174843
+#+title:      KDOC 419: トキワ荘マンガミュージアムを観察する
+#+date:       [2025-07-06 Sun 13:50]
+#+filetags:   :draft:essay:
+#+identifier: 20250706T135040
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -67,64 +67,16 @@
 * 概要
 # 本文(見出しも設定する)
 
-CPUアーキテクチャによって、型のサイズは異なることがある。実行時のオーバーヘッドなしで判定しているのをGo言語自体のソースコードで見かけた。
+[[https://ja.wikipedia.org/wiki/%E3%83%88%E3%82%AD%E3%83%AF%E8%8D%98%E3%83%9E%E3%83%B3%E3%82%AC%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0][トキワ荘マンガミュージアム]]は、東京都豊島区にある漫画に関する博物館である。
 
-constなのでコンパイル時に、ビルド成果物へ値が埋め込まれる。実行時のオーバーヘッドがない。
+#+begin_export html
+<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d4142.42527168324!2d139.68947191122666!3d35.72335060977725!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x6018f35913eafb9f%3A0x932250aec9d5b534!2sTokiwaso%20Manga%20Museum!5e1!3m2!1sen!2sjp!4v1751777420035!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+#+end_export
 
-#+caption: uint型のビットサイズを判定する
-#+begin_src git-permalink
-https://github.com/golang/go/blob/0f8ab2db177baee7b04182f5641693df3b212aa9/src/math/bits/bits.go#L17
-#+end_src
-
-#+RESULTS:
-#+begin_src
-const uintSize = 32 << (^uint(0) >> 63) // 32 or 64
-#+end_src
-
-ビット演算に慣れてないので、一瞬でわからない。確認する。
-
-- ~^~ でビット反転する
-- >> で右ビット演算する
-- << で左ビット演算する
-
-中心になるアイデアは、すべてのビットに1が立つとビットサイズの違いが現れるということだ。分解して見る。
-
-#+caption: それぞれ見る(64bitアーキテクチャで実行した)
-#+begin_src go
-  import "fmt"
-  func main() {
-    fmt.Printf("%b\n", uint(0))
-    fmt.Printf("%b\n", ^uint(0))
-
-    // ^uint(0) >> 63 の結果、32bit環境では 0 に、64bit環境では 1 になる
-    fmt.Printf("%d\n", 32 << 0) // 移動しないので32のまま
-    fmt.Printf("%d\n", 32 << 1) // 1だけ左シフトする。つまり32(2の5乗)から64(2の6乗)になる
-  }
-#+end_src
-
-#+RESULTS:
-#+begin_src
-0
-1111111111111111111111111111111111111111111111111111111111111111
-32
-64
-#+end_src
-
-ビットシフト演算子の両辺どちらが移動量かわからなくなるので確認する。移動元と移動量の位置は同じで、向きでシフトの向きが異なると覚える。
-
-#+begin_src go
-  import "fmt"
-  func main() {
-    fmt.Printf("%b\n", 0b0010 << 1)
-    fmt.Printf("%b\n", 0b0010 >> 1)
-  }
-#+end_src
-
-#+RESULTS:
-#+begin_src
-100
-1
-#+end_src
+- マンガミュージアムといっても、特定の時期(1950~60年代)・場所(椎名町)のマンガ家を解説した博物館で、スコープが限られている
+- 実は入居時期がかぶってた時期はそんなに長くない
+- 靴を脱いで部屋に入っていく体験が良い
+- 元の建物は取り壊し後しばらくは忘れ去られていた(Wikipediaから)が、近年の活動によって形となった。自然発生的にできたものではない。意図をもって、掘り起こしたものである。地域振興の意図と絡めて、復活したように見える
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
