@@ -1,0 +1,67 @@
+:properties:
+:ID: 20250701T213624
+:mtime:    20250720093059
+:ctime:    20250701213627
+:end:
+#+title:      KDOC 415: io.Readerのシグネチャはヒープエスケープを避けられる設計になっている
+#+date:       [2025-07-01 Tue 21:36]
+#+filetags:   :permanent:
+#+identifier: 20250701T213624
+
+* この文書のステータス
+- 作成
+  - [X] 2025-07-01 貴島
+- レビュー
+  - [X] 2025-07-19 貴島
+
+* 概要
+
+io.Reader, io.Writerのインターフェース設計には、ヒープのエスケープも関係しているという。
+
+#+caption: io.Readerのシグネチャ
+#+begin_src go
+  type Reader interface {
+          Read(p []byte) (n int, err error)
+  }
+#+end_src
+
+~[]byte~ の初期化は呼び出し側の責務になっている。これによって呼び出し側がメモリ管理できるようになる。呼び出し側のスタックに留まり、ヒープにエスケープするのを抑えられる。Readを何度呼んでも新しいヒープ確保が発生しない。呼び出し側がヒープにする自由度もある。
+
+実際に試してみる。
+
+#+caption: Read1だけがヒープのエスケープが発生する
+#+begin_src shell :results output
+  tmpfile=$(mktemp /tmp/tmpgo.XXXXXX.go)
+
+  cat > $tmpfile <<EOF
+  package main
+
+  func main() {}
+
+  // Read側で初期化して返すと、ヒープにエスケープしなければならない
+  func Read1() []byte {
+    return make([]byte, 1)
+  }
+
+  // 呼び出し側で初期化してもらうようにすると、ヒープにエスケープする必要がない
+  func Read2([]byte) {}
+
+  EOF
+
+  go build -gcflags="-m" -o bin $tmpfile 2>&1
+  rm bin
+  rm $tmpfile
+#+end_src
+
+#+RESULTS:
+#+begin_src
+/tmp/tmpgo.s6wAwW.go:3:6: can inline main
+/tmp/tmpgo.s6wAwW.go:6:6: can inline Read1
+/tmp/tmpgo.s6wAwW.go:11:6: can inline Read2
+/tmp/tmpgo.s6wAwW.go:7:14: make([]byte, 1) escapes to heap
+#+end_src
+
+* 関連
+
+- [[https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis][Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance]]。調べている中でio.Readerとio.Writerインターフェースの設計について言及していたのを見つけた
+- [[id:20250701T193212][KDOC 414: インターフェースがヒープにエスケープされるのを見る]]。調べるきっかけになった
