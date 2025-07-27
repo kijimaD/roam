@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250702T194815
-:mtime:    20250720093257
-:ctime:    20250702194819
+:ID: 20250720T174241
+:mtime:    20250727102429
+:ctime:    20250720174247
 :end:
-#+title:      KDOC 416: Goのエスケープ解析における2つの不変条件を見る
-#+date:       [2025-07-02 Wed 19:48]
-#+filetags:   :draft:permanent:
-#+identifier: 20250702T194815
+#+title:      KDOC 422: 科学技術館を観察する
+#+date:       [2025-07-20 Sun 17:42]
+#+filetags:   :draft:essay:
+#+identifier: 20250720T174241
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -49,7 +49,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-07-20 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -66,42 +67,22 @@
 * 概要
 # 本文(見出しも設定する)
 
-Goのドキュメントにヒープエスケープの「不変条件」が書かれていたので、見る。
+[[https://ja.wikipedia.org/wiki/%E7%A7%91%E5%AD%A6%E6%8A%80%E8%A1%93%E9%A4%A8][科学技術館]]は、東京都千代田区にある科学博物館である。
 
-#+begin_src git-permalink
-https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/compile/internal/escape/escape.go#L20-L29
-#+end_src
+#+begin_export html
+<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3907.053697938309!2d139.75048871198626!3d35.69158897246949!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188c12c576f675%3A0xfcf1facbfb12c41!2sScience%20and%20Technology%20Museum!5e1!3m2!1sen!2sjp!4v1753578898950!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+#+end_export
 
-#+RESULTS:
-#+begin_src
-// Escape analysis.
-//
-// Here we analyze functions to determine which Go variables
-// (including implicit allocations such as calls to "new" or "make",
-// composite literals, etc.) can be allocated on the stack. The two
-// key invariants we have to ensure are: (1) pointers to stack objects
-// cannot be stored in the heap, and (2) pointers to a stack object
-// cannot outlive that object (e.g., because the declaring function
-// returned and destroyed the object's stack frame, or its space is
-// reused across loop iterations for logically distinct variables).
-#+end_src
+* メモ
 
-2つの不変条件。
-
-- (1)スタックオブジェクトへのポインタはヒープに保存できない
-- (2)スタックオブジェクトへのポインタはそのオブジェクトより長生きできない
-  - 関数を抜けるとオブジェクトのスタックフレームは解放される。もしくは解放されたスペースがループ内で論理的に異なる変数として再利用される
-
-つまり、保存場所とポインタ先の関係、スタックオブジェクトとスタックオブジェクトのライフタイムの関係、に関する原則と解釈した。
-
-- (1) 保存場所とポインタ先の問題(空間)
-  - ルール: スタックオブジェクトへのポインタは、ヒープ領域に保存してはならない。
-  - 理由: ヒープにあるデータは、関数呼び出しを超えて長生きする可能性がある。しかし、それが指し示す先のスタックオブジェクトは、関数を抜けると解放される。結果、ヒープ上には実体のないポインタ（ダングリングポインタ）が残る
-  - 解決策: コンパイラは、ヒープに保存されるポインタが指す先のオブジェクトもヒープにエスケープさせる。これによってヒープからヒープを指す状態にする
-- (2) ポインタ「寿命」の問題(時間)
-  - ルール: スタックオブジェクトへのポインタは、そのオブジェクトのライフタイムを超えて存在してはならない
-  - 理由: 関数を抜けるとスタックオブジェクトは消える。そのポインタが残るとダングリングポインタとなる
-  - 解決策: コンパイラは、ポインタがオブジェクトのライフタイムを超えて使われる可能性を検知したら、そのオブジェクト自体を最初からヒープに確保する
+- 建物全体が、タイムカプセルで保存されたような昭和感がある。クリーム色の壁や床、低い天井。もう絶滅しかけている
+- 子供が興味を引かれるような、実体験できるアクティビティが多い。小さな子どもの家族が9割を占めていて、混雑している。ゆっくり見たり考えるのは難しい
+- テーマごとにブースがある。自転車/災害/建築/薬/電気/音...
+- 自転車など特定の狭い工業製品にフォーカスしているものもあれば、ざっくり電気に注目している、というブースもある。科学というより工業の場所も多い。取り扱うテーマが広すぎるので、どうまとめるかが難しそうであった
+- 複数フロアあり面積は広いが、ブース1つはそこまで大きくない。浅く広く展示されている。熱量・熱意を感じるのは難しい。後から知ったが、青少年向けだという。たしかに子どもでも理解できそうだが、そこから本当の興味につながるだろうか、とは感じる。圧倒的な物量と解説がなければ、その分野の奥深さを感じることができないように見える。子どもに媚びている。子どもは、子ども向けということをわかっている
+- 企業名を掲げて主催しているブースも多い。広告・商売と絡めるのも手段の1つだ
+- アクティビティ重視は、入館者数減少に対する施策だという。これまでさまざまな議論や改善があったようだ
+- もちろん、そういう博物館もあっていい。しかし超一等地にある科学博物館としては残念な感じがする
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
@@ -116,6 +97,4 @@ https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/c
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-
-- [[id:20250630T185540][KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?]]。調べるきっかけになった
-- [[id:20250701T174437][KDOC 413: ローカル変数がヒープにエスケープされるのを見る]]。エスケープする具体例
+なし。
