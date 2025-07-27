@@ -66,7 +66,7 @@ rename: ## denoteファイルをすべて更新する
 
 .PHONY: server
 server: ## webサーバを起動する
-	docker run -d -v "$(PWD)/public":/usr/share/nginx/html -w /usr/share/nginx/html -p 8005:80 --name roam-server --restart always docker.io/nginx:1.27
+	docker compose up -d
 
 .PHONY: watch
 watch: ## 自動更新する
