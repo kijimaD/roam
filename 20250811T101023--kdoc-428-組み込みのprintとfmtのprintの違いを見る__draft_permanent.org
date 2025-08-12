@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250806T084714
-:mtime:    20250809085131
-:ctime:    20250806084722
+:ID: 20250811T101023
+:mtime:    20250812090912
+:ctime:    20250811101030
 :end:
-#+title:      KDOC 425: string型の仕様を見る
-#+date:       [2025-08-06 Wed 08:47]
+#+title:      KDOC 428: 組み込みのPrintとfmtのPrintの違いを見る
+#+date:       [2025-08-11 Mon 10:10]
 #+filetags:   :draft:permanent:
-#+identifier: 20250806T084714
+#+identifier: 20250811T101023
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -49,7 +49,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-08-08 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -66,46 +67,26 @@
 * 概要
 # 本文(見出しも設定する)
 
-Go言語には組み込みでstring型がある。言語仕様書を見ると、シンプルに書かれている。
+Go言語には、標準ライブラリの ~fmt.Print~ と組み込み関数の ~print~ がある。どのような違いがあるのだろうか。
 
-↓string型はバイト列の並びにすぎない。ここでの言外の着目は、単に「バイト列」にだけ言及しているという点だ。並べ方(エンコーディング。UTF-8など)については一切言及していない。入れる中身に制約はない。
-
-#+begin_quote
-A string value is a (possibly empty) sequence of bytes.
-
---- [[https://go.dev/ref/spec#String_types][string type]]から抜粋
-#+end_quote
-
-#+begin_src go
-  import "fmt"
-  func main() {
-          abc := string([]byte{0x41, 0x42, 0x43})
-          fmt.Printf("%#v, ", abc)
-          あ := string([]byte{0xe3, 0x81, 0x82})
-          fmt.Printf("%#v, ", あ)
-
-          // UTF-8として無効
-          invalid := string([]byte{0xe3})
-          fmt.Printf("%#v, ", invalid)
-  }
+#+caption: 組み込み関数のprint
+#+begin_src git-permalink
+https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L293-L297
 #+end_src
 
 #+RESULTS:
 #+begin_src
-"ABC", "あ", "\xe3",
+// The print built-in function formats its arguments in an
+// implementation-specific way and writes the result to standard error.
+// Print is useful for bootstrapping and debugging; it is not guaranteed
+// to stay in the language.
+func print(args ...Type)
 #+end_src
 
-len()にstring型を引数にして実行するとバイト数が返ってくる(シーケンスが表現する「文字」数でなく)。string型は単なるバイト列だということを認識すると、一貫性のある挙動に見える。
+- 標準エラー出力に書きこむ
+- 残り続ける保証なし
 
-↓いっぽうで、文字列リテラルは、「暗黙的にUTF-8エンコードである」と明記されている。
-
-#+begin_quote
-The value of a raw string literal is the string composed of the uninterpreted (implicitly UTF-8-encoded) characters between the quotes;
-
---- [[https://go.dev/ref/spec#String_literals][string literal]]から抜粋
-#+end_quote
-
-であるから、通常の方法(文字列リテラル)でstring型の変数を初期化するとUTF-8のバイト列になるのだが、string型にシーケンスに対する制限があるわけではない。
+組み込みの ~print~ はデバッグ用という感じ。
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
