@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250811T101023
-:mtime:    20250822085815
-:ctime:    20250811101030
+:ID: 20250823T081830
+:mtime:    20250824095459
+:ctime:    20250823081928
 :end:
-#+title:      KDOC 428: 組み込みのPrintとfmtのPrintの違いを見る
-#+date:       [2025-08-11 Mon 10:10]
+#+title:      KDOC 429: エイリアス型に対する型アサーションを見る
+#+date:       [2025-08-23 Sat 08:18]
 #+filetags:   :draft:permanent:
-#+identifier: 20250811T101023
+#+identifier: 20250823T081830
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -67,34 +67,50 @@
 * 概要
 # 本文(見出しも設定する)
 
-Go言語には、 ~fmt~ packageの ~Print~ と、 ~builtin~ packageの ~print~ がある。どのような違いがあるのだろうか。
+Go言語で、 ~byte~ 型は ~uint8~ のエイリアス型である。
 
-#+caption: builtin packageのprint
 #+begin_src git-permalink
-https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L293-L297
+https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L87-L90
 #+end_src
 
 #+RESULTS:
 #+begin_src
-// The print built-in function formats its arguments in an
-// implementation-specific way and writes the result to standard error.
-// Print is useful for bootstrapping and debugging; it is not guaranteed
-// to stay in the language.
-func print(args ...Type)
+// byte is an alias for uint8 and is equivalent to uint8 in all ways. It is
+// used, by convention, to distinguish byte values from 8-bit unsigned
+// integer values.
+type byte = uint8
 #+end_src
 
-書いてあるとおり、builtin packageの ~print~ はデバッグ用のようである。
+したがって、 ~byte~ 型 を型アサーションすると、 ~uint8~ 型でも通過する。
 
-builtin package。
+#+begin_src go
+  import "fmt"
+  func main() {
+          var x interface{}
 
-- 標準エラー出力に書きこむ
-- 残り続ける保証なし
-- ~print~, ~println~ しか用意されていない
+          x = byte(1)
 
-fmt package。
+          // 1
+          switch x.(type) {
+          case uint8:
+                  fmt.Println("1 uint8で型アサーション通過した")
+          default:
+                  println("byte != uint8")
+          }
 
-- 標準出力に書き込む
-- さまざまな亜種が用意されている
+          // 2
+          _, ok := x.(uint8)
+          if ok {
+                  fmt.Println("2 uint8で型アサーション通過した")
+          }
+  }
+#+end_src
+
+#+RESULTS:
+#+begin_src
+1 uint8で型アサーション通過した
+2 uint8で型アサーション通過した
+#+end_src
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
