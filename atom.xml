@@ -5,341 +5,159 @@
 <link href="https://kijimad.github.io/roam"/>
 <link href="https://kijimad.github.io/roam/atom.xml" rel="self"/>
 <id>https://kijimad.github.io/roam/atom.xml</id>
-<updated>2025-08-22T23:06:18+09:00</updated>
+<updated>2025-08-27T21:08:24+09:00</updated>
 <entry>
-  <title>KDOC 410: 物事に対する情熱は行動の後に生まれる</title>
+  <title>KDOC 415: io.Readerのシグネチャはヒープエスケープを避けられる設計になっている</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org49ed33f" class="outline-2">
- <h2 id="org49ed33f"> <a href="#org49ed33f">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org49ed33f">
+ <div id="outline-container-orgecb645a" class="outline-2">
+ <h2 id="orgecb645a"> <a href="#orgecb645a">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgecb645a">
  <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-06-29 貴島</li>
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-01 貴島</li>
 </ul></li>
  <li>レビュー
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-19 貴島</li>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org77deb22" class="outline-2">
- <h2 id="org77deb22"> <a href="#org77deb22">概要</a></h2>
- <div class="outline-text-2" id="text-org77deb22">
+ <div id="outline-container-org5505f0d" class="outline-2">
+ <h2 id="org5505f0d"> <a href="#org5505f0d">概要</a></h2>
+ <div class="outline-text-2" id="text-org5505f0d">
  <p>
-大人や社会は「好きなことを仕事にしろ」と言った。しかし、「好きなこと」をどうやって見つけるのかには口をつぐんだ。本当は知らないと自白する代わりに、「色んなことをしてそれを探せ」と言った。
+io.Reader, io.Writerのインターフェース設計には、ヒープのエスケープも関係しているという。
 </p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>io.Readerのシグネチャ</label> <pre class="src src-go">type Reader interface {
+        Read(p []byte) (n int, err error)
+}
+</pre>
+</div>
 
  <p>
-受け取ったメッセージを思い返してみると、こういうことだ。
-</p>
-
- <ul class="org-ul"> <li>自分が好きなものは広い世界のどこかに存在している</li>
- <li>いろんな体験をすれば発見できる。だからバイトしろ。海外に行け。勉強しろ。スポーツしろ</li>
- <li>ないならもっと探せ。でも時間制限があるから、22歳までに見つけろ</li>
- <li>好きなものかはやってみれば直感や感情で判定できる</li>
- <li>エゴや憧れも好きのうちだ。実際に体験してなくてもそれは好きに分類できる</li>
- <li>本当に好きならたくさん努力できるだろう。努力できないなら好きとはいえない</li>
-</ul> <p>
-「砂漠のどこかにダイヤが転がっているからそれを探せ」と言っているように聞こえた。このモデルの問題点は、ダイヤはどこにも転がっていないという点だ。自分探しに成功した人間が存在しないように、好きなことは未知の場所を探して見つけられるものではない。
-</p>
-
- <hr></hr> <hr></hr> <p>
-「物事に対する情熱はやり続けた後に生まれる」という考え方もある。
+ <code>[]byte</code> の初期化は呼び出し側の責務になっている。これによって呼び出し側がメモリ管理できるようになる。呼び出し側のスタックに留まり、ヒープにエスケープするのを抑えられる。Readを何度呼んでも新しいヒープ確保が発生しない。呼び出し側がヒープにする自由度もある。
 </p>
 
  <p>
-行動が先にあって好きになっていくということだ。ダイヤを探すのではなく、手に持っている石を磨き続ければダイヤになる。現時点で情熱がないとしたらそれはまだ発見できていないということではなく、何も続けていないということだ。何でもいいからやり始めればいい。重要なのは  <b>「選ぶこと」</b> ではなく  <b>「磨き始めること」</b> だ。
+実際に試してみる。
 </p>
 
- <p>
-ありもしないものを探せというアドバイスより、何でもいいから続けてみろ、というアドバイスのほうが建設的に見える。
-</p>
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 2: </span>Read1だけがヒープのエスケープが発生する</label> <pre class="src src-shell"> <span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmpgo.XXXXXX.go)
+
+cat > $ <span class="org-variable-name">tmpfile</span> <<EOF <span class="org-sh-heredoc">
+package main
+
+func main() {}
+
+// Read側で初期化して返すと、ヒープにエスケープしなければならない
+func Read1() []byte {
+  return make([]byte, 1)
+}
+
+// 呼び出し側で初期化してもらうようにすると、ヒープにエスケープする必要がない
+func Read2([]byte) {}
+
+EOF
+</span>
+go build -gcflags= <span class="org-string">"-m"</span> -o bin $ <span class="org-variable-name">tmpfile</span> 2>&1
+rm bin
+rm $ <span class="org-variable-name">tmpfile</span>
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">/tmp/tmpgo.s6wAwW.go:3:6: can inline main
+/tmp/tmpgo.s6wAwW.go:6:6: can inline Read1
+/tmp/tmpgo.s6wAwW.go:11:6: can inline Read2
+/tmp/tmpgo.s6wAwW.go:7:14: make([]byte, 1) escapes to heap
+</pre>
 </div>
 </div>
- <div id="outline-container-org503aa72" class="outline-2">
- <h2 id="org503aa72"> <a href="#org503aa72">関連</a></h2>
- <div class="outline-text-2" id="text-org503aa72">
- <ul class="org-ul"> <li> <a href="20221027T235104--kdoc-3-『ない仕事の作り方』__book.html#ID-20221027T235104">KDOC 3: 『ない仕事の作り方』</a>では、好きだから集めるのではなく、大量に集めるから好きになるのだ、と主張する</li>
- <li> <a href="20250611T180912--kdoc-385-『続ける思考』__book.html#ID-20250611T180912">KDOC 385: 『続ける思考』</a>では、意味など考えず時間をかけた結果として好きになる、と主張する</li>
+</div>
+ <div id="outline-container-org9f32bae" class="outline-2">
+ <h2 id="org9f32bae"> <a href="#org9f32bae">関連</a></h2>
+ <div class="outline-text-2" id="text-org9f32bae">
+ <ul class="org-ul"> <li> <a href="https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis">Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance</a>。調べている中でio.Readerとio.Writerインターフェースの設計について言及していたのを見つけた</li>
+ <li> <a href="20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__wiki.html#ID-20250701T193212">KDOC 414: インターフェースがヒープにエスケープされるのを見る</a>。調べるきっかけになった</li>
 </ul></div>
 </div>
 </div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250629T110721--kdoc-410-物事に対する情熱は行動の後に生まれる__essay.html"/>
-  <id>https://kijimad.github.io/roam/20250629T110721--kdoc-410-物事に対する情熱は行動の後に生まれる__essay.html</id>
-  <updated>2025-08-23T08:06:15+09:00</updated>
+  <link href="https://kijimad.github.io/roam/20250701T213624--kdoc-415-ioreaderのシグネチャはヒープエスケープを避けられる設計になっている__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250701T213624--kdoc-415-ioreaderのシグネチャはヒープエスケープを避けられる設計になっている__permanent.html</id>
+  <updated>2025-08-28T06:08:15+09:00</updated>
 </entry>
 <entry>
-  <title>KDOC 417: WASMでリクエスト実装を変えているのを見る</title>
+  <title>KDOC 423: big.Ratのゼロ値を見る</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org2b71ddf" class="outline-2">
- <h2 id="org2b71ddf"> <a href="#org2b71ddf">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org2b71ddf">
+ <div id="outline-container-org366c266" class="outline-2">
+ <h2 id="org366c266"> <a href="#org366c266">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org366c266">
  <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-24 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-26 貴島</li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orgdd1344f" class="outline-2">
- <h2 id="orgdd1344f"> <a href="#orgdd1344f">概要</a></h2>
- <div class="outline-text-2" id="text-orgdd1344f">
- <p>
-WASMはセキュリティのために、ブラウザのサンドボックス化された環境で実行される。外部環境にアクセスするには、JavaScriptのAPIを経由しなければならない。OSからリクエストする方法とは異なる。
-</p>
-
- <p>
-なので、WASM上のリクエストの実装は変えられている。通常のGoの実装が、ソケット通信によってリクエストを送信するのとは異なる。実際に観察してみる。
-</p>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>ビルドタグを確認する</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/net/http/roundtrip_js.go#L5
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">//go:build js && wasm
-</pre>
-</div>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 2: </span>RoundTripメソッド内でJSを呼び出している</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/net/http/roundtrip_js.go#L129
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">fetchPromise := js.Global().Call("fetch", req.URL.String(), opt)
-</pre>
-</div>
-</div>
-</div>
- <div id="outline-container-org9923b14" class="outline-2">
- <h2 id="org9923b14"> <a href="#org9923b14">関連</a></h2>
- <div class="outline-text-2" id="text-org9923b14">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250702T234055--kdoc-417-wasmでリクエスト実装を変えているのを見る__permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250702T234055--kdoc-417-wasmでリクエスト実装を変えているのを見る__permanent.html</id>
-  <updated>2025-08-23T08:06:13+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 427: 桁ごとに処理するスマートな方法を見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org7ea051e" class="outline-2">
- <h2 id="org7ea051e"> <a href="#org7ea051e">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org7ea051e">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-08-08 貴島</li>
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-27 貴島</li>
 </ul></li>
  <li>レビュー
  <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-orgbe851dd" class="outline-2">
- <h2 id="orgbe851dd"> <a href="#orgbe851dd">概要</a></h2>
- <div class="outline-text-2" id="text-orgbe851dd">
+ <div id="outline-container-org4acc4a1" class="outline-2">
+ <h2 id="org4acc4a1"> <a href="#org4acc4a1">概要</a></h2>
+ <div class="outline-text-2" id="text-org4acc4a1">
  <p>
-コーディング問題に、数値を桁ごとに処理せよ、というものがある。さっと出てこなかったのでメモしておく。
+Go言語の  <code>big.Rat</code> 型は分数を表すための型である。ゼロ値でのゼロ除算を避けるため、分母は1として扱われている。
 </p>
 
  <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>“12345”を、1桁ずつ処理する</label> <pre class="src src-go">import "fmt"
+ <pre class="src src-go">import (
+  "math/big"
+  "fmt"
+)
+
 func main() {
-        for _, r := range "12345" {
-                c := int(r - '0')
-                fmt.Println(c)
-        }
+  var zero big.Rat
+  fmt.Printf("%#v\n", zero.Num()) // 分子
+  fmt.Printf("%#v\n", zero.Denom()) // 分母
+
+  fmt.Printf("%#v\n", zero)
+  // aは分子、bは分母
 }
 </pre>
 </div>
 
  <div class="org-src-container">
- <pre class="src src-nil">1
-2
-3
-4
-5
+ <pre class="src src-nil">0
+1
+big.Rat{a:big.Int{neg:false, abs:big.nat(nil)}, b:big.Int{neg:false, abs:big.nat(nil)}}
 </pre>
 </div>
-
- <p>
-流れ。
-</p>
-
- <ol class="org-ol"> <li>入力文字列(数字)をrune、つまりUnicodeコードポイントに分割する</li>
- <li>1文字ごとにベースのコードポイント’0’を使って、コードポイントを数値に変換する。数字のコードポイントは連番で並んでいる</li>
- <li>得られた数値を使う</li>
-</ol></div>
-</div>
- <div id="outline-container-org2bc6fa4" class="outline-2">
- <h2 id="org2bc6fa4"> <a href="#org2bc6fa4">関連</a></h2>
- <div class="outline-text-2" id="text-org2bc6fa4">
- <ul class="org-ul"> <li> <a href="20250320T102813--kdoc-347-大文字小文字の変換をそらで書く__wiki.html#ID-20250320T102813">KDOC 347: 大文字小文字の変換をそらで書く</a>。類似した、コードポイントを使ったトリック。数字、小文字、大文字ごとでコードポイントが連番なのでトリックが使える</li>
-</ul></div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250807T085644--kdoc-427-桁ごとに処理するスマートな方法を見る__draft_wiki.html"/>
-  <id>https://kijimad.github.io/roam/20250807T085644--kdoc-427-桁ごとに処理するスマートな方法を見る__draft_wiki.html</id>
-  <updated>2025-08-23T08:06:00+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 426: スマホにDNSフィルタリングを設定して有害コンテンツをブロックする</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org5c275a8" class="outline-2">
- <h2 id="org5c275a8"> <a href="#org5c275a8">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org5c275a8">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-08-07 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orgab804dd" class="outline-2">
- <h2 id="orgab804dd"> <a href="#orgab804dd">概要</a></h2>
- <div class="outline-text-2" id="text-orgab804dd">
- <p>
-ポルノ依存対策に取り組んできた。以前、Adguardによって自宅LANに対してDNSフィルタリングを設定して、センシティブコンテンツをブロックするようにした。
-</p>
-
- <ul class="org-ul"> <li> <a href="20241115T185022--kdoc-288-dnsフィルタリングで有害コンテンツをブロックする__essay.html#ID-20241115T185022">KDOC 288: DNSフィルタリングで有害コンテンツをブロックする</a></li>
-</ul> <p>
-自宅の全端末で、URLのブラックリストに加えて検索エンジンの強制セーフサーチを適用した。偶発的にポルノが出ない、反射的に検索して表示されない、というのは習慣の改善にとても効果があった。
-</p>
-
- <p>
-しかし、意思は弱かった。スマホでWifiを切って、携帯電話回線を利用して回避し始めた。しばらく放置していたが、対策することにした。
-</p>
 </div>
 </div>
- <div id="outline-container-orge6462c9" class="outline-2">
- <h2 id="orge6462c9"> <a href="#orge6462c9">DNSフィルタリングサービス</a></h2>
- <div class="outline-text-2" id="text-orge6462c9">
- <p>
-スマホのフィルタリング手法にも色々あるのだが、一番手軽で確実なのはDNSフィルタリングに見える <sup> <a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>。自宅LANとは違って、グローバルなDNSサーバを使う必要がある。 <a href="https://nextdns.io/">NextDNS</a>というWebサービスを使うことにした。ある程度のクエリ数までは無料であり、スマホはあまり使わないのでちょうどよかった。使うだけなら会員登録すら必要なくて、スマホの「プライベートDNS」を設定するだけでいい。OSごとのガイドもちゃんと用意されている。カテゴリによるフィルタリング、各検索エンジンの強制セーフサーチがあって、要件を完全に満たしている。
-</p>
-
- <p>
-またしばらく運用してみる。
-</p>
-</div>
-</div>
- <div id="outline-container-orgfdbb863" class="outline-2">
- <h2 id="orgfdbb863"> <a href="#orgfdbb863">関連</a></h2>
- <div class="outline-text-2" id="text-orgfdbb863">
- <ul class="org-ul"> <li> <a href="20241115T185022--kdoc-288-dnsフィルタリングで有害コンテンツをブロックする__essay.html#ID-20241115T185022">KDOC 288: DNSフィルタリングで有害コンテンツをブロックする</a>。これ自体はよく機能した。しかし穴があったために目的を達成できていなかった</li>
-</ul></div>
-</div>
- <div id="footnotes">
- <h2 class="footnotes">Footnotes: </h2>
- <div id="text-footnotes">
-
- <div class="footdef"> <sup> <a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"> <p class="footpara">
-スマホは定期的に替えるイベントが発生するので、同じ設定が簡単にできるかも重要である。アプリは、その点面倒である。
-</p></div></div>
-
-
-</div>
-</div></div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250806T215014--kdoc-426-スマホにdnsフィルタリングを設定して有害コンテンツをブロックする__draft_essay.html"/>
-  <id>https://kijimad.github.io/roam/20250806T215014--kdoc-426-スマホにdnsフィルタリングを設定して有害コンテンツをブロックする__draft_essay.html</id>
-  <updated>2025-08-23T08:05:59+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 424: 『具体と抽象』</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org70bdded" class="outline-2">
- <h2 id="org70bdded"> <a href="#org70bdded">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org70bdded">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul> <ul class="org-ul"> <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orgf253ff4" class="outline-2">
- <h2 id="orgf253ff4"> <a href="#orgf253ff4">概要</a></h2>
- <div class="outline-text-2" id="text-orgf253ff4">
- <p>
- <a href="https://amzn.to/4ffrMnt">『具体と抽象』</a>は、SNSや会社で議論が噛み合わないなどの身近な例を題材に、具体と抽象についてやさしく解説した本である。
-</p>
-</div>
-</div>
- <div id="outline-container-orge11364b" class="outline-2">
- <h2 id="orge11364b"> <a href="#orge11364b">メモ</a></h2>
- <div class="outline-text-2" id="text-orge11364b">
- <p>
-感想。
-</p>
-
- <ul class="org-ul"> <li>この本自体が具体と抽象を往復する構成となっていて読みやすい</li>
- <li>社会を生きるにあたって、「具体レベルの世界にのみ生きる人だ」とみなすことによって楽になることは多そうである</li>
- <li>ちょくちょく具体のみに生きる人への恨み、軽蔑を感じる</li>
- <li>文化や会話は日本中どこでも同じで共有しているとみなされているが、そうではない。個人ごとに違う。同じと考えたときの違和感を言語化しているようだ</li>
-</ul> <p>
-箇所。
-</p>
-
- <ul class="org-ul"> <li>「理学」と「工学」はある面で正反対である。理学は抽象化の方向で、工学は具体化の方向である(位置298)</li>
- <li>斬新な製品や革新的な仕組みを作るためには「多数の意見を聞く」ことはしない。多数の意見はそれぞれの具体レベルに引きずられて、どうしても「いまの延長」の議論しかできなくなる。逆に改善していく場面では、なるべく多数の人から意見を吸い上げることが重要になる(位置403)</li>
- <li>具体レベルのみで読んでいる人は書かれていることにはすべて「実在するモデル」がいる前提で解釈する。書いている側は体験を抽象化してから具体的にストーリーに落としている場合が多い(位置438)</li>
- <li>人に仕事を頼んだり頼まれたりするときに、その人の好む「自由度の大きさ」を考慮する必要がある。「適当にやっといて」で丸投げだと不快に考える人は具体レベルのみの世界に生きる「低い自由度を好む人」である(位置458)
- <ul class="org-ul"> <li>(感想)そうには見えない</li>
-</ul></li>
- <li>上流では個性が重要視される。いかに尖らせるかが重要なので、多数決による意思決定はなじまない。意思決定は多数の人間が関わるほど無難になる(位置490)
- <ul class="org-ul"> <li>(感想)わかる</li>
-</ul></li>
- <li>「上流発想」の建築家は「全体の統一感」や「つながり」を重視する。実際に住む人間からすれば「個別の使い勝手」や「部分的な見た目」のほうが重要である(位置515)</li>
- <li>ネット上で見当違いの議論をしているのをよく見る。「–は–だ」と言い切るのは、そこで「抽象レベルの方向性」を示しているだけで、「具体レベルのすべてがそうだ」と言っているわけではない(位置570)</li>
- <li>哲学の利点は無駄がなくなるということだ。哲学がないとすべてにおいて個別に判断する。場当たり的になって、行為の整合性が取れない。哲学のレベルで方向性が共有されていると、個別に見える事象も大きな方向性に合致しているかで判断できる。ぶれが少なくなる(位置589)</li>
- <li>アナロジーとは「抽象レベルのまね」である。具体レベルのまねは単なるパクリでも、抽象レベルでまねすれば「斬新なアイデア」となる。重要になるのは関係性や構造の共通性に着目することである。特許で守れるのは抽象度が低い、直接的に類似性のあるもののみ(位置621)</li>
- <li>ルールや理論、法則は、多くの場合具体的に起こっている事象の「後追い」の知識だった。しかし一度固定化された抽象度の高い知識は固定観念となる。そして後付けだったはずの理論やルールに現実を合わせようとする。本末転倒が起こる(位置685)</li>
- <li>抽象と具体のどちらかだけでは不完全である。具体と抽象の往復が必要になる(位置717)</li>
- <li>人間は自分の理解レベルより上位の抽象度で語られると突然不快になるという性質があるように見える(位置806)</li>
- <li>他人への一般化は平気でやるのに、自分が関連していることを他人に一般化されることは理解できないし好まない傾向がある(位置821)</li>
- <li>高い抽象レベルの視点を持っている人ほど一見異なる事象が「同じ」に見え、抽象度が低い視点の人ほどすべてが「違って」見える。抽象化して考えるためにはまず「共通点はないか」と考えてみることが重要である。このような思考の障害になるのは、「自分だけが特別である」「自分の仕事や業界が特殊である」という考え方である(位置854)</li>
- <li>人は失敗例を見ても「あれは自分とは違うから」と考えがちである。他人に自分の話を一般化されることを嫌う傾向がある。経験した世界が狭ければ狭いほど、自分の置かれた状況が特殊だと考える傾向がある(位置861)</li>
- <li>具体レベルだけ数学をとらえれば「直接何の役にも立たない」ように見えるが、抽象レベルで見れば数学の考え方はどんな職業の人にも必ず役に立つ(位置915)</li>
-</ul></div>
-</div>
- <div id="outline-container-orgd9becf3" class="outline-2">
- <h2 id="orgd9becf3"> <a href="#orgd9becf3">関連</a></h2>
- <div class="outline-text-2" id="text-orgd9becf3">
+ <div id="outline-container-org4c2dfe8" class="outline-2">
+ <h2 id="org4c2dfe8"> <a href="#org4c2dfe8">関連</a></h2>
+ <div class="outline-text-2" id="text-org4c2dfe8">
  <p>
 なし。
 </p>
 </div>
 </div>
 </div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250728T223330--kdoc-424-『具体と抽象』__draft_book.html"/>
-  <id>https://kijimad.github.io/roam/20250728T223330--kdoc-424-『具体と抽象』__draft_book.html</id>
-  <updated>2025-08-23T08:05:54+09:00</updated>
+  <link href="https://kijimad.github.io/roam/20250721T101356--kdoc-423-bigratのゼロ値を見る__draft_permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250721T101356--kdoc-423-bigratのゼロ値を見る__draft_permanent.html</id>
+  <updated>2025-08-28T06:08:14+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 425: string型の仕様を見る</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org62a3b39" class="outline-2">
- <h2 id="org62a3b39"> <a href="#org62a3b39">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org62a3b39">
+ <div id="outline-container-org115fb87" class="outline-2">
+ <h2 id="org115fb87"> <a href="#org115fb87">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org115fb87">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-08-08 貴島</li>
 </ul></li>
@@ -348,9 +166,9 @@ func main() {
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-orgcb5fefe" class="outline-2">
- <h2 id="orgcb5fefe"> <a href="#orgcb5fefe">概要</a></h2>
- <div class="outline-text-2" id="text-orgcb5fefe">
+ <div id="outline-container-org54f6853" class="outline-2">
+ <h2 id="org54f6853"> <a href="#org54f6853">概要</a></h2>
+ <div class="outline-text-2" id="text-org54f6853">
  <p>
 Go言語には組み込みでstring型がある。言語仕様書を見ると、シンプルに書かれている。
 </p>
@@ -412,9 +230,9 @@ The value of a raw string literal is the string composed of the uninterpreted (i
 </p>
 </div>
 </div>
- <div id="outline-container-org28b886b" class="outline-2">
- <h2 id="org28b886b"> <a href="#org28b886b">関連</a></h2>
- <div class="outline-text-2" id="text-org28b886b">
+ <div id="outline-container-org7f9322d" class="outline-2">
+ <h2 id="org7f9322d"> <a href="#org7f9322d">関連</a></h2>
+ <div class="outline-text-2" id="text-org7f9322d">
  <p>
 なし。
 </p>
@@ -423,16 +241,16 @@ The value of a raw string literal is the string composed of the uninterpreted (i
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250806T084714--kdoc-425-string型の仕様を見る__draft_permanent.html"/>
   <id>https://kijimad.github.io/roam/20250806T084714--kdoc-425-string型の仕様を見る__draft_permanent.html</id>
-  <updated>2025-08-23T08:05:53+09:00</updated>
+  <updated>2025-08-28T06:08:09+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 413: ローカル変数がヒープにエスケープされるのを見る</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org875ae18" class="outline-2">
- <h2 id="org875ae18"> <a href="#org875ae18">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org875ae18">
+ <div id="outline-container-orge344927" class="outline-2">
+ <h2 id="orge344927"> <a href="#orge344927">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orge344927">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-01 貴島</li>
 </ul></li>
@@ -441,9 +259,9 @@ The value of a raw string literal is the string composed of the uninterpreted (i
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org15158e3" class="outline-2">
- <h2 id="org15158e3"> <a href="#org15158e3">概要</a></h2>
- <div class="outline-text-2" id="text-org15158e3">
+ <div id="outline-container-org7d9fb4a" class="outline-2">
+ <h2 id="org7d9fb4a"> <a href="#org7d9fb4a">概要</a></h2>
+ <div class="outline-text-2" id="text-org7d9fb4a">
  <p>
 関数を抜けた後も使うようなケースでは、関数呼び出し後に消されないようにスタックからヒープに移す必要がある。後も使うケースとしては、ポインタを返すなどがある。ローカル変数として宣言されていても、ヒープに移動させられる。
 </p>
@@ -477,89 +295,624 @@ rm $ <span class="org-variable-name">tmpfile</span>
 </div>
 </div>
 </div>
- <div id="outline-container-org7e6a810" class="outline-2">
- <h2 id="org7e6a810"> <a href="#org7e6a810">関連</a></h2>
- <div class="outline-text-2" id="text-org7e6a810">
+ <div id="outline-container-org7c166f2" class="outline-2">
+ <h2 id="org7c166f2"> <a href="#org7c166f2">関連</a></h2>
+ <div class="outline-text-2" id="text-org7c166f2">
  <ul class="org-ul"> <li> <a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?</a>。ヒープを調べるきっかけになった</li>
 </ul></div>
 </div>
- <div id="outline-container-orge6cab51" class="outline-2">
- <h2 id="orge6cab51"> <a href="#orge6cab51">Backlinks</a></h2>
- <div class="outline-text-2" id="text-orge6cab51">
+ <div id="outline-container-orgfa79284" class="outline-2">
+ <h2 id="orgfa79284"> <a href="#orgfa79284">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-orgfa79284">
  <ul class="org-ul"> <li> <a href="./20250702T194815--kdoc-416-goのエスケープ解析における2つの不変条件を見る__permanent.html">KDOC 416: Goのエスケープ解析における2つの不変条件を見る</a></li>
 </ul></div>
 </div>
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__wiki.html"/>
   <id>https://kijimad.github.io/roam/20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__wiki.html</id>
-  <updated>2025-08-23T08:05:52+09:00</updated>
+  <updated>2025-08-28T06:08:09+09:00</updated>
 </entry>
 <entry>
-  <title>KDOC 422: 科学技術館を観察する</title>
+  <title>KDOC 420: testdataディレクトリはコンパイル対象外になる</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org6067a66" class="outline-2">
- <h2 id="org6067a66"> <a href="#org6067a66">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org6067a66">
+ <div id="outline-container-org3ad017b" class="outline-2">
+ <h2 id="org3ad017b"> <a href="#org3ad017b">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org3ad017b">
  <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-27 貴島</li>
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-30 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orga9d3470" class="outline-2">
+ <h2 id="orga9d3470"> <a href="#orga9d3470">概要</a></h2>
+ <div class="outline-text-2" id="text-orga9d3470">
+ <p>
+Go言語で、コンパイル対象にならないディレクトリ名がある。Goファイルが含まれていても、無視される。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>ヘルプコメントに記載されている</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/go/internal/help/helpdoc.go#L124-L125
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">Directory and file names that begin with "." or "_" are ignored
+by the go tool, as are directories named "testdata".
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 2: </span>Import関数を見る</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/go/internal/modindex/read.go#L404-L409
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">// goroot and gopath
+inTestdata := func(sub string) bool {
+	return strings.Contains(sub, "/testdata/") || strings.HasSuffix(sub, "/testdata") || str.HasPathPrefix(sub, "testdata")
+}
+var pkga string
+if !inTestdata(rp.dir) {
+</pre>
+</div>
+</div>
+</div>
+ <div id="outline-container-org60cf763" class="outline-2">
+ <h2 id="org60cf763"> <a href="#org60cf763">関連</a></h2>
+ <div class="outline-text-2" id="text-org60cf763">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250710T073233--kdoc-420-testdataディレクトリはコンパイル対象外になる__wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250710T073233--kdoc-420-testdataディレクトリはコンパイル対象外になる__wiki.html</id>
+  <updated>2025-08-28T06:08:08+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 417: WASMでリクエスト実装を変えているのを見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orge51cd40" class="outline-2">
+ <h2 id="orge51cd40"> <a href="#orge51cd40">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orge51cd40">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-24 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-26 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org584b542" class="outline-2">
+ <h2 id="org584b542"> <a href="#org584b542">概要</a></h2>
+ <div class="outline-text-2" id="text-org584b542">
+ <p>
+WASMはセキュリティのために、ブラウザのサンドボックス化された環境で実行される。外部環境にアクセスするには、JavaScriptのAPIを経由しなければならない。OSからリクエストする方法とは異なる。
+</p>
+
+ <p>
+なので、WASM上のリクエストの実装は変えられている。通常のGoの実装が、ソケット通信によってリクエストを送信するのとは異なる。実際に観察してみる。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>ビルドタグを確認する</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/net/http/roundtrip_js.go#L5
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">//go:build js && wasm
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 2: </span>RoundTripメソッド内でJSを呼び出している</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/net/http/roundtrip_js.go#L129
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">fetchPromise := js.Global().Call("fetch", req.URL.String(), opt)
+</pre>
+</div>
+</div>
+</div>
+ <div id="outline-container-org2d40078" class="outline-2">
+ <h2 id="org2d40078"> <a href="#org2d40078">関連</a></h2>
+ <div class="outline-text-2" id="text-org2d40078">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250702T234055--kdoc-417-wasmでリクエスト実装を変えているのを見る__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250702T234055--kdoc-417-wasmでリクエスト実装を変えているのを見る__permanent.html</id>
+  <updated>2025-08-28T06:08:07+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 429: エイリアス型に対する型アサーションを見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgecfff8b" class="outline-2">
+ <h2 id="orgecfff8b"> <a href="#orgecfff8b">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgecfff8b">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgc184172" class="outline-2">
+ <h2 id="orgc184172"> <a href="#orgc184172">概要</a></h2>
+ <div class="outline-text-2" id="text-orgc184172">
+ <p>
+Go言語で、  <code>byte</code> 型は  <code>uint8</code> のエイリアス型である。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L87-L90
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">// byte is an alias for uint8 and is equivalent to uint8 in all ways. It is
+// used, by convention, to distinguish byte values from 8-bit unsigned
+// integer values.
+type byte = uint8
+</pre>
+</div>
+
+ <p>
+したがって、  <code>byte</code> 型 を型アサーションすると、  <code>uint8</code> 型でも通過する。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-go">import "fmt"
+func main() {
+        var x interface{}
+
+        x = byte(1)
+
+        // 1
+        switch x.(type) {
+        case uint8:
+                fmt.Println("1 uint8で型アサーション通過した")
+        default:
+                println("byte != uint8")
+        }
+
+        // 2
+        _, ok := x.(uint8)
+        if ok {
+                fmt.Println("2 uint8で型アサーション通過した")
+        }
+}
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">1 uint8で型アサーション通過した
+2 uint8で型アサーション通過した
+</pre>
+</div>
+</div>
+</div>
+ <div id="outline-container-orgc73eb32" class="outline-2">
+ <h2 id="orgc73eb32"> <a href="#orgc73eb32">関連</a></h2>
+ <div class="outline-text-2" id="text-orgc73eb32">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250823T081830--kdoc-429-エイリアス型に対する型アサーションを見る__draft_permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250823T081830--kdoc-429-エイリアス型に対する型アサーションを見る__draft_permanent.html</id>
+  <updated>2025-08-28T06:08:06+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 420: constが埋め込まれる様子を見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org88a3389" class="outline-2">
+ <h2 id="org88a3389"> <a href="#org88a3389">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org88a3389">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
 </ul></li>
  <li>レビュー
  <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org47cee2b" class="outline-2">
- <h2 id="org47cee2b"> <a href="#org47cee2b">概要</a></h2>
- <div class="outline-text-2" id="text-org47cee2b">
+ <div id="outline-container-orgdf1287f" class="outline-2">
+ <h2 id="orgdf1287f"> <a href="#orgdf1287f">概要</a></h2>
+ <div class="outline-text-2" id="text-orgdf1287f">
  <p>
- <a href="https://ja.wikipedia.org/wiki/%E7%A7%91%E5%AD%A6%E6%8A%80%E8%A1%93%E9%A4%A8">科学技術館</a>は、東京都千代田区にある科学博物館である。
+Goでconstとvarの違いを見る。
 </p>
 
- <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3907.053697938309!2d139.75048871198626!3d35.69158897246949!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188c12c576f675%3A0xfcf1facbfb12c41!2sScience%20and%20Technology%20Museum!5e1!3m2!1sen!2sjp!4v1753578898950!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+ <iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,selection:(endColumn:2,endLineNumber:11,positionColumn:2,positionLineNumber:11,selectionStartColumn:2,selectionStartLineNumber:11,startColumn:2,startLineNumber:11),source:'//+Type+your+code+here,+or+load+an+example.%0A//+Your+function+name+should+start+with+a+capital+letter.%0Apackage+main%0A%0Avar+a+%3D+%22hello%22%0Aconst+b+%3D+%22world%22%0A%0Afunc+main()+%7B%0A++++print(a)%0A++++print(b)%0A%7D'),l:'5',n:'0',o:'Go+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:gltip,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'0',libraryCode:'0',trim:'1',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+x86-64+gc+(tip)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>const。埋め込まれている</label> <pre class="src src-asm"> <span class="org-function-name">LEAQ</span>     <span class="org-keyword">go</span>:string. <span class="org-string">"world"</span>(SB), AX
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 2: </span>var。参照している</label> <pre class="src src-asm"> <span class="org-function-name">MOVQ</span>     <span class="org-keyword">main.a</span>(SB), AX
+</pre>
+</div>
+
+ <p>
+ <code>const</code> は  <code>var</code> に比べて制約が多いが、こうやってコンパイル時に埋め込まれるのが理由の1つに見える。
+</p>
 </div>
 </div>
- <div id="outline-container-org6dbb426" class="outline-2">
- <h2 id="org6dbb426"> <a href="#org6dbb426">メモ</a></h2>
- <div class="outline-text-2" id="text-org6dbb426">
- <ul class="org-ul"> <li>建物全体が、タイムカプセルで保存されたような昭和感がある。クリーム色の壁や床、低い天井。もう絶滅しかけている</li>
- <li>子供が興味を引かれるような、実体験できるアクティビティが多い。小さな子どもの家族が9割を占めていて、混雑している。ゆっくり見たり考えるのは難しい</li>
- <li>テーマごとにブースがある。自転車/災害/建築/薬/電気/音…</li>
- <li>自転車など特定の狭い工業製品にフォーカスしているものもあれば、ざっくり電気に注目している、というブースもある。科学というより工業の場所も多い。取り扱うテーマが広すぎるので、どうまとめるかが難しそうであった</li>
- <li>複数フロアあり面積は広いが、ブース1つはそこまで大きくない。浅く広く展示されている。熱量・熱意を感じるのは難しい。後から知ったが、青少年向けだという。たしかに子どもでも理解できそうだが、そこから本当の興味につながるだろうか、とは感じる。圧倒的な物量と解説がなければ、その分野の奥深さを感じることができないように見える。子どもに媚びている。子どもは、子ども向けということをわかっている</li>
- <li>企業名を掲げて主催しているブースも多い。広告・商売と絡めるのも手段の1つだ</li>
- <li>アクティビティ重視は、入館者数減少に対する施策だという。これまでさまざまな議論や改善があったようだ</li>
- <li>もちろん、そういう博物館もあっていい。しかし超一等地にある科学博物館としては残念な感じがする</li>
-</ul></div>
-</div>
- <div id="outline-container-org100e941" class="outline-2">
- <h2 id="org100e941"> <a href="#org100e941">関連</a></h2>
- <div class="outline-text-2" id="text-org100e941">
+ <div id="outline-container-org6d57edc" class="outline-2">
+ <h2 id="org6d57edc"> <a href="#org6d57edc">関連</a></h2>
+ <div class="outline-text-2" id="text-org6d57edc">
  <p>
 なし。
 </p>
 </div>
 </div>
- <div id="outline-container-org26a1e82" class="outline-2">
- <h2 id="org26a1e82"> <a href="#org26a1e82">Backlinks</a></h2>
- <div class="outline-text-2" id="text-org26a1e82">
- <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250705T205631--kdoc-420-constが埋め込まれる様子を見る__draft_permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250705T205631--kdoc-420-constが埋め込まれる様子を見る__draft_permanent.html</id>
+  <updated>2025-08-28T06:08:04+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 426: スマホにDNSフィルタリングを設定して有害コンテンツをブロックする</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgea6ef43" class="outline-2">
+ <h2 id="orgea6ef43"> <a href="#orgea6ef43">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgea6ef43">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-08-07 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org2e9643a" class="outline-2">
+ <h2 id="org2e9643a"> <a href="#org2e9643a">概要</a></h2>
+ <div class="outline-text-2" id="text-org2e9643a">
+ <p>
+ポルノ依存対策に取り組んできた。以前、Adguardによって自宅LANに対してDNSフィルタリングを設定して、センシティブコンテンツをブロックするようにした。
+</p>
+
+ <ul class="org-ul"> <li> <a href="20241115T185022--kdoc-288-dnsフィルタリングで有害コンテンツをブロックする__essay.html#ID-20241115T185022">KDOC 288: DNSフィルタリングで有害コンテンツをブロックする</a></li>
+</ul> <p>
+自宅の全端末で、URLのブラックリストに加えて検索エンジンの強制セーフサーチを適用した。偶発的にポルノが出ない、反射的に検索して表示されない、というのは習慣の改善にとても効果があった。
+</p>
+
+ <p>
+しかし、意思は弱かった。スマホでWifiを切って、携帯電話回線を利用して回避し始めた。しばらく放置していたが、対策することにした。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgd901210" class="outline-2">
+ <h2 id="orgd901210"> <a href="#orgd901210">DNSフィルタリングサービス</a></h2>
+ <div class="outline-text-2" id="text-orgd901210">
+ <p>
+スマホのフィルタリング手法にも色々あるのだが、一番手軽で確実なのはDNSフィルタリングに見える <sup> <a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>。自宅LANとは違って、グローバルなDNSサーバを使う必要がある。 <a href="https://nextdns.io/">NextDNS</a>というWebサービスを使うことにした。ある程度のクエリ数までは無料であり、スマホはあまり使わないのでちょうどよかった。使うだけなら会員登録すら必要なくて、スマホの「プライベートDNS」を設定するだけでいい。OSごとのガイドもちゃんと用意されている。カテゴリによるフィルタリング、各検索エンジンの強制セーフサーチがあって、要件を完全に満たしている。
+</p>
+
+ <p>
+またしばらく運用してみる。
+</p>
+</div>
+</div>
+ <div id="outline-container-org37818d8" class="outline-2">
+ <h2 id="org37818d8"> <a href="#org37818d8">関連</a></h2>
+ <div class="outline-text-2" id="text-org37818d8">
+ <ul class="org-ul"> <li> <a href="20241115T185022--kdoc-288-dnsフィルタリングで有害コンテンツをブロックする__essay.html#ID-20241115T185022">KDOC 288: DNSフィルタリングで有害コンテンツをブロックする</a>。これ自体はよく機能した。しかし穴があったために目的を達成できていなかった</li>
+</ul></div>
+</div>
+ <div id="footnotes">
+ <h2 class="footnotes">Footnotes: </h2>
+ <div id="text-footnotes">
+
+ <div class="footdef"> <sup> <a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"> <p class="footpara">
+スマホは定期的に替えるイベントが発生するので、同じ設定が簡単にできるかも重要である。アプリは、その点面倒である。
+</p></div></div>
+
+
+</div>
+</div></div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250806T215014--kdoc-426-スマホにdnsフィルタリングを設定して有害コンテンツをブロックする__draft_essay.html"/>
+  <id>https://kijimad.github.io/roam/20250806T215014--kdoc-426-スマホにdnsフィルタリングを設定して有害コンテンツをブロックする__draft_essay.html</id>
+  <updated>2025-08-28T06:08:02+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 421: 継続時間形式を見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org2eeea34" class="outline-2">
+ <h2 id="org2eeea34"> <a href="#org2eeea34">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org2eeea34">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org11d7a12" class="outline-2">
+ <h2 id="org11d7a12"> <a href="#org11d7a12">概要</a></h2>
+ <div class="outline-text-2" id="text-org11d7a12">
+ <p>
+ <a href="https://github.com/golang/go/commit/11f11f2a00aa3149a6ea69a50e7b7b429cf368b7">encoding/json/v2: support ISO 8601 durations · golang/go@11f11f2</a>では、ISO 8601形式での継続時間を実装している。JSONのデフォルトの表示にはまだ議論があり、あくまでもオプションのサポートだという。JavaScriptに先例がある。
+</p>
+
+ <p>
+ <a href="https://ja.wikipedia.org/wiki/ISO_8601">ISO 8601</a>は、日付や時刻が有名だが、「継続時間」も定義している。たとえば  <code>P3Y6M4DT12H30M5S</code> は、「3年、6か月、4日、12時間、30分、5秒」という継続時間を表現しているという。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgc1c0627" class="outline-2">
+ <h2 id="orgc1c0627"> <a href="#orgc1c0627">関連</a></h2>
+ <div class="outline-text-2" id="text-orgc1c0627">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250713T090146--kdoc-421-継続時間形式を見る__draft_wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250713T090146--kdoc-421-継続時間形式を見る__draft_wiki.html</id>
+  <updated>2025-08-28T06:08:02+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 412: ヒープ管理方法の変遷を見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgc95e037" class="outline-2">
+ <h2 id="orgc95e037"> <a href="#orgc95e037">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgc95e037">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-06-30 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-19 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org1f06add" class="outline-2">
+ <h2 id="org1f06add"> <a href="#org1f06add">概要</a></h2>
+ <div class="outline-text-2" id="text-org1f06add">
+ <p>
+ヒープ管理方法の変遷を見る。柔軟性、安全性、パフォーマンスのトレードオフの歴史である。
+</p>
+
+ <ol class="org-ol"> <li>従来はプログラマーが  <code>malloc</code> や  <code>free</code> でヒープを確保・解放していた
+ <ul class="org-ul"> <li>課題: メモリ解放忘れや解放済みのポインタへのアクセス。安全性に問題があった</li>
+</ul></li>
+ <li>処理系にガベージコレクションを組み込み、メモリ管理を自動で行うようにした
+ <ul class="org-ul"> <li>課題: パフォーマンスへの影響、一時停止、管理の複雑さ</li>
+</ul></li>
+ <li>所有権に基づいてメモリを管理する。コンパイル時にメモリ管理の正しさを検証し、実行時のオーバーヘッドなく安全性を得る
+ <ul class="org-ul"> <li>課題: リストなど特定のケースで実装が難しいことがあるという</li>
+</ul></li>
+</ol></div>
+</div>
+ <div id="outline-container-org4c7813c" class="outline-2">
+ <h2 id="org4c7813c"> <a href="#org4c7813c">関連</a></h2>
+ <div class="outline-text-2" id="text-org4c7813c">
+ <ul class="org-ul"> <li> <a href="https://ja.wikipedia.org/wiki/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3">ガベージコレクション - Wikipedia</a></li>
+ <li> <a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて解放する。ではヒープは?</a>。きっかけになった疑問</li>
 </ul></div>
 </div>
 </div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250720T174241--kdoc-422-科学技術館を観察する__draft_essay.html"/>
-  <id>https://kijimad.github.io/roam/20250720T174241--kdoc-422-科学技術館を観察する__draft_essay.html</id>
-  <updated>2025-08-23T08:05:51+09:00</updated>
+  <link href="https://kijimad.github.io/roam/20250630T192238--kdoc-412-ヒープ管理方法の変遷を見る__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250630T192238--kdoc-412-ヒープ管理方法の変遷を見る__permanent.html</id>
+  <updated>2025-08-28T06:08:00+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 430: require.NoErrorを使う</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org02c6495" class="outline-2">
+ <h2 id="org02c6495"> <a href="#org02c6495">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org02c6495">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgdfa7a92" class="outline-2">
+ <h2 id="orgdfa7a92"> <a href="#orgdfa7a92">概要</a></h2>
+ <div class="outline-text-2" id="text-orgdfa7a92">
+ <p>
+ <code>testify/assert</code> はGo言語でテスト用のアサーションヘルパーを提供するライブラリである。
+</p>
+
+ <p>
+よく使うものに、エラー処理が簡単に記載できる、NoError()という関数がある。これには2つの種類がある。
+</p>
+
+ <ul class="org-ul"> <li> <code>require.NoError()</code> – 失敗したらそのテストは中断する</li>
+ <li> <code>assert.NoError()</code> – 失敗してもそのテストを中断しない</li>
+</ul> <p>
+というような違いがある。  <code>require</code> のほうは知らなかった。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgce1856f" class="outline-2">
+ <h2 id="orgce1856f"> <a href="#orgce1856f">関連</a></h2>
+ <div class="outline-text-2" id="text-orgce1856f">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250827T082332--kdoc-430-requirenoerrorを使う__draft_wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250827T082332--kdoc-430-requirenoerrorを使う__draft_wiki.html</id>
+  <updated>2025-08-28T06:07:58+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 428: 組み込みのPrintとfmtのPrintの違いを見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org2328d74" class="outline-2">
+ <h2 id="org2328d74"> <a href="#org2328d74">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org2328d74">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org5e4654c" class="outline-2">
+ <h2 id="org5e4654c"> <a href="#org5e4654c">概要</a></h2>
+ <div class="outline-text-2" id="text-org5e4654c">
+ <p>
+Go言語には、  <code>fmt</code> packageの  <code>Print</code> と、  <code>builtin</code> packageの  <code>print</code> がある。どのような違いがあるのだろうか。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>builtin packageのprint</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L293-L297
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">// The print built-in function formats its arguments in an
+// implementation-specific way and writes the result to standard error.
+// Print is useful for bootstrapping and debugging; it is not guaranteed
+// to stay in the language.
+func print(args ...Type)
+</pre>
+</div>
+
+ <p>
+書いてあるとおり、builtin packageの  <code>print</code> はデバッグ用のようである。
+</p>
+
+ <p>
+builtin package。
+</p>
+
+ <ul class="org-ul"> <li>標準エラー出力に書きこむ</li>
+ <li>残り続ける保証なし</li>
+ <li> <code>print</code>,  <code>println</code> しか用意されていない</li>
+</ul> <p>
+fmt package。
+</p>
+
+ <ul class="org-ul"> <li>標準出力に書き込む</li>
+ <li>さまざまな亜種が用意されている</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgf3711c9" class="outline-2">
+ <h2 id="orgf3711c9"> <a href="#orgf3711c9">関連</a></h2>
+ <div class="outline-text-2" id="text-orgf3711c9">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250811T101023--kdoc-428-組み込みのprintとfmtのprintの違いを見る__draft_permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250811T101023--kdoc-428-組み込みのprintとfmtのprintの違いを見る__draft_permanent.html</id>
+  <updated>2025-08-28T06:07:46+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 427: 桁ごとに処理するスマートな方法を見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org09c33df" class="outline-2">
+ <h2 id="org09c33df"> <a href="#org09c33df">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org09c33df">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-08-08 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgd65fcc8" class="outline-2">
+ <h2 id="orgd65fcc8"> <a href="#orgd65fcc8">概要</a></h2>
+ <div class="outline-text-2" id="text-orgd65fcc8">
+ <p>
+コーディング問題に、数値を桁ごとに処理せよ、というものがある。さっと出てこなかったのでメモしておく。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>“12345”を、1桁ずつ処理する</label> <pre class="src src-go">import "fmt"
+func main() {
+        for _, r := range "12345" {
+                c := int(r - '0')
+                fmt.Println(c)
+        }
+}
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">1
+2
+3
+4
+5
+</pre>
+</div>
+
+ <p>
+流れ。
+</p>
+
+ <ol class="org-ol"> <li>入力文字列(数字)をrune、つまりUnicodeコードポイントに分割する</li>
+ <li>1文字ごとにベースのコードポイント’0’を使って、コードポイントを数値に変換する。数字のコードポイントは連番で並んでいる</li>
+ <li>得られた数値を使う</li>
+</ol></div>
+</div>
+ <div id="outline-container-orgf4efe0b" class="outline-2">
+ <h2 id="orgf4efe0b"> <a href="#orgf4efe0b">関連</a></h2>
+ <div class="outline-text-2" id="text-orgf4efe0b">
+ <ul class="org-ul"> <li> <a href="20250320T102813--kdoc-347-大文字小文字の変換をそらで書く__wiki.html#ID-20250320T102813">KDOC 347: 大文字小文字の変換をそらで書く</a>。類似した、コードポイントを使ったトリック。数字、小文字、大文字ごとでコードポイントが連番なのでトリックが使える</li>
+</ul></div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250807T085644--kdoc-427-桁ごとに処理するスマートな方法を見る__draft_wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250807T085644--kdoc-427-桁ごとに処理するスマートな方法を見る__draft_wiki.html</id>
+  <updated>2025-08-28T06:07:44+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 416: Goのエスケープ解析における2つの不変条件を見る</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-orgee974d6" class="outline-2">
- <h2 id="orgee974d6"> <a href="#orgee974d6">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-orgee974d6">
+ <div id="outline-container-org7da775f" class="outline-2">
+ <h2 id="org7da775f"> <a href="#org7da775f">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org7da775f">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-20 貴島</li>
 </ul></li>
@@ -568,9 +921,9 @@ rm $ <span class="org-variable-name">tmpfile</span>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org662ac49" class="outline-2">
- <h2 id="org662ac49"> <a href="#org662ac49">概要</a></h2>
- <div class="outline-text-2" id="text-org662ac49">
+ <div id="outline-container-orgc7632ce" class="outline-2">
+ <h2 id="orgc7632ce"> <a href="#orgc7632ce">概要</a></h2>
+ <div class="outline-text-2" id="text-orgc7632ce">
  <p>
 Goのドキュメントにヒープエスケープの「不変条件」が書かれていたので、見る。
 </p>
@@ -618,9 +971,9 @@ Goのドキュメントにヒープエスケープの「不変条件」が書か
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org1363fb4" class="outline-2">
- <h2 id="org1363fb4"> <a href="#org1363fb4">関連</a></h2>
- <div class="outline-text-2" id="text-org1363fb4">
+ <div id="outline-container-orgdc34cc5" class="outline-2">
+ <h2 id="orgdc34cc5"> <a href="#orgdc34cc5">関連</a></h2>
+ <div class="outline-text-2" id="text-orgdc34cc5">
  <ul class="org-ul"> <li> <a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?</a>。調べるきっかけになった</li>
  <li> <a href="20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__wiki.html#ID-20250701T174437">KDOC 413: ローカル変数がヒープにエスケープされるのを見る</a>。エスケープする具体例</li>
 </ul></div>
@@ -628,16 +981,16 @@ Goのドキュメントにヒープエスケープの「不変条件」が書か
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250702T194815--kdoc-416-goのエスケープ解析における2つの不変条件を見る__permanent.html"/>
   <id>https://kijimad.github.io/roam/20250702T194815--kdoc-416-goのエスケープ解析における2つの不変条件を見る__permanent.html</id>
-  <updated>2025-08-23T08:05:30+09:00</updated>
+  <updated>2025-08-28T06:07:40+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 414: インターフェースがヒープにエスケープされるのを見る</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org2569b67" class="outline-2">
- <h2 id="org2569b67"> <a href="#org2569b67">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org2569b67">
+ <div id="outline-container-orgf8bc40a" class="outline-2">
+ <h2 id="orgf8bc40a"> <a href="#orgf8bc40a">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgf8bc40a">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-01 貴島</li>
 </ul></li>
@@ -646,9 +999,9 @@ Goのドキュメントにヒープエスケープの「不変条件」が書か
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-orgbf55914" class="outline-2">
- <h2 id="orgbf55914"> <a href="#orgbf55914">概要</a></h2>
- <div class="outline-text-2" id="text-orgbf55914">
+ <div id="outline-container-org02d36f0" class="outline-2">
+ <h2 id="org02d36f0"> <a href="#org02d36f0">概要</a></h2>
+ <div class="outline-text-2" id="text-org02d36f0">
  <p>
 関数を抜けた後も使うようなケースでは、消されないようにスタックからヒープに移す必要がある。インターフェースを返すと、実体を関数から抜けた後も保持しておく必要があるため、ヒープにエスケープされる。
 </p>
@@ -682,31 +1035,105 @@ rm $ <span class="org-variable-name">tmpfile</span>
 </div>
 </div>
 </div>
- <div id="outline-container-org581c01f" class="outline-2">
- <h2 id="org581c01f"> <a href="#org581c01f">関連</a></h2>
- <div class="outline-text-2" id="text-org581c01f">
+ <div id="outline-container-orga18010a" class="outline-2">
+ <h2 id="orga18010a"> <a href="#orga18010a">関連</a></h2>
+ <div class="outline-text-2" id="text-orga18010a">
  <ul class="org-ul"> <li> <a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?</a>。ヒープを調べるきっかけになった</li>
 </ul></div>
 </div>
- <div id="outline-container-orge77fcfe" class="outline-2">
- <h2 id="orge77fcfe"> <a href="#orge77fcfe">Backlinks</a></h2>
- <div class="outline-text-2" id="text-orge77fcfe">
+ <div id="outline-container-org711eaf0" class="outline-2">
+ <h2 id="org711eaf0"> <a href="#org711eaf0">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-org711eaf0">
  <ul class="org-ul"> <li> <a href="./20250701T213624--kdoc-415-ioreaderのシグネチャはヒープエスケープを避けられる設計になっている__permanent.html">KDOC 415: io.Readerのシグネチャはヒープエスケープを避けられる設計になっている</a></li>
 </ul></div>
 </div>
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__wiki.html"/>
   <id>https://kijimad.github.io/roam/20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__wiki.html</id>
-  <updated>2025-08-23T08:05:30+09:00</updated>
+  <updated>2025-08-28T06:07:40+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 424: 『具体と抽象』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgeb118d8" class="outline-2">
+ <h2 id="orgeb118d8"> <a href="#orgeb118d8">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgeb118d8">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org2d929b4" class="outline-2">
+ <h2 id="org2d929b4"> <a href="#org2d929b4">概要</a></h2>
+ <div class="outline-text-2" id="text-org2d929b4">
+ <p>
+ <a href="https://amzn.to/4ffrMnt">『具体と抽象』</a>は、SNSや会社で議論が噛み合わないなどの身近な例を題材に、具体と抽象についてやさしく解説した本である。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgd2e6669" class="outline-2">
+ <h2 id="orgd2e6669"> <a href="#orgd2e6669">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgd2e6669">
+ <p>
+感想。
+</p>
+
+ <ul class="org-ul"> <li>この本自体が具体と抽象を往復する構成となっていて読みやすい</li>
+ <li>社会を生きるにあたって、「具体レベルの世界にのみ生きる人だ」とみなすことによって楽になることは多そうである</li>
+ <li>ちょくちょく具体のみに生きる人への恨み、軽蔑を感じる</li>
+ <li>文化や会話は日本中どこでも同じで共有しているとみなされているが、そうではない。個人ごとに違う。同じと考えたときの違和感を言語化しているようだ</li>
+</ul> <p>
+箇所。
+</p>
+
+ <ul class="org-ul"> <li>「理学」と「工学」はある面で正反対である。理学は抽象化の方向で、工学は具体化の方向である(位置298)</li>
+ <li>斬新な製品や革新的な仕組みを作るためには「多数の意見を聞く」ことはしない。多数の意見はそれぞれの具体レベルに引きずられて、どうしても「いまの延長」の議論しかできなくなる。逆に改善していく場面では、なるべく多数の人から意見を吸い上げることが重要になる(位置403)</li>
+ <li>具体レベルのみで読んでいる人は書かれていることにはすべて「実在するモデル」がいる前提で解釈する。書いている側は体験を抽象化してから具体的にストーリーに落としている場合が多い(位置438)</li>
+ <li>人に仕事を頼んだり頼まれたりするときに、その人の好む「自由度の大きさ」を考慮する必要がある。「適当にやっといて」で丸投げだと不快に考える人は具体レベルのみの世界に生きる「低い自由度を好む人」である(位置458)
+ <ul class="org-ul"> <li>(感想)そうには見えない</li>
+</ul></li>
+ <li>上流では個性が重要視される。いかに尖らせるかが重要なので、多数決による意思決定はなじまない。意思決定は多数の人間が関わるほど無難になる(位置490)
+ <ul class="org-ul"> <li>(感想)わかる</li>
+</ul></li>
+ <li>「上流発想」の建築家は「全体の統一感」や「つながり」を重視する。実際に住む人間からすれば「個別の使い勝手」や「部分的な見た目」のほうが重要である(位置515)</li>
+ <li>ネット上で見当違いの議論をしているのをよく見る。「–は–だ」と言い切るのは、そこで「抽象レベルの方向性」を示しているだけで、「具体レベルのすべてがそうだ」と言っているわけではない(位置570)</li>
+ <li>哲学の利点は無駄がなくなるということだ。哲学がないとすべてにおいて個別に判断する。場当たり的になって、行為の整合性が取れない。哲学のレベルで方向性が共有されていると、個別に見える事象も大きな方向性に合致しているかで判断できる。ぶれが少なくなる(位置589)</li>
+ <li>アナロジーとは「抽象レベルのまね」である。具体レベルのまねは単なるパクリでも、抽象レベルでまねすれば「斬新なアイデア」となる。重要になるのは関係性や構造の共通性に着目することである。特許で守れるのは抽象度が低い、直接的に類似性のあるもののみ(位置621)</li>
+ <li>ルールや理論、法則は、多くの場合具体的に起こっている事象の「後追い」の知識だった。しかし一度固定化された抽象度の高い知識は固定観念となる。そして後付けだったはずの理論やルールに現実を合わせようとする。本末転倒が起こる(位置685)</li>
+ <li>抽象と具体のどちらかだけでは不完全である。具体と抽象の往復が必要になる(位置717)</li>
+ <li>人間は自分の理解レベルより上位の抽象度で語られると突然不快になるという性質があるように見える(位置806)</li>
+ <li>他人への一般化は平気でやるのに、自分が関連していることを他人に一般化されることは理解できないし好まない傾向がある(位置821)</li>
+ <li>高い抽象レベルの視点を持っている人ほど一見異なる事象が「同じ」に見え、抽象度が低い視点の人ほどすべてが「違って」見える。抽象化して考えるためにはまず「共通点はないか」と考えてみることが重要である。このような思考の障害になるのは、「自分だけが特別である」「自分の仕事や業界が特殊である」という考え方である(位置854)</li>
+ <li>人は失敗例を見ても「あれは自分とは違うから」と考えがちである。他人に自分の話を一般化されることを嫌う傾向がある。経験した世界が狭ければ狭いほど、自分の置かれた状況が特殊だと考える傾向がある(位置861)</li>
+ <li>具体レベルだけ数学をとらえれば「直接何の役にも立たない」ように見えるが、抽象レベルで見れば数学の考え方はどんな職業の人にも必ず役に立つ(位置915)</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgf376e4d" class="outline-2">
+ <h2 id="orgf376e4d"> <a href="#orgf376e4d">関連</a></h2>
+ <div class="outline-text-2" id="text-orgf376e4d">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250728T223330--kdoc-424-『具体と抽象』__draft_book.html"/>
+  <id>https://kijimad.github.io/roam/20250728T223330--kdoc-424-『具体と抽象』__draft_book.html</id>
+  <updated>2025-08-28T06:07:26+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 419: トキワ荘マンガミュージアムを観察する</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org4ee8319" class="outline-2">
- <h2 id="org4ee8319"> <a href="#org4ee8319">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org4ee8319">
+ <div id="outline-container-orgf4d89e3" class="outline-2">
+ <h2 id="orgf4d89e3"> <a href="#orgf4d89e3">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgf4d89e3">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
 </ul></li>
@@ -715,9 +1142,9 @@ rm $ <span class="org-variable-name">tmpfile</span>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org3cdca35" class="outline-2">
- <h2 id="org3cdca35"> <a href="#org3cdca35">概要</a></h2>
- <div class="outline-text-2" id="text-org3cdca35">
+ <div id="outline-container-org7585eea" class="outline-2">
+ <h2 id="org7585eea"> <a href="#org7585eea">概要</a></h2>
+ <div class="outline-text-2" id="text-org7585eea">
  <p>
  <a href="https://ja.wikipedia.org/wiki/%E3%83%88%E3%82%AD%E3%83%AF%E8%8D%98%E3%83%9E%E3%83%B3%E3%82%AC%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0">トキワ荘マンガミュージアム</a>は、東京都豊島区にある漫画に関する博物館である。
 </p>
@@ -740,373 +1167,33 @@ rm $ <span class="org-variable-name">tmpfile</span>
  <li>建物の復元には意味があるが、物足りなく感じた。単純に展示面積が少なく見える。パッションを感じるためには、もっと圧倒的な物量が必要に見える。トキワ荘にフォーカスするならスケールアップして小人になったつもりで観覧、はどうだろうか。狭さまで等倍で再現する必要はないように見える。…</li>
 </ul></div>
 </div>
- <div id="outline-container-orgfb19368" class="outline-2">
- <h2 id="orgfb19368"> <a href="#orgfb19368">関連</a></h2>
- <div class="outline-text-2" id="text-orgfb19368">
+ <div id="outline-container-org935000d" class="outline-2">
+ <h2 id="org935000d"> <a href="#org935000d">関連</a></h2>
+ <div class="outline-text-2" id="text-org935000d">
  <p>
 なし。
 </p>
 </div>
 </div>
- <div id="outline-container-org2f85c35" class="outline-2">
- <h2 id="org2f85c35"> <a href="#org2f85c35">Backlinks</a></h2>
- <div class="outline-text-2" id="text-org2f85c35">
+ <div id="outline-container-org0179d94" class="outline-2">
+ <h2 id="org0179d94"> <a href="#org0179d94">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-org0179d94">
  <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
 </ul></div>
 </div>
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250706T135040--kdoc-419-トキワ荘マンガミュージアムを観察する__draft_essay.html"/>
   <id>https://kijimad.github.io/roam/20250706T135040--kdoc-419-トキワ荘マンガミュージアムを観察する__draft_essay.html</id>
-  <updated>2025-08-23T08:05:29+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 420: constが埋め込まれる様子を見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org8c6202a" class="outline-2">
- <h2 id="org8c6202a"> <a href="#org8c6202a">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org8c6202a">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-org5166177" class="outline-2">
- <h2 id="org5166177"> <a href="#org5166177">概要</a></h2>
- <div class="outline-text-2" id="text-org5166177">
- <p>
-Goでconstとvarの違いを見る。
-</p>
-
- <iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,selection:(endColumn:2,endLineNumber:11,positionColumn:2,positionLineNumber:11,selectionStartColumn:2,selectionStartLineNumber:11,startColumn:2,startLineNumber:11),source:'//+Type+your+code+here,+or+load+an+example.%0A//+Your+function+name+should+start+with+a+capital+letter.%0Apackage+main%0A%0Avar+a+%3D+%22hello%22%0Aconst+b+%3D+%22world%22%0A%0Afunc+main()+%7B%0A++++print(a)%0A++++print(b)%0A%7D'),l:'5',n:'0',o:'Go+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:gltip,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'0',libraryCode:'0',trim:'1',verboseDemangling:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:go,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+x86-64+gc+(tip)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>const。埋め込まれている</label> <pre class="src src-asm"> <span class="org-function-name">LEAQ</span>     <span class="org-keyword">go</span>:string. <span class="org-string">"world"</span>(SB), AX
-</pre>
-</div>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 2: </span>var。参照している</label> <pre class="src src-asm"> <span class="org-function-name">MOVQ</span>     <span class="org-keyword">main.a</span>(SB), AX
-</pre>
-</div>
-
- <p>
- <code>const</code> は  <code>var</code> に比べて制約が多いが、こうやってコンパイル時に埋め込まれるのが理由の1つに見える。
-</p>
-</div>
-</div>
- <div id="outline-container-org409b381" class="outline-2">
- <h2 id="org409b381"> <a href="#org409b381">関連</a></h2>
- <div class="outline-text-2" id="text-org409b381">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250705T205631--kdoc-420-constが埋め込まれる様子を見る__draft_permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250705T205631--kdoc-420-constが埋め込まれる様子を見る__draft_permanent.html</id>
-  <updated>2025-08-23T08:05:25+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 423: big.Ratのゼロ値を見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org9c012db" class="outline-2">
- <h2 id="org9c012db"> <a href="#org9c012db">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org9c012db">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-27 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-org5ab6358" class="outline-2">
- <h2 id="org5ab6358"> <a href="#org5ab6358">概要</a></h2>
- <div class="outline-text-2" id="text-org5ab6358">
- <p>
-Go言語の  <code>big.Rat</code> 型は分数を表すための型である。ゼロ値でのゼロ除算を避けるため、分母は1として扱われている。
-</p>
-
- <div class="org-src-container">
- <pre class="src src-go">import (
-  "math/big"
-  "fmt"
-)
-
-func main() {
-  var zero big.Rat
-  fmt.Printf("%#v\n", zero.Num()) // 分子
-  fmt.Printf("%#v\n", zero.Denom()) // 分母
-
-  fmt.Printf("%#v\n", zero)
-  // aは分子、bは分母
-}
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">0
-1
-big.Rat{a:big.Int{neg:false, abs:big.nat(nil)}, b:big.Int{neg:false, abs:big.nat(nil)}}
-</pre>
-</div>
-</div>
-</div>
- <div id="outline-container-org5779e13" class="outline-2">
- <h2 id="org5779e13"> <a href="#org5779e13">関連</a></h2>
- <div class="outline-text-2" id="text-org5779e13">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250721T101356--kdoc-423-bigratのゼロ値を見る__draft_permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250721T101356--kdoc-423-bigratのゼロ値を見る__draft_permanent.html</id>
-  <updated>2025-08-23T08:05:22+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 420: testdataディレクトリはコンパイル対象外になる</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org71b4174" class="outline-2">
- <h2 id="org71b4174"> <a href="#org71b4174">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org71b4174">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-30 貴島</li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orgd8987a0" class="outline-2">
- <h2 id="orgd8987a0"> <a href="#orgd8987a0">概要</a></h2>
- <div class="outline-text-2" id="text-orgd8987a0">
- <p>
-Go言語で、コンパイル対象にならないディレクトリ名がある。Goファイルが含まれていても、無視される。
-</p>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>ヘルプコメントに記載されている</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/go/internal/help/helpdoc.go#L124-L125
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">Directory and file names that begin with "." or "_" are ignored
-by the go tool, as are directories named "testdata".
-</pre>
-</div>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 2: </span>Import関数を見る</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/cmd/go/internal/modindex/read.go#L404-L409
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">// goroot and gopath
-inTestdata := func(sub string) bool {
-	return strings.Contains(sub, "/testdata/") || strings.HasSuffix(sub, "/testdata") || str.HasPathPrefix(sub, "testdata")
-}
-var pkga string
-if !inTestdata(rp.dir) {
-</pre>
-</div>
-</div>
-</div>
- <div id="outline-container-org208b9a6" class="outline-2">
- <h2 id="org208b9a6"> <a href="#org208b9a6">関連</a></h2>
- <div class="outline-text-2" id="text-org208b9a6">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250710T073233--kdoc-420-testdataディレクトリはコンパイル対象外になる__wiki.html"/>
-  <id>https://kijimad.github.io/roam/20250710T073233--kdoc-420-testdataディレクトリはコンパイル対象外になる__wiki.html</id>
-  <updated>2025-08-23T08:05:20+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 411: スタックは積み重ねて取り出して解放する。ではヒープは?</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-orgfcfb7f5" class="outline-2">
- <h2 id="orgfcfb7f5"> <a href="#orgfcfb7f5">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-orgfcfb7f5">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-06-30 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-19 貴島</li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-org28d04bd" class="outline-2">
- <h2 id="org28d04bd"> <a href="#org28d04bd">概要</a></h2>
- <div class="outline-text-2" id="text-org28d04bd">
- <p>
-スタックとヒープについて聞かれた。
-</p>
-
- <p>
-スタック領域は関数呼び出しとともに積み重ねてローカル変数を保存していき、抜けるとともに解放できる明確なイメージがあった。しかし、ヒープはどう使われているかを答えられなくて凹んだ。
-</p>
-
- <hr></hr> <hr></hr> <p>
-逆になぜ、スタックの使用方法は明確なイメージがあったのだろうか。それはよくコードとアセンブリを比較していたからだ。スタックベースの操作が頻繁に登場し、関数呼び出し時にメモリを確保し、抜けるときに破棄する流れをよく見た。
-</p>
-
- <p>
-多くのCPUの命令セットアーキテクチャは  <code>push</code> /  <code>pop</code> /  <code>ret</code> などのスタック操作をサポートしている。これらの命令は「一番上に積む」「一番上から取る」という制限された動きしかできず柔軟性はない。だからコンパイル時にサイズを決めて機械的に変換でき、どの領域が使われているかは明確である。スタックは、CPUレベルで使っていると言える。
-</p>
-
- <p>
-いっぽう、アセンブリでヒープ確保は、  <code>malloc</code> のようなライブラリ関数の呼び出し( <code>call</code>)として現れる。そのさきで何が行われているかは、OSや言語処理系レベルの話だ。スタックより柔軟に使えるが複雑なために、上のレイヤーに任せているといえる。
-</p>
-
- <p>
-スタックとヒープはまとめて扱われるが、異なる特性を持っている。処理するレイヤーは異なるのを認識するのが重要に見える。
-</p>
-</div>
-</div>
- <div id="outline-container-org21dfab7" class="outline-2">
- <h2 id="org21dfab7"> <a href="#org21dfab7">関連</a></h2>
- <div class="outline-text-2" id="text-org21dfab7">
- <ul class="org-ul"> <li> <a href="https://ja.wikipedia.org/wiki/%E3%83%92%E3%83%BC%E3%83%97%E9%A0%98%E5%9F%9F">ヒープ領域 - Wikipedia</a></li>
- <li> <a href="20240427T120833--kdoc-141-cのポインタ操作をアセンブリで見る__wiki.html#ID-20240427T120833">KDOC 141: Cのポインタ操作をアセンブリで見る</a>。アセンブラを見ていた例</li>
-</ul></div>
-</div>
- <div id="outline-container-org6d21a05" class="outline-2">
- <h2 id="org6d21a05"> <a href="#org6d21a05">Backlinks</a></h2>
- <div class="outline-text-2" id="text-org6d21a05">
- <ul class="org-ul"> <li> <a href="./20250630T192238--kdoc-412-ヒープ管理方法の変遷を見る__permanent.html">KDOC 412: ヒープ管理方法の変遷を見る</a></li>
- <li> <a href="./20250701T174437--kdoc-413-ローカル変数がヒープにエスケープされるのを見る__wiki.html">KDOC 413: ローカル変数がヒープにエスケープされるのを見る</a></li>
- <li> <a href="./20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__wiki.html">KDOC 414: インターフェースがヒープにエスケープされるのを見る</a></li>
- <li> <a href="./20250702T194815--kdoc-416-goのエスケープ解析における2つの不変条件を見る__permanent.html">KDOC 416: Goのエスケープ解析における2つの不変条件を見る</a></li>
-</ul></div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html</id>
-  <updated>2025-08-23T08:05:20+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 421: 継続時間形式を見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org239b724" class="outline-2">
- <h2 id="org239b724"> <a href="#org239b724">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org239b724">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-17 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orga58db25" class="outline-2">
- <h2 id="orga58db25"> <a href="#orga58db25">概要</a></h2>
- <div class="outline-text-2" id="text-orga58db25">
- <p>
- <a href="https://github.com/golang/go/commit/11f11f2a00aa3149a6ea69a50e7b7b429cf368b7">encoding/json/v2: support ISO 8601 durations · golang/go@11f11f2</a>では、ISO 8601形式での継続時間を実装している。JSONのデフォルトの表示にはまだ議論があり、あくまでもオプションのサポートだという。JavaScriptに先例がある。
-</p>
-
- <p>
- <a href="https://ja.wikipedia.org/wiki/ISO_8601">ISO 8601</a>は、日付や時刻が有名だが、「継続時間」も定義している。たとえば  <code>P3Y6M4DT12H30M5S</code> は、「3年、6か月、4日、12時間、30分、5秒」という継続時間を表現しているという。
-</p>
-</div>
-</div>
- <div id="outline-container-orgd90f3a2" class="outline-2">
- <h2 id="orgd90f3a2"> <a href="#orgd90f3a2">関連</a></h2>
- <div class="outline-text-2" id="text-orgd90f3a2">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250713T090146--kdoc-421-継続時間形式を見る__draft_wiki.html"/>
-  <id>https://kijimad.github.io/roam/20250713T090146--kdoc-421-継続時間形式を見る__draft_wiki.html</id>
-  <updated>2025-08-23T08:05:19+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 428: 組み込みのPrintとfmtのPrintの違いを見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org2eef270" class="outline-2">
- <h2 id="org2eef270"> <a href="#org2eef270">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org2eef270">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul> <ul class="org-ul"> <li>レビュー
- <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-org0b41e27" class="outline-2">
- <h2 id="org0b41e27"> <a href="#org0b41e27">概要</a></h2>
- <div class="outline-text-2" id="text-org0b41e27">
- <p>
-Go言語には、標準ライブラリの  <code>fmt.Print</code> と組み込み関数の  <code>print</code> がある。どのような違いがあるのだろうか。
-</p>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>組み込み関数のprint</label> <pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/builtin/builtin.go#L293-L297
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">// The print built-in function formats its arguments in an
-// implementation-specific way and writes the result to standard error.
-// Print is useful for bootstrapping and debugging; it is not guaranteed
-// to stay in the language.
-func print(args ...Type)
-</pre>
-</div>
-
- <ul class="org-ul"> <li>標準エラー出力に書きこむ</li>
- <li>残り続ける保証なし</li>
-</ul> <p>
-組み込みの  <code>print</code> はデバッグ用という感じ。
-</p>
-</div>
-</div>
- <div id="outline-container-orgd5c4dfd" class="outline-2">
- <h2 id="orgd5c4dfd"> <a href="#orgd5c4dfd">関連</a></h2>
- <div class="outline-text-2" id="text-orgd5c4dfd">
- <p>
-なし。
-</p>
-</div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250811T101023--kdoc-428-組み込みのprintとfmtのprintの違いを見る__draft_permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250811T101023--kdoc-428-組み込みのprintとfmtのprintの違いを見る__draft_permanent.html</id>
-  <updated>2025-08-23T08:05:18+09:00</updated>
+  <updated>2025-08-28T06:07:26+09:00</updated>
 </entry>
 <entry>
   <title>KDOC 418: 実行時のオーバーヘッドなしで型のサイズを判定する</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org6d822fc" class="outline-2">
- <h2 id="org6d822fc"> <a href="#org6d822fc">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org6d822fc">
+ <div id="outline-container-org615444c" class="outline-2">
+ <h2 id="org615444c"> <a href="#org615444c">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org615444c">
  <ul class="org-ul"> <li>作成
  <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-24 貴島</li>
 </ul></li>
@@ -1115,9 +1202,9 @@ func print(args ...Type)
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org0ff748b" class="outline-2">
- <h2 id="org0ff748b"> <a href="#org0ff748b">概要</a></h2>
- <div class="outline-text-2" id="text-org0ff748b">
+ <div id="outline-container-org90993bb" class="outline-2">
+ <h2 id="org90993bb"> <a href="#org90993bb">概要</a></h2>
+ <div class="outline-text-2" id="text-org90993bb">
  <p>
 CPUアーキテクチャによって、型のサイズは異なることがある。実行時のオーバーヘッドなしで判定しているのをGo言語自体のソースコードで見かけた。
 </p>
@@ -1188,9 +1275,9 @@ func main() {
 </div>
 </div>
 </div>
- <div id="outline-container-orgd19f426" class="outline-2">
- <h2 id="orgd19f426"> <a href="#orgd19f426">関連</a></h2>
- <div class="outline-text-2" id="text-orgd19f426">
+ <div id="outline-container-orgdfd965d" class="outline-2">
+ <h2 id="orgdfd965d"> <a href="#orgdfd965d">関連</a></h2>
+ <div class="outline-text-2" id="text-orgdfd965d">
  <p>
 なし。
 </p>
@@ -1199,135 +1286,64 @@ func main() {
 </div>]]></content>
   <link href="https://kijimad.github.io/roam/20250703T174843--kdoc-418-実行時のオーバーヘッドなしで型のサイズを判定する__wiki.html"/>
   <id>https://kijimad.github.io/roam/20250703T174843--kdoc-418-実行時のオーバーヘッドなしで型のサイズを判定する__wiki.html</id>
-  <updated>2025-08-23T08:05:15+09:00</updated>
+  <updated>2025-08-28T06:07:26+09:00</updated>
 </entry>
 <entry>
-  <title>KDOC 415: io.Readerのシグネチャはヒープエスケープを避けられる設計になっている</title>
+  <title>KDOC 422: 科学技術館を観察する</title>
   <author><name>kijimaD</name></author>
   <content type="html"><![CDATA[<div id="content" class="content">
 
- <div id="outline-container-org9b12448" class="outline-2">
- <h2 id="org9b12448"> <a href="#org9b12448">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org9b12448">
+ <div id="outline-container-orgb7d727f" class="outline-2">
+ <h2 id="orgb7d727f"> <a href="#orgb7d727f">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgb7d727f">
  <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-01 貴島</li>
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-27 貴島</li>
 </ul></li>
  <li>レビュー
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-19 貴島</li>
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
 </ul></li>
 </ul></div>
 </div>
- <div id="outline-container-org22fa8cb" class="outline-2">
- <h2 id="org22fa8cb"> <a href="#org22fa8cb">概要</a></h2>
- <div class="outline-text-2" id="text-org22fa8cb">
+ <div id="outline-container-orge88dc47" class="outline-2">
+ <h2 id="orge88dc47"> <a href="#orge88dc47">概要</a></h2>
+ <div class="outline-text-2" id="text-orge88dc47">
  <p>
-io.Reader, io.Writerのインターフェース設計には、ヒープのエスケープも関係しているという。
+ <a href="https://ja.wikipedia.org/wiki/%E7%A7%91%E5%AD%A6%E6%8A%80%E8%A1%93%E9%A4%A8">科学技術館</a>は、東京都千代田区にある科学博物館である。
 </p>
 
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 1: </span>io.Readerのシグネチャ</label> <pre class="src src-go">type Reader interface {
-        Read(p []byte) (n int, err error)
-}
-</pre>
+ <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3907.053697938309!2d139.75048871198626!3d35.69158897246949!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188c12c576f675%3A0xfcf1facbfb12c41!2sScience%20and%20Technology%20Museum!5e1!3m2!1sen!2sjp!4v1753578898950!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
 </div>
-
+</div>
+ <div id="outline-container-orgd4de77d" class="outline-2">
+ <h2 id="orgd4de77d"> <a href="#orgd4de77d">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgd4de77d">
+ <ul class="org-ul"> <li>建物全体が、タイムカプセルで保存されたような昭和感がある。クリーム色の壁や床、低い天井。もう絶滅しかけている</li>
+ <li>子供が興味を引かれるような、実体験できるアクティビティが多い。小さな子どもの家族が9割を占めていて、混雑している。ゆっくり見たり考えるのは難しい</li>
+ <li>テーマごとにブースがある。自転車/災害/建築/薬/電気/音…</li>
+ <li>自転車など特定の狭い工業製品にフォーカスしているものもあれば、ざっくり電気に注目している、というブースもある。科学というより工業の場所も多い。取り扱うテーマが広すぎるので、どうまとめるかが難しそうであった</li>
+ <li>複数フロアあり面積は広いが、ブース1つはそこまで大きくない。浅く広く展示されている。熱量・熱意を感じるのは難しい。後から知ったが、青少年向けだという。たしかに子どもでも理解できそうだが、そこから本当の興味につながるだろうか、とは感じる。圧倒的な物量と解説がなければ、その分野の奥深さを感じることができないように見える。子どもに媚びている。子どもは、子ども向けということをわかっている</li>
+ <li>企業名を掲げて主催しているブースも多い。広告・商売と絡めるのも手段の1つだ</li>
+ <li>アクティビティ重視は、入館者数減少に対する施策だという。これまでさまざまな議論や改善があったようだ</li>
+ <li>もちろん、そういう博物館もあっていい。しかし超一等地にある科学博物館としては残念な感じがする</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgab566da" class="outline-2">
+ <h2 id="orgab566da"> <a href="#orgab566da">関連</a></h2>
+ <div class="outline-text-2" id="text-orgab566da">
  <p>
- <code>[]byte</code> の初期化は呼び出し側の責務になっている。これによって呼び出し側がメモリ管理できるようになる。呼び出し側のスタックに留まり、ヒープにエスケープするのを抑えられる。Readを何度呼んでも新しいヒープ確保が発生しない。呼び出し側がヒープにする自由度もある。
+なし。
 </p>
-
- <p>
-実際に試してみる。
-</p>
-
- <div class="org-src-container">
- <label class="org-src-name"> <span class="listing-number">Listing 2: </span>Read1だけがヒープのエスケープが発生する</label> <pre class="src src-shell"> <span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmpgo.XXXXXX.go)
-
-cat > $ <span class="org-variable-name">tmpfile</span> <<EOF <span class="org-sh-heredoc">
-package main
-
-func main() {}
-
-// Read側で初期化して返すと、ヒープにエスケープしなければならない
-func Read1() []byte {
-  return make([]byte, 1)
-}
-
-// 呼び出し側で初期化してもらうようにすると、ヒープにエスケープする必要がない
-func Read2([]byte) {}
-
-EOF
-</span>
-go build -gcflags= <span class="org-string">"-m"</span> -o bin $ <span class="org-variable-name">tmpfile</span> 2>&1
-rm bin
-rm $ <span class="org-variable-name">tmpfile</span>
-</pre>
-</div>
-
- <div class="org-src-container">
- <pre class="src src-nil">/tmp/tmpgo.s6wAwW.go:3:6: can inline main
-/tmp/tmpgo.s6wAwW.go:6:6: can inline Read1
-/tmp/tmpgo.s6wAwW.go:11:6: can inline Read2
-/tmp/tmpgo.s6wAwW.go:7:14: make([]byte, 1) escapes to heap
-</pre>
 </div>
 </div>
-</div>
- <div id="outline-container-org56c289d" class="outline-2">
- <h2 id="org56c289d"> <a href="#org56c289d">関連</a></h2>
- <div class="outline-text-2" id="text-org56c289d">
- <ul class="org-ul"> <li> <a href="https://syntactic-sugar.dev/blog/nested-route/go-escape-analysis">Stack or Heap? Going Deeper with Escape Analysis in Go for Better Performance</a>。調べている中でio.Readerとio.Writerインターフェースの設計について言及していたのを見つけた</li>
- <li> <a href="20250701T193212--kdoc-414-インターフェースがヒープにエスケープされるのを見る__wiki.html#ID-20250701T193212">KDOC 414: インターフェースがヒープにエスケープされるのを見る</a>。調べるきっかけになった</li>
+ <div id="outline-container-orgca304ee" class="outline-2">
+ <h2 id="orgca304ee"> <a href="#orgca304ee">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-orgca304ee">
+ <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
 </ul></div>
 </div>
 </div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250701T213624--kdoc-415-ioreaderのシグネチャはヒープエスケープを避けられる設計になっている__permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250701T213624--kdoc-415-ioreaderのシグネチャはヒープエスケープを避けられる設計になっている__permanent.html</id>
-  <updated>2025-08-23T08:05:15+09:00</updated>
-</entry>
-<entry>
-  <title>KDOC 412: ヒープ管理方法の変遷を見る</title>
-  <author><name>kijimaD</name></author>
-  <content type="html"><![CDATA[<div id="content" class="content">
-
- <div id="outline-container-org8cdc60f" class="outline-2">
- <h2 id="org8cdc60f"> <a href="#org8cdc60f">この文書のステータス</a></h2>
- <div class="outline-text-2" id="text-org8cdc60f">
- <ul class="org-ul"> <li>作成
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-06-30 貴島</li>
-</ul></li>
- <li>レビュー
- <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-07-19 貴島</li>
-</ul></li>
-</ul></div>
-</div>
- <div id="outline-container-orgc7a88a4" class="outline-2">
- <h2 id="orgc7a88a4"> <a href="#orgc7a88a4">概要</a></h2>
- <div class="outline-text-2" id="text-orgc7a88a4">
- <p>
-ヒープ管理方法の変遷を見る。柔軟性、安全性、パフォーマンスのトレードオフの歴史である。
-</p>
-
- <ol class="org-ol"> <li>従来はプログラマーが  <code>malloc</code> や  <code>free</code> でヒープを確保・解放していた
- <ul class="org-ul"> <li>課題: メモリ解放忘れや解放済みのポインタへのアクセス。安全性に問題があった</li>
-</ul></li>
- <li>処理系にガベージコレクションを組み込み、メモリ管理を自動で行うようにした
- <ul class="org-ul"> <li>課題: パフォーマンスへの影響、一時停止、管理の複雑さ</li>
-</ul></li>
- <li>所有権に基づいてメモリを管理する。コンパイル時にメモリ管理の正しさを検証し、実行時のオーバーヘッドなく安全性を得る
- <ul class="org-ul"> <li>課題: リストなど特定のケースで実装が難しいことがあるという</li>
-</ul></li>
-</ol></div>
-</div>
- <div id="outline-container-orgd6c1bb5" class="outline-2">
- <h2 id="orgd6c1bb5"> <a href="#orgd6c1bb5">関連</a></h2>
- <div class="outline-text-2" id="text-orgd6c1bb5">
- <ul class="org-ul"> <li> <a href="https://ja.wikipedia.org/wiki/%E3%82%AC%E3%83%99%E3%83%BC%E3%82%B8%E3%82%B3%E3%83%AC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%B3">ガベージコレクション - Wikipedia</a></li>
- <li> <a href="20250630T185540--kdoc-411-スタックは積み重ねて取り出して解放する。ではヒープは__permanent.html#ID-20250630T185540">KDOC 411: スタックは積み重ねて解放する。ではヒープは?</a>。きっかけになった疑問</li>
-</ul></div>
-</div>
-</div>]]></content>
-  <link href="https://kijimad.github.io/roam/20250630T192238--kdoc-412-ヒープ管理方法の変遷を見る__permanent.html"/>
-  <id>https://kijimad.github.io/roam/20250630T192238--kdoc-412-ヒープ管理方法の変遷を見る__permanent.html</id>
-  <updated>2025-08-23T08:05:15+09:00</updated>
+  <link href="https://kijimad.github.io/roam/20250720T174241--kdoc-422-科学技術館を観察する__draft_essay.html"/>
+  <id>https://kijimad.github.io/roam/20250720T174241--kdoc-422-科学技術館を観察する__draft_essay.html</id>
+  <updated>2025-08-28T06:07:24+09:00</updated>
 </entry>
 </feed>
