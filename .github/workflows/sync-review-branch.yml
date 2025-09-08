@@ -1,0 +1,53 @@
+name: Sync Review Branch
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sync-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create or update review branch
+        run: |
+          # レビュー用ブランチ名
+          REVIEW_BRANCH="review-branch"
+
+          # レビューブランチが存在するかチェック
+          if git ls-remote --heads origin $REVIEW_BRANCH | grep -q $REVIEW_BRANCH; then
+            echo "Review branch exists, updating it"
+            git checkout -b $REVIEW_BRANCH origin/$REVIEW_BRANCH
+            git reset --hard origin/main
+            git push origin $REVIEW_BRANCH --force
+          else
+            echo "Creating new review branch"
+            git checkout -b $REVIEW_BRANCH
+            git push origin $REVIEW_BRANCH --set-upstream
+          fi
+
+      - name: Create or update PR
+        run: |
+          REVIEW_BRANCH="review-branch"
+
+          # 既存のPRをチェック
+          EXISTING_PR=$(gh pr list --base main --head $REVIEW_BRANCH --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR #$EXISTING_PR already exists, it will be automatically updated"
+          else
+            echo "Creating new PR for review"
+            gh pr create \
+              --base main \
+              --head $REVIEW_BRANCH \
+              --title "🤖 Automated Review PR" \
+              --body "このPRは自動生成されています。mainブランチの変更をレビューするために使用されます。
+
+Claudeによる自動レビューがコメントとして追加されます。"
+          fi
