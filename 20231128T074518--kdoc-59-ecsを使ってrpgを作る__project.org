@@ -1,6 +1,10 @@
+:PROPERTIES:
+:mtime:    20250913194151
+:ctime:    20250913194151
+:END:
 :properties:
 :ID: 20231128T074518
-:mtime:    20250908230249
+:mtime:    20250913193751
 :ctime:    20241028174234
 :end:
 #+title:      KDOC 59: ECSを使ってRPGを作る
@@ -78,19 +82,69 @@ CLOCK: [2025-09-07 Sun 09:38]--[2025-09-07 Sun 10:03] =>  0:25
   - 無駄にややこしいし、ローグライクにそぐわない
   - 表示アニメーションはあってもいいが、主要機能のenter待ちはいらない
   - SafeSliceの文字列版は消す
-
-** TODO ローグライクに切り替える
+** TODO ターン世界を導入する
 :LOGBOOK:
-CLOCK: [2025-09-08 Mon 22:02]--[2025-09-08 Mon 22:27] =>  0:25
-CLOCK: [2025-09-08 Mon 20:31]--[2025-09-08 Mon 20:56] =>  0:25
-CLOCK: [2025-09-07 Sun 22:29]--[2025-09-07 Sun 22:54] =>  0:25
+CLOCK: [2025-09-14 Sun 14:48]--[2025-09-14 Sun 15:13] =>  0:25
+CLOCK: [2025-09-14 Sun 14:01]--[2025-09-14 Sun 14:26] =>  0:25
+CLOCK: [2025-09-14 Sun 13:31]--[2025-09-14 Sun 13:56] =>  0:25
+CLOCK: [2025-09-14 Sun 13:06]--[2025-09-14 Sun 13:31] =>  0:25
+CLOCK: [2025-09-14 Sun 11:39]--[2025-09-14 Sun 12:04] =>  0:25
+CLOCK: [2025-09-14 Sun 11:14]--[2025-09-14 Sun 11:39] =>  0:25
+CLOCK: [2025-09-14 Sun 10:44]--[2025-09-14 Sun 11:09] =>  0:25
 :END:
-
-- [X] 既存の戦闘を削除する
-- [ ] Positionを削除する
-- [ ] 移動などをターンベースにする
+- [ ] ターンベースシステムを導入する
+- [ ] 移動などを対応させる
 - [ ] ローグライク式に戦闘できるようにする
-- [ ] 仲間を削除する
+
+メモ。
+
+- loggerにactionカテゴリを追加して使うようにして
+
+** TODO コンテキスト移動する
+
+同じ方向キーでも、コンテキストによってじっさいの実行イベントは変化する。こうすることで直感的に操作できる。
+
+- *隣接タイルが空* → 移動
+- *隣接タイルに敵* → 攻撃
+- *隣接タイルにドア* → ドア開閉
+- *隣接タイルが採掘可能* → 自動採掘
+- *隣接タイルが水域* → 水泳開始
+
+#+caption: CDDAの参考
+#+begin_src C
+bool avatar_action::move(avatar &you, map &m, const tripoint &d) {
+    const tripoint dest_loc = you.pos() + d;
+
+    // 1. プレイヤー状態確認
+    if (you.has_effect(effect_stunned)) {
+        // スタン状態での移動制限
+        return false;
+    }
+
+    // 2. 敵・NPC検出
+    creature_tracker &creatures = get_creature_tracker();
+    if (Creature *critter = creatures.creature_at(dest_loc)) {
+        // 攻撃処理
+        you.melee_attack(*critter, true);
+        return true;
+    }
+
+    // 3. 特殊地形処理
+    if (m.has_flag(ter_furn_flag::TFLAG_MINEABLE, dest_loc)) {
+        // 自動採掘処理
+        return try_auto_mining(you, m, dest_loc);
+    }
+
+    // 4. ドア処理
+    if (m.open_door(you, dest_loc, !m.is_outside(you.pos()))) {
+        // ドア開閉処理
+        return true;
+    }
+
+    // 5. 通常移動
+    return g->walk_move(dest_loc);
+}
+#+end_src
 
 ** TODO セーブデータJSONをソートする
 :LOGBOOK:
@@ -3888,3 +3942,22 @@ CLOCK: [2025-09-07 Sun 12:48]--[2025-09-07 Sun 13:13] =>  0:25
 :END:
 
 UIを別のpackageに移動する。
+** DONE ローグライクで必要なくなった箇所を削除する
+CLOSED: [2025-09-14 Sun 10:44]
+:LOGBOOK:
+CLOCK: [2025-09-13 Sat 18:15]--[2025-09-13 Sat 18:40] =>  0:25
+CLOCK: [2025-09-13 Sat 17:47]--[2025-09-13 Sat 18:12] =>  0:25
+CLOCK: [2025-09-13 Sat 17:17]--[2025-09-13 Sat 17:42] =>  0:25
+CLOCK: [2025-09-13 Sat 16:31]--[2025-09-13 Sat 16:56] =>  0:25
+CLOCK: [2025-09-08 Mon 22:02]--[2025-09-08 Mon 22:27] =>  0:25
+CLOCK: [2025-09-08 Mon 20:31]--[2025-09-08 Mon 20:56] =>  0:25
+CLOCK: [2025-09-07 Sun 22:29]--[2025-09-07 Sun 22:54] =>  0:25
+:END:
+
+- [X] 既存の戦闘を削除する
+- [X] Positionを削除する
+- [X] 仲間を削除する
+  - InPartyを削除する
+  - AliveやDeadも削除
+  - TargetAlivePartyを削除する
+  - HP/SPバーが消えてしまっている

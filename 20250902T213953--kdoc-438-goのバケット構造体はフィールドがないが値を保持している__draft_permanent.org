@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250831T135810
-:mtime:    20250909194605
-:ctime:    20250831135814
+:ID: 20250902T213953
+:mtime:    20250914171216
+:ctime:    20250902214008
 :end:
-#+title:      KDOC 433: カメラ博物館を観察する
-#+date:       [2025-08-31 Sun 13:58]
-#+filetags:   :draft:essay:
-#+identifier: 20250831T135810
+#+title:      KDOC 438: Goのバケット構造体はフィールドがないが値を保持している
+#+date:       [2025-09-02 Tue 21:39]
+#+filetags:   :draft:permanent:
+#+identifier: 20250902T213953
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -49,9 +49,10 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-09-04 貴島
+  - [X] 2025-09-14 貴島
 - レビュー
-  - [X] 2025-09-09 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 
 # チェックリスト ================
 # 関連をつけた。
@@ -65,19 +66,36 @@
 * 概要
 # 本文(見出しも設定する)
 
-[[https://www.jcii-cameramuseum.jp/][日本カメラ博物館 JCII Camera Museum]]は東京都千代田区にあるカメラの博物館である。
+ハッシュテーブルは、キー値のハッシュをインデックスとした配列に格納して実装している。要素を全部見る必要がない分早い。1つ1つの配列をバケットという。
 
-#+begin_export html
-<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d8540.415448159765!2d139.74036361224634!3d35.68606117247137!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188c6ffbe55555%3A0x2d21feba3ad3cbee!2sJCII%20Camera%20Museum!5e1!3m2!1sen!2sjp!4v1756770645359!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-#+end_export
+- "key" -> ハッシュ化して11111111 -> マップ配列[11111111] -> バケット特定 -> バケット(配列)の中でさらにハッシュあるいは値が一致するものを探す -> "value"
 
-* メモ
+Goのmapのバケット構造体はこのように定義されている。
 
-- 主催団体や博物館の沿革や目的、収集の定義を最初に説明している。最初に視点を共有して、全体の目的のなかで個別の展示にどういう役割があるかを考えられる。単なる収集家とは異なる
-- かつて航空機の射撃訓練では、カメラを使って命中したかの判定に使っていた。写っていれば命中
-- 展示品の隣にはカードが置いてあり、1つ1つに丁寧な解説がついている。団体の作った何らかの基準を満たしている品にはマークがついている。展示ガラスやライティングは綺麗で、美しく見える。展示からはカメラへの愛と尊敬、そして展示方法の熟達を感じる
-- ステレオ写真の体験展示がある。ステレオ写真は人の目で見えているように、左右で少し違う写真を見ることで立体的に見えるもの。古い写真や自然の写真だが、その場にいるような感覚がして面白く感じた。ステレオ写真は写真の歴史と同じくらい長い歴史があり、機材や写真が残っている
-- 企画展は各テーマで「すごい」カメラを集めて解説するもので、視点が興味深いものだった。「デザイン」「革新的な機能」「産業用」「小さい」など
+#+caption: バケット構造体
+#+begin_src git-permalink
+https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/runtime/map_noswiss.go#L149-L160
+#+end_src
+
+#+RESULTS:
+#+begin_src
+// A bucket for a Go map.
+type bmap struct {
+	// tophash generally contains the top byte of the hash value
+	// for each key in this bucket. If tophash[0] < minTopHash,
+	// tophash[0] is a bucket evacuation state instead.
+	tophash [abi.OldMapBucketCount]uint8
+	// Followed by bucketCnt keys and then bucketCnt elems.
+	// NOTE: packing all the keys together and then all the elems together makes the
+	// code a bit more complicated than alternating key/elem/key/elem/... but it allows
+	// us to eliminate padding which would be needed for, e.g., map[int64]int8.
+	// Followed by an overflow pointer.
+}
+#+end_src
+
+- フィールドはないがデータを保持している
+- [key, key, key, ..., value, value, value] とメモリ配置させるためにGo外で管理している
+- paddingのとおり、交互に配置して余分なスペースが生まれるのを防ぐため。キーの型と、値の型が異なると隙間が生まれやすい
 
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
