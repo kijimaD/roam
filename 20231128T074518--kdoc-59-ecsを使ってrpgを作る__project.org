@@ -59,42 +59,44 @@ CLOCK: [2024-11-16 Sat 09:22]--[2024-11-16 Sat 09:47] =>  0:25
 - https://www.pixilart.com/art/mayon-sr21881399e91aws3
   - 火山の背景
 * Tasks
-** TODO ロードが壊れている
+** TODO 光源を追加する
 :LOGBOOK:
+CLOCK: [2025-10-05 Sun 22:54]--[2025-10-05 Sun 23:19] =>  0:25
+CLOCK: [2025-10-05 Sun 21:56]--[2025-10-05 Sun 22:21] =>  0:25
+CLOCK: [2025-10-05 Sun 21:31]--[2025-10-05 Sun 21:56] =>  0:25
+CLOCK: [2025-10-05 Sun 21:06]--[2025-10-05 Sun 21:31] =>  0:25
+CLOCK: [2025-10-05 Sun 11:49]--[2025-10-05 Sun 12:14] =>  0:25
+CLOCK: [2025-10-05 Sun 11:20]--[2025-10-05 Sun 11:45] =>  0:25
 :END:
+光源がある部分は色が変わる。
 
-タイルが表示されない。セーブデータ的に、タイルは保存されているのだが。
+タイルごとに色のフィルタを設定できればよいのだろうな。
 
-** TODO ステート遷移がおかしい
+** TODO 画面フィルターを追加してきれいにする
 
-- 戻ると真っ黒になる組み合わせがある
-  - Menuの基本動作がPopなので、前のステートがないとそうなる
-- Switch と Pop を混同している
+- おすすめの組み合わせ（実装の容易さ順）
 
-** TODO 無意味なコンストラクタを削除する
+最も簡単で効果的。
 
-#+begin_src go
-NewDungeonStateWithDepth は指定されたDepthでDungeonStateインスタンスを作成するファクトリー関数
-func NewDungeonStateWithDepth(depth int) es.StateFactory[w.World] {
-	return func() es.State[w.World] {
-		return &DungeonState{Depth: depth, BuilderType: mapplanner.PlannerTypeRandom}
-	}
-}
+1. ビネット効果 - 画面四隅を暗く（DrawImageで半透明画像を重ねるだけ）
+2. コントラスト調整 - シェーダーで色を調整
+3. パーティクル効果 - 簡単な点の描画で雰囲気UP
 
-// NewDungeonStateWithSeed は指定されたDepthとSeedでDungeonStateインスタンスを作成するファクトリー関数
-func NewDungeonStateWithSeed(depth int, seed uint64) es.StateFactory[w.World] {
-	return func() es.State[w.World] {
-		return &DungeonState{Depth: depth, Seed: seed, BuilderType: mapplanner.PlannerTypeRandom}
-	}
-}
+中程度の実装で大きな効果。
 
-// NewDungeonStateWithBuilder は指定されたBuilderTypeでDungeonStateインスタンスを作成するファクトリー関数
-func NewDungeonStateWithBuilder(depth int, builderType mapplanner.PlannerType) es.StateFactory[w.World] {
-	return func() es.State[w.World] {
-		return &DungeonState{Depth: depth, BuilderType: builderType}
-	}
-}
-#+end_src
+1. 動的照明 - 既存の視界システムを応用
+2. スムーズ移動 - 線形補間で移動をアニメーション
+3. グローエフェクト - 特定スプライトに発光
+
+本格的だが美しい。
+
+1. アウトライン - スプライトの輪郭検出と描画
+2. ブルーム - ガウスぼかしで光を拡散
+3. カラーグレーディング - 色調の統一感
+
+** TODO stateでエラーハンドリングする
+
+エラーフィールドを作成するか。
 
 ** TODO 倒れてから攻撃してくる
 
@@ -106,18 +108,23 @@ func NewDungeonStateWithBuilder(depth int, builderType mapplanner.PlannerType) e
 - 「武器店」
 - 「民家」
 ** TODO APの処理追加
+:LOGBOOK:
+CLOCK: [2025-10-04 Sat 22:06]--[2025-10-04 Sat 22:31] =>  0:25
+CLOCK: [2025-10-04 Sat 21:38]--[2025-10-04 Sat 22:03] =>  0:25
+CLOCK: [2025-10-04 Sat 20:55]--[2025-10-04 Sat 21:20] =>  0:25
+CLOCK: [2025-10-04 Sat 20:27]--[2025-10-04 Sat 20:52] =>  0:25
+CLOCK: [2025-10-04 Sat 20:02]--[2025-10-04 Sat 20:27] =>  0:25
+CLOCK: [2025-10-04 Sat 18:42]--[2025-10-04 Sat 19:07] =>  0:25
+CLOCK: [2025-10-04 Sat 15:44]--[2025-10-04 Sat 16:09] =>  0:25
+CLOCK: [2025-10-04 Sat 15:18]--[2025-10-04 Sat 15:43] =>  0:25
+CLOCK: [2025-10-04 Sat 14:43]--[2025-10-04 Sat 15:08] =>  0:25
+CLOCK: [2025-10-04 Sat 14:18]--[2025-10-04 Sat 14:43] =>  0:25
+CLOCK: [2025-10-04 Sat 12:56]--[2025-10-04 Sat 13:21] =>  0:25
+:END:
 
 - まず、よくわからないコードになっている。ゲーム性の根幹なので整理する
 - 足りない場合はターンスキップする
 
-** TODO effectsの立ち位置を明確にする
-:LOGBOOK:
-CLOCK: [2025-09-21 Sun 10:03]--[2025-09-21 Sun 10:28] =>  0:25
-:END:
-
-- 現状のattack activityでは直接ダメージ計算して、ログを出している
-- いろいろな共通化など考えるとeffectを発行するべきにも思える
-- イベントシステムとの使い分けはどうするか
 ** TODO 共通のエラーハンドリング方式を定める
 
 - ゲームなのでpanicさせたくない。が、検知はしたい
@@ -231,11 +238,6 @@ CLOCK: [2025-08-21 Thu 21:47]--[2025-08-21 Thu 22:12] =>  0:25
 
 ** TODO 合成のレアリティスコア
 性能にスコアをつけ、結果的に出来上がったものに対してレアリティランクをつけるとよさそう。
-** TODO 光源を追加する
-光源がある部分は色が変わる。
-
-タイルごとに色のフィルタを設定できればよいのだろうな。
-
 ** TODO ゲームループカウントをグローバル化する
 カウントしてメッセージをアニメーションさせる用。汎用的なのでグローバルでやってよさそう。アニメーションのためのもっとよい方法がある可能性はある。ちゃんと調べないとな…。
 
@@ -4202,3 +4204,60 @@ CLOSED: [2025-09-30 Tue 21:43]
 CLOSED: [2025-09-30 Tue 21:44]
 
 素材はあるので、それを使えるようにする。
+** DONE ロードが壊れている
+CLOSED: [2025-10-02 Thu 21:32]
+:LOGBOOK:
+:END:
+
+タイルが表示されない。セーブデータ的に、タイルは保存されているのだが。
+
+** DONE ステート遷移がおかしい
+CLOSED: [2025-10-02 Thu 21:32]
+
+- 戻ると真っ黒になる組み合わせがある
+  - Menuの基本動作がPopなので、前のステートがないとそうなる
+- Switch と Pop を混同している
+** DONE 置物をraw化する
+CLOSED: [2025-10-04 Sat 12:54]
+
+ハードコードされている。
+
+- Name
+- Prop
+- SpriteRender
+** DONE 無意味なコンストラクタを削除する
+CLOSED: [2025-10-04 Sat 12:55]
+
+#+begin_src go
+NewDungeonStateWithDepth は指定されたDepthでDungeonStateインスタンスを作成するファクトリー関数
+func NewDungeonStateWithDepth(depth int) es.StateFactory[w.World] {
+	return func() es.State[w.World] {
+		return &DungeonState{Depth: depth, BuilderType: mapplanner.PlannerTypeRandom}
+	}
+}
+
+// NewDungeonStateWithSeed は指定されたDepthとSeedでDungeonStateインスタンスを作成するファクトリー関数
+func NewDungeonStateWithSeed(depth int, seed uint64) es.StateFactory[w.World] {
+	return func() es.State[w.World] {
+		return &DungeonState{Depth: depth, Seed: seed, BuilderType: mapplanner.PlannerTypeRandom}
+	}
+}
+
+// NewDungeonStateWithBuilder は指定されたBuilderTypeでDungeonStateインスタンスを作成するファクトリー関数
+func NewDungeonStateWithBuilder(depth int, builderType mapplanner.PlannerType) es.StateFactory[w.World] {
+	return func() es.State[w.World] {
+		return &DungeonState{Depth: depth, BuilderType: builderType}
+	}
+}
+#+end_src
+** DONE effectsの立ち位置を明確にする
+CLOSED: [2025-10-04 Sat 22:22]
+:LOGBOOK:
+CLOCK: [2025-10-04 Sat 13:47]--[2025-10-04 Sat 14:12] =>  0:25
+CLOCK: [2025-10-04 Sat 13:21]--[2025-10-04 Sat 13:46] =>  0:25
+CLOCK: [2025-09-21 Sun 10:03]--[2025-09-21 Sun 10:28] =>  0:25
+:END:
+
+- 現状のattack activityでは直接ダメージ計算して、ログを出している
+- いろいろな共通化など考えるとeffectを発行するべきにも思える
+- イベントシステムとの使い分けはどうするか
