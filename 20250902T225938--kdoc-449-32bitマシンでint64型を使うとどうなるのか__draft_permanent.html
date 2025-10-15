@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-10-15T22:14:30Z -->
+<!-- 2025-10-15T22:35:01Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 449: 32bitマシンでint64型を使うとどうなるのか?</title>
@@ -15,17 +15,14 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 449: 32bitマシンでint64型を使うとどうなるのか?</h1>
-<div id="outline-container-orge1d41db" class="outline-2">
-<h2 id="orge1d41db"><a href="#orge1d41db">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orge1d41db">
+<div id="outline-container-org4177da0" class="outline-2">
+<h2 id="org4177da0"><a href="#org4177da0">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org4177da0">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
-<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+<li class="on"><input type='checkbox' checked='checked' /> 2025-10-12 貴島</li>
 </ul></li>
-</ul>
-
-<ul class="org-ul">
 <li>レビュー
 <ul class="org-ul">
 <li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
@@ -33,17 +30,78 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-org951b504" class="outline-2">
-<h2 id="org951b504"><a href="#org951b504">概要</a></h2>
-<div class="outline-text-2" id="text-org951b504">
+<div id="outline-container-org1960b9a" class="outline-2">
+<h2 id="org1960b9a"><a href="#org1960b9a">概要</a></h2>
+<div class="outline-text-2" id="text-org1960b9a">
+<p>
+32bitマシンだとレジスタに入り切らないため1度で処理できず、スタックを使う想定だが、正しいだろうか。レジスタよりサイズが大きい場合にどう扱うか、ともいえる。
+</p>
+
+<p>
+アセンブラを見る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>32bit</label><pre class="src src-shell"><span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmp.XXXXXX.c)
+
+cat &gt; $<span class="org-variable-name">tmpfile</span> &lt;&lt;EOF<span class="org-sh-heredoc">
+  #include &lt;stdio.h&gt;
+
+  int main() {
+      long long a = 1234567890123;
+      int b = 42;
+      printf("%lld %d\n", a, b);
+      return 0;
+  }
+EOF
+</span>
+docker run --rm -v /tmp:/tmp -w /tmp i386/ubuntu bash -c <span class="org-string">"apt update -y &amp;&amp; apt install -y build-essential &amp;&amp; gcc -m32 -S $tmpfile -o 32.s &amp;&amp; cat 32.s"</span>
+
+rm $<span class="org-variable-name">tmpfile</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>64bit</label><pre class="src src-shell"><span class="org-variable-name">tmpfile</span>=$(mktemp /tmp/tmp.XXXXXX.c)
+
+cat &gt; $<span class="org-variable-name">tmpfile</span> &lt;&lt;EOF<span class="org-sh-heredoc">
+  #include &lt;stdio.h&gt;
+
+  int main() {
+      long long a = 1234567890123;
+      int b = 42;
+      printf("%lld %d\n", a, b);
+      return 0;
+  }
+EOF
+</span>gcc -S $<span class="org-variable-name">tmpfile</span> -o /tmp/64.s
+
+rm $<span class="org-variable-name">tmpfile</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">cat /tmp/32.s
+cat /tmp/64.s
+diff /tmp/32.s /tmp/64.s
+</pre>
 </div>
 </div>
-<div id="outline-container-org0e8858a" class="outline-2">
-<h2 id="org0e8858a"><a href="#org0e8858a">関連</a></h2>
-<div class="outline-text-2" id="text-org0e8858a">
+</div>
+<div id="outline-container-org5758313" class="outline-2">
+<h2 id="org5758313"><a href="#org5758313">関連</a></h2>
+<div class="outline-text-2" id="text-org5758313">
 <p>
 なし。
 </p>
+</div>
+</div>
+<div id="outline-container-orgc1a8574" class="outline-2">
+<h2 id="orgc1a8574"><a href="#orgc1a8574">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgc1a8574">
+<ul class="org-ul">
+<li><a href="./20250902T230002--kdoc-450-goで型のメモリ上のサイズの仕様がどうなっているか見る__draft_permanent.html">KDOC 450: Goで型のメモリ上のサイズの仕様がどうなっているか見る</a></li>
+</ul>
 </div>
 </div>
 </div>
