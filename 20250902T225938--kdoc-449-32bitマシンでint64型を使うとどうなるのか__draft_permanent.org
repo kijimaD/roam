@@ -49,8 +49,7 @@
 
 * この文書のステータス
 - 作成
-  - [ ] <署名>
-# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
+  - [X] 2025-10-12 貴島
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -66,6 +65,270 @@
 # すべてのコメントを削除した。
 * 概要
 # 本文(見出しも設定する)
+
+32bitマシンだとレジスタに入り切らないため1度に処理できず、スタックを使う想定だが、正しいだろうか。レジスタよりサイズが大きい場合にどう扱うか、ともいえる。
+
+アセンブラを見る。
+
+#+caption: 32bit
+#+begin_src shell :results output
+  tmpfile=$(mktemp /tmp/tmp.XXXXXX.c)
+
+  cat > $tmpfile <<EOF
+    #include <stdio.h>
+
+    int main() {
+        long long a = 1234567890123;
+        int b = 42;
+        printf("%lld %d\n", a, b);
+        return 0;
+    }
+  EOF
+
+  docker run --rm -v /tmp:/tmp -w /tmp i386/ubuntu bash -c "apt update -y && apt install -y build-essential && gcc -m32 -S $tmpfile -o 32.s && cat 32.s"
+
+  rm $tmpfile
+#+end_src
+
+#+caption: 64bit
+#+begin_src shell :results output
+    tmpfile=$(mktemp /tmp/tmp.XXXXXX.c)
+
+    cat > $tmpfile <<EOF
+      #include <stdio.h>
+
+      int main() {
+          long long a = 1234567890123;
+          int b = 42;
+          printf("%lld %d\n", a, b);
+          return 0;
+      }
+    EOF
+    gcc -S $tmpfile -o /tmp/64.s
+
+    rm $tmpfile
+#+end_src
+
+#+begin_src shell :wrap export diff
+  cat /tmp/32.s
+  cat /tmp/64.s
+  diff /tmp/32.s /tmp/64.s
+#+end_src
+
+#+RESULTS:
+#+begin_export diff
+	.file	"tmp.Q8B7li.c"
+	.text
+	.section	.rodata
+.LC0:
+	.string	"%lld %d\n"
+	.text
+	.globl	main
+	.type	main, @function
+main:
+.LFB0:
+	.cfi_startproc
+	leal	4(%esp), %ecx
+	.cfi_def_cfa 1, 0
+	andl	$-16, %esp
+	pushl	-4(%ecx)
+	pushl	%ebp
+	.cfi_escape 0x10,0x5,0x2,0x75,0
+	movl	%esp, %ebp
+	pushl	%ebx
+	pushl	%ecx
+	.cfi_escape 0xf,0x3,0x75,0x78,0x6
+	.cfi_escape 0x10,0x3,0x2,0x75,0x7c
+	subl	$16, %esp
+	call	__x86.get_pc_thunk.ax
+	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+	movl	$1912276171, -16(%ebp)
+	movl	$287, -12(%ebp)
+	movl	$42, -20(%ebp)
+	pushl	-20(%ebp)
+	pushl	-12(%ebp)
+	pushl	-16(%ebp)
+	leal	.LC0@GOTOFF(%eax), %edx
+	pushl	%edx
+	movl	%eax, %ebx
+	call	printf@PLT
+	addl	$16, %esp
+	movl	$0, %eax
+	leal	-8(%ebp), %esp
+	popl	%ecx
+	.cfi_restore 1
+	.cfi_def_cfa 1, 0
+	popl	%ebx
+	.cfi_restore 3
+	popl	%ebp
+	.cfi_restore 5
+	leal	-4(%ecx), %esp
+	.cfi_def_cfa 4, 4
+	ret
+	.cfi_endproc
+.LFE0:
+	.size	main, .-main
+	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat
+	.globl	__x86.get_pc_thunk.ax
+	.hidden	__x86.get_pc_thunk.ax
+	.type	__x86.get_pc_thunk.ax, @function
+__x86.get_pc_thunk.ax:
+.LFB1:
+	.cfi_startproc
+	movl	(%esp), %eax
+	ret
+	.cfi_endproc
+.LFE1:
+	.ident	"GCC: (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0"
+	.section	.note.GNU-stack,"",@progbits
+	.file	"tmp.wWxeed.c"
+	.text
+	.section	.rodata
+.LC0:
+	.string	"%lld %d\n"
+	.text
+	.globl	main
+	.type	main, @function
+main:
+.LFB0:
+	.cfi_startproc
+	endbr64
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register 6
+	subq	$16, %rsp
+	movabsq	$1234567890123, %rax
+	movq	%rax, -8(%rbp)
+	movl	$42, -12(%rbp)
+	movl	-12(%rbp), %edx
+	movq	-8(%rbp), %rax
+	movq	%rax, %rsi
+	leaq	.LC0(%rip), %rax
+	movq	%rax, %rdi
+	movl	$0, %eax
+	call	printf@PLT
+	movl	$0, %eax
+	leave
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc
+.LFE0:
+	.size	main, .-main
+	.ident	"GCC: (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+	.section	.note.GNU-stack,"",@progbits
+	.section	.note.gnu.property,"a"
+	.align 8
+	.long	1f - 0f
+	.long	4f - 1f
+	.long	5
+0:
+	.string	"GNU"
+1:
+	.align 8
+	.long	0xc0000002
+	.long	3f - 2f
+2:
+	.long	0x3
+3:
+	.align 8
+4:
+1c1
+< 	.file	"tmp.Q8B7li.c"
+---
+> 	.file	"tmp.wWxeed.c"
+12,34c12,27
+< 	leal	4(%esp), %ecx
+< 	.cfi_def_cfa 1, 0
+< 	andl	$-16, %esp
+< 	pushl	-4(%ecx)
+< 	pushl	%ebp
+< 	.cfi_escape 0x10,0x5,0x2,0x75,0
+< 	movl	%esp, %ebp
+< 	pushl	%ebx
+< 	pushl	%ecx
+< 	.cfi_escape 0xf,0x3,0x75,0x78,0x6
+< 	.cfi_escape 0x10,0x3,0x2,0x75,0x7c
+< 	subl	$16, %esp
+< 	call	__x86.get_pc_thunk.ax
+< 	addl	$_GLOBAL_OFFSET_TABLE_, %eax
+< 	movl	$1912276171, -16(%ebp)
+< 	movl	$287, -12(%ebp)
+< 	movl	$42, -20(%ebp)
+< 	pushl	-20(%ebp)
+< 	pushl	-12(%ebp)
+< 	pushl	-16(%ebp)
+< 	leal	.LC0@GOTOFF(%eax), %edx
+< 	pushl	%edx
+< 	movl	%eax, %ebx
+---
+> 	endbr64
+> 	pushq	%rbp
+> 	.cfi_def_cfa_offset 16
+> 	.cfi_offset 6, -16
+> 	movq	%rsp, %rbp
+> 	.cfi_def_cfa_register 6
+> 	subq	$16, %rsp
+> 	movabsq	$1234567890123, %rax
+> 	movq	%rax, -8(%rbp)
+> 	movl	$42, -12(%rbp)
+> 	movl	-12(%rbp), %edx
+> 	movq	-8(%rbp), %rax
+> 	movq	%rax, %rsi
+> 	leaq	.LC0(%rip), %rax
+> 	movq	%rax, %rdi
+> 	movl	$0, %eax
+36d28
+< 	addl	$16, %esp
+38,47c30,31
+< 	leal	-8(%ebp), %esp
+< 	popl	%ecx
+< 	.cfi_restore 1
+< 	.cfi_def_cfa 1, 0
+< 	popl	%ebx
+< 	.cfi_restore 3
+< 	popl	%ebp
+< 	.cfi_restore 5
+< 	leal	-4(%ecx), %esp
+< 	.cfi_def_cfa 4, 4
+---
+> 	leave
+> 	.cfi_def_cfa 7, 8
+52,63c36
+< 	.section	.text.__x86.get_pc_thunk.ax,"axG",@progbits,__x86.get_pc_thunk.ax,comdat
+< 	.globl	__x86.get_pc_thunk.ax
+< 	.hidden	__x86.get_pc_thunk.ax
+< 	.type	__x86.get_pc_thunk.ax, @function
+< __x86.get_pc_thunk.ax:
+< .LFB1:
+< 	.cfi_startproc
+< 	movl	(%esp), %eax
+< 	ret
+< 	.cfi_endproc
+< .LFE1:
+< 	.ident	"GCC: (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0"
+---
+> 	.ident	"GCC: (Ubuntu 13.3.0-6ubuntu2~24.04) 13.3.0"
+64a38,53
+> 	.section	.note.gnu.property,"a"
+> 	.align 8
+> 	.long	1f - 0f
+> 	.long	4f - 1f
+> 	.long	5
+> 0:
+> 	.string	"GNU"
+> 1:
+> 	.align 8
+> 	.long	0xc0000002
+> 	.long	3f - 2f
+> 2:
+> 	.long	0x3
+> 3:
+> 	.align 8
+> 4:
+#+end_export
+
 * 関連
 # 関連するエントリ。なぜ関連させたか理由を書く。意味のあるつながりを意識的につくる。
 # - この事実は自分のこのアイデアとどう整合するか。

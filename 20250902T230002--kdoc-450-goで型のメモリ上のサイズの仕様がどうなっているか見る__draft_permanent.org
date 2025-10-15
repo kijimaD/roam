@@ -1,12 +1,12 @@
 :properties:
-:ID: 20250902T222844
-:mtime:    20251001081725
-:ctime:    20250902222850
+:ID: 20250902T230002
+:mtime:    20250905003823
+:ctime:    20250902230009
 :end:
-#+title:      KDOC 447: Connectionヘッダーは現在の接続にのみ適応する
-#+date:       [2025-09-02 Tue 22:28]
-#+filetags:   :draft:wiki:
-#+identifier: 20250902T222844
+#+title:      KDOC 450: Goで型のメモリ上のサイズの仕様がどうなっているか見る
+#+date:       [2025-09-02 Tue 23:00]
+#+filetags:   :draft:permanent:
+#+identifier: 20250902T230002
 
 # (kd/denote-kdoc-rename)
 # (denote-rename-file-using-front-matter (buffer-file-name) 0)
@@ -49,7 +49,8 @@
 
 * この文書のステータス
 - 作成
-  - [X] 2025-10-06 貴島
+  - [ ] <署名>
+# (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
 - レビュー
   - [ ] <署名>
 # (progn (kill-line -1) (insert (format "  - [X] %s 貴島" (format-time-string "%Y-%m-%d"))))
@@ -66,14 +67,29 @@
 * 概要
 # 本文(見出しも設定する)
 
-HTTPの ~Connection~ ヘッダーは現在のトランザクションが完了したあとも、ネットワーク接続を開いたままにするかどうかを制御する。
-
-- [[https://developer.mozilla.org/ja/docs/Web/HTTP/Reference/Headers/Connection][Connection - HTTP | MDN]]
-
-この命令は現在の接続にのみ適応され、プロキシで転送されるべきでない。単一のTCP接続にのみ適用されるべきで、プロキシは受信したConnectionヘッダーを処理したあと削除する必要がある。
+同じ型でも、CPUアーキテクチャによってメモリ上のサイズが変わる型がある。Goではどうなっているだろうか。仕様を見る。
 
 #+begin_quote
-したがって、これを解釈する最初のプロキシーはそれを消費する必要があり、その先に転送してはいけません。
+There is also a set of predeclared integer types with implementation-specific sizes:
+uint     either 32 or 64 bits
+int      same size as uint
+uintptr  an unsigned integer large enough to store the uninterpreted bits of a pointer value
+
+[[https://go.dev/ref/spec#Numeric_types][The Go Programming Language Specification - The Go Programming Language]]
+#+end_quote
+
+サイズが固定の型。
+
+#+begin_quote
+An integer, floating-point, or complex type represents the set of integer, floating-point, or complex values, respectively. They are collectively called numeric types. The predeclared architecture-independent numeric types are:
+
+uint8       the set of all unsigned  8-bit integers (0 to 255)
+uint16      the set of all unsigned 16-bit integers (0 to 65535)
+uint32      the set of all unsigned 32-bit integers (0 to 4294967295)
+uint64      the set of all unsigned 64-bit integers (0 to 18446744073709551615)
+(略...)
+
+[[https://go.dev/ref/spec#Numeric_types][The Go Programming Language Specification - The Go Programming Language]]
 #+end_quote
 
 * 関連
@@ -89,4 +105,5 @@ HTTPの ~Connection~ ヘッダーは現在のトランザクションが完了�
 # - 付け加えるもの
 # - アイデア同士を組み合わせて新しいものを生み出せないか
 # - どんな疑問が浮かんだか
-なし。
+
+- [[id:20250902T225938][KDOC 449: 32bitマシンでint64型を使うとどうなるのか?]]。型のサイズについて
