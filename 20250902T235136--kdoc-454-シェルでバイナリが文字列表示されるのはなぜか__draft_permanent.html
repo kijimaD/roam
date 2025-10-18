@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- 2025-10-15T22:35:01Z -->
+<!-- 2025-10-18T08:58:26Z -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>KDOC 454: シェルでバイナリが文字列表示されるのはなぜか?</title>
@@ -15,9 +15,9 @@
 </div>
 <div id="content" class="content">
 <h1 class="title">KDOC 454: シェルでバイナリが文字列表示されるのはなぜか?</h1>
-<div id="outline-container-orgbf22849" class="outline-2">
-<h2 id="orgbf22849"><a href="#orgbf22849">この文書のステータス</a></h2>
-<div class="outline-text-2" id="text-orgbf22849">
+<div id="outline-container-org79eaf37" class="outline-2">
+<h2 id="org79eaf37"><a href="#org79eaf37">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org79eaf37">
 <ul class="org-ul">
 <li>作成
 <ul class="org-ul">
@@ -33,32 +33,56 @@
 </ul>
 </div>
 </div>
-<div id="outline-container-orgf0a2495" class="outline-2">
-<h2 id="orgf0a2495"><a href="#orgf0a2495">概要</a></h2>
-<div class="outline-text-2" id="text-orgf0a2495">
-<ul class="org-ul">
-<li><code>xxd</code> はバイナリ表示 &#x2013; 16進数表示を変換表示する</li>
-<li>-r で、16進数表示からバイナリ表示に切り替わる</li>
-</ul>
+<div id="outline-container-org42c4be0" class="outline-2">
+<h2 id="org42c4be0"><a href="#org42c4be0">概要</a></h2>
+<div class="outline-text-2" id="text-org42c4be0">
+<p>
+xxdでASCIIコードを渡して文字列表示できる。
+</p>
 
 <div class="org-src-container">
-<label class="org-src-name"><span class="listing-number">Listing 1: </span>これで文字列表示される理由</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"6141"</span> | xxd -r -p
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>変換する</label><pre class="src src-shell"><span class="org-builtin">echo</span> -n <span class="org-string">"6865 6c6c 6f0a"</span> | xxd -r -p
 </pre>
 </div>
 
 <div class="org-src-container">
-<pre class="src src-nil">aA
+<pre class="src src-nil">hello
+</pre>
+</div>
+
+<ul class="org-ul">
+<li><code>xxd</code> はバイナリ &#x2013; 16進数を変換表示するコマンド</li>
+<li>-r で、16進数表示からバイナリ表示に切り替わる</li>
+</ul>
+
+<p>
+疑問は <code>-r</code> オプションによって16進数表示から「バイナリ」表示に切り替わっているはずだが、アルファベットが表示されていることだ。
+</p>
+
+<p>
+仮定は、バイナリは端末上で表示すると解釈されてアルファベット表示されることだ。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>バイナリを書き込んで表示する</label><pre class="src src-shell">printf <span class="org-string">'\x61'</span> &gt; a.bin
+cat a.bin
+rm a.bin
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">a
 </pre>
 </div>
 
 <p>
--r オプションによって16進数表示からバイナリ表示に切り替わっている。しかし、ASCII文字が表示されている。これはなぜなのだろうか。
+考えてみると、プレーンテキストだろうと何でもバイナリで保存されている。端末が解釈してアルファベット表示するのは自然である。さらに直感的に確認する方法か公式仕様を知りたい。
 </p>
 </div>
 </div>
-<div id="outline-container-org727da72" class="outline-2">
-<h2 id="org727da72"><a href="#org727da72">関連</a></h2>
-<div class="outline-text-2" id="text-org727da72">
+<div id="outline-container-org49c6b95" class="outline-2">
+<h2 id="org49c6b95"><a href="#org49c6b95">関連</a></h2>
+<div class="outline-text-2" id="text-org49c6b95">
 <p>
 なし。
 </p>
