@@ -118,9 +118,11 @@
       org-export-with-tags 'not-in-toc
       org-export-with-toc nil)
 
+;; 本番のGitHub Pagesでは絶対パス
+;; 開発環境では相対パス
 (defvar kd/site-url (if (string-equal (getenv "PRODUCTION") "true")
                         "https://kijimad.github.io/roam"
-                      "http://localhost:8005")
+                      ".")
   "The URL for the site being generated.")
 
 (defun dw/site-header (info)
