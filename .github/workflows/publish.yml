@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   push:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   org-roam-ui:
     runs-on: ubuntu-latest
@@ -38,39 +42,30 @@ jobs:
   release_image:
     if: github.ref == 'refs/heads/main'
     needs: tag
-    permissions:
-      contents: read
-      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_release:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_release:latest
       target: release
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ secrets.GITHUB_TOKEN }}
 
   staging_image:
     needs: tag
-    permissions:
-      contents: read
-      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_staging:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_staging:latest
       target: staging
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ secrets.GITHUB_TOKEN }}
 
   build_image:
     needs: tag
-    permissions:
-      contents: read
-      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_build:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_build:latest
       target: build
     secrets:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      token: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     needs:
