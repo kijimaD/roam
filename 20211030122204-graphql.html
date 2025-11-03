@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:55Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GraphQL</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">GraphQL</h1>
+<div id="outline-container-org99bf0e3" class="outline-2">
+<h2 id="org99bf0e3"><a href="#org99bf0e3">概要</a></h2>
+<div class="outline-text-2" id="text-org99bf0e3">
+<p>
+GraphQLはAPI向けに作られたクエリ言語(<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>と同じジャンル)、実行環境である。
+</p>
+
+<p>
+従来のRESTでは事前に決められたリソースをURLを指定して取得するのに対し、GraphQLでは必要なものを指定できる。
+複数のリソースを取得するとき、RESTではそれぞれAPIを呼び出す必要があるが、GraphQLでは1回のAPI呼び出しで完了する。
+<a href="20210902220546-react.html#ID-dc50d818-d7d1-48a8-ad76-62ead617c670">React</a>などと組み合わせて使用される。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb2a14e1" class="outline-2">
+<h2 id="orgb2a14e1"><a href="#orgb2a14e1">基本用語</a></h2>
+<div class="outline-text-2" id="text-orgb2a14e1">
+</div>
+<div id="outline-container-org243cfed" class="outline-3">
+<h3 id="org243cfed"><a href="#org243cfed">ミューテーション</a></h3>
+<div class="outline-text-3" id="text-org243cfed">
+<p>
+データを変更する。
+アプリケーションの状態を変更するために作成する。
+ミューテーションはアプリケーションで使われる動詞と対応するのが望ましい。
+サービスに対してできることがミューテーションとして定義される。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>ルート型のMutationに対してミューテーションを追加し、写真にタグをつける</label><pre class="src src-graphql">type Mutation {
+  postPhoto(
+    name: String!
+    description: String
+    category: PhotoCategory=PORTRAIT
+  ): Photo!
+}
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>ミューテーション実行の例</label><pre class="src src-graphql">mutation {
+  postPhoto(name: "Sending the Palisades") {
+    id
+    url
+    created
+    postedBy {
+      name
+    }
+  }
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org50a0337" class="outline-3">
+<h3 id="org50a0337"><a href="#org50a0337">フラグメント</a></h3>
+<div class="outline-text-3" id="text-org50a0337">
+<p>
+フラグメントは複数の場所で使いまわすことができる選択セット。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>フラグメントの例</label><pre class="src src-graphql">query {
+  allTrails {
+    ...trailStatus
+    ...trailDetails
+  }
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfc5ba04" class="outline-3">
+<h3 id="orgfc5ba04"><a href="#orgfc5ba04">クエリ変数</a></h3>
+<div class="outline-text-3" id="text-orgfc5ba04">
+<p>
+クエリ内の静的な値を置き換えて動的な値を渡せる。
+</p>
+</div>
+</div>
+<div id="outline-container-org6fa1d1a" class="outline-3">
+<h3 id="org6fa1d1a"><a href="#org6fa1d1a">サブスクリプション</a></h3>
+<div class="outline-text-3" id="text-org6fa1d1a">
+<p>
+サーバを更新するたびにクライアントで情報をリアルタイムに受け取る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>まずサブスクリプションする</label><pre class="src src-graphql">subscription {
+  liftStatusChange {
+    name
+    capacity
+    status
+  }
+}
+</pre>
+</div>
+
+<div class="results" id="orge531d10">
+<p>
+{
+  &ldquo;data&rdquo;: {
+    &ldquo;liftStatusChange&rdquo;: null
+  }
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>変更する</label><pre class="src src-graphql">mutation closeLift {
+  setLiftStatus(id: "astra-express" status: HOLD) {
+    name
+    status
+  }
+}
+</pre>
+</div>
+
+<div class="results" id="org3daf8b6">
+<p>
+{
+  &ldquo;data&rdquo;: {
+    &ldquo;setLiftStatus&rdquo;: {
+      &ldquo;name&rdquo;: &ldquo;Astra Express&rdquo;,
+      &ldquo;status&rdquo;: &ldquo;HOLD&rdquo;
+    }
+  }
+}
+</p>
+
+</div>
+
+<p>
+変更内容がサブスクリプションしているクライアントに向けてプッシュされる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgfc5c61e" class="outline-3">
+<h3 id="orgfc5c61e"><a href="#orgfc5c61e">イントロスペクション</a></h3>
+<div class="outline-text-3" id="text-orgfc5c61e">
+<p>
+APIスキーマの詳細を取得できる機能。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>サンプルAPIのAPIスキーマを取得する</label><pre class="src src-graphql">query {
+  __schema {
+    types {
+      name
+      description
+    }
+  }
+}
+</pre>
+</div>
+
+<div class="results" id="orgc94c5cb">
+<p>
+{
+  &ldquo;data&rdquo;: {
+    &ldquo;__schema&rdquo;: {
+      &ldquo;types&rdquo;: [
+        {
+          &ldquo;name&rdquo;: &ldquo;Lift&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A `Lift` is a chairlift, gondola, tram, funicular, pulley, rope tow, or other means of ascending a mountain.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;ID&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The `ID` scalar type represents a unique identifier, often used to refetch an object or as key for a cache. The ID type appears in a JSON response as a String; however, it is not intended to be human-readable. When expected as an input type, any string (such as `\&rdquo;4\&ldquo;`) or integer (such as `4`) input value will be accepted as an ID.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;String&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The `String` scalar type represents textual data, represented as UTF-8 character sequences. The String type is most often used by GraphQL to represent free-form human-readable text.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Int&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The `Int` scalar type represents non-fractional signed whole numeric values. Int can represent values between -(2^31) and 2^31 - 1.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Boolean&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The `Boolean` scalar type represents `true` or `false`.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Trail&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A `Trail` is a run at a ski resort&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;LiftStatus&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;An enum describing the options for `LiftStatus`: `OPEN`, `CLOSED`, `HOLD`&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;TrailStatus&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;An enum describing the options for `TrailStatus`: `OPEN`, `CLOSED`&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;SearchResult&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;This union type returns one of two types: a `Lift` or a `Trail`. When we search for a letter, we&rsquo;ll return a list of either `Lift` or `Trail` objects.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Query&rdquo;,
+          &ldquo;description&rdquo;: null
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Mutation&rdquo;,
+          &ldquo;description&rdquo;: null
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Subscription&rdquo;,
+          &ldquo;description&rdquo;: null
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;CacheControlScope&rdquo;,
+          &ldquo;description&rdquo;: null
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;Upload&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The `Upload` scalar type represents a file upload.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__Schema&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A GraphQL Schema defines the capabilities of a GraphQL server. It exposes all available types and directives on the server, as well as the entry points for query, mutation, and subscription operations.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__Type&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The fundamental unit of any GraphQL Schema is the type. There are many kinds of types in GraphQL as represented by the `__TypeKind` enum.\n\nDepending on the kind of a type, certain fields describe information about that type. Scalar types provide no information beyond a name, description and optional `specifiedByUrl`, while Enum types provide their values. Object and Interface types provide the fields they describe. Abstract types, Union and Interface, provide the Object types possible at runtime. List and NonNull types compose other types.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__TypeKind&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;An enum describing what kind of type a given `__Type` is.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__Field&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;Object and Interface types are described by a list of Fields, each of which has a name, potentially a list of arguments, and a return type.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__InputValue&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;Arguments provided to Fields or Directives and the input fields of an InputObject are represented as Input Values which describe their type and optionally a default value.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__EnumValue&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;One possible value for a given Enum. Enum values are unique values, not a placeholder for a string or numeric value. However an Enum value is returned in a JSON response as a string.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__Directive&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A Directive provides a way to describe alternate runtime execution and type validation behavior in a GraphQL document.\n\nIn some cases, you need to provide options to alter GraphQL&rsquo;s execution behavior in ways field arguments will not suffice, such as conditionally including or skipping a field. Directives provide this by describing additional information to the executor.&rdquo;
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;__DirectiveLocation&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A Directive can be adjacent to many parts of the GraphQL language, a __DirectiveLocation describes one such possible adjacencies.&rdquo;
+        }
+      ]
+    }
+  }
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>特定の型の詳細。Lift型で指定できるすべてのフィールドを知ることができる</label><pre class="src src-graphql">query liftDetails {
+  __type(name: "Lift") {
+    name
+    fields {
+      name
+      description
+      type {
+        name
+      }
+    }
+  }
+}
+</pre>
+</div>
+
+<div class="results" id="orgad4db40">
+<p>
+{
+  &ldquo;data&rdquo;: {
+    &ldquo;__type&rdquo;: {
+      &ldquo;name&rdquo;: &ldquo;Lift&rdquo;,
+      &ldquo;fields&rdquo;: [
+        {
+          &ldquo;name&rdquo;: &ldquo;id&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The unique identifier for a `Lift` (id: \&rdquo;panorama\&ldquo;)&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;name&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The name of a `Lift`&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;status&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The current status for a `Lift`: `OPEN`, `CLOSED`, `HOLD`&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: &ldquo;LiftStatus&rdquo;
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;capacity&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The number of people that a `Lift` can hold&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;night&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A boolean describing whether a `Lift` is open for night skiing&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;elevationGain&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;The number of feet in elevation that a `Lift` ascends&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        },
+        {
+          &ldquo;name&rdquo;: &ldquo;trailAccess&rdquo;,
+          &ldquo;description&rdquo;: &ldquo;A list of trails that this `Lift` serves&rdquo;,
+          &ldquo;type&rdquo;: {
+            &ldquo;name&rdquo;: null
+          }
+        }
+      ]
+    }
+  }
+}
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org21f8e95" class="outline-3">
+<h3 id="org21f8e95"><a href="#org21f8e95">スキーマ</a></h3>
+<div class="outline-text-3" id="text-org21f8e95">
+<p>
+GraphQLによって、APIは型の集合としてとらえられるようになる。
+データ型の集合をスキーマという。
+</p>
+</div>
+</div>
+<div id="outline-container-orgefd6ed2" class="outline-3">
+<h3 id="orgefd6ed2"><a href="#orgefd6ed2">ユニオン型・インターフェース型</a></h3>
+<div class="outline-text-3" id="text-orgefd6ed2">
+<p>
+異なる型が混在するフィールドを表現するのに使う。
+含まれている複数の型がまったく異なるものであればユニオン型を、共通のフィールドがある場合はインターフェースを利用するのが一般的。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf68d77c" class="outline-3">
+<h3 id="orgf68d77c"><a href="#orgf68d77c">ドキュメント</a></h3>
+<div class="outline-text-3" id="text-orgf68d77c">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>トリプルクオーテーションでコメント追加</label><pre class="src src-graphql">"""
+最低一度は認可されたユーザ
+"""
+type User {
+
+  """
+  ユーザの一意のGitHubログインID
+  """
+  githubLogin: ID!
+
+  """
+  ユーザの姓名
+  """
+  name: String
+
+  """
+  このユーザが投稿した全写真
+  """
+  postedPhotos: [Photo!]!
+
+  """
+  このユーザが含まれる全写真
+  """
+  inPhotos: [Photo!]!
+}
+
+type Mutation {
+  """
+  GitHubユーザで認可
+  """
+  githubAuth(
+    "ユーザの認可のために送信されるGitHubの一意のコード"
+    code: String!
+  ): AuthPayload!
+}
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdbfa760" class="outline-2">
+<h2 id="orgdbfa760"><a href="#orgdbfa760"><a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>設定</a></h2>
+<div class="outline-text-2" id="text-orgdbfa760">
+<p>
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>でコード、クエリアクセス、結果出力をプレーンテキストで残す設定。
+</p>
+
+<p>
+graphql-modeを追加する。
+<a href="https://github.com/davazp/graphql-mode">davazp/graphql-mode: An Emacs mode for GraphQL</a>
+</p>
+
+<p>
+ob-graphqlを追加する。
+<a href="https://github.com/jdormit/ob-graphql">jdormit/ob-graphql: GraphQL execution backend for org-babel</a>
+</p>
+
+<p>
+取得元を入力#+BEGIN_SRCに入れることで、org-babelでクエリを実行できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-graphql">query GetContinents {
+    continent(code: "AF") {
+        name
+    code
+    }
+}
+</pre>
+</div>
+
+<div class="results" id="org485d5c9">
+<p>
+{
+  &ldquo;data&rdquo;: {
+    &ldquo;continent&rdquo;: {
+      &ldquo;name&rdquo;: &ldquo;Africa&rdquo;,
+      &ldquo;code&rdquo;: &ldquo;AF&rdquo;
+    }
+  }
+}
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org5fd4802" class="outline-2">
+<h2 id="org5fd4802"><a href="#org5fd4802">Tasks</a></h2>
+<div class="outline-text-2" id="text-org5fd4802">
+</div>
+<div id="outline-container-org63f822d" class="outline-3">
+<h3 id="org63f822d"><a href="#org63f822d"><span class="todo TODO">TODO</span> <a href="https://www.howtographql.com/graphql-ruby/0-introduction/">Building a GraphQL Server with Ruby Backend Tutorial | Intro</a></a></h3>
+<div class="outline-text-3" id="text-org63f822d">
+<p>
+<a href="20210509095513-ruby.html#ID-cfd092c4-1bb2-43d3-88b1-9f647809e546">Ruby</a>を使っての解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbccc413" class="outline-3">
+<h3 id="orgbccc413"><a href="#orgbccc413"><span class="todo TODO">TODO</span> <a href="https://graphql.org/learn/">Introduction to GraphQL | GraphQL</a></a></h3>
+<div class="outline-text-3" id="text-orgbccc413">
+<p>
+導入。
+</p>
+</div>
+</div>
+<div id="outline-container-org47cde44" class="outline-3">
+<h3 id="org47cde44"><a href="#org47cde44"><span class="todo TODO">TODO</span> <a href="https://qiita.com/vsanna/items/031aa5a17a2f284eb65d">雑に始める GraphQL Ruby【class-based API】 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org47cde44">
+<p>
+RubyでGraphQLを使う方法。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb45eaa7" class="outline-3">
+<h3 id="orgb45eaa7"><a href="#orgb45eaa7"><span class="todo TODO">TODO</span> <a href="https://note.com/tkhm_dev/n/n83efc181f63d">Reading: 初めてGraphQL - 型の基礎｜tkhm｜note</a></a></h3>
+<div class="outline-text-3" id="text-orgb45eaa7">
+<p>
+graphqlの記事。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org02997cd" class="outline-2">
+<h2 id="org02997cd"><a href="#org02997cd">Reference</a></h2>
+<div class="outline-text-2" id="text-org02997cd">
+</div>
+<div id="outline-container-org42616b6" class="outline-3">
+<h3 id="org42616b6"><a href="#org42616b6"><a href="https://graphql-ruby.org/guides">GraphQL - Guides Index</a></a></h3>
+<div class="outline-text-3" id="text-org42616b6">
+<p>
+ドキュメント。
+</p>
+</div>
+</div>
+<div id="outline-container-orgad4c54f" class="outline-3">
+<h3 id="orgad4c54f"><a href="#orgad4c54f"><a href="https://github.com/graphql/graphql-playground">graphql/graphql-playground: 🎮 GraphQL IDE for better development workflows (GraphQL Subscriptions, interactive docs &amp; collaboration)</a></a></h3>
+<div class="outline-text-3" id="text-orgad4c54f">
+<p>
+graphqlのサンプル。
+</p>
+</div>
+</div>
+<div id="outline-container-org94ea1b5" class="outline-3">
+<h3 id="org94ea1b5"><a href="#org94ea1b5"><a href="https://github.com/graphql/graphiql">graphql/graphiql: GraphiQL &amp; the GraphQL LSP Reference Ecosystem for building browser &amp; IDE tools.</a></a></h3>
+<div class="outline-text-3" id="text-org94ea1b5">
+<p>
+graphqlのサンプル。
+</p>
+</div>
+</div>
+<div id="outline-container-org8cb78eb" class="outline-3">
+<h3 id="org8cb78eb"><a href="#org8cb78eb"><a href="https://docs.github.com/en/graphql/overview/explorer">Explorer - GitHub Docs</a></a></h3>
+<div class="outline-text-3" id="text-org8cb78eb">
+<p>
+GitHubのGraphQL API。
+</p>
+</div>
+</div>
+<div id="outline-container-org93f6ecc" class="outline-3">
+<h3 id="org93f6ecc"><a href="#org93f6ecc"><a href="https://dev.to/vaidehijoshi/a-gentle-introduction-to-graph-theory">A Gentle Introduction To Graph Theory - DEV Community</a></a></h3>
+<div class="outline-text-3" id="text-org93f6ecc">
+<p>
+ノードとエッジについてのブログ記事。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc7c38d4" class="outline-3">
+<h3 id="orgc7c38d4"><a href="#orgc7c38d4"><a href="https://graphql.org/swapi-graphql/">SWAPI GraphQL API</a></a></h3>
+<div class="outline-text-3" id="text-orgc7c38d4">
+<p>
+サンプルでどんな感じかテストできるサイト。
+スターウォーズの情報にアクセスできる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>サンプル</label><pre class="src src-graphql">query {
+  person(personID: 5){
+    name
+    birthYear
+    created
+    filmConnection {
+      films {
+        title
+      }
+    }
+  }
+}
+</pre>
+</div>
+
+<div class="results" id="org1299802">
+<p>
+null
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgeb9a631" class="outline-3">
+<h3 id="orgeb9a631"><a href="#orgeb9a631"><a href="https://ja.wikipedia.org/wiki/GraphQL">GraphQL - Wikipedia</a></a></h3>
+</div>
+</div>
+<div id="outline-container-org075f841" class="outline-2">
+<h2 id="org075f841"><a href="#org075f841">Archives</a></h2>
+<div class="outline-text-2" id="text-org075f841">
+</div>
+<div id="outline-container-orge1570d1" class="outline-3">
+<h3 id="orge1570d1"><a href="#orge1570d1"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AEGraphQL-%E2%80%95Web%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9%E3%82%92%E4%BD%9C%E3%81%A3%E3%81%A6%E5%AD%A6%E3%81%B6%E6%96%B0%E4%B8%96%E4%BB%A3API-Eve-Porcello/dp/487311893X/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=30T3XVSFJABS3&amp;keywords=Graphql&amp;qid=1640733838&amp;sprefix=graphql%2Caps%2C203&amp;sr=8-1">初めてのGraphQL ―Webサービスを作って学ぶ新世代API</a></a></h3>
+<div class="outline-text-3" id="text-orge1570d1">
+<ul class="org-ul">
+<li>86, 100, 124, 147, 185, 190, 197, 229</li>
+</ul>
+
+<p>
+実際にコードとして書いていくのにはあまり評判がよくない。概要を知るためには役立つよう。
+コードサンプルは<a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>, node.js, expressなので、元からこれらについて知らないとあまりピンとこない感じがする。
+</p>
+
+<p>
+メモ。
+グラフ理論。グラフは概念同士の関係性を図示するための優れた考え方。
+<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>はデータベースのための問い合わせ言語で、GraphQLはインターネットのための問い合わせ言語。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org5bd894c" class="outline-2">
+<h2 id="org5bd894c"><a href="#org5bd894c">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org5bd894c">
+<ul class="org-ul">
+<li><a href="./20210509095946-rails.html">Rails</a></li>
+<li><a href="./20210911113057-go.html">Go</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

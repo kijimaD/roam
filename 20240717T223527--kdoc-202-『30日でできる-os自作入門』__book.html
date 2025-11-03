@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:50Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 202: 『30日でできる! OS自作入門』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 202: 『30日でできる! OS自作入門』</h1>
+<div id="outline-container-orgf4a99dd" class="outline-2">
+<h2 id="orgf4a99dd"><a href="#orgf4a99dd">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgf4a99dd">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-09-08 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-10-28 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6ece1a1" class="outline-2">
+<h2 id="org6ece1a1"><a href="#org6ece1a1">概要</a></h2>
+<div class="outline-text-2" id="text-org6ece1a1">
+<p>
+<a href="https://tatsu-zine.com/books/make-your-own-os-in30days">30日でできる! OS自作入門</a>は、OS自作を解説する本。付録コードは<a href="https://github.com/hide27k/haribote-os">hide27k/haribote-os</a>にある。
+</p>
+</div>
+</div>
+<div id="outline-container-org9754f01" class="outline-2">
+<h2 id="org9754f01"><a href="#org9754f01">メモ</a></h2>
+<div class="outline-text-2" id="text-org9754f01">
+<ul class="org-ul">
+<li>難しいから失敗したのではなく、簡単だよといって説明してくれる人がいなかったから失敗した。OSの作り方に限らないが、難しいと考えている人から説明してもらってもやさしくて分かりやすい説明は期待できない(まえがき)</li>
+<li>1からOSを作る場合のコツ。いきなり最初からOSを作ろうと考えないこと、だという。なんとなくOSっぽく見えるものを作ればよい。OSを作ろうと考えてしまうと、あれもやらないといけない、これもやらないといけないなど、先々のことで頭がいっぱいになってしまって、うんざりしてやる気がなくなる(p4)</li>
+<li>OSまわりの詳しいことは、入門者には不要である。勉強しているだけで時間が過ぎ、さらに世間のOSは細かいことまであれこれよく考えられているなと思い知らされる。自分はなんと浅い考えで作ろうとしていたのだろうかと打ちのめされる。やる気がなくなる。もしくは先人の考えに圧倒されて、それらの技術を組み合わせるだけの作業になると、面白くない(p5)</li>
+<li>専門用語や理屈だけ知っていても面白くない。どんなにおんぼろでも、楽しんで作れればよい。とにかく一回作ってみて、それで問題点を把握して、その問題点を克服するためにどういう方法が世間では提案されているかを知るほうが、複雑な理論を深く理解できる(p5)</li>
+<li>壁にぶつかったら、そのときに必要なことだけ勉強する、でよい(p5)</li>
+<li>OS屋にとっては、ソースプログラムなんて結局は機械語を得るための「手段」であって目的ではない(p9)</li>
+<li>本文を読むだけでなくてちゃんとプログラムを読む必要がある。本の主役は本文ではなく、付録のプログラムである、という(p10)</li>
+<li>メモリの0番地はBIOSがさまざまな用途で使っている。ここを勝手に使うともれなくBIOSとのけんかになり、BIOSは誤作動する。また、メモリの0xf0000番地付近はBIOSそのものがいて、使えない(p42)</li>
+<li>BIOSが設計された時代のCPUは、32ビットレジスタを使うことができなかった。そのため補助的な役目をするセグメントレジスタというのを作った。そしてメモリの番地を指定するときにこのセグメントレジスタも使えるようにした(p52)</li>
+<li><code>MOV CX,[1234]</code> だと考えていたのは、じつは <code>MOV CX[DS:1234]</code> という意味だった。セグメントレジスタを省略するとほとんどの場合DSを指定したものとみなされる(p53)</li>
+<li>EQUは、C言語でいうところの <code>#define</code> のようなもので、定数を宣言するのに使う(p57)</li>
+<li>空の状態のディスクに対してファイルを保存したとき(p59)
+<ol class="org-ol">
+<li>ファイル名は0x002600以降に入る</li>
+<li>ファイルの中身は0x004200以降に入る</li>
+</ol></li>
+<li>BIOSは16ビット用の機械語で書いてある(p61)</li>
+<li>VRAMというのはビデオメモリ、画面用のメモリのこと。それぞれの番地が画面上の画素に対応していて、画面に絵を出せる(p62)</li>
+<li>オブジェクトファイルは、ほかのオブジェクトファイルとリンクするための特別な機械語ファイル。C言語だけではプログラム全体を書けない限界がある。一部はアセンブラで書かなければならない。アセンブラで書いてある部分とくっつけなければならない。そのため、オブジェクトファイルは他のオブジェクトファイルとくっつけるための「のりしろ」に相当する情報を余分に持っていて、単独では機械語としては一部未完成になっている(p65)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>特定のアドレスに書き込むC言語のイディオム。書き込み先は確保してないのでSegmentation faultになる</label><pre class="src src-C"><span class="org-type">char</span> *<span class="org-variable-name">p</span>;
+<span class="org-type">int</span> <span class="org-variable-name">i</span> = 0;
+*p = i &amp; 0x0f;
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[ Babel evaluation exited with code "Segmentation fault" ]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ポインタは番地にすぎない(p83)
+<ul class="org-ul">
+<li><code>p[i]</code> は、 <code>*(p + i)</code> と完全に同じ意味</li>
+<li><code>p[i]</code> は、 <code>i[p]</code> と完全に同じ意味</li>
+</ul></li>
+<li>CPUにはメモリだけでなく装置(device)もつながっている。装置へ電気信号を送るのがIN命令やOUT命令。送り先の装置を区別するために、装置番号(ポート)を使う(p88)</li>
+<li>CLI命令は、割り込みフラグを0にする命令(p89)</li>
+<li>STI命令は、割り込みフラグを1にする命令(p89)</li>
+<li>FLAGSはキャリーフラグや割り込みフラグが詰まったレジスタ。EFLAGSはFLAGSを32ビットに拡張(Extend)したレジスタ(p89)</li>
+<li>ポインタ参照でカッコがある場合とない場合の違い
+<ul class="org-ul">
+<li><code>xsize = *binfo.scrnx;</code> はbinfoが指す構造体のメンバscrnxがさらにポインタであり、そのポインタを参照する</li>
+<li><code>xsize = (*binfo).scrnx;</code> はbinfoが指す構造体のメンバscrnxにアクセスする</li>
+</ul></li>
+<li>カッコを使わずに矢印表記で <code>xsize = binfo-&gt;scrnx;</code> と書ける</li>
+<li>文字列というのは、文字コードを順番にメモリに並べて、最後に <code>0x00</code> をつけたもののこと(p107)</li>
+<li>セグメンテーションというのは、メモリを好きなように切り分けて、それぞれのブロックの最初の番地を0として扱える機能である、という。したがって、どのプログラムも <code>ORG 0</code> とすればよい。また、セグメンテーションでなくページングでも開始アドレスの問題を解決できる(p112)</li>
+<li>セグメント1つの情報には8バイト必要である。セグメント番号は1~8191が使える。つまり8*8191=65536(64KB)が必要になる。こんなにたくさんのデータはCPUが覚えられないのでメモリに保存する。この64KBの領域をGDT(Global Descriptor table)という。メモリのどこかにセグメントの設定を並べて、その先頭の番地と有効設定個数をCPUの <code>GDTR</code> という特別なレジスタに保存する(p113)</li>
+<li>割り込み処理を管理するIDT(Interrupt Descriptor Table)もある。IDTは割り込み番号0から255に対して、割り込み番号123が発生したら〜関数を呼び出してね、みたいな設定の表。設定方法はGDTとよく似ている(p113)</li>
+<li>IDTの設定の際には、セグメントの設定が先に完了している必要がある。なのでGDTを先に設定する(p114)</li>
+<li>C言語ではポインタに足し算するときには、掛け算をしている。例えば8バイトの構造体へのポインタの変数に1を足すと、番地が8増える</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>コンパイラはこの記述を見つけると、その場所に指定されたソースファイルを埋め込んだものとしてコンパイルしてくれる</label><pre class="src src-C"><span class="org-preprocessor">#include</span> <span class="org-string">"example.h"</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>割り込みを使うにはGDT、IDT、PICを設定しておく必要がある(p127)</li>
+<li>CPUは単独では1つしか割り込みを扱えない設計になっている。補助チップとしてPIC(programmable interrupt controller)がついている。PICは8個の割り込み信号を1つの割り込み信号にまとめる装置。入力ピンの8個の信号を監視してどれか1つでも割り込み信号が来たら出力ピンがオンになってお知らせするというもの(p127)
+<ul class="org-ul">
+<li>PICはCPUから見ると外部装置なので、CPUからはOUT命令を使って操作する</li>
+</ul></li>
+<li><code>INT 0x00~0x1f</code> はIRQ用に使ってはいけない。 <code>INT 0x00~0x1f</code> はアプリケーションがOSに対して悪さをしようとしたときにCPUが内部で自動的に発生させて、それを通じてOSに通報するためのものだから。IRQをこれに重なるように割り当てると、IRQからなのか、それともCPU保護の通知なのか、わからなくなってしまう(p130)</li>
+<li>割り込み処理は基本的に本来の仕事に割り込んで実行されるものだから、すぐに終わらなければならない。ほかの割り込みが受け付けられなくなる(p139)</li>
+<li>2バイトのキーコードの場合、キーボード回路は一度には1バイトしか送れない。なので一度のキーの押し下げに対して2回のキーボード割り込みが発生する(p142)</li>
+<li>キーボード割り込みのバッファを実装する。遅いコピーを避け、使い回せるような構造を持ったFIFOキュー(p148)</li>
+<li>機械語の流れを観察すると、9割以上の時間がループで消費されている。その番地のメモリは何度も読まれることになるが、キャッシュに入っているので時間のかかるメモリの読み出し命令はなくなって、機械語の実行速度が早くなる(p177)</li>
+<li>486以降にしかセットされないビットがあり、そこに書き込んでみて反映するかで判定する。使えるメモリがどこまであるかを、書き込んで反映されるかで調べる(p178)</li>
+<li>切り上げや切り下げの計算はANDでビット演算することで行える。割り算ではないので、計算は早い。メモリ処理を1024バイト、4096バイト単位にしておくと切り上げの計算でANDを使うことができ、メモリ確保の処理が速くなる。いっぽう、1000バイトや4000バイト単位にしていると割り算を使う必要がある。割り算はCPUの命令の中で遅く、全体としての速度に悪影響がある(p198)</li>
+<li>returnというのは、突き詰めて考えると呼び出し元に戻るJMP命令である(p305)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>構造体のサイズを調べる</label><pre class="src src-C"><span class="org-preprocessor">#include</span> <span class="org-string">&lt;stdio.h&gt;</span>
+<span class="org-keyword">struct</span> <span class="org-type">a</span> {
+  <span class="org-type">int</span> <span class="org-variable-name">x</span>, <span class="org-variable-name">y</span>, <span class="org-variable-name">z</span>;
+};
+<span class="org-keyword">struct</span> <span class="org-type">b</span> {
+  <span class="org-type">unsigned</span> <span class="org-type">char</span> *<span class="org-variable-name">buf</span>;
+};
+printf(<span class="org-string">"a size: %d\nb size: %d"</span>, <span class="org-keyword">sizeof</span>(<span class="org-keyword">struct</span> <span class="org-type">a</span>), <span class="org-keyword">sizeof</span>(<span class="org-keyword">struct</span> <span class="org-type">b</span>));
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">a size: 12
+b size: 8
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>キーボードのランプを点けたり消したりする方法(p353)</li>
+<li><a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C言語</a>では、gotoと関数の呼び出しはまったく違う扱いであるが、アセンブラでは、CALL命令とJMP命令はほぼ同じである。そのわずかな違いは、CALL命令の場合、あとでRET命令を実行したときに戻ってこられるようにするために、スタックの戻り先の番地をPUSHしてくれること(p402)</li>
+<li>セグメント定義のところでアクセス権に0x60を足すと、アプリ用のセグメントという設定になる。OS用のセグメントを代入しようとするとすぐに例外を起こすようになる(p437)</li>
+<li>1000で割るのは早くないので1024で割ることにする(p480)</li>
+<li>GDTは全部のタスクから共通に使えるセグメント設定で、LDTはあるタスクでしか有効でないセグメント設定である(p577)</li>
+<li>OSをうまく作るコツ。最初からOSを作ろうと考えないことに加えて、気に入らないところはあとで直せばいい、と考えること。なんならあとで作り直してもよい(p684)</li>
+<li>OSに明確で説明しやすい目的を持たせるのも重要である。「何を優先して何をあきらめていいか」がはっきりしていると、OSをうまく作りやすくなる(p684)</li>
+<li>最初は目的なんて気にしなくてよい。むしろ作っていくうちに目的が見えてくる。目的を気にするのは、作り直し3回めからでいい(p685)</li>
+<li>この本で一貫しているのは、「失敗から学ぶ」ことである、という。最初は適当に作り、後になってから最初作ったものに欠陥があるから改良しようという流れになっている(p694)</li>
+<li>本当は難しいことをどれだけ簡単に見せるかも本書のテーマであった、という。簡単そうに見えれば、とりあえずわかったつもりになって先を読んでくれる。先を読んでくれさえすれば、その難しいことがどれだけ役に立つかを実感できるだろう。実感できないようなことであれば、重要ではないことなので、わかったつもりのままでよい(p695)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org862228e" class="outline-2">
+<h2 id="org862228e"><a href="#org862228e">用語集</a></h2>
+<div class="outline-text-2" id="text-org862228e">
+<dl class="org-dl">
+<dt>IDT(Interrupt Descriptor Table)</dt><dd>割り込み処理が発生したとき、対応する命令を設定する機能。キーボードの入力処理などをやる</dd>
+<dt>GDT(Global Descriptor Table)</dt><dd>システムで唯一のセグメントディスクリプタテーブル</dd>
+<dt>LGDT命令</dt><dd>GDTRレジスタをロードする命令</dd>
+<dt>セグメントディスクリプタ</dt><dd>論理アドレスと対になった物理アドレスとのマッピング</dd>
+<dt>CLI命令</dt><dd>ハードウェア割り込みを禁止する</dd>
+<dt>STI命令</dt><dd>ハードウェア割り込みを許可する</dd>
+<dt>RESB命令</dt><dd>指定したバイト数だけ0x00を書き込む</dd>
+<dt>PIC</dt><dd>プログラマブル割り込みコントローラ。外部デバイスからの割り込みを管理するためのハードウェア</dd>
+<dt>OCW2レジスタ</dt><dd>PICに対して割り込みの処理完了を通知するために使用されるレジスタ。特定のビットフィールドを設定することでどの割り込みラインの処理が完了したかをPICに伝える
+<ul class="org-ul">
+<li>例えば、 <code>0x61</code> が設定されたとき、 <code>0x60</code> はOCW2レジスタの基本値で、割り込み受付完了を通知するコマンドを示す。 <code>0x01</code> はIRQライン1(キーボード割り込み)を表す</li>
+</ul></dd>
+<dt>KBC</dt><dd>キーボード制御回路</dd>
+<dt>IPL</dt><dd>Initial Program Loader</dd>
+<dt>TRレジスタ</dt><dd>現在どのタスクを実行しているのかCPUが覚えておくためのレジスタ。Task Register</dd>
+<dt>セグメントレジスタ</dt><dd>セグメントレジスタはセグメントアドレスを指定するのに使う。メモリにアクセスするとき、コンピュータはセグメントレジスタを参照する。セグメントレジスタは4つ(CS, DS, ES, SS)存在し、専用の役割がある。</dd>
+<dt>CSレジスタ</dt><dd>コードセグメントレジスタ。自分自身のセグメント。このレジスタが指すセグメントアドレスは、実行中の機械語プログラムが格納されているアドレス。CPUが機械語を実行するために必要で、自動的に使用される</dd>
+<dt>DSレジスタ</dt><dd>データを格納する専用のセグメントを表す。レジスタとメモリのデータ転送で参照されるセグメント</dd>
+<dt>ESレジスタ</dt><dd>基本的な役割はDSレジスタと同じ。データセグメント以外にセグメントが必要な場合に使用する</dd>
+<dt>SSレジスタ</dt><dd>スタック操作に使われるセグメントアドレスを格納する</dd>
+<dt>EIPレジスタ</dt><dd>次に実行する命令がメモリのどの番地にあるのかCPUが記憶しておくためのレジスタ</dd>
+<dt>TSS</dt><dd>レジスタの内容をメモリに書き込む先となるセグメント。Task Status Segment</dd>
+<dt>ESPレジスタ</dt><dd>スタック領域の一番上のアドレスを示す。ESPレジスタに格納されている値(スタックポインタ)はインテルプロセッサの仕様により、「pop」命令や「push」命令を使用すると自動的に加減算される</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-orgc27c105" class="outline-2">
+<h2 id="orgc27c105"><a href="#orgc27c105">参考</a></h2>
+<div class="outline-text-2" id="text-orgc27c105">
+<ul class="org-ul">
+<li><a href="https://hack.ninja-web.net/index.htm">■分かりやす～いコンピュータ技術情報</a></li>
+<li><a href="https://wisdom.sakura.ne.jp/programming/asm/assembly6.html">セグメントレジスタ</a></li>
+<li><a href="https://web.archive.org/web/20170506001951/https://vanya.jp.net/os/x86call/">x86アセンブリ言語での関数コール</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org72945f2" class="outline-2">
+<h2 id="org72945f2"><a href="#org72945f2">関連</a></h2>
+<div class="outline-text-2" id="text-org72945f2">
+<ul class="org-ul">
+<li><a href="20240505T160356--kdoc-167-『cpuの創り方』__book.html#ID-20240505T160356">KDOC 167: 『CPUの創り方』</a>。低レイヤーつながり</li>
+<li><a href="20240427T113714--kdoc-140-『自作エミュレータで学ぶx86アーキテクチャ』__book.html#ID-20240427T113714">KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』</a>。低レイヤーつながり</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org76e86ce" class="outline-2">
+<h2 id="org76e86ce"><a href="#org76e86ce">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org76e86ce">
+<ul class="org-ul">
+<li><a href="./20240824T190333--kdoc-226-任意のアドレスに読み書きする__wiki.html">KDOC 226: 任意のアドレスに読み書きする</a></li>
+<li><a href="./20240825T101916--kdoc-227-フィールド定義の順番によってメモリサイズが変わることがある__wiki.html">KDOC 227: フィールド定義の順番によってメモリサイズが変わることがある</a></li>
+<li><a href="./20240831T202553--kdoc-233-ubuntuでシステムコール番号を調べる__wiki.html">KDOC 233: Ubuntuでシステムコール番号を調べる</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

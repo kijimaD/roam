@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:41Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>org-mode</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">org-mode</h1>
+<div id="outline-container-orgf3cb3fc" class="outline-2">
+<h2 id="orgf3cb3fc"><a href="#orgf3cb3fc">概要</a></h2>
+<div class="outline-text-2" id="text-orgf3cb3fc">
+<p>
+org-modeは<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>の機能の1つ。独自のアウトライン形式.orgを扱うためのインターフェースを提供する。Emacsのkiller appの一角で、根強い人気がある。
+</p>
+
+<ul class="org-ul">
+<li>キーボードにフォーカスしたアウトライン操作</li>
+<li>プロジェクト管理</li>
+<li>時間計測</li>
+<li>脚注</li>
+<li>PDF、HTMLなどの各種形式への変換(<a href="index.html#ID-2709c815-cd38-4679-86e8-ff2d3b8817e4">Insomnia</a>はこの変換を使ってビルドしている)</li>
+<li>コードの実行、実行結果の文書内への挿入</li>
+<li>シンタックスハイライト</li>
+<li>タグを使用した検索</li>
+</ul>
+
+<p>
+などが可能。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc210fd6" class="outline-2">
+<h2 id="orgc210fd6"><a href="#orgc210fd6">Memo</a></h2>
+<div class="outline-text-2" id="text-orgc210fd6">
+</div>
+<div id="outline-container-org5e195b6" class="outline-3">
+<h3 id="org5e195b6"><a href="#org5e195b6">pandocでディレクトリ内のorgファイルを1つのPDFにする</a></h3>
+<div class="outline-text-3" id="text-org5e195b6">
+<ul class="org-ul">
+<li><a href="https://zenn.dev/honahuku/scraps/bb784d54600256">ubuntuでpandocを使ったmarkdownのpdf作成</a></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo apt install pandoc texlive-lang-japanese texlive-latex-extra texlive-luatex
+sudo apt install librsvg2-bin <span class="org-comment-delimiter"># </span><span class="org-comment">SVG
+</span>pandoc -s test.org -o te2st.pdf --pdf-engine=lualatex -V <span class="org-variable-name">documentclass</span>=ltjsarticle -V <span class="org-variable-name">luatexjapresetoptions</span>=morisawa
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>ディレクトリ下を一括で実行する</label><pre class="src src-shell">mkdir -p pdf
+find ./ -name <span class="org-string">"*.org"</span> -type f -exec sh -c <span class="org-string">'echo ${0}; pandoc "${0}" -o "pdf/${0%.org}.pdf" --toc -N --pdf-engine=lualatex -V documentclass=ltjsarticle -V luatexjapresetoptions=morisawa &amp;&amp; echo ok'</span> {} <span class="org-string">\;</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>結合する</label><pre class="src src-shell">sudo apt install pdftk
+pdftk *.pdf cat output merge.pdf
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org24e8880" class="outline-3">
+<h3 id="org24e8880"><a href="#org24e8880">見積もり時間</a></h3>
+<div class="outline-text-3" id="text-org24e8880">
+<p>
+<code>C-c C-x e</code> で見積もり時間を設定できる。見積もり時間を設定すると、モードラインの残り時間の横に表示される。[0:51/03:00]という感じ。
+</p>
+</div>
+</div>
+<div id="outline-container-org9b25efe" class="outline-3">
+<h3 id="org9b25efe"><a href="#org9b25efe">easy templates</a></h3>
+<div class="outline-text-3" id="text-org9b25efe">
+<ul class="org-ul">
+<li><code>&lt;q tag</code> でquote blockを展開できる</li>
+<li>&lt;s tag でsource code blockを展開できる</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5056060" class="outline-3">
+<h3 id="org5056060"><a href="#org5056060">orgエレメントの情報を取得する</a></h3>
+<div class="outline-text-3" id="text-org5056060">
+<p>
+org-modeをパースした結果が保持されているので、APIによって簡単に扱うことができる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>細かい情報を取得できる</label><pre class="src src-emacs-lisp">(org-element-context)
+</pre>
+</div>
+
+<div class="results" id="org641a94b">
+<p>
+(src-block (:language emacs-lisp :switches nil :parameters :results raw :begin 530 :end 622 :number-lines nil :preserve-indent nil :retain-labels t :use-labels t :label-fmt nil :value (org-element-context)
+ :post-blank 1 :post-affiliated 553 :caption (((細かい情報を取得できる))) :parent nil))
+</p>
+
+</div>
+
+<p>
+org-modeが各エレメントをどのように扱っているか少し想像がつく。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>アクセスして取得する用の関数もある</label><pre class="src src-emacs-lisp">(org-element-type (org-element-context))
+</pre>
+</div>
+
+<div class="results" id="orgaf88722">
+<p>
+src-block
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org62c1ae4" class="outline-3">
+<h3 id="org62c1ae4"><a href="#org62c1ae4">orgファイルからkeywordsを取得する</a></h3>
+<div class="outline-text-3" id="text-org62c1ae4">
+<p>
+(org-collect-keywords)を使うとorgファイルの情報を取得できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>(org-collect-keywords)を使ってタイトルを取得しているコード例</label><pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L299-L309
+</pre>
+</div>
+
+<div class="results" id="orgf7ae08b">
+<p>
+(defun org-roam-db&#x2013;file-title ()
+  &ldquo;In current Org buffer, get the title.
+If there is no title, return the file name relative to
+`org-roam-directory&rsquo;.&rdquo;
+  (org-link-display-format
+   (or (cadr (assoc &ldquo;TITLE&rdquo; (org-collect-keywords &rsquo;(&ldquo;title&rdquo;))))
+       (file-name-sans-extension (file-relative-name
+                                  (buffer-file-name (buffer-base-buffer))
+                                  org-roam-directory)))))
+</p>
+
+<p>
+(defun org-roam-db-insert-file ()
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgb52e502" class="outline-3">
+<h3 id="orgb52e502"><a href="#orgb52e502">メモをつける</a></h3>
+<div class="outline-text-3" id="text-orgb52e502">
+<p>
+タスクの状態が遷移したときに、メモを開く設定ができる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>property</label><pre class="src src-nil">:PROPERTIES:
+:LOGGING:  lognoterepeat
+:END:
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd611c75" class="outline-3">
+<h3 id="orgd611c75"><a href="#orgd611c75">プロパティ挿入</a></h3>
+<div class="outline-text-3" id="text-orgd611c75">
+<p>
+特殊な意味をもつ、大文字で構成されるさまざまなプロパティが存在する。
+EXPORTシリーズ、CUSTOM_ID、ID&#x2026;。
+</p>
+
+<p>
+C-c C-x p で挿入できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org5066dae" class="outline-3">
+<h3 id="org5066dae"><a href="#org5066dae">直前のタスクで再度計測</a></h3>
+<div class="outline-text-3" id="text-org5066dae">
+<p>
+C-c C-x C-i (org-clock-in) でタスク計測できる。
+</p>
+
+<p>
+直前のタスクで再度計測するときは、 C-c C-x C-x (org-clock-in-last) で可能。
+<a href="https://orgmode.org/manual/Clocking-commands.html">https://orgmode.org/manual/Clocking-commands.html</a>
+</p>
+
+<p>
+clock-inが動くだけで、org-pomodoroはinvokeしない。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdac90cd" class="outline-3">
+<h3 id="orgdac90cd"><a href="#orgdac90cd">見出しのリンクを挿入する</a></h3>
+<div class="outline-text-3" id="text-orgdac90cd">
+<p>
+<a href="20210508233810-org_roam.html#ID-815a2c31-7ddb-40ad-bae0-f84e1cfd8de1">Org-roam</a>で見出しへのファイル内リンクを貼りたいとき。
+</p>
+
+<p>
+<code>org-store-link (C-c l)</code>
+で、見出しのリンクを取得する。このとき見出しのIDが生成される。これを消すと辿れなくなるので注意。
+</p>
+
+<p>
+<code>org-insert-link (C-c C-l)</code>
+で、貼り付ける。
+</p>
+</div>
+</div>
+<div id="outline-container-orga3dc4d5" class="outline-3">
+<h3 id="orga3dc4d5"><a href="#orga3dc4d5">タグをつける</a></h3>
+<div class="outline-text-3" id="text-orga3dc4d5">
+<p>
+<code>C-c C-c</code> で見出しにタグを挿入できる。
+WIPとかつけるようにすると便利そう。
+基本的なカテゴリは階層で、一時的な状態はタグでやるようにするのがよさそう。
+</p>
+
+<p>
+<code>C-c / m</code> で検索できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org7e7b376" class="outline-3">
+<h3 id="org7e7b376"><a href="#org7e7b376">可変幅と等幅フォント</a></h3>
+<div class="outline-text-3" id="text-org7e7b376">
+<p>
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>はテキストエディタなので、文字表示のほとんどは等幅フォントだ。が、
+org-modeでは自然言語の文章なので、幅の違うフォントのほうが読みやすい。
+</p>
+
+<p>
+<a href="https://zzamboni.org/post/beautifying-org-mode-in-emacs/">zzamboni.org | Beautifying Org Mode in Emacs</a>の設定がとても良い。
+</p>
+
+<ul class="org-ul">
+<li>M-qでインデントの形に文章を整形する</li>
+<li>variable-pitch-modeが可変幅にするmode</li>
+<li>variable-pitch-modeだけだとコードブロックも可変になっちゃうので、コードブロックなどのfaceも変更する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org508910b" class="outline-3">
+<h3 id="org508910b"><a href="#org508910b">org-alertで通知する</a></h3>
+<div class="outline-text-3" id="text-org508910b">
+<p>
+<a href="https://github.com/spegoraro/org-alert">spegoraro/org-alert: System notifications of org agenda items</a>
+org-alertでDEADLINEが近い見出しを通知できる。
+期限設定していても、通知されなければ忘れる。
+スケジュール管理に使うのであれば必須か。
+</p>
+</div>
+</div>
+<div id="outline-container-org6a0353b" class="outline-3">
+<h3 id="org6a0353b"><a href="#org6a0353b">babelのヘッダーを挿入する</a></h3>
+<div class="outline-text-3" id="text-org6a0353b">
+<p>
+ヘッダーでbabelの実行結果のオプションを変えることができる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-org"><span class="org-org-block-begin-line">#+BEGIN_SRC emacs-lisp :result outputs
+</span><span class="org-org-block">(concat </span><span class="org-org-block"><span class="org-string">"hello"</span></span><span class="org-org-block"> </span><span class="org-org-block"><span class="org-string">"world"</span></span><span class="org-org-block">)
+</span><span class="org-org-block-end-line">#+END_SRC</span>
+</pre>
+</div>
+
+<p>
+で実行すると標準出力が挿入される。
+</p>
+
+<p>
+手書きは忘れやすいのでコマンドでやる。
+コードブロック上で <code>C-c C-v j</code> :: <code>org-babel-insert-header-arg</code> 。
+</p>
+
+<p>
+わかりやすい説明。
+<a href="http://misohena.jp/blog/2017-10-26-how-to-use-code-block-of-emacs-org-mode.html">org-modeのコードブロック(Babel)の使い方 | Misohena Blog</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org9f274ae" class="outline-3">
+<h3 id="org9f274ae"><a href="#org9f274ae">babelで結果をそのまま表示する</a></h3>
+<div class="outline-text-3" id="text-org9f274ae">
+<p>
+適用させたい見出しレベルのproperty内で、↓追加する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">:header-args+: :results output
+</pre>
+</div>
+
+<p>
+動作の違い。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">[1, 2]
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+</tr>
+</tbody>
+</table>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> [1, 2]
+</pre>
+</div>
+
+<pre class="example">
+[1, 2]
+</pre>
+</div>
+</div>
+<div id="outline-container-org05d29ed" class="outline-3">
+<h3 id="org05d29ed"><a href="#org05d29ed">org-protocolを設定する</a></h3>
+<div class="outline-text-3" id="text-org05d29ed">
+<ul class="org-ul">
+<li><a href="https://github.com/sprig/org-capture-extension">sprig/org-capture-extension: A Chrome and firefox extension facilitating org-capture in emacs</a></li>
+</ul>
+<p>
+Chrome拡張としてある。ここのReadmeに書いてあるコマンドを実行する。
+</p>
+<ul class="org-ul">
+<li>emacsclientをorg-protocolのハンドラとして登録する。たぶんプロトコルと対応するアプリケーションを選ぶ、という処理だろう。httpのときはブラウザを起動する、みたいな</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-shell">cat &gt; <span class="org-string">"${HOME}/.local/share/applications/org-protocol.desktop"</span> &lt;&lt; EOF<span class="org-sh-heredoc">
+[Desktop Entry]
+Name=org-protocol
+Exec=emacsclient %u
+Type=Application
+Terminal=false
+Categories=System;
+MimeType=x-scheme-handler/org-protocol;
+EOF</span>
+</pre>
+</div>
+
+<p>
+そして↓。Linux MintでもOKだった。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">update-desktop-database ~/.local/share/applications/
+</pre>
+</div>
+
+<p>
+OSの設定は完了。Emacsの設定を追加する。template名をちゃんと設定する+ディレクトリが存在しないと起動しない。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> org-capture-templates `(
+    (<span class="org-string">"p"</span> <span class="org-string">"Protocol"</span> entry (file+headline ,(concat org-directory <span class="org-string">"notes.org"</span>) <span class="org-string">"Inbox"</span>)
+        <span class="org-string">"* %^{Title}\nSource: %u, %c\n #+BEGIN_QUOTE\n%i\n#+END_QUOTE\n\n\n%?"</span>)
+    (<span class="org-string">"L"</span> <span class="org-string">"Protocol Link"</span> entry (file+headline ,(concat org-directory <span class="org-string">"notes.org"</span>) <span class="org-string">"Inbox"</span>)
+        <span class="org-string">"* %? [[%:link][%:description]] \nCaptured On: %U"</span>)
+))
+</pre>
+</div>
+
+<p>
+Chromeに拡張機能をインストールしてクリックすると、Emacsが立ち上がる。
+</p>
+</div>
+</div>
+<div id="outline-container-orge3b8918" class="outline-3">
+<h3 id="orge3b8918"><a href="#orge3b8918">org-protocolでプロンプトを出さないようにする</a></h3>
+<div class="outline-text-3" id="text-orge3b8918">
+<p>
+Linux Mint, Chromeにて。
+org-protocolを設定できても、ドメインごとでxdg-openを許可しますかプロンプトが出るので面倒。
+ポリシーを変更することで出さないようにする。
+</p>
+
+<p>
+設定ポリシーは、chrome://policy/ で確認できる。最初は何もない。
+↓実行する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>ポリシーを追加する</label><pre class="src src-shell">sudo mkdir -p /etc/opt/chrome/policies/managed/ &amp;&amp; <span class="org-builtin">echo</span> <span class="org-string">'{ "URLAllowlist": ["org-protocol://*"] }'</span> |sudo tee /etc/opt/chrome/policies/managed/whitelist.json
+</pre>
+</div>
+
+<p>
+chrome://policy/ に表示されるのを確認する(再読込が必要)。
+org-protocol使用時にプロンプトが出なくなる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb38f5d2" class="outline-3">
+<h3 id="orgb38f5d2"><a href="#orgb38f5d2">メモを取るのにはorg-captureを使う</a></h3>
+</div>
+<div id="outline-container-orgbefc8ef" class="outline-3">
+<h3 id="orgbefc8ef"><a href="#orgbefc8ef">エクスポートしないタグ</a></h3>
+<div class="outline-text-3" id="text-orgbefc8ef">
+<p>
+<code>C-c C-q</code> で <code>noexport</code> を指定するとその場所はエクスポートされない。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org7d30d78" class="outline-2">
+<h2 id="org7d30d78"><a href="#org7d30d78">Tasks</a></h2>
+<div class="outline-text-2" id="text-org7d30d78">
+</div>
+<div id="outline-container-org47f8d01" class="outline-3">
+<h3 id="org47f8d01"><a href="#org47f8d01"><span class="todo TODO">TODO</span> org-lintをCIで実行する</a></h3>
+<div class="outline-text-3" id="text-org47f8d01">
+<p>
+<code>org-lint</code> をディレクトリに対して行う方法。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc288940" class="outline-3">
+<h3 id="orgc288940"><a href="#orgc288940"><span class="todo TODO">TODO</span> ファイルごとの形式を正規化する</a></h3>
+<div class="outline-text-3" id="text-orgc288940">
+<p>
+見出しにけっこうズレがある。そういうのを検知するLintがあるはずだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org0afafe6" class="outline-3">
+<h3 id="org0afafe6"><a href="#org0afafe6"><span class="todo TODO">TODO</span> clock table/agenda にリンクをつける</a></h3>
+</div>
+</div>
+<div id="outline-container-org5698329" class="outline-2">
+<h2 id="org5698329"><a href="#org5698329">Example</a></h2>
+<div class="outline-text-2" id="text-org5698329">
+</div>
+<div id="outline-container-orgaa77c3f" class="outline-3">
+<h3 id="orgaa77c3f"><a href="#orgaa77c3f">チェックリスト</a></h3>
+<div class="outline-text-3" id="text-orgaa77c3f">
+<p>
+<code>C-c</code> でチェックできる。
+</p>
+<ul class="org-ul">
+<li>人としてやるべきこと <code>[1/3]</code>
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 盆栽に水をやる</li>
+<li class="off"><input type='checkbox' /> 子孫に美田を残す</li>
+<li class="off"><input type='checkbox' /> 借金を返す</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga90515c" class="outline-3">
+<h3 id="orga90515c"><a href="#orga90515c">脚注</a></h3>
+<div class="outline-text-3" id="text-orga90515c">
+<p>
+これが脚注<sup><a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>である。
+定義はどこに書いてもいい。
+出力時にはFootnotesのアウトラインが作られてそこに挿入される。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd3a5645" class="outline-2">
+<h2 id="orgd3a5645"><a href="#orgd3a5645">Reference</a></h2>
+<div class="outline-text-2" id="text-orgd3a5645">
+</div>
+<div id="outline-container-org3620bef" class="outline-3">
+<h3 id="org3620bef"><a href="#org3620bef"><a href="https://www.evalapply.org/posts/why-and-how-i-use-org-mode/index.html">Why and How I use &ldquo;Org Mode&rdquo; for my writing and more</a></a></h3>
+<div class="outline-text-3" id="text-org3620bef">
+<p>
+org-modeを使う理由。
+</p>
+</div>
+</div>
+<div id="outline-container-org48d7a06" class="outline-3">
+<h3 id="org48d7a06"><a href="#org48d7a06"><a href="https://zzamboni.org/post/beautifying-org-mode-in-emacs/">zzamboni.org | Beautifying Org Mode in Emacs</a></a></h3>
+<div class="outline-text-3" id="text-org48d7a06">
+<p>
+かなりいい感じに表示する設定。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb3cc669" class="outline-3">
+<h3 id="orgb3cc669"><a href="#orgb3cc669"><a href="https://orgmode.org/manual/Results-of-Evaluation.html">Results of Evaluation (The Org Manual)</a></a></h3>
+</div>
+<div id="outline-container-org8f26523" class="outline-3">
+<h3 id="org8f26523"><a href="#org8f26523"><a href="https://lists.gnu.org/archive/html/emacs-orgmode/2017-10/msg00227.html">Re: [O] Lint multiple files at once</a></a></h3>
+</div>
+<div id="outline-container-org99f141b" class="outline-3">
+<h3 id="org99f141b"><a href="#org99f141b"><a href="https://blog.jethro.dev/posts/org_mode_workflow_preview/">Org-mode Workflow: A Preview · Jethro Kuan</a></a></h3>
+<div class="outline-text-3" id="text-org99f141b">
+<p>
+org-mode運用法。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcde44b7" class="outline-3">
+<h3 id="orgcde44b7"><a href="#orgcde44b7"><a href="https://github.com/sprig/org-capture-extension">sprig/org-capture-extension: A Chrome and firefox extension facilitating org-capture in emacs</a></a></h3>
+<div class="outline-text-3" id="text-orgcde44b7">
+<p>
+org-protocolの設定。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org57287e6" class="outline-2">
+<h2 id="org57287e6"><a href="#org57287e6">Archives</a></h2>
+<div class="outline-text-2" id="text-org57287e6">
+</div>
+<div id="outline-container-org7a2269e" class="outline-3">
+<h3 id="org7a2269e"><a href="#org7a2269e"><span class="done CLOSE">CLOSE</span> exampleを完成させる</a></h3>
+<div class="outline-text-3" id="text-org7a2269e">
+<p>
+どういう意味なのか、全く思い出せない。
+ああ、org-modeの使用例のページを作るということか。
+別にいらないだろう。実際の例で示せばいい。
+</p>
+</div>
+</div>
+<div id="outline-container-org29a2de5" class="outline-3">
+<h3 id="org29a2de5"><a href="#org29a2de5"><span class="done DONE">DONE</span> org-captureでメモ元リンクを記録しないようにする</a></h3>
+<div class="outline-text-3" id="text-org29a2de5">
+</div>
+</div>
+<div id="outline-container-org200a9f3" class="outline-3">
+<h3 id="org200a9f3"><a href="#org200a9f3"><span class="done CLOSE">CLOSE</span> org-pomodoro完了後メモを残すように設定を復活</a></h3>
+<div class="outline-text-3" id="text-org200a9f3">
+<p>
+別に見ないから不要だろう。
+</p>
+</div>
+</div>
+<div id="outline-container-org4c9ba17" class="outline-3">
+<h3 id="org4c9ba17"><a href="#org4c9ba17"><span class="done DONE">DONE</span> denoteを調べる</a></h3>
+<div class="outline-text-3" id="text-org4c9ba17">
+<ul class="org-ul">
+<li><a href="https://protesilaos.com/codelog/2022-06-18-denote-demo/">Emacs: demonstration of my Denote package (simple note-taking) | Protesilaos Stavrou</a></li>
+</ul>
+
+<p>
+roamだと時系列、ブログ的に表現しにくいので、denoteを調べる。ほとんどは分野別ファイルで問題ないが、たまに必要なときがある。いい感じだ。
+</p>
+
+<p>
+denoteリンクをHTMLエクスポートする方法がわからない。エラーになる。
+リネームするときは denote-rename-file を使う。
+</p>
+</div>
+</div>
+<div id="outline-container-org075817f" class="outline-3">
+<h3 id="org075817f"><a href="#org075817f"><span class="done DONE">DONE</span> Agenda Viewの整理</a></h3>
+<div class="outline-text-3" id="text-org075817f">
+<p>
+予定関係をうまく使えてない。
+</p>
+
+<ul class="org-ul">
+<li>effort表示をorg-agendaでできるようにした
+<ul class="org-ul">
+<li>目標値だけで、今どれくらいやったのかはわからないのが若干ビミョーだが&#x2026;</li>
+</ul></li>
+<li>週タスクを決めるためのビュー
+<ul class="org-ul">
+<li>TODO一覧を見る</li>
+<li>今週やると決めたものにeffortを設定する</li>
+</ul></li>
+<li>今日(週)やることのビュー
+<ul class="org-ul">
+<li>週のscheduleの一覧が表示される</li>
+<li>今日やることをWIPにして開始</li>
+<li>2つ表示しようとしたが、面倒だったのでやめた</li>
+<li>scheduledがうまく設定できず。まああまり先に設定してもやらないので、まあやらなくていい。せいぜい今週がわかればいい</li>
+<li>effortでのフィルタはできたので、週にやりたいものはeffortを設定することにする</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgeae5b35" class="outline-2">
+<h2 id="orgeae5b35"><a href="#orgeae5b35">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgeae5b35">
+<ul class="org-ul">
+<li><a href="./20210508233810-org_roam.html">Org-roam</a></li>
+<li><a href="./20210508234743-emacs.html">Emacs</a></li>
+<li><a href="./20210904124352-workflow.html">workflow</a></li>
+<li><a href="./20210911113057-go.html">Go</a></li>
+<li><a href="./20211002090535-100knocks.html">100knocks</a></li>
+<li><a href="./20230205172738-mermaid.html">Mermaid</a></li>
+<li><a href="./20240206T010954--kdoc-72-org-modeのhtmlエクスポート時に結果だけを表示する__wiki.html">KDOC 72: org-modeのHTMLエクスポート時に結果だけを表示する</a></li>
+<li><a href="./20240207T095628--kdoc-78-org-modeで脚注を再割り振りする__wiki.html">KDOC 78: org-modeで脚注を再割り振りする</a></li>
+<li><a href="./index.html">Insomnia</a></li>
+</ul>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+The link is: <a href="https://orgmode.org">https://orgmode.org</a>
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

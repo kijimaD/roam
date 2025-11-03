@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:59Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 173: 『ガベージコレクションのアルゴリズムと実装』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 173: 『ガベージコレクションのアルゴリズムと実装』</h1>
+<div id="outline-container-org7b3dabc" class="outline-2">
+<h2 id="org7b3dabc"><a href="#org7b3dabc"><span class="done CLOSE">CLOSE</span> この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org7b3dabc">
+<p>
+途中でわからなくなって読むのを止めた。
+</p>
+
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-04 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-04 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org931c42b" class="outline-2">
+<h2 id="org931c42b"><a href="#org931c42b">概要</a></h2>
+<div class="outline-text-2" id="text-org931c42b">
+<p>
+<a href="https://tatsu-zine.com/books/gcbook">『ガベージコレクションのアルゴリズムと実装』</a>はガベージコレクションを解説した本である。
+</p>
+</div>
+</div>
+<div id="outline-container-orge5caff7" class="outline-2">
+<h2 id="orge5caff7"><a href="#orge5caff7">メモ</a></h2>
+<div class="outline-text-2" id="text-orge5caff7">
+<ul class="org-ul">
+<li>GCを読むと、「言語処理系の理解が深まる」という副作用を得られる。言語処理系は数万行のコード群からなる巨大なプログラムだが、このように巨大なプログラムを読むときには明確な目標が1つなければ読み進めるのは難しい。穴を深く掘ろうとすれば自然とその穴の直径が広がっていくように、何か1点を深く理解していこうとすることが、全体を理解することにつながる、という(vi)</li>
+<li>GCにおけるオブジェクトの意味は、「アプリケーションによって利用されるデータのかたまり」、だという(p2)</li>
+<li>GCでは、ポインタが重要だという。オブジェクトが持つポインタをたどって別のオブジェクトを探すため。非ポインタに対して何もしない(p5)</li>
+<li>アロケーションとは、メモリ領域上にオブジェクトを配置すること。ミューテータは新たなオブジェクトが必要になった場合、オブジェクトとして必要なサイズをアロケータに要求する。アロケータはヒープ領域上の空き領域から要求を満たすものを探し、ミューテータに返す(p8)</li>
+<li>GCの世界におけるルートとは、オブジェクトのポインタをたどる際の起点となる場所、だという(p10)</li>
+<li>グローバル変数領域から直接、あるいは間接的に参照されているオブジェクトを、GCは生きていると考える、という(p11)</li>
+<li>多くのオブジェクトは生成されてからすぐに死ぬという研究が多く報告されている、という。カウンタの値は0~1の範囲で変化し、5ビットのカウンタ(Sticky)がオーバーフローするようなことはまれ(p54)</li>
+<li>GCにおいて、幅優先探索より深さ優先探索のほうがメモリ消費量を少なく抑えられる傾向があるので、マークフェーズで深さ優先探索がよく使われる(p14)</li>
+<li>探索を行うマークフェーズと、ゴミ領域を解放するスイープフェーズ</li>
+<li>トレーシングGCの色モデル。最初の白の世界から、黒くなっていく。間に灰色がある(<a href="http://matsu-www.is.titech.ac.jp/~endo/gc/gc.pdf">一般教養としてのGarbage Collection</a>)
+<dl class="org-dl">
+<dt>白</dt><dd>GCにまだ発見されていない</dd>
+<dt>灰色</dt><dd>GCに発見された。ただ、白いオブジェクトを直接指している可能性がある</dd>
+<dt>黒</dt><dd>GCに発見された。直接指すオブジェクトもすでにGCに発見されている(黒か灰色)</dd>
+</dl></li>
+<li>CAS命令はマルチスレッド環境において、アトミックにメモリを処理する。DBのトランザクションのようなもの。CAS命令は1バイト単位でメモリ領域へアクセスするようになっている</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org55f963f" class="outline-2">
+<h2 id="org55f963f"><a href="#org55f963f">関連</a></h2>
+<div class="outline-text-2" id="text-org55f963f">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

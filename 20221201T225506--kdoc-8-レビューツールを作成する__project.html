@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:43Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 8: レビューツールを作成する</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 8: レビューツールを作成する</h1>
+<p>
+<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>のレビュー返しで、対応したコミットをまとめて送るツールを<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>で作成した。
+</p>
+<div id="outline-container-org3d245ed" class="outline-2">
+<h2 id="org3d245ed"><a href="#org3d245ed">開発メモ</a></h2>
+<div class="outline-text-2" id="text-org3d245ed">
+<p>
+GitHub のレビューで、対応コミットを返信するツールを作る。レビューしてもらったとき、対応したコミットを返信する。自分が対応したことのチェックと、相手にとってわかりやすくするため。
+</p>
+
+<p>
+レビュー例。
+</p>
+<ul class="org-ul">
+<li>ここはタイポではないでしょうか
+<ul class="org-ul">
+<li>コミット ABCDEFG で修正しました 👈ここを自動化する</li>
+</ul></li>
+</ul>
+
+<p>
+しかし面倒だ。さらに逐次で返信するのではなくて、レビュー送信するときみたいに、一気に返信したい。
+</p>
+
+<ul class="org-ul">
+<li>GitHubのUIとエディタを行き来することがない。まあ結局コメントのリンクは取得しなきゃいけないんだが</li>
+<li>ちくちく返信して相手を煩わせることがない</li>
+<li>pushしないと、Gitハッシュはリンク化されない。そのため、[Git→push→GitHub]→[Git→push→GitHub]…としなければならない</li>
+</ul>
+
+<p>
+などの理由によって。
+</p>
+
+<p>
+バッチでコメントを送信することで、[Git→GitHub]→[Git→GitHub]→&#x2026;→push→コマンド実行 となる。
+</p>
+</div>
+</div>
+<div id="outline-container-org89cb56d" class="outline-2">
+<h2 id="org89cb56d"><a href="#org89cb56d">使う流れ</a></h2>
+<div class="outline-text-2" id="text-org89cb56d">
+<ul class="org-ul">
+<li>リンクをつけてコミットする</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-nil">build: 修正した
+
+https://github.com/kijimaD/gar/pull/1#discussion_r1037682054
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>git pushする。プッシュしないと、コメントのgitハッシュがリンク化されない</li>
+<li>コマンドを実行する <code>gar 223</code></li>
+<li>実行されるであろうことを出力する</li>
+<li>yesを押す</li>
+<li>送信</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfc572ce" class="outline-2">
+<h2 id="orgfc572ce"><a href="#orgfc572ce">memo</a></h2>
+<div class="outline-text-2" id="text-orgfc572ce">
+<p>
+<a href="https://github.com/kijimaD/gar/pull/1#discussion_r1037682054">https://github.com/kijimaD/gar/pull/1#discussion_r1037682054</a>
+</p>
+
+<p>
+レビューコメント一覧。後で使う。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">curl <span class="org-sh-escaped-newline">\</span>
+-H <span class="org-string">"Accept: application/vnd.github+json"</span> <span class="org-sh-escaped-newline">\</span>
+-H <span class="org-string">"Authorization: Bearer ..."</span> <span class="org-sh-escaped-newline">\</span>
+https://api.github.com/repos/kijimaD/gar/pulls/1/reviews
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>コメント返信。コメントのURLからrを除いたのがID</label><pre class="src src-shell">curl <span class="org-sh-escaped-newline">\</span>
+    -X POST <span class="org-sh-escaped-newline">\</span>
+    -H <span class="org-string">"Accept: application/vnd.github+json"</span> <span class="org-sh-escaped-newline">\</span>
+    -H <span class="org-string">"Authorization: Bearer ..."</span> <span class="org-sh-escaped-newline">\</span>
+    https://api.github.com/repos/kijimaD/gar/pulls/1/comments/1037682054/replies <span class="org-sh-escaped-newline">\</span>
+    -d <span class="org-string">'{"body":"comment from API!"}'</span>
+</pre>
+</div>
+
+<p>
+対象とするコミット群をどうやって取るか。未マージ分をどうやって判定するか。
+</p>
+
+<p>
+PRからターゲットブランチとブランチ名を取得して、対象コミットを取得するのが確実そう。コマンド実行時にPR番号を入力させる。ちょっとメンドイけどターゲットブランチはしょうがなさそう。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>例</label><pre class="src src-shell">gar 111
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>PRの詳細</label><pre class="src src-shell">curl <span class="org-sh-escaped-newline">\</span>
+  -H <span class="org-string">"Accept: application/vnd.github+json"</span> <span class="org-sh-escaped-newline">\</span>
+  -H <span class="org-string">"Authorization: Bearer ..."</span> <span class="org-sh-escaped-newline">\</span>
+  https://api.github.com/repos/kijimaD/gar/pulls/1
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>カレントブランチ: head -&gt; rev</li>
+<li>デフォルトブランチ: repo -&gt; default_branch</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>リモートを取得する</label><pre class="src src-shell">git config --get remote.origin.url
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

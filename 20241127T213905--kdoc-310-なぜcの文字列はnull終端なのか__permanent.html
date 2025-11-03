@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:49Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 310: なぜCの文字列はnull終端なのか?</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 310: なぜCの文字列はnull終端なのか?</h1>
+<div id="outline-container-orgf4b4dc5" class="outline-2">
+<h2 id="orgf4b4dc5"><a href="#orgf4b4dc5">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgf4b4dc5">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-28 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-30 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2302f29" class="outline-2">
+<h2 id="org2302f29"><a href="#org2302f29">概要</a></h2>
+<div class="outline-text-2" id="text-org2302f29">
+<p>
+C言語では文字列はchar型の配列である。文字列専用の組み込みデータ型はなく、そのまま配列を使う。Cの配列は単なるポインタであるから、サイズ情報は持っていない。
+</p>
+
+<p>
+なのでnull終端が必要、というのだが、なぜ文字列だけなのだろうかと考えた。ほかのデータ型の配列でnull終端が必要ないのはなぜなのだろうか。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>charのサイズは1バイトなので、添字のバイトずつオフセットする</label><pre class="src src-C"><span class="org-type">char</span> <span class="org-variable-name">arr</span>[3] = {1, 2, 3};
+printf(<span class="org-string">"h\t%p\n"</span>, arr);
+printf(<span class="org-string">"0\t%p\n"</span>, &amp;arr[0]);
+printf(<span class="org-string">"1\t%p\n"</span>, &amp;arr[1]);
+printf(<span class="org-string">"2\t%p\n"</span>, &amp;arr[2]);
+printf(<span class="org-string">"16\t%p\n"</span>, &amp;arr[16]);
+printf(<span class="org-string">"-16\t%p\n"</span>, &amp;arr[-16]);
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">h	0x7ffdc766b455
+0	0x7ffdc766b455
+1	0x7ffdc766b456
+2	0x7ffdc766b457
+16	0x7ffdc766b465
+-16	0x7ffdc766b445
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org415c4af" class="outline-2">
+<h2 id="org415c4af"><a href="#org415c4af">関連</a></h2>
+<div class="outline-text-2" id="text-org415c4af">
+<p>
+なし。
+</p>
+</div>
+</div>
+<div id="outline-container-orge79e5cd" class="outline-2">
+<h2 id="orge79e5cd"><a href="#orge79e5cd">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orge79e5cd">
+<ul class="org-ul">
+<li><a href="./20241128T210636--kdoc-314-cの配列はメモリ効率のため長さを保持していない__permanent.html">KDOC 314: Cの配列はメモリ効率のため長さを保持していない</a></li>
+<li><a href="./20241128T214542--kdoc-315-文字列は長さを事前に決められないことが多い__permanent.html">KDOC 315: 文字列は長さを事前に決められないことが多い</a></li>
+<li><a href="./20241128T230339--kdoc-316-goのスライスは長さを保持している__permanent.html">KDOC 316: Goのスライスは長さを保持している</a></li>
+<li><a href="./20241128T235217--kdoc-317-goの文字列は長さを保持している__permanent.html">KDOC 317: Goの文字列は長さを保持している</a></li>
+<li><a href="./20241129T002602--kdoc-319-文字列は特別な扱いをされている__essay.html">KDOC 319: 文字列は特別な扱いをされている</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:56Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 55: giteaのコードを読んでメモする</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 55: giteaのコードを読んでメモする</h1>
+<div id="outline-container-org0e234be" class="outline-2">
+<h2 id="org0e234be"><a href="#org0e234be"><span class="done DONE">DONE</span> プロジェクトのステータス</a></h2>
+<div class="outline-text-2" id="text-org0e234be">
+<p>
+プロジェクトは終了である。
+</p>
+</div>
+</div>
+<div id="outline-container-orga5941ff" class="outline-2">
+<h2 id="orga5941ff"><a href="#orga5941ff">概要</a></h2>
+<div class="outline-text-2" id="text-orga5941ff">
+<p>
+<a href="https://github.com/go-gitea/gitea">go-gitea/gitea</a>を読んだメモ。バックエンドは<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>で書かれている。
+</p>
+</div>
+</div>
+<div id="outline-container-orga80c72e" class="outline-2">
+<h2 id="orga80c72e"><a href="#orga80c72e">memo</a></h2>
+<div class="outline-text-2" id="text-orga80c72e">
+</div>
+<div id="outline-container-org11241cd" class="outline-3">
+<h3 id="org11241cd"><a href="#org11241cd">コンパイル</a></h3>
+<div class="outline-text-3" id="text-org11241cd">
+<p>
+コンパイルしている部分。タスク名が動的になっていてわかりにくい。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/Makefile#L788-L789
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">$(EXECUTABLE): $(GO_SOURCES) $(TAGS_PREREQ)
+	CGO_CFLAGS="$(CGO_CFLAGS)" $(GO) build $(GOFLAGS) $(EXTRA_GOFLAGS) -tags '$(TAGS)' -ldflags '-s -w $(LDFLAGS)' -o $@
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb179013" class="outline-3">
+<h3 id="orgb179013"><a href="#orgb179013">routerを起動している部分</a></h3>
+<div class="outline-text-3" id="text-orgb179013">
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/cmd/web.go#L211
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">webRoutes := routers.NormalRoutes()
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf7f9e22" class="outline-3">
+<h3 id="orgf7f9e22"><a href="#orgf7f9e22">DB設定部分</a></h3>
+<div class="outline-text-3" id="text-orgf7f9e22">
+<p>
+setting packageにまとめられている。パッケージで変数化されている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>database</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/0999721c7b4d124c1f14bbd067acdcf767542abb/modules/setting/database.go#L27-L28
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// Database holds the database settings
+Database = struct {
+</pre>
+</div>
+
+<p>
+変数はグローバル変数にしつつ↑、セットはパッケージ内の関数でやる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/setting/database.go#L59-L65
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">func loadDBSetting(rootCfg ConfigProvider) {
+	sec := rootCfg.Section("database")
+	Database.Type = DatabaseType(sec.Key("DB_TYPE").String())
+
+	Database.Host = sec.Key("HOST").String()
+	Database.Name = sec.Key("NAME").String()
+	Database.User = sec.Key("USER").String()
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgff64f34" class="outline-3">
+<h3 id="orgff64f34"><a href="#orgff64f34">DB初期化部分</a></h3>
+<div class="outline-text-3" id="text-orgff64f34">
+<p>
+routerでのDBの初期化は↓でやっている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/engine.go#L132-L133
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// InitEngine initializes the xorm.Engine and sets it as db.DefaultContext
+func InitEngine(ctx context.Context) error {
+</pre>
+</div>
+
+<p>
+InitEngineの中でデータベースを初期化する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>InitEngine(ctx context.Context) error 内で実行する</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/engine.go#L134
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">xormEngine, err := newXORMEngine()
+</pre>
+</div>
+
+<p>
+InitEngineの中でSetDefaultEngine()して初期化したデータベースをDefaultContextに設定する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/engine.go#L153-L160
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// SetDefaultEngine sets the default engine for db
+func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
+	x = eng
+	DefaultContext = &amp;Context{
+		Context: ctx,
+		e:       x,
+	}
+}
+</pre>
+</div>
+
+<p>
+セットできているかの確認文。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/routers/init.go#L136
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">mustInitCtx(ctx, common.InitDBEngine)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orge25e8ef" class="outline-3">
+<h3 id="orge25e8ef"><a href="#orge25e8ef">変数default contextに設定する</a></h3>
+<div class="outline-text-3" id="text-orge25e8ef">
+<p>
+設定している部分。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/engine.go#L153-L160
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// SetDefaultEngine sets the default engine for db
+func SetDefaultEngine(ctx context.Context, eng *xorm.Engine) {
+	x = eng
+	DefaultContext = &amp;Context{
+		Context: ctx,
+		e:       x,
+	}
+}
+</pre>
+</div>
+
+<p>
+テストとかではdefault contextを使って、dbを簡単に起動している。そうでない部分では、起動時に明示して上書きしているようだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org3a3c2d0" class="outline-3">
+<h3 id="org3a3c2d0"><a href="#org3a3c2d0">APIContextをセットしている部分</a></h3>
+<div class="outline-text-3" id="text-org3a3c2d0">
+<p>
+DBのデータなどはcontext.APIContextで伝達している。APIContextにはBaseが埋め込まれている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>APIContextの定義</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/context/api.go#L28-L43
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// APIContext is a specific context for API service
+type APIContext struct {
+	*Base
+
+	Cache cache.Cache
+
+	Doer        *user_model.User // current signed-in user
+	IsSigned    bool
+	IsBasicAuth bool
+
+	ContextUser *user_model.User // the user which is being visited, in most cases it differs from Doer
+
+	Repo    *Repository
+	Org     *APIOrganization
+	Package *Package
+}
+</pre>
+</div>
+
+<p>
+Baseにはcontext.Contextが埋め込まれている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>Baseの定義</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/context/base.go#L31-L44
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">type Base struct {
+	originCtx     context.Context
+	contextValues []contextValuePair
+
+	Resp ResponseWriter
+	Req  *http.Request
+
+	// Data is prepared by ContextDataStore middleware, this field only refers to the pre-created/prepared ContextData.
+	// Although it's mainly used for MVC templates, sometimes it's also used to pass data between middlewares/handler
+	Data middleware.ContextData
+
+	// Locale is mainly for Web context, although the API context also uses it in some cases: message response, form validation
+	Locale translation.Locale
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/context/api.go#L213-L223
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// APIContexter returns apicontext as middleware
+func APIContexter() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			base, baseCleanUp := NewBaseContext(w, req)
+			ctx := &amp;APIContext{
+				Base:  base,
+				Cache: mc.GetCache(),
+				Repo:  &amp;Repository{PullRequest: &amp;PullRequest{}},
+				Org:   &amp;APIOrganization{},
+			}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org47f01c0" class="outline-3">
+<h3 id="org47f01c0"><a href="#org47f01c0">contextからdbインスタンスを取り出す</a></h3>
+<div class="outline-text-3" id="text-org47f01c0">
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/admin/task.go#L56
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">has, err := db.GetEngine(ctx).ID(task.RepoID).Get(&amp;repo)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6bcc546" class="outline-3">
+<h3 id="org6bcc546"><a href="#org6bcc546">DBコンテキストは異なる</a></h3>
+<div class="outline-text-3" id="text-org6bcc546">
+<p>
+DBのためだけにありそう。defaultContextが入るのはこれ。contextを構造体に埋め込むのはよくないとされている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/context.go#L29-L34
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// Context represents a db context
+type Context struct {
+	context.Context
+	e           Engine
+	transaction bool
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>クエリを走らせるためのcontext</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/context.go#L14-L16
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// DefaultContext is the default context to run xorm queries in
+// will be overwritten by Init with HammerContext
+var DefaultContext context.Context
+</pre>
+</div>
+
+<p>
+context.Contextはインターフェースなので、DefaultContextにはdb.Contextが入る。
+</p>
+
+<p>
+このDBコンテキストは、Engine()を実装しているのでEnginedインターフェースを満たす。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/context.go#L67-L90
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// Engined structs provide an Engine
+type Engined interface {
+	Engine() Engine
+}
+
+// GetEngine will get a db Engine from this context or return an Engine restricted to this context
+func GetEngine(ctx context.Context) Engine {
+	if e := getEngine(ctx); e != nil {
+		return e
+	}
+	return x.Context(ctx)
+}
+
+// getEngine will get a db Engine from this context or return nil
+func getEngine(ctx context.Context) Engine {
+	if engined, ok := ctx.(Engined); ok {
+		return engined.Engine()
+	}
+	enginedInterface := ctx.Value(enginedContextKey)
+	if enginedInterface != nil {
+		return enginedInterface.(Engined).Engine()
+	}
+	return nil
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/context.go#L49-L52
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// Engine returns db engine
+func (ctx *Context) Engine() Engine {
+	return ctx.e
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org41ace29" class="outline-3">
+<h3 id="org41ace29"><a href="#org41ace29">DBオブジェクト宣言</a></h3>
+<div class="outline-text-3" id="text-org41ace29">
+<p>
+xormのオブジェクト作成はxorm.NewEngine()で行う。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>func newXORMEngine() (*xorm.Engine, error) で実行している</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/db/engine.go#L107
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">engine, err = xorm.NewEngine("postgresschema", connStr)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcb87259" class="outline-3">
+<h3 id="orgcb87259"><a href="#orgcb87259">テストで、どうやってDefaultContextをセットしているか</a></h3>
+<div class="outline-text-3" id="text-orgcb87259">
+<p>
+テストでたくさん使っている。便利だ。これはいつセットされているか。
+</p>
+
+<p>
+最初にunittest.PrepareTestDatabase()する。この中でDefaultContextに対してクエリが実行されている。そのあとDefaultContextを直に取得して実行する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/actions/runner_token_test.go#L16-L18
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">assert.NoError(t, unittest.PrepareTestDatabase())
+token := unittest.AssertExistsAndLoadBean(t, &amp;ActionRunnerToken{ID: 3})
+expectedToken, err := GetLatestRunnerToken(db.DefaultContext, 1, 0)
+</pre>
+</div>
+
+<p>
+dbはcontextのvalueで持つべきじゃないらしい。リクエストスコープでないから。ダメじゃんと思ったけれども、contextの内部で持ってるわけではなく構造体で持ってるからいいのか。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbcb667c" class="outline-3">
+<h3 id="orgbcb667c"><a href="#orgbcb667c">APIコンテキストはどうやって生成しているか</a></h3>
+<div class="outline-text-3" id="text-orgbcb667c">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>リクエスト時の普通のcontextから、APIContextを生成している部分</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/modules/context/api.go#L213-L243
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// APIContexter returns apicontext as middleware
+func APIContexter() func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+			base, baseCleanUp := NewBaseContext(w, req)
+			ctx := &amp;APIContext{
+				Base:  base,
+				Cache: mc.GetCache(),
+				Repo:  &amp;Repository{PullRequest: &amp;PullRequest{}},
+				Org:   &amp;APIOrganization{},
+			}
+			defer baseCleanUp()
+
+			ctx.Base.AppendContextValue(apiContextKey, ctx)
+			ctx.Base.AppendContextValueFunc(git.RepositoryContextKey, func() any { return ctx.Repo.GitRepo })
+
+			// If request sends files, parse them here otherwise the Query() can't be parsed and the CsrfToken will be invalid.
+			if ctx.Req.Method == "POST" &amp;&amp; strings.Contains(ctx.Req.Header.Get("Content-Type"), "multipart/form-data") {
+				if err := ctx.Req.ParseMultipartForm(setting.Attachment.MaxSize &lt;&lt; 20); err != nil &amp;&amp; !strings.Contains(err.Error(), "EOF") { // 32MB max size
+					ctx.InternalServerError(err)
+					return
+				}
+			}
+
+			httpcache.SetCacheControlInHeader(ctx.Resp.Header(), 0, "no-transform")
+			ctx.Resp.Header().Set(`X-Frame-Options`, setting.CORSConfig.XFrameOptions)
+
+			next.ServeHTTP(ctx.Resp, ctx.Req)
+		})
+	}
+}
+</pre>
+</div>
+
+<p>
+ミドルウェアとして登録されている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/routers/api/v1/api.go#L807
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">m.Use(context.APIContexter())
+</pre>
+</div>
+
+<p>
+DB関係なくないか。どこでセットされているか。
+</p>
+
+<p>
+トランザクションコンテキストは必要。なぜ。
+</p>
+</div>
+</div>
+<div id="outline-container-orge89bb48" class="outline-3">
+<h3 id="orge89bb48"><a href="#orge89bb48">マイグレーションコマンド</a></h3>
+<div class="outline-text-3" id="text-orge89bb48">
+<p>
+マイグレーションはタスクで行う。あるいは、Webの起動時にも関数が用意されている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/cmd/migrate.go#L25
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">func runMigrate(ctx *cli.Context) error {
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgad47b0b" class="outline-3">
+<h3 id="orgad47b0b"><a href="#orgad47b0b">テスト時にどうやってDB初期化されているか</a></h3>
+<div class="outline-text-3" id="text-orgad47b0b">
+<ul class="org-ul">
+<li>マイグレーション</li>
+<li>DefaultContext初期化</li>
+</ul>
+
+<p>
+が必要なはずだが見当たらない。
+</p>
+
+<p>
+unittest.PrepareTestDatabase() を見るが、そのときにはすでにDefaultContextからDBが取得できている。
+</p>
+
+<p>
+各test packageにあるtest_main.goにある、TestMain関数内でunittest.MainTest()している。MainTest内でDBを初期化してる。テスト時に必ず実行される。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>初期化している</label><pre class="src src-git-permalink">https://github.com/go-gitea/gitea/blob/8ef169a173c24e5ab57de8d6638bb6786e378a3d/models/unittest/testdb.go#L73
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">func MainTest(m *testing.M, testOpts ...*TestOptions) {
+</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

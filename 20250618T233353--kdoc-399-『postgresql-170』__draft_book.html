@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:49Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 399: 『PostgreSQL 17.0』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 399: 『PostgreSQL 17.0』</h1>
+<div id="outline-container-orgdaab17d" class="outline-2">
+<h2 id="orgdaab17d"><a href="#orgdaab17d">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgdaab17d">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org094d4f1" class="outline-2">
+<h2 id="org094d4f1"><a href="#org094d4f1">概要</a></h2>
+<div class="outline-text-2" id="text-org094d4f1">
+<p>
+<a href="https://pgsql-jp.github.io/jpug-doc/17.0/postgresql-17.0-A4.pdf">PostgreSQL 17.0文書</a>は、PostgreSQLのマニュアル。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc02dbcc" class="outline-2">
+<h2 id="orgc02dbcc"><a href="#orgc02dbcc">メモ</a></h2>
+<div class="outline-text-2" id="text-orgc02dbcc">
+<ul class="org-ul">
+<li>PostgreSQLはクライアント/サーバモデルを採用している。クライアントとサーバのホストが異なる場合、TCP/IPネットワーク経由で通信する(p4)
+<ul class="org-ul">
+<li>(感想)ホストが同じ場合はソケット接続という理解で合っているか</li>
+</ul></li>
+<li>サーバは接続ごとに新しいプロセスを開始(fork)する。これによってクライアントからの複数同時接続を取り扱える(p4)</li>
+<li>左外部結合というのは、結合演算子の左側に指定したテーブルの各行が最低でも1度出力されるから。いっぽう右側では左側のテーブルの行に一致するもののみが出力される(p14)</li>
+<li>SQLのWHEREとHAVINGの間の相互作用を理解するのが重要である。WHEREとHAVINGの基本的な違いは、WHEREがグループや集約を演算する前に入力行を選択するのに対し、HAVINGはグループと集約を演算したあとにグループ化された行を選択する。したがって、WHERE句は集約関数を持てない。集約を使ってどの行をその集約の入力にすることになるから(p17)</li>
+<li>複数のトランザクションが同時に動作しているとき、それぞれのトランザクションは別のトランザクションが行っている未完了の変更を見ることができてはならない。作業中のトランザクションによる更新は、ほかのトランザクションからはトランザクションが完結するまで不可視である。そのトランザクションが完結した時点でトランザクションで行った更新のすべてが見えるようになる(p21)</li>
+<li>PostgreSQLはすべてのSQL文をトランザクション内で実行するようになっている。BEGINを発行しない場合、それぞれの文は暗黙的にBEGINが付いているとみなし、成功すればCOMMITで囲われているものとする(p21)</li>
+<li>セーブポイントはトランザクションを構成するある部分を選択的に破棄するいっぽう、破棄されない残りの部分をコミットする(p22)</li>
+<li>システムは <code>NAMEDATALEN</code> - 1より長い識別子を使わない。より長い名前を書くと短く切られる。デフォルトでは <code>NAMEDATALEN</code> は64バイトなので、識別子は最長で63バイト。定数は変えて増やせる(p40)</li>
+<li>任意の文字の連なりをダブルクォートで囲ったものを区切り識別子 or 引用符付き識別子という(p40)
+<ul class="org-ul">
+<li>(感想)なぜプログラミング言語のように文字列リテラルといわないのか</li>
+<li>(感想)名前の列あるいはテーブルを問い合わせるために使うから。データそのものでなく、識別子として使うからこのような名前になっている</li>
+</ul></li>
+<li>引用符がつかない名前は常に小文字に解釈される。識別子を引用符で囲むことで大文字と小文字が区別される(p40)</li>
+<li>SQLにおける文字列定数は、単一引用符で括られた任意の文字の並びである(p41)
+<ul class="org-ul">
+<li>(感想)なぜ文字列定数というのだろう</li>
+</ul></li>
+<li>対象の文字列内に単一引用符が多くあると、それらをすべて二重にしなければならないので理解しづらくなる。そのような場合は単一引用符をエスケープすることなく使用できるドル引用符付けが便利。ただし標準SQLで定義されていない(p44)</li>
+<li>定数は文脈に基づいて自動的にもっとも適切な型に変換される(p46)</li>
+<li>(感想)集約とか関数とかはあまり使ったことがないしあまり使うケースもないように見えるので、細かい話があまり頭に入ってこない</li>
+<li>SQLではテーブル内の行の順序は保証されない。テーブルを読み込むと、明示的に並び替えを要求しない限り行は不特定な順番で並び替えられる(p69)</li>
+<li>リレーショナルデータベース理論では、すべてのテーブルに主キーが1つ必要とされている。PostgrSQLは強制しないが、これに従うことが推奨される(p80)</li>
+<li>関連削除のデフォルト設定はNO ACTIONである。NO ACTIONでは検査をトランザクション中で後回しにできる。RESTRICTは後回しにできない(p83)</li>
+<li>排他制約 <code>EXCLUDE</code> によって、2つの行に関して演算子の比較の少なくとも1つが偽もしくはnullを返すのを確実にする(p84)</li>
+<li>全てのテーブルに、システムによって暗黙的に定義されたシステム列がいくつかある(p84)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org38472b3" class="outline-2">
+<h2 id="org38472b3"><a href="#org38472b3">関連</a></h2>
+<div class="outline-text-2" id="text-org38472b3">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

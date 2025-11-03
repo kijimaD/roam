@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:49Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 181: 『Linuxシステムプログラミング』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 181: 『Linuxシステムプログラミング』</h1>
+<div id="outline-container-org161145d" class="outline-2">
+<h2 id="org161145d"><a href="#org161145d">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org161145d">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-16 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-20 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2b59e5f" class="outline-2">
+<h2 id="org2b59e5f"><a href="#org2b59e5f">概要</a></h2>
+<div class="outline-text-2" id="text-org2b59e5f">
+<p>
+<a href="https://www.oreilly.co.jp/books/9784873113623/">Linuxシステムプログラミング</a>は、<a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>を解説する本。
+</p>
+</div>
+</div>
+<div id="outline-container-org7adb8d6" class="outline-2">
+<h2 id="org7adb8d6"><a href="#org7adb8d6">メモ</a></h2>
+<div class="outline-text-2" id="text-org7adb8d6">
+<ul class="org-ul">
+<li>ファイル名はファイルに対応してない。ファイルに実際に対応しているのはinode。しかしinodeはファイル名を持っていない。ファイル名を保持しているのはディレクトリ(p10)
+<ul class="org-ul">
+<li>概念としてのディレクトリは他のファイルと同じように見えるが、内容としてファイル名とinode番号の組のみを持つ点が異なる。カーネルはディレクトリに保存された組をもとに、ファイル名をinode番号へ変換する</li>
+</ul></li>
+<li>ユーザアプリケーションがファイル名を指定しファイルオープンを要求すると、カーネルは対象ファイル名を持つ親ディレクトリをオープンし、指定されたファイル名を検索する(p10)</li>
+<li>ハードリンクはinode、シンボリックリンクはパス名を保持する(p12)</li>
+<li>ファイルを削除できるかを決定するのは、そのファイルのパーミッションではなく、親ディレクトリのパーミッション(p18)</li>
+<li>Linuxでは動作の大部分で SystemV をお手本にしている、という(p27)</li>
+<li>Unixを開発した Ken Thompson は、Unixの設計の中でこの1文字が最大の後悔だというジョークを残した、という(p29)</li>
+<li>アプリケーションが複数のファイルディスクリプタを処理し、同期が必要になる場合はよくある。このとき多重IOが有効である、という。多重IOを使用すると、複数のファイルディスクリプタの状態を一度にテストでき、いずれかのファイルディスクリプタがI/O可能になったときにアプリケーションが通知を受け取れるようになる。多重I/Oはアプリケーションの処理切り替えポイントになる(p49)</li>
+<li>select()システムコールは同期的多重I/Oの仕組み(p49)</li>
+<li>可能な限りどんなものでもファイルとして表現しようとしているLinuxのシステムでは、ファイルのオープン、読み取り、書き込み、クローズを把握することは重要である、という(p63)</li>
+<li>/dev/zero は0を無限に返す仮想デバイス(p65)</li>
+<li>ユーザはブロックサイズについて意識することはない。データを書き込むと、プロセス空間内のバッファに書き込まれる。ある決まったサイズに達すると1度の書き込みでバッファ全体を書き出す。読み込みの場合も、ブロックサイズでアラインメントされたサイズでデータを読み取る、という(p67)</li>
+<li>標準I/Oライブラリ関数の世界では、オープンしたファイルをストリームと呼ぶ、という(p68)</li>
+<li>通常エラー出力だけはデフォルトでバッファリングしない。標準出力が端末の場合はデフォルトで行単位でバッファリングする、という(p81)</li>
+<li>レベルトリガは信号が届いている間はいつでも発生する。エッジトリガは信号が変化したときのみ発生する(p99)</li>
+<li>メモリの最小単位をページといい、それぞれにアクセス権限と用途がある、という。mmapシステムコールはページにファイルをマッピングする(p101)</li>
+<li>mmapによるファイル操作の利点。read()やwrite()ではユーザ空間のバッファとのコピー処理が発生するが、メモリマッピングの場合には発生しない。メモリへマッピングした場合はシステムコールやコンテキストスイッチのオーバーヘッドが発生せず、単なるメモリアクセスと変わらない。また共有可能、シークが単なるポインタ処理で済む、などの利点がある。欠点もあるが、ファイルサイズが大きい場合には効果が大きい場合が多い(p106)</li>
+<li>アドバイスで、カーネルのリソース管理にヒントを与えられる。動画ストーリミングなど大量のデータを読み書きした場合には、アドバイスを用いてキャッシュを破棄するようにするとよい、というような使い方がある(p115)</li>
+<li>idleプロセスのpidは0。initプロセスのpidは1。(p131)</li>
+<li>プログラムイメージをメモリへロードし実行する処理は、Unixではプロセス作成とは分離されている。まずforkシステムコールによりプロセスを新規作成する。次にexecシステムコールでバイナリをメモリにロードし、それまでそのアドレス空間にあった内容と置き換え、新たなプログラムを実行する(p134)</li>
+<li>プロセスグループによって、グループ内のすべてのプロセスにシグナルを送信できる(p160)</li>
+<li>キーボードの押下、マウスの移動などはI/Oバウンド。応答性のために短いタイムスライスが適切で、スケジューラはI/Oバウンドの傾向を強く持つアプリケーションの優先度を高く設定する(p170)</li>
+<li>一度プロセスをあるCPU上で実行すると、それ以降はプロセススケジューラはそのプロセスを可能な限り同じCPUで実行しようとする。プロセスを異なるプロセッサ間でマイグレーションするのはコストが高い、という。それでも、負荷がプロセッサによって偏っている場合にはプロセスを移動する意義があり、いつ移動するかの判断をロードバランスという(p177)</li>
+<li>プロセッサアフィニティとは、プロセスが同じプロセッサ上で実行する程度を表す。プロセスによっては、同じプロセッサで動作したほうが有利な場合が多くある、という(p177)</li>
+<li>Unixではディレクトリとは単純な概念で、ファイル名と対応するinode番号のリストを保持するもの、だという。ディレクトリが保持するファイル名をディレクトリエントリ、ファイル名とinodeの対応をリンクとよぶ。ディレクトリの内容とは、そのディレクトリ名とファイル名のリスト(p218)</li>
+<li>ユーザがディレクトリ下のファイルをオープンするときには、カーネルがディレクトリ内のファイル名リストからファイル名を検索し、対応するinode番号を特定する。特定したinode番号をファイルシステムに渡し、ファイルシステムがデバイス上の物理的なファイル保存位置を特定する(p218)</li>
+<li>すべてのディレクトリは2つのディレクトリを含む。 <code>.</code> および <code>..</code> である。技術的には、ルートディレクトリでさえも自分自身のサブディレクトリといえる(p219)。</li>
+<li>ユーザがシステムにログインすると、ログインプロセスがカレントディレクトリを <code>/etc/passwd</code> に記載されたユーザのホームディレクトリへ設定する(p222)</li>
+<li>シェルが以前のディレクトリを蓄えておく、たとえば <code>cd -</code> のような場合。カレントディレクトリをオープンしておき、ファイルディスクリプタで戻るのが、パス名を保持するより早い。パス名保持は取得と保存にコストがかかる。ファイルディスクリプタを使うと、メモリ内に持つのはinodeだけ、だという(p224)</li>
+<li>シンボリックリンクはファイルシステムがマッピングするものではなく、実行時に解釈される、より上位で処理されるポインタである。シンボリックリンクは異なるファイルシステムに跨って使用できる(p231)</li>
+<li>ハードリンクは既存のファイルoldpathと同じinodeを参照する新規リンクnewpathを作成する。ソフトリンク(シンボリックリンク)は特殊な型を持つ専用ファイルで、他のファイル名のパス名を格納するもので、これをシンボリックリンクのターゲットという(p233)</li>
+<li>Unixではファイル、ディレクトリをコピーするシステムコールもライブラリも提供していない、という。移動はシステムコールがある(p237)</li>
+<li>デバイスノードはアプリケーションからデバイスドライバへアクセスするスペシャルファイル。Unixのファイルオープン、クローズ、読み取り、書き込みを行うと、カーネルは通常のファイルI/Oとしては処理せず、要求をデバイスドライバに渡す。デバイスドライバはI/Oを処理し、結果をアプリケーションに返す。デバイスノードはデバイスを抽象化したもの、だという(p239)</li>
+<li>特殊なデバイスノード。nullデバイス、zeroデバイス、fullデバイス。それらのデバイスには用途があり、アプリケーションの異常時の動作をテストする際に有用である(p240)</li>
+<li>BSS領域の語源は block started by symbol(p255)</li>
+<li>動的メモリ割当は渡されたsize自身が変化するため複雑な処理だという。配列要素のサイズは固定だが、割り当てる要素数は変化する(p257)</li>
+<li>malloc()で割り当てた領域の内容は不定だが、calloc()では領域の内容をすべて0で初期化する、という。calloc()はすでにゼロクリアされているページを割り当てるため、メモリ領域をある値で割り当てるmemset()より早い(p257)</li>
+<li>スタック上に自動的に領域が確保され、スタックの破棄と同時に領域が解放されるオート変数などとは異なり、動的に割り当てたメモリ領域は明示的に解放するまで、プロセスアドレス空間の一部として存在し続ける(p260)</li>
+<li>データのアラインメントとは、ハードウェアから見たメモリ領域とアドレスの関係を指す(p263)</li>
+<li>構造体の場合にはパディングが必要になる。char型のメンバ(1バイト)の直後にint型のメンバ(4バイト)を置いた場合、コンパイラが2者の間に3バイトのパディングを挿入し、int型のメンバが4バイト境界に沿うように配置する(p265)</li>
+<li>長所と短所から、glibcでは小さいサイズのメモリ割当の場合にはmalloc()を、サイズが大きい場合は無名メモリマッピングを使用している(p267)</li>
+<li>メモリ割当方法の比較表(p278)</li>
+<li>memmem()はメモリ領域から任意のバイト列を検索するライブラリ関数(p282)</li>
+<li>killシステムコールは名前に反して、任意のシグナルを送信できる(p300)</li>
+<li>モノトニック時間は単調かつ厳密に増加するだけの時間。実時間(wall time)は、ユーザが時刻を合わせた,システムが正確な時間を維持するために微調整した、うるう秒が発生した、などの理由によって変わることがある。Linuxではシステムのuptimeを管理していて、変更されることがない。2点間の時間経過の計測に有用である(p317)</li>
+<li>Unixシステムはepochからの経過秒数で絶対時間を表現する。epochはUTCの1970年1月1日の午前0時(p317)</li>
+<li>急激に時間を変更すると問題が起きる可能性があるので、adjtime()でゆるやかに時間を調整する。定常的に時計のずれを正しく補正するNTPデーモンなどのバックグラウンド処理用に提供されている(p330)</li>
+<li>インライン関数は関数コールの位置に関数コードをそのままコピー(展開)する。コンパイラは、関数を外部へ配置/コール(ジャンプ)せず、関数をコール位置で直接実行するようにコードを生成する。関数コールのオーバーヘッドを排除できるうえに、コール側とコールされた関数側の双方を同時に最適化できる。コードサイズに悪影響を及ぼす。現代のアーキテクチャで真に必要な場面は限られる、という(p350)</li>
+<li>GCCでは式の期待する値に対するヒントを与えられる。例えば条件式が真偽のどちらかを返す場合が多いかをコンパイラに通知できる。GCCはこのヒントをもとにブロックの転置(順序入れ替え)などの最適化を行い、条件分岐のパフォーマンスを向上させられる(p355)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgce0d80f" class="outline-2">
+<h2 id="orgce0d80f"><a href="#orgce0d80f">関連</a></h2>
+<div class="outline-text-2" id="text-orgce0d80f">
+<ul class="org-ul">
+<li><a href="20240529T002323--kdoc-179-『ハローhello-world-osと標準ライブラリのシゴトとしくみ』__book.html#ID-20240529T002323">KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』</a>。OSつながり</li>
+<li><a href="https://ja.wikipedia.org/wiki/%E3%83%97%E3%83%AA%E3%82%A8%E3%83%B3%E3%83%97%E3%82%B7%E3%83%A7%E3%83%B3">プリエンプション - Wikipedia</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org34a90df" class="outline-2">
+<h2 id="org34a90df"><a href="#org34a90df">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org34a90df">
+<ul class="org-ul">
+<li><a href="./20240601T121521--kdoc-182-ブロックサイズの違いによるパフォーマンスへの影響を調べる__wiki.html">KDOC 182: ブロックサイズの違いによるパフォーマンスへの影響を調べる</a></li>
+<li><a href="./20240608T011926--kdoc-187-psでプロセスツリーを見て理解する__wiki.html">KDOC 187: psでプロセスツリーを見て理解する</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:52Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 378: 『RFC 1952: GZIP file format specification version 4.3』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 378: 『RFC 1952: GZIP file format specification version 4.3』</h1>
+<div id="outline-container-orgeafab4e" class="outline-2">
+<h2 id="orgeafab4e"><a href="#orgeafab4e">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgeafab4e">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-05-06 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-06-16 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8a264bf" class="outline-2">
+<h2 id="org8a264bf"><a href="#org8a264bf">概要</a></h2>
+<div class="outline-text-2" id="text-org8a264bf">
+<p>
+<a href="https://www.rfc-editor.org/rfc/rfc1952.html">RFC 1952: GZIP file format specification version 4.3</a>はgzipファイルの仕様を示した文書。
+</p>
+</div>
+</div>
+<div id="outline-container-orgee74329" class="outline-2">
+<h2 id="orgee74329"><a href="#orgee74329">メモ</a></h2>
+<div class="outline-text-2" id="text-orgee74329">
+<ul class="org-ul">
+<li>gzipファイルフォーマットは一連の「メンバ」、圧縮データのセットで構成される。</li>
+<li>データ仕様のアスキーアートにも仕様がある。1つの箱は1バイトを示す</li>
+<li>least significant: 最下位ビット</li>
+<li>significant bit: 最上位ビット</li>
+<li>先頭はgzipファイルであることを示すID
+<ul class="org-ul">
+<li>ID1 = 31(0x1f, \037)</li>
+<li>ID2 = 139(0x8b, \213)</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>先頭2バイトがIDの1f 8bになっている</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; aaa
+gzip aaa
+xxd aaa.gz
+rm aaa.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 d6bc 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>誤り検出符号(CRC) <a href="https://ja.wikipedia.org/wiki/%E5%B7%A1%E5%9B%9E%E5%86%97%E9%95%B7%E6%A4%9C%E6%9F%BB">巡回冗長検査 - Wikipedia</a></li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>FNAMEで元のファイル名を保持する。&ldquo;aaa&rdquo;の、0x61 0x61 0x61が見える。また、ゼロ終端になっている</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; aaa
+gzip aaa
+xxd aaa.gz
+rm aaa.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 35be 1968 0003 6161 6100 aba8  ....5..h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; AAA
+gzip AAA
+xxd AAA.gz
+file AAA.gz
+rm AAA.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 27c2 1968 0003 4141 4100 aba8  ....'..h..AAA...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+AAA.gz: gzip compressed data, was "AAA", last modified: Tue May  6 08:02:47 2025, from Unix, original size modulo 2^32 4
+</pre>
+</div>
+
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>ファイル名はUTF-8で符号化された。&ldquo;あ&rdquo;: e3 81 82。3バイト文字なので、その分データが増えている</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; &#12354;&#12354;&#12354;
+gzip &#12354;&#12354;&#12354;
+xxd &#12354;&#12354;&#12354;.gz
+rm &#12354;&#12354;&#12354;.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 39c1 1968 0003 e381 82e3 8182  ....9..h........
+00000010: e381 8200 aba8 a8e0 0200 6774 1ed2 0400  ..........gt....
+00000020: 0000                                     ..
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>そのまま追記しても有効な形式であり、展開できる</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; aaa
+gzip aaa
+<span class="org-builtin">echo</span> <span class="org-string">"yyy"</span> | gzip -c &gt;&gt; aaa.gz
+xxd aaa.gz
+<span class="org-builtin">echo</span> <span class="org-string">"================"</span>
+gzip -c -d aaa.gz
+rm aaa.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 cdbd 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000 1f8b 0800  ....gt..........
+00000020: 0000 0000 0003 abac ace4 0200 7448 7b72  ............tH{r
+00000030: 0400 0000                                ....
+================
+xxx
+yyy
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>バイナリのOS情報にはUNIX: 03が入っている</label><pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"xxx"</span> &gt; aaa
+gzip aaa
+xxd aaa.gz
+file aaa.gz
+rm aaa.gz
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">00000000: 1f8b 0808 02ca 1968 0003 6161 6100 aba8  .......h..aaa...
+00000010: a8e0 0200 6774 1ed2 0400 0000            ....gt......
+aaa.gz: gzip compressed data, was "aaa", last modified: Tue May  6 08:36:18 2025, from Unix, original size modulo 2^32 4
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5ea8b01" class="outline-2">
+<h2 id="org5ea8b01"><a href="#org5ea8b01">関連</a></h2>
+<div class="outline-text-2" id="text-org5ea8b01">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

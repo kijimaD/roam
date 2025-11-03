@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:57Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 99: 『詳解UNIXプログラミング』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 99: 『詳解UNIXプログラミング』</h1>
+<div id="outline-container-orgc23faba" class="outline-2">
+<h2 id="orgc23faba"><a href="#orgc23faba">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgc23faba">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-03-24 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-03-24 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org84870fa" class="outline-2">
+<h2 id="org84870fa"><a href="#org84870fa">概要</a></h2>
+<div class="outline-text-2" id="text-org84870fa">
+<ul class="org-ul">
+<li><a href="https://www.seshop.com/product/detail/20694">詳解UNIXプログラミング［第3版］【PDF版】 ｜ SEshop｜ 翔泳社の本・電子書籍通販サイト</a></li>
+</ul>
+
+<p>
+かなり分量がある。細かく見るときりがないのと、例があまりよくわからないので(動かして試してピンとくる例は少ない)、ざっくりと全体像を把握して、あとで必要になってから再度読む。そもそもUnixを把握している人向けなのだろう。そうでないとシステムプログラミングしようと思わないだろう。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaf32349" class="outline-2">
+<h2 id="orgaf32349"><a href="#orgaf32349">メモ</a></h2>
+<div class="outline-text-2" id="text-orgaf32349">
+<ul class="org-ul">
+<li>エラーが発生するとほとんどのシステム関数は-1を返す</li>
+<li>プログラムは、ディレクトリ内のディスクにある実行可能なファイル</li>
+<li>プログラムの実行中の実体をプロセスという</li>
+<li>ctrl + D はファイル末尾文字を送る</li>
+<li>プロセス内のすべてのスレッドは、同一のアドレス空間、ファイル記述子、スタック、プロセス関連の属性を共有する
+<ul class="org-ul">
+<li>スレッドは同一のメモリを参照できるので、共有データへの参照は矛盾を避けるために同期する必要がある</li>
+<li>スレッドIDはプロセスに固有である</li>
+</ul></li>
+<li>シェル上では特殊な働きをするキーが存在する。どのキーがどの働きをするのかは、 <code>stty -a</code> コマンドで確認できる</li>
+<li>シェルがパイプでつながれたプロセス群を起動するたびに「この端末ではいま、このプロセスが動いています」と端末に教えている</li>
+<li>環境変数とは、プロセスの親子関係を通じて伝播する環境変数のようなもの</li>
+<li>POSIX(Portable Operating System Interface) は、IEEE が作成しはじめた一連の規格
+<ul class="org-ul">
+<li>本に関係するのは1003.1オペレーティングシステムインターフェース規格</li>
+<li>1003.1規格は実装ではなくインターフェースを規定する</li>
+</ul></li>
+<li>フォアグラウンドプロセスグループとは、ターミナルと同じプロセスグループIDを持つプロセスグループのこと</li>
+<li>シェルは新しいプロセスをforkし、実行するプログラム。forkしたプログラムの終了を待ちながら標準出力する</li>
+<li>Unixシステムはプロセスに対して3つの値を管理している
+<dl class="org-dl">
+<dt>クロック時間</dt><dd>プロセスが実行に費やした時間</dd>
+<dt>ユーザCPU時間</dt><dd>ユーザの命令に関与したCPU時間</dd>
+<dt>システムCPU時間</dt><dd>カーネルが関与したCPU時間</dd>
+</dl></li>
+<li><p>
+Unixシステムにおけるほとんどのファイル入出力は5つの関数だけで行える
+</p>
+
+<p>
+open/read/write/lseek/close。
+</p></li>
+
+<li><p>
+ファイル入出力関数は、標準入出力ルーティンに対比してしばしば「アンバッファド入出力」とよばれる
+</p>
+
+<p>
+readやwriteがカーネル内のシステムコールを起動するため、バッファリングしないということ。
+</p></li>
+
+<li>カーネルではオープンしているすべてのファイルはファイル記述子で参照する。ファイル記述子は非負の整数</li>
+<li>プロセスの標準入力: ファイル記述子0</li>
+<li>標準出力: ファイル記述子1</li>
+<li>標準エラー: ファイル記述子2</li>
+<li>OKならばファイル記述子、エラーなら-1を返す</li>
+<li>↑これらはシェルやアプリケーションの慣例であり、Unixカーネルの機能ではない</li>
+<li>2つのファイル関連の関数を呼び出すとき2番めの関数呼び出しが最初の呼び出し結果に依存する場合にはプログラムに脆弱性がある</li>
+<li>実際に読み取ったバイト数が要求バイト数より小さい場合がある</li>
+</ul>
+
+<p>
+オープンしているファイルに関するカーネルデータ構造。この関係はプロセス間でファイルを共有する方法の本質。
+</p>
+
+
+<div id="org8a54e65" class="figure">
+<p><img src="./images/20240212-data.drawio.svg" alt="20240212-data.drawio.svg" class="org-svg">
+</p>
+</div>
+
+<ul class="org-ul">
+<li>dup(ファイルディスクリプタをコピーする)で標準入出力をリダイレクトしたり、同じファイルに対するファイル操作を同時実行している</li>
+<li>ファイルテーブルエントリはプロセスがオープンしているファイルに関する情報を格納する。ファイルテーブルはエントリごとに作成される。プロセスがオープンしたファイルの数に応じてエントリが追加される</li>
+<li>プロセスごとなのはプロセスを隔離をするため</li>
+<li>コピーするのはファイルディスクリプタに権限などを設定することで、プロセスごとに違う設定でオープンするため</li>
+<li>カーネル内のバッファキャッシュやページキャッシュを介してほとんどのディスク入出力をしている。ファイルへデータを書き出すと、通常、カーネルが当該データをカーネル内バッファへコピーし、あとでディスクへ書き出すためにキューに入れる。これを遅延書き出しと呼ぶ</li>
+<li>バッファキャッシュの内容とディスク上のファイルシステムの一貫性を保つために関数sync, fsync, fdatasyncがある</li>
+<li>関数fnctlは、すでにオープンしてあるファイルの属性を変更する</li>
+<li>ファイルディスクリプタフラグとファイルステータスフラグ</li>
+<li><code>/dev/fd/0</code> と書けば、標準出力ということが明確になる</li>
+</ul>
+
+<p>
+引数の <code>-</code> が標準入力や標準出力を指すという特別な意味は多くのプログラムに入り込んでいる。ややこしい。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"a"</span> | cat -
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">a
+</pre>
+</div>
+
+<p>
+<code>/dev/fd/0</code> を使うと明確になる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-builtin">echo</span> <span class="org-string">"a"</span> | cat &gt; /dev/fd/1
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">a
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>書き出したデータを実際にディスクに書き出す方法</li>
+<li>複数プロセスによるアトミック操作</li>
+<li>ディスクとinodeの関係性</li>
+</ul>
+
+<div id="org9b28a92" class="figure">
+<p><img src="./images/20240219-data.drawio.svg" alt="20240219-data.drawio.svg" class="org-svg">
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org9876466" class="outline-2">
+<h2 id="org9876466"><a href="#org9876466">関連</a></h2>
+<div class="outline-text-2" id="text-org9876466">
+<ul class="org-ul">
+<li><a href="20240314T212016--kdoc-122-linuxカーネル知識の全体像を把握する__essay.html#ID-20240314T212016">KDOC 122: Linuxカーネル知識の全体像を把握する</a>。まだ全体像すら把握してない。レベルが足りてなさそう</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge4d0eaf" class="outline-2">
+<h2 id="orge4d0eaf"><a href="#orge4d0eaf">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orge4d0eaf">
+<ul class="org-ul">
+<li><a href="./20240324T122926--kdoc-128-『goならわかるシステムプログラミング』__book.html">KDOC 128: 『Goならわかるシステムプログラミング』</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

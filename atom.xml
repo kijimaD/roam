@@ -1,0 +1,3235 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><author><name>Kijima Daigo</name></author>
+<title>Insomnia</title>
+<generator>Emacs webfeeder.el</generator>
+<link href="https://kijimad.github.io/roam"/>
+<link href="https://kijimad.github.io/roam/atom.xml" rel="self"/>
+<id>https://kijimad.github.io/roam/atom.xml</id>
+<updated>2025-11-03T16:38:54+09:00</updated>
+<entry>
+  <title>KDOC 478: 重なりマッチしない</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org058b1cb" class="outline-2">
+ <h2 id="org058b1cb"> <a href="#org058b1cb">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org058b1cb">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-25 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgb3ec701" class="outline-2">
+ <h2 id="orgb3ec701"> <a href="#orgb3ec701">概要</a></h2>
+ <div class="outline-text-2" id="text-orgb3ec701">
+ <p>
+正規表現ではマッチするとカーソルが進み、2回同じ文字でマッチしない。正規表現エンジンで共通の挙動なのか、異なる挙動のものがあるかは調べていない。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>直感的には、“B8”, “8B” がマッチしそうに見える</label> <pre class="src src-go">package main
+
+import (
+        "fmt"
+        "regexp"
+)
+
+func main() {
+        found := regexp.MustCompile("B8|8B").FindAllString("B8B", -1)
+        fmt.Printf("%#v\n", found)
+}
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">[]string{"B8"}
+</pre>
+</div>
+</div>
+</div>
+ <div id="outline-container-org206fd6a" class="outline-2">
+ <h2 id="org206fd6a"> <a href="#org206fd6a">関連</a></h2>
+ <div class="outline-text-2" id="text-org206fd6a">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251025T094156--kdoc-478-重なりマッチしない__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20251025T094156--kdoc-478-重なりマッチしない__permanent.html</id>
+  <updated>2025-11-04T01:38:43+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 463: Base64エンコードでaがYQ==になるのはなぜか?</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org3ab8d22" class="outline-2">
+ <h2 id="org3ab8d22"> <a href="#org3ab8d22">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org3ab8d22">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-27 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-27 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org86ed5c1" class="outline-2">
+ <h2 id="org86ed5c1"> <a href="#org86ed5c1">概要</a></h2>
+ <div class="outline-text-2" id="text-org86ed5c1">
+ <p>
+インターネットまわりでちょくちょく出てくるbase64だが、よく知らない。対応関係がさっぱりわからない。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-shell"> <span class="org-builtin">echo</span> -n  <span class="org-string">"a"</span> | base64
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">YQ==
+</pre>
+</div>
+
+ <p>
+ <a href="https://qiita.com/PlanetMeron/items/2905e2d0aa7fe46a36d4">base64ってなんぞ？？理解のために実装してみた #base64 - Qiita</a>を参考に試した。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-shell"> <span class="org-builtin">echo</span> -n  <span class="org-string">"a"</span> | xxd -b
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">00000000: 01100001                                               a
+</pre>
+</div>
+
+ <ul class="org-ul"> <li>011000 01
+ <ul class="org-ul"> <li>6ビットに分ける</li>
+</ul></li>
+ <li>011000 010000
+ <ul class="org-ul"> <li>6ビットに足りない分を0で埋める</li>
+</ul></li>
+ <li>Y      Q
+ <ul class="org-ul"> <li>ビットと文字の対応表を見て変換する</li>
+</ul></li>
+ <li> <code>YQ==</code>
+ <ul class="org-ul"> <li>4文字に分けて足りない分を  <code>=</code> で埋める</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgbea0f4b" class="outline-2">
+ <h2 id="orgbea0f4b"> <a href="#orgbea0f4b">関連</a></h2>
+ <div class="outline-text-2" id="text-orgbea0f4b">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250913T204052--kdoc-463-base64エンコードでaがyqになるのはなぜか__wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250913T204052--kdoc-463-base64エンコードでaがyqになるのはなぜか__wiki.html</id>
+  <updated>2025-11-04T01:38:41+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 479: 『ネットワークのしくみ』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org8bf69bd" class="outline-2">
+ <h2 id="org8bf69bd"> <a href="#org8bf69bd">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org8bf69bd">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org5af350c" class="outline-2">
+ <h2 id="org5af350c"> <a href="#org5af350c">概要</a></h2>
+ <div class="outline-text-2" id="text-org5af350c">
+ <p>
+『ネットワークのしくみ』はプロトコルを萌え擬人化して解説する本。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgdbf2690" class="outline-2">
+ <h2 id="orgdbf2690"> <a href="#orgdbf2690">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgdbf2690">
+ <ul class="org-ul"> <li>Macアドレスには場所にまつわる情報がない。宛先がわからないとブロードキャストするしかない。この動作原理なので、大きなネットワークにはなりようがない。イーサネットはルータは超えられない(p121)</li>
+ <li>ルーティングテーブルはネットワークの地図のようなもの。それを見れば次のどのルーターに転送すればいいか目的地に近づくかわかる（p130）</li>
+ <li>最初はTTLを１にしてパケットを送る。するとすぐに消滅するが、中継してくれたパケットがわかる。破棄したルータが教えてくれるから。つぎはTTLを２にすると同様に２番めのルータがわかる。繰り返すと、目的地までに経由するルータのリストが得られるtracert(p133)</li>
+ <li>デフォルトゲートウェイ: 宛先が異なるネットワークのとき送信する先。送信先IPアドレスは最終目的地のまま、宛先MACアドレスをデフォルトゲートウェイに送る</li>
+ <li>無線LANといっても、メーカーが違うとつながらない時代があった。その解決のためにWifi-Alliance という団体が作られた。もともとはちゃん無線LAN機器がつながるかを認証する団体だった(p186)</li>
+</ul> <p>
+感想。
+</p>
+
+ <ul class="org-ul"> <li>過剰な下ネタや、いかにも萌えっぽい掛け合いでどうかしている雰囲気である。ちゃんとした出版社がついているのに驚く</li>
+ <li>しばらく読んでノリに慣れると、プロトコルの擬人化が定着してきて、非常に身近な存在に感じられるようになった</li>
+</ul></div>
+</div>
+ <div id="outline-container-org5bf8126" class="outline-2">
+ <h2 id="org5bf8126"> <a href="#org5bf8126">関連</a></h2>
+ <div class="outline-text-2" id="text-org5bf8126">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251025T151444--kdoc-479-『ネットワークのしくみ』__draft_book.html"/>
+  <id>https://kijimad.github.io/roam/20251025T151444--kdoc-479-『ネットワークのしくみ』__draft_book.html</id>
+  <updated>2025-11-04T01:38:38+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 473: 『Excelでできる不動産投資「収益計算」のすべて』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org79c95ad" class="outline-2">
+ <h2 id="org79c95ad"> <a href="#org79c95ad">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org79c95ad">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgc3ad9af" class="outline-2">
+ <h2 id="orgc3ad9af"> <a href="#orgc3ad9af">概要</a></h2>
+ <div class="outline-text-2" id="text-orgc3ad9af">
+ <p>
+『Excelでできる不動産投資「収益計算」のすべて』は、不動産投資についての本である。
+</p>
+</div>
+</div>
+ <div id="outline-container-org852d2a9" class="outline-2">
+ <h2 id="org852d2a9"> <a href="#org852d2a9">メモ</a></h2>
+ <div class="outline-text-2" id="text-org852d2a9">
+ <ul class="org-ul"> <li>金利の支払いは税務上の経費になるが、元本の返済は経費にならない。したがって税務上の経費が減るので税金の支払いが増えCFを圧迫する。純資産は順調に増えている(位置173)</li>
+ <li>賃料から得られるCFばかりにとらわれず、いかに純資産を増加させるかに着目するのが重要(位置183)</li>
+ <li>不動産投資における最大の経費は税金である。投資家が税金について熟知すべき理由は、税金を支払っても利益が出るか検証するためである。不動産業者や税理士に試算を依頼しても概算しか出てこない(位置225)</li>
+ <li>物件価格に変動がない場合の1年間の  <code>正味利益簡便計算法</code> (位置358)
+ <ul class="org-ul"> <li>不動産投資の1年間の賞味利益 = 賃貸NOI - 金利支払い - 税金支払い</li>
+ <li>物件を保有することにより得られる正味利益(純資産の増加額)は、毎年の賃貸NOIの積み上げであり、物件を保有するために必要なコストは借り入れ金利と税金である</li>
+</ul></li>
+ <li>不動産投資における減価償却とは、今年の税金が安くなり、その分売却時の税金が高くなるという性質を持つ、会計上の経費である。したがって、買ってから売るまでの全体で見れば、減価償却による損益は相殺され、その有無が賞味利益に与える影響はほとんどない(位置358)</li>
+ <li>正味利益の計算では、借入金利の支払いだけが経費となり、元金の返済は経費として考えない。正味利益のうち、一部はCFとして現金を得て、元金返済部分はそれと同額の土地持分を購入したと考えているためである。不動産をローンで買うことには、ローン返済を通じて土地を少しづつ自分のものにしていくという意味合いがある。銀行に借金を返せば、その分だけ土地持分が増えていくと考える(位置381)</li>
+ <li>土地は売れば換金できる。換金性のあるものはすべて現金同等と考え、土地持分の取得も同じく、純資産が増加したと理解する。今すぐ得られるキャッシュフローに、売却時に現金化される土地の持分増加という「含み益」を足し合わせた額が保有期間中の正味利益と考えるべき(位置381)</li>
+ <li>保有期間中の賞味利益 = 税引後賃料キャッシュフロー + (今期に増加した含み益 - 売却時に支払うべき税金)
+ <ul class="org-ul"> <li>「含み益」は土地の持分という形で蓄積されていく。将来にわたって土地価格が下落しない場所を選ぶことが重要である(位置398)</li>
+</ul></li>
+ <li>解散価値(NAV): 「いま不動産を売却して、売却益に対する税金を支払って投資を終了させた場合、結局いくら残るのか」</li>
+ <li>金融市場では、換金価値のある資産はすべて現金換算してリアルタイムで評価するのが慣例である。所有権が法律によって保証されていてすぐに買い手が見つかるのなら、どのような資産も解散価値(純資産)をいつでも現金化できる、現金と等価の資産であることに変わりない。不動産投資において、キャッシュフローばかりに気をとられず、純資産の増加に注力すべきなのはそのため(位置438)</li>
+ <li>キャッシュフローだけを見ると物件を売却したとき、借入金の返済が終わった翌月から急激に利益が増えるように見えるが、実際にはそうではない。NAVの増加額は毎年ほぼ一定である。それをどのような形で受け取るか、賃料キャッシュフローとしていま現金を受け取るか、土地持分を将来現金化するか、その違いだけ。十分な純資産があれば、現金を作ることは難しくない。純資産には担保価値と換金性があるから(位置438)</li>
+ <li>日本の都市部で行われている不動産投資の収益の源泉は、高い賃料収入(NOI)と低金利の借り入れの広いスプレッド(差額)である。売却時に高く売れればキャピタルゲインも得られるが、日本でキャピタルゲインありきの不動産投資を考えている人は少数派である(位置(p473)</li>
+ <li>諸外国では借入金利が高く、賃料収入と借入金利のスプレッドは非常に狭い。借入した場合持てば持つほど赤字が積み重なり、それを相殺できるだけの大きな売却益が得られなければ利益は出ない。したがって海外ではキャピタルゲインに期待する投資であり、日本とは状況が異なる。世界の投資家から日本の不動産が注目されているのは相対的に高い利回りと低い借入金利による広いスプレッドが得られ、かつ価格の上昇が期待できるからである(p474)</li>
+ <li>物件を購入したら売却までを見据えて保有期間中にすべきことは賃料の値上げである。賃料を値上げすれば収入が増えるという当たり前の効果があるが、それ以上に重要なのは売却価格の上昇に対する寄与が高いためである(位置557)</li>
+ <li>投資の上級者は、「すべての投資は、将来キャッシュフローの割引現在価値である」という表現をする。投資とはキャッシュフローを得て資金を増やすための活動である。会計上の「含み益」(未実現益)を知る必要はあるが、結局「いつの時点で、いくらの現金を受け取れる」という「実現益」こそが投資のすべてである。すべての投資は金融商品や事業において将来発生するであろうキャッシュフローを得るためにいまいくらまで払えるかを判断することにほかならない(位置603)</li>
+ <li>割引現在価値: 早期に得られるキャッシュフローには再投資する利回り分だけ余計に価値がある。最低でも年率3%の利回りが確約されている市場環境であれば、いま100もらうのと1年後に103もらうのは同じ価値といえる(位置619)</li>
+ <li>日本で不動産投資をする最大の理由は、金融機関からの借入により高いROEが期待できるから(位置715)</li>
+ <li>不動産投資において、不動産は融資を得るための媒介物にすぎず、重要なのは不動産そのものよりも融資である、という。融資を中心に据えた不動産投資とは、金融政策により生じた金融システムの歪みを利益に変えるハックのようなもの(位置759)</li>
+ <li>銀行融資で計算すべき要素は「自己資金比率」「金利」「返済期間」だけ(位置764)</li>
+ <li>現在の融資環境においては、初期投資額の大小に関わらず、5年後に売却するというシナリオであれば売却まで考慮した投資全体の利益額はほとんど変わらない。低金利の借入による不動産投資では、自己資金額にかかわらず、物件購入後に得られる利益の総額はほとんど同じである。自己資金を多く投入しても、利益の総額がほぼ一定なので、投入した自己資金は収益向上に貢献していない、といえる(位置778)</li>
+ <li>自己資金を多く入れることには、金利の支払いを減らす以上の意味合いはない。少ない自己資金で物件を購入することは、価格下落リスクを吸収するためのバッファとして、本来は銀行に拘束されるべき資金を手元に残しておくことだと考えるとよい(位置791)</li>
+ <li>返済期間の長短を変えることは、先に多くのキャッシュフローを得るか、売却時にまとめて「含み益」を現金化するか、その比率を変えることである。返済期間の長短によって金利の支払いが増減するが、購入から売却までの全体で見ると投資から得られる利益の総額は低金利の環境で大きく変わらない(位置855)</li>
+ <li>金利の支払いは「残債に対して n %」という計算によるものなので、返済が進み残債が減少すれば、金利上昇に対する耐性が付く(位置919)</li>
+ <li>不動産投資とは所有権という無形の資産に投資するものであり、それに金銭的価値がつくのは建築基準法や税制などの論理的なインフラによる保証と制限があるから(位置1024)</li>
+ <li>不動産投資は物件を売却して出口を迎えるまでは、すでに現金として受け取ったキャッシュフローですら「含み益」にすぎないということを念頭におくべき。減価償却を多くとれば、売却時のキャピタルゲイン課税が高額になる(位置1245)</li>
+ <li>低金利で借入ができる以上、高利回り物件を厳選して購入するよりも一般的な物件でも保有規模を拡大したほうが利益に貢献する(位置1245)</li>
+ <li>「規模が大きいと危ないからはじめは小さく」と考える人が多くいるが、じっさいには規模が大きいほうが安定しており利益率も高い(位置2462)</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgbfff16b" class="outline-2">
+ <h2 id="orgbfff16b"> <a href="#orgbfff16b">関連</a></h2>
+ <div class="outline-text-2" id="text-orgbfff16b">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251014T082131--kdoc-473-『excelでできる不動産投資「収益計算」のすべて』__book.html"/>
+  <id>https://kijimad.github.io/roam/20251014T082131--kdoc-473-『excelでできる不動産投資「収益計算」のすべて』__book.html</id>
+  <updated>2025-11-04T01:38:37+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 466: ディストロレスコンテナに何が入っているのか見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orga6b0e79" class="outline-2">
+ <h2 id="orga6b0e79"> <a href="#orga6b0e79">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orga6b0e79">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-09-14 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-31 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org5093bc9" class="outline-2">
+ <h2 id="org5093bc9"> <a href="#org5093bc9">概要</a></h2>
+ <div class="outline-text-2" id="text-org5093bc9">
+ <p>
+Dockerのディストロレスイメージが安全な本番イメージとしてよく使われる。  <code>scratch</code> コンテナとの違いは何か。
+</p>
+
+ <ul class="org-ul"> <li> <a href="https://github.com/GoogleContainerTools/distroless">GoogleContainerTools/distroless</a></li>
+</ul> <p>
+イメージタグを見る限り、  <code>debian</code> や  <code>node</code> があるので、OSの依存関係や言語処理系は入っている、ということなのだろう。
+</p>
+
+ <p>
+中身を見てみる。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-shell"> <span class="org-comment-delimiter"># </span> <span class="org-comment">デフォルトのcommandはないので適当に指定してコンテナを起動する
+</span>docker create --name tmp-distroless gcr.io/distroless/base true
+docker cp tmp-distroless:/ ./distroless-files
+docker rm tmp-distroless
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-shell">du -sh ./distroless-files
+tree ./distroless-files
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">24M	./distroless-files
+./distroless-files
+├── bin
+├── boot
+├── dev
+│   ├── console
+│   ├── pts
+│   └── shm
+├── etc
+│   ├── debian_version
+│   ├── default
+│   ├── dpkg
+│   │   └── origins
+│   │       └── debian
+│   ├── ethertypes
+│   ├── group
+│   ├── host.conf
+│   ├── hostname
+│   ├── hosts
+│   ├── issue
+│   ├── issue.net
+│   ├── ld.so.conf.d
+│   │   └── x86_64-linux-gnu.conf
+│   ├── mime.types
+│   ├── mtab -> /proc/mounts
+│   ├── nsswitch.conf
+│   ├── os-release -> ../usr/lib/os-release
+│   ├── passwd
+│   ├── profile.d
+│   ├── protocols
+│   ├── resolv.conf
+│   ├── rpc
+│   ├── services
+│   ├── skel
+│   ├── ssl
+│   │   └── certs
+│   │       └── ca-certificates.crt
+│   └── update-motd.d
+│       └── 10-uname
+├── home
+│   └── nonroot
+├── lib
+│   └── x86_64-linux-gnu
+│       ├── ld-linux-x86-64.so.2
+│       ├── libanl.so.1
+│       ├── libBrokenLocale.so.1
+│       ├── libc_malloc_debug.so.0
+│       ├── libc.so.6
+│       ├── libdl.so.2
+│       ├── libmemusage.so
+│       ├── libm.so.6
+│       ├── libmvec.so.1
+│       ├── libnsl.so.1
+│       ├── libnss_compat.so.2
+│       ├── libnss_dns.so.2
+│       ├── libnss_files.so.2
+│       ├── libnss_hesiod.so.2
+│       ├── libpcprofile.so
+│       ├── libpthread.so.0
+│       ├── libresolv.so.2
+│       ├── librt.so.1
+│       ├── libthread_db.so.1
+│       └── libutil.so.1
+├── lib64
+│   └── ld-linux-x86-64.so.2 -> /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+├── proc
+├── root
+├── run
+├── sbin
+├── sys
+├── tmp
+├── usr
+│   ├── bin
+│   ├── games
+│   ├── include
+│   ├── lib
+│   │   ├── os-release
+│   │   └── x86_64-linux-gnu
+│   │       ├── engines-3
+│   │       │   ├── afalg.so
+│   │       │   ├── loader_attic.so
+│   │       │   └── padlock.so
+│   │       ├── gconv
+│   │       │   ├── ANSI_X3.110.so
+│   │       │   ├── ARMSCII-8.so
+│   │       │   ├── ASMO_449.so
+│   │       │   ├── BIG5HKSCS.so
+│   │       │   ├── BIG5.so
+│   │       │   ├── BRF.so
+│   │       │   ├── CP10007.so
+│   │       │   ├── CP1125.so
+│   │       │   ├── CP1250.so
+│   │       │   ├── CP1251.so
+│   │       │   ├── CP1252.so
+│   │       │   ├── CP1253.so
+│   │       │   ├── CP1254.so
+│   │       │   ├── CP1255.so
+│   │       │   ├── CP1256.so
+│   │       │   ├── CP1257.so
+│   │       │   ├── CP1258.so
+│   │       │   ├── CP737.so
+│   │       │   ├── CP770.so
+│   │       │   ├── CP771.so
+│   │       │   ├── CP772.so
+│   │       │   ├── CP773.so
+│   │       │   ├── CP774.so
+│   │       │   ├── CP775.so
+│   │       │   ├── CP932.so
+│   │       │   ├── CSN_369103.so
+│   │       │   ├── CWI.so
+│   │       │   ├── DEC-MCS.so
+│   │       │   ├── EBCDIC-AT-DE-A.so
+│   │       │   ├── EBCDIC-AT-DE.so
+│   │       │   ├── EBCDIC-CA-FR.so
+│   │       │   ├── EBCDIC-DK-NO-A.so
+│   │       │   ├── EBCDIC-DK-NO.so
+│   │       │   ├── EBCDIC-ES-A.so
+│   │       │   ├── EBCDIC-ES.so
+│   │       │   ├── EBCDIC-ES-S.so
+│   │       │   ├── EBCDIC-FI-SE-A.so
+│   │       │   ├── EBCDIC-FI-SE.so
+│   │       │   ├── EBCDIC-FR.so
+│   │       │   ├── EBCDIC-IS-FRISS.so
+│   │       │   ├── EBCDIC-IT.so
+│   │       │   ├── EBCDIC-PT.so
+│   │       │   ├── EBCDIC-UK.so
+│   │       │   ├── EBCDIC-US.so
+│   │       │   ├── ECMA-CYRILLIC.so
+│   │       │   ├── EUC-CN.so
+│   │       │   ├── EUC-JISX0213.so
+│   │       │   ├── EUC-JP-MS.so
+│   │       │   ├── EUC-JP.so
+│   │       │   ├── EUC-KR.so
+│   │       │   ├── EUC-TW.so
+│   │       │   ├── GB18030.so
+│   │       │   ├── GBBIG5.so
+│   │       │   ├── GBGBK.so
+│   │       │   ├── GBK.so
+│   │       │   ├── gconv-modules
+│   │       │   ├── gconv-modules.cache
+│   │       │   ├── gconv-modules.d
+│   │       │   │   └── gconv-modules-extra.conf
+│   │       │   ├── GEORGIAN-ACADEMY.so
+│   │       │   ├── GEORGIAN-PS.so
+│   │       │   ├── GOST_19768-74.so
+│   │       │   ├── GREEK7-OLD.so
+│   │       │   ├── GREEK7.so
+│   │       │   ├── GREEK-CCITT.so
+│   │       │   ├── HP-GREEK8.so
+│   │       │   ├── HP-ROMAN8.so
+│   │       │   ├── HP-ROMAN9.so
+│   │       │   ├── HP-THAI8.so
+│   │       │   ├── HP-TURKISH8.so
+│   │       │   ├── IBM037.so
+│   │       │   ├── IBM038.so
+│   │       │   ├── IBM1004.so
+│   │       │   ├── IBM1008_420.so
+│   │       │   ├── IBM1008.so
+│   │       │   ├── IBM1025.so
+│   │       │   ├── IBM1026.so
+│   │       │   ├── IBM1046.so
+│   │       │   ├── IBM1047.so
+│   │       │   ├── IBM1097.so
+│   │       │   ├── IBM1112.so
+│   │       │   ├── IBM1122.so
+│   │       │   ├── IBM1123.so
+│   │       │   ├── IBM1124.so
+│   │       │   ├── IBM1129.so
+│   │       │   ├── IBM1130.so
+│   │       │   ├── IBM1132.so
+│   │       │   ├── IBM1133.so
+│   │       │   ├── IBM1137.so
+│   │       │   ├── IBM1140.so
+│   │       │   ├── IBM1141.so
+│   │       │   ├── IBM1142.so
+│   │       │   ├── IBM1143.so
+│   │       │   ├── IBM1144.so
+│   │       │   ├── IBM1145.so
+│   │       │   ├── IBM1146.so
+│   │       │   ├── IBM1147.so
+│   │       │   ├── IBM1148.so
+│   │       │   ├── IBM1149.so
+│   │       │   ├── IBM1153.so
+│   │       │   ├── IBM1154.so
+│   │       │   ├── IBM1155.so
+│   │       │   ├── IBM1156.so
+│   │       │   ├── IBM1157.so
+│   │       │   ├── IBM1158.so
+│   │       │   ├── IBM1160.so
+│   │       │   ├── IBM1161.so
+│   │       │   ├── IBM1162.so
+│   │       │   ├── IBM1163.so
+│   │       │   ├── IBM1164.so
+│   │       │   ├── IBM1166.so
+│   │       │   ├── IBM1167.so
+│   │       │   ├── IBM12712.so
+│   │       │   ├── IBM1364.so
+│   │       │   ├── IBM1371.so
+│   │       │   ├── IBM1388.so
+│   │       │   ├── IBM1390.so
+│   │       │   ├── IBM1399.so
+│   │       │   ├── IBM16804.so
+│   │       │   ├── IBM256.so
+│   │       │   ├── IBM273.so
+│   │       │   ├── IBM274.so
+│   │       │   ├── IBM275.so
+│   │       │   ├── IBM277.so
+│   │       │   ├── IBM278.so
+│   │       │   ├── IBM280.so
+│   │       │   ├── IBM281.so
+│   │       │   ├── IBM284.so
+│   │       │   ├── IBM285.so
+│   │       │   ├── IBM290.so
+│   │       │   ├── IBM297.so
+│   │       │   ├── IBM420.so
+│   │       │   ├── IBM423.so
+│   │       │   ├── IBM424.so
+│   │       │   ├── IBM437.so
+│   │       │   ├── IBM4517.so
+│   │       │   ├── IBM4899.so
+│   │       │   ├── IBM4909.so
+│   │       │   ├── IBM4971.so
+│   │       │   ├── IBM500.so
+│   │       │   ├── IBM5347.so
+│   │       │   ├── IBM803.so
+│   │       │   ├── IBM850.so
+│   │       │   ├── IBM851.so
+│   │       │   ├── IBM852.so
+│   │       │   ├── IBM855.so
+│   │       │   ├── IBM856.so
+│   │       │   ├── IBM857.so
+│   │       │   ├── IBM858.so
+│   │       │   ├── IBM860.so
+│   │       │   ├── IBM861.so
+│   │       │   ├── IBM862.so
+│   │       │   ├── IBM863.so
+│   │       │   ├── IBM864.so
+│   │       │   ├── IBM865.so
+│   │       │   ├── IBM866NAV.so
+│   │       │   ├── IBM866.so
+│   │       │   ├── IBM868.so
+│   │       │   ├── IBM869.so
+│   │       │   ├── IBM870.so
+│   │       │   ├── IBM871.so
+│   │       │   ├── IBM874.so
+│   │       │   ├── IBM875.so
+│   │       │   ├── IBM880.so
+│   │       │   ├── IBM891.so
+│   │       │   ├── IBM901.so
+│   │       │   ├── IBM902.so
+│   │       │   ├── IBM9030.so
+│   │       │   ├── IBM903.so
+│   │       │   ├── IBM904.so
+│   │       │   ├── IBM905.so
+│   │       │   ├── IBM9066.so
+│   │       │   ├── IBM918.so
+│   │       │   ├── IBM921.so
+│   │       │   ├── IBM922.so
+│   │       │   ├── IBM930.so
+│   │       │   ├── IBM932.so
+│   │       │   ├── IBM933.so
+│   │       │   ├── IBM935.so
+│   │       │   ├── IBM937.so
+│   │       │   ├── IBM939.so
+│   │       │   ├── IBM943.so
+│   │       │   ├── IBM9448.so
+│   │       │   ├── IEC_P27-1.so
+│   │       │   ├── INIS-8.so
+│   │       │   ├── INIS-CYRILLIC.so
+│   │       │   ├── INIS.so
+│   │       │   ├── ISIRI-3342.so
+│   │       │   ├── ISO_10367-BOX.so
+│   │       │   ├── ISO_11548-1.so
+│   │       │   ├── ISO-2022-CN-EXT.so
+│   │       │   ├── ISO-2022-CN.so
+│   │       │   ├── ISO-2022-JP-3.so
+│   │       │   ├── ISO-2022-JP.so
+│   │       │   ├── ISO-2022-KR.so
+│   │       │   ├── ISO_2033.so
+│   │       │   ├── ISO_5427-EXT.so
+│   │       │   ├── ISO_5427.so
+│   │       │   ├── ISO_5428.so
+│   │       │   ├── ISO646.so
+│   │       │   ├── ISO_6937-2.so
+│   │       │   ├── ISO_6937.so
+│   │       │   ├── ISO8859-10.so
+│   │       │   ├── ISO8859-11.so
+│   │       │   ├── ISO8859-13.so
+│   │       │   ├── ISO8859-14.so
+│   │       │   ├── ISO8859-15.so
+│   │       │   ├── ISO8859-16.so
+│   │       │   ├── ISO8859-1.so
+│   │       │   ├── ISO8859-2.so
+│   │       │   ├── ISO8859-3.so
+│   │       │   ├── ISO8859-4.so
+│   │       │   ├── ISO8859-5.so
+│   │       │   ├── ISO8859-6.so
+│   │       │   ├── ISO8859-7.so
+│   │       │   ├── ISO8859-8.so
+│   │       │   ├── ISO8859-9E.so
+│   │       │   ├── ISO8859-9.so
+│   │       │   ├── ISO-IR-197.so
+│   │       │   ├── ISO-IR-209.so
+│   │       │   ├── JOHAB.so
+│   │       │   ├── KOI8-R.so
+│   │       │   ├── KOI8-RU.so
+│   │       │   ├── KOI-8.so
+│   │       │   ├── KOI8-T.so
+│   │       │   ├── KOI8-U.so
+│   │       │   ├── LATIN-GREEK-1.so
+│   │       │   ├── LATIN-GREEK.so
+│   │       │   ├── libCNS.so
+│   │       │   ├── libGB.so
+│   │       │   ├── libISOIR165.so
+│   │       │   ├── libJIS.so
+│   │       │   ├── libJISX0213.so
+│   │       │   ├── libKSC.so
+│   │       │   ├── MAC-CENTRALEUROPE.so
+│   │       │   ├── MACINTOSH.so
+│   │       │   ├── MAC-IS.so
+│   │       │   ├── MAC-SAMI.so
+│   │       │   ├── MAC-UK.so
+│   │       │   ├── MIK.so
+│   │       │   ├── NATS-DANO.so
+│   │       │   ├── NATS-SEFI.so
+│   │       │   ├── PT154.so
+│   │       │   ├── RK1048.so
+│   │       │   ├── SAMI-WS2.so
+│   │       │   ├── SHIFT_JISX0213.so
+│   │       │   ├── SJIS.so
+│   │       │   ├── T.61.so
+│   │       │   ├── TCVN5712-1.so
+│   │       │   ├── TIS-620.so
+│   │       │   ├── TSCII.so
+│   │       │   ├── UHC.so
+│   │       │   ├── UNICODE.so
+│   │       │   ├── UTF-16.so
+│   │       │   ├── UTF-32.so
+│   │       │   ├── UTF-7.so
+│   │       │   └── VISCII.so
+│   │       ├── libcrypto.so.3
+│   │       ├── libssl.so.3
+│   │       └── ossl-modules
+│   │           └── legacy.so
+│   ├── sbin
+│   ├── share
+│   │   ├── base-files
+│   │   │   ├── dot.bashrc
+│   │   │   ├── dot.profile
+│   │   │   ├── dot.profile.md5sums
+│   │   │   ├── info.dir
+│   │   │   ├── motd
+│   │   │   ├── profile
+│   │   │   ├── profile.md5sums
+│   │   │   └── staff-group-for-usr-local
+│   │   ├── bug
+│   │   │   └── media-types
+│   │   │       └── presubj
+│   │   ├── common-licenses
+│   │   │   ├── Apache-2.0
+│   │   │   ├── Artistic
+│   │   │   ├── BSD
+│   │   │   ├── CC0-1.0
+│   │   │   ├── GFDL -> GFDL-1.3
+│   │   │   ├── GFDL-1.2
+│   │   │   ├── GFDL-1.3
+│   │   │   ├── GPL -> GPL-3
+│   │   │   ├── GPL-1
+│   │   │   ├── GPL-2
+│   │   │   ├── GPL-3
+│   │   │   ├── LGPL -> LGPL-3
+│   │   │   ├── LGPL-2
+│   │   │   ├── LGPL-2.1
+│   │   │   ├── LGPL-3
+│   │   │   ├── MPL-1.1
+│   │   │   └── MPL-2.0
+│   │   ├── dict
+│   │   ├── doc
+│   │   │   ├── base-files
+│   │   │   │   ├── changelog.gz
+│   │   │   │   ├── copyright
+│   │   │   │   ├── FAQ -> README
+│   │   │   │   ├── README
+│   │   │   │   └── README.FHS
+│   │   │   ├── ca-certificates
+│   │   │   │   └── copyright
+│   │   │   ├── libc6
+│   │   │   │   ├── changelog.Debian.gz
+│   │   │   │   ├── changelog.gz
+│   │   │   │   ├── copyright
+│   │   │   │   ├── NEWS.Debian.gz
+│   │   │   │   ├── NEWS.gz
+│   │   │   │   ├── README.Debian.gz
+│   │   │   │   └── README.hesiod.gz
+│   │   │   ├── libssl3
+│   │   │   │   ├── changelog.Debian.gz
+│   │   │   │   ├── changelog.gz
+│   │   │   │   └── copyright
+│   │   │   ├── media-types
+│   │   │   │   ├── changelog.gz
+│   │   │   │   └── copyright
+│   │   │   ├── netbase
+│   │   │   │   ├── changelog.gz
+│   │   │   │   └── copyright
+│   │   │   └── tzdata
+│   │   │       ├── changelog.Debian.gz
+│   │   │       ├── changelog.gz
+│   │   │       ├── copyright
+│   │   │       └── README.Debian
+│   │   ├── info
+│   │   ├── lintian
+│   │   │   └── overrides
+│   │   │       ├── base-files
+│   │   │       ├── libc6
+│   │   │       └── tzdata
+│   │   ├── man
+│   │   ├── misc
+│   │   └── zoneinfo
+│   │       ├── Africa
+│   │       │   ├── Abidjan
+│   │       │   ├── Accra
+│   │       │   ├── Addis_Ababa
+│   │       │   ├── Algiers
+│   │       │   ├── Asmara
+│   │       │   ├── Asmera -> Nairobi
+│   │       │   ├── Bamako
+│   │       │   ├── Bangui
+│   │       │   ├── Banjul
+│   │       │   ├── Bissau
+│   │       │   ├── Blantyre
+│   │       │   ├── Brazzaville
+│   │       │   ├── Bujumbura
+│   │       │   ├── Cairo
+│   │       │   ├── Casablanca
+│   │       │   ├── Ceuta
+│   │       │   ├── Conakry
+│   │       │   ├── Dakar
+│   │       │   ├── Dar_es_Salaam
+│   │       │   ├── Djibouti
+│   │       │   ├── Douala
+│   │       │   ├── El_Aaiun
+│   │       │   ├── Freetown
+│   │       │   ├── Gaborone
+│   │       │   ├── Harare
+│   │       │   ├── Johannesburg
+│   │       │   ├── Juba
+│   │       │   ├── Kampala
+│   │       │   ├── Khartoum
+│   │       │   ├── Kigali
+│   │       │   ├── Kinshasa
+│   │       │   ├── Lagos
+│   │       │   ├── Libreville
+│   │       │   ├── Lome
+│   │       │   ├── Luanda
+│   │       │   ├── Lubumbashi
+│   │       │   ├── Lusaka
+│   │       │   ├── Malabo
+│   │       │   ├── Maputo
+│   │       │   ├── Maseru
+│   │       │   ├── Mbabane
+│   │       │   ├── Mogadishu
+│   │       │   ├── Monrovia
+│   │       │   ├── Nairobi
+│   │       │   ├── Ndjamena
+│   │       │   ├── Niamey
+│   │       │   ├── Nouakchott
+│   │       │   ├── Ouagadougou
+│   │       │   ├── Porto-Novo
+│   │       │   ├── Sao_Tome
+│   │       │   ├── Timbuktu -> Abidjan
+│   │       │   ├── Tripoli
+│   │       │   ├── Tunis
+│   │       │   └── Windhoek
+│   │       ├── America
+│   │       │   ├── Adak
+│   │       │   ├── Anchorage
+│   │       │   ├── Anguilla
+│   │       │   ├── Antigua
+│   │       │   ├── Araguaina
+│   │       │   ├── Argentina
+│   │       │   │   ├── Buenos_Aires
+│   │       │   │   ├── Catamarca
+│   │       │   │   ├── ComodRivadavia -> Catamarca
+│   │       │   │   ├── Cordoba
+│   │       │   │   ├── Jujuy
+│   │       │   │   ├── La_Rioja
+│   │       │   │   ├── Mendoza
+│   │       │   │   ├── Rio_Gallegos
+│   │       │   │   ├── Salta
+│   │       │   │   ├── San_Juan
+│   │       │   │   ├── San_Luis
+│   │       │   │   ├── Tucuman
+│   │       │   │   └── Ushuaia
+│   │       │   ├── Aruba
+│   │       │   ├── Asuncion
+│   │       │   ├── Atikokan
+│   │       │   ├── Atka -> Adak
+│   │       │   ├── Bahia
+│   │       │   ├── Bahia_Banderas
+│   │       │   ├── Barbados
+│   │       │   ├── Belem
+│   │       │   ├── Belize
+│   │       │   ├── Blanc-Sablon
+│   │       │   ├── Boa_Vista
+│   │       │   ├── Bogota
+│   │       │   ├── Boise
+│   │       │   ├── Buenos_Aires -> Argentina/Buenos_Aires
+│   │       │   ├── Cambridge_Bay
+│   │       │   ├── Campo_Grande
+│   │       │   ├── Cancun
+│   │       │   ├── Caracas
+│   │       │   ├── Catamarca -> Argentina/Catamarca
+│   │       │   ├── Cayenne
+│   │       │   ├── Cayman
+│   │       │   ├── Chicago
+│   │       │   ├── Chihuahua
+│   │       │   ├── Ciudad_Juarez
+│   │       │   ├── Coral_Harbour -> Panama
+│   │       │   ├── Cordoba -> Argentina/Cordoba
+│   │       │   ├── Costa_Rica
+│   │       │   ├── Coyhaique
+│   │       │   ├── Creston
+│   │       │   ├── Cuiaba
+│   │       │   ├── Curacao
+│   │       │   ├── Danmarkshavn
+│   │       │   ├── Dawson
+│   │       │   ├── Dawson_Creek
+│   │       │   ├── Denver
+│   │       │   ├── Detroit
+│   │       │   ├── Dominica
+│   │       │   ├── Edmonton
+│   │       │   ├── Eirunepe
+│   │       │   ├── El_Salvador
+│   │       │   ├── Ensenada -> Tijuana
+│   │       │   ├── Fortaleza
+│   │       │   ├── Fort_Nelson
+│   │       │   ├── Fort_Wayne -> Indiana/Indianapolis
+│   │       │   ├── Glace_Bay
+│   │       │   ├── Godthab -> Nuuk
+│   │       │   ├── Goose_Bay
+│   │       │   ├── Grand_Turk
+│   │       │   ├── Grenada
+│   │       │   ├── Guadeloupe
+│   │       │   ├── Guatemala
+│   │       │   ├── Guayaquil
+│   │       │   ├── Guyana
+│   │       │   ├── Halifax
+│   │       │   ├── Havana
+│   │       │   ├── Hermosillo
+│   │       │   ├── Indiana
+│   │       │   │   ├── Indianapolis
+│   │       │   │   ├── Knox
+│   │       │   │   ├── Marengo
+│   │       │   │   ├── Petersburg
+│   │       │   │   ├── Tell_City
+│   │       │   │   ├── Vevay
+│   │       │   │   ├── Vincennes
+│   │       │   │   └── Winamac
+│   │       │   ├── Indianapolis -> Indiana/Indianapolis
+│   │       │   ├── Inuvik
+│   │       │   ├── Iqaluit
+│   │       │   ├── Jamaica
+│   │       │   ├── Jujuy -> Argentina/Jujuy
+│   │       │   ├── Juneau
+│   │       │   ├── Kentucky
+│   │       │   │   ├── Louisville
+│   │       │   │   └── Monticello
+│   │       │   ├── Knox_IN -> Indiana/Knox
+│   │       │   ├── Kralendijk -> Puerto_Rico
+│   │       │   ├── La_Paz
+│   │       │   ├── Lima
+│   │       │   ├── Los_Angeles
+│   │       │   ├── Louisville -> Kentucky/Louisville
+│   │       │   ├── Lower_Princes -> Puerto_Rico
+│   │       │   ├── Maceio
+│   │       │   ├── Managua
+│   │       │   ├── Manaus
+│   │       │   ├── Marigot -> Puerto_Rico
+│   │       │   ├── Martinique
+│   │       │   ├── Matamoros
+│   │       │   ├── Mazatlan
+│   │       │   ├── Mendoza -> Argentina/Mendoza
+│   │       │   ├── Menominee
+│   │       │   ├── Merida
+│   │       │   ├── Metlakatla
+│   │       │   ├── Mexico_City
+│   │       │   ├── Miquelon
+│   │       │   ├── Moncton
+│   │       │   ├── Monterrey
+│   │       │   ├── Montevideo
+│   │       │   ├── Montreal -> Toronto
+│   │       │   ├── Montserrat
+│   │       │   ├── Nassau
+│   │       │   ├── New_York
+│   │       │   ├── Nipigon -> Toronto
+│   │       │   ├── Nome
+│   │       │   ├── Noronha
+│   │       │   ├── North_Dakota
+│   │       │   │   ├── Beulah
+│   │       │   │   ├── Center
+│   │       │   │   └── New_Salem
+│   │       │   ├── Nuuk
+│   │       │   ├── Ojinaga
+│   │       │   ├── Panama
+│   │       │   ├── Pangnirtung -> Iqaluit
+│   │       │   ├── Paramaribo
+│   │       │   ├── Phoenix
+│   │       │   ├── Port-au-Prince
+│   │       │   ├── Porto_Acre -> Rio_Branco
+│   │       │   ├── Port_of_Spain
+│   │       │   ├── Porto_Velho
+│   │       │   ├── Puerto_Rico
+│   │       │   ├── Punta_Arenas
+│   │       │   ├── Rainy_River -> Winnipeg
+│   │       │   ├── Rankin_Inlet
+│   │       │   ├── Recife
+│   │       │   ├── Regina
+│   │       │   ├── Resolute
+│   │       │   ├── Rio_Branco
+│   │       │   ├── Rosario -> Argentina/Cordoba
+│   │       │   ├── Santa_Isabel -> Tijuana
+│   │       │   ├── Santarem
+│   │       │   ├── Santiago
+│   │       │   ├── Santo_Domingo
+│   │       │   ├── Sao_Paulo
+│   │       │   ├── Scoresbysund
+│   │       │   ├── Shiprock -> Denver
+│   │       │   ├── Sitka
+│   │       │   ├── St_Barthelemy -> Puerto_Rico
+│   │       │   ├── St_Johns
+│   │       │   ├── St_Kitts
+│   │       │   ├── St_Lucia
+│   │       │   ├── St_Thomas
+│   │       │   ├── St_Vincent
+│   │       │   ├── Swift_Current
+│   │       │   ├── Tegucigalpa
+│   │       │   ├── Thule
+│   │       │   ├── Thunder_Bay -> Toronto
+│   │       │   ├── Tijuana
+│   │       │   ├── Toronto
+│   │       │   ├── Tortola
+│   │       │   ├── Vancouver
+│   │       │   ├── Virgin -> Puerto_Rico
+│   │       │   ├── Whitehorse
+│   │       │   ├── Winnipeg
+│   │       │   ├── Yakutat
+│   │       │   └── Yellowknife -> Edmonton
+│   │       ├── Antarctica
+│   │       │   ├── Casey
+│   │       │   ├── Davis
+│   │       │   ├── DumontDUrville
+│   │       │   ├── Macquarie
+│   │       │   ├── Mawson
+│   │       │   ├── McMurdo
+│   │       │   ├── Palmer
+│   │       │   ├── Rothera
+│   │       │   ├── South_Pole -> ../Pacific/Auckland
+│   │       │   ├── Syowa
+│   │       │   ├── Troll
+│   │       │   └── Vostok
+│   │       ├── Arctic
+│   │       │   └── Longyearbyen -> ../Europe/Berlin
+│   │       ├── Asia
+│   │       │   ├── Aden
+│   │       │   ├── Almaty
+│   │       │   ├── Amman
+│   │       │   ├── Anadyr
+│   │       │   ├── Aqtau
+│   │       │   ├── Aqtobe
+│   │       │   ├── Ashgabat
+│   │       │   ├── Ashkhabad -> Ashgabat
+│   │       │   ├── Atyrau
+│   │       │   ├── Baghdad
+│   │       │   ├── Bahrain
+│   │       │   ├── Baku
+│   │       │   ├── Bangkok
+│   │       │   ├── Barnaul
+│   │       │   ├── Beirut
+│   │       │   ├── Bishkek
+│   │       │   ├── Brunei
+│   │       │   ├── Calcutta -> Kolkata
+│   │       │   ├── Chita
+│   │       │   ├── Choibalsan -> Ulaanbaatar
+│   │       │   ├── Chongqing -> Shanghai
+│   │       │   ├── Chungking -> Shanghai
+│   │       │   ├── Colombo
+│   │       │   ├── Dacca -> Dhaka
+│   │       │   ├── Damascus
+│   │       │   ├── Dhaka
+│   │       │   ├── Dili
+│   │       │   ├── Dubai
+│   │       │   ├── Dushanbe
+│   │       │   ├── Famagusta
+│   │       │   ├── Gaza
+│   │       │   ├── Harbin -> Shanghai
+│   │       │   ├── Hebron
+│   │       │   ├── Ho_Chi_Minh
+│   │       │   ├── Hong_Kong
+│   │       │   ├── Hovd
+│   │       │   ├── Irkutsk
+│   │       │   ├── Istanbul -> ../Europe/Istanbul
+│   │       │   ├── Jakarta
+│   │       │   ├── Jayapura
+│   │       │   ├── Jerusalem
+│   │       │   ├── Kabul
+│   │       │   ├── Kamchatka
+│   │       │   ├── Karachi
+│   │       │   ├── Kashgar -> Urumqi
+│   │       │   ├── Kathmandu
+│   │       │   ├── Katmandu -> Kathmandu
+│   │       │   ├── Khandyga
+│   │       │   ├── Kolkata
+│   │       │   ├── Krasnoyarsk
+│   │       │   ├── Kuala_Lumpur
+│   │       │   ├── Kuching
+│   │       │   ├── Kuwait
+│   │       │   ├── Macao -> Macau
+│   │       │   ├── Macau
+│   │       │   ├── Magadan
+│   │       │   ├── Makassar
+│   │       │   ├── Manila
+│   │       │   ├── Muscat
+│   │       │   ├── Nicosia
+│   │       │   ├── Novokuznetsk
+│   │       │   ├── Novosibirsk
+│   │       │   ├── Omsk
+│   │       │   ├── Oral
+│   │       │   ├── Phnom_Penh
+│   │       │   ├── Pontianak
+│   │       │   ├── Pyongyang
+│   │       │   ├── Qatar
+│   │       │   ├── Qostanay
+│   │       │   ├── Qyzylorda
+│   │       │   ├── Rangoon -> Yangon
+│   │       │   ├── Riyadh
+│   │       │   ├── Saigon -> Ho_Chi_Minh
+│   │       │   ├── Sakhalin
+│   │       │   ├── Samarkand
+│   │       │   ├── Seoul
+│   │       │   ├── Shanghai
+│   │       │   ├── Singapore
+│   │       │   ├── Srednekolymsk
+│   │       │   ├── Taipei
+│   │       │   ├── Tashkent
+│   │       │   ├── Tbilisi
+│   │       │   ├── Tehran
+│   │       │   ├── Tel_Aviv -> Jerusalem
+│   │       │   ├── Thimbu -> Thimphu
+│   │       │   ├── Thimphu
+│   │       │   ├── Tokyo
+│   │       │   ├── Tomsk
+│   │       │   ├── Ujung_Pandang -> Makassar
+│   │       │   ├── Ulaanbaatar
+│   │       │   ├── Ulan_Bator -> Ulaanbaatar
+│   │       │   ├── Urumqi
+│   │       │   ├── Ust-Nera
+│   │       │   ├── Vientiane
+│   │       │   ├── Vladivostok
+│   │       │   ├── Yakutsk
+│   │       │   ├── Yangon
+│   │       │   ├── Yekaterinburg
+│   │       │   └── Yerevan
+│   │       ├── Atlantic
+│   │       │   ├── Azores
+│   │       │   ├── Bermuda
+│   │       │   ├── Canary
+│   │       │   ├── Cape_Verde
+│   │       │   ├── Faeroe -> Faroe
+│   │       │   ├── Faroe
+│   │       │   ├── Jan_Mayen -> ../Europe/Berlin
+│   │       │   ├── Madeira
+│   │       │   ├── Reykjavik
+│   │       │   ├── South_Georgia
+│   │       │   ├── Stanley
+│   │       │   └── St_Helena
+│   │       ├── Australia
+│   │       │   ├── ACT -> Sydney
+│   │       │   ├── Adelaide
+│   │       │   ├── Brisbane
+│   │       │   ├── Broken_Hill
+│   │       │   ├── Canberra -> Sydney
+│   │       │   ├── Currie -> Hobart
+│   │       │   ├── Darwin
+│   │       │   ├── Eucla
+│   │       │   ├── Hobart
+│   │       │   ├── LHI -> Lord_Howe
+│   │       │   ├── Lindeman
+│   │       │   ├── Lord_Howe
+│   │       │   ├── Melbourne
+│   │       │   ├── North -> Darwin
+│   │       │   ├── NSW -> Sydney
+│   │       │   ├── Perth
+│   │       │   ├── Queensland -> Brisbane
+│   │       │   ├── South -> Adelaide
+│   │       │   ├── Sydney
+│   │       │   ├── Tasmania -> Hobart
+│   │       │   ├── Victoria -> Melbourne
+│   │       │   ├── West -> Perth
+│   │       │   └── Yancowinna -> Broken_Hill
+│   │       ├── Brazil
+│   │       │   ├── Acre -> ../America/Rio_Branco
+│   │       │   ├── DeNoronha -> ../America/Noronha
+│   │       │   ├── East -> ../America/Sao_Paulo
+│   │       │   └── West -> ../America/Manaus
+│   │       ├── Canada
+│   │       │   ├── Atlantic -> ../America/Halifax
+│   │       │   ├── Central -> ../America/Winnipeg
+│   │       │   ├── Eastern -> ../America/Toronto
+│   │       │   ├── Mountain -> ../America/Edmonton
+│   │       │   ├── Newfoundland -> ../America/St_Johns
+│   │       │   ├── Pacific -> ../America/Vancouver
+│   │       │   ├── Saskatchewan -> ../America/Regina
+│   │       │   └── Yukon -> ../America/Whitehorse
+│   │       ├── CET
+│   │       ├── Chile
+│   │       │   ├── Continental -> ../America/Santiago
+│   │       │   └── EasterIsland -> ../Pacific/Easter
+│   │       ├── CST6CDT
+│   │       ├── Cuba -> America/Havana
+│   │       ├── EET
+│   │       ├── Egypt -> Africa/Cairo
+│   │       ├── Eire -> Europe/Dublin
+│   │       ├── EST
+│   │       ├── EST5EDT
+│   │       ├── Etc
+│   │       │   ├── GMT
+│   │       │   ├── GMT+0 -> GMT
+│   │       │   ├── GMT-0 -> GMT
+│   │       │   ├── GMT0 -> GMT
+│   │       │   ├── GMT+1
+│   │       │   ├── GMT-1
+│   │       │   ├── GMT+10
+│   │       │   ├── GMT-10
+│   │       │   ├── GMT+11
+│   │       │   ├── GMT-11
+│   │       │   ├── GMT+12
+│   │       │   ├── GMT-12
+│   │       │   ├── GMT-13
+│   │       │   ├── GMT-14
+│   │       │   ├── GMT+2
+│   │       │   ├── GMT-2
+│   │       │   ├── GMT+3
+│   │       │   ├── GMT-3
+│   │       │   ├── GMT+4
+│   │       │   ├── GMT-4
+│   │       │   ├── GMT+5
+│   │       │   ├── GMT-5
+│   │       │   ├── GMT+6
+│   │       │   ├── GMT-6
+│   │       │   ├── GMT+7
+│   │       │   ├── GMT-7
+│   │       │   ├── GMT+8
+│   │       │   ├── GMT-8
+│   │       │   ├── GMT+9
+│   │       │   ├── GMT-9
+│   │       │   ├── Greenwich -> GMT
+│   │       │   ├── UCT -> UTC
+│   │       │   ├── Universal -> UTC
+│   │       │   ├── UTC
+│   │       │   └── Zulu -> UTC
+│   │       ├── Europe
+│   │       │   ├── Amsterdam
+│   │       │   ├── Andorra
+│   │       │   ├── Astrakhan
+│   │       │   ├── Athens
+│   │       │   ├── Belfast -> London
+│   │       │   ├── Belgrade
+│   │       │   ├── Berlin
+│   │       │   ├── Bratislava -> Prague
+│   │       │   ├── Brussels
+│   │       │   ├── Bucharest
+│   │       │   ├── Budapest
+│   │       │   ├── Busingen -> Zurich
+│   │       │   ├── Chisinau
+│   │       │   ├── Copenhagen
+│   │       │   ├── Dublin
+│   │       │   ├── Gibraltar
+│   │       │   ├── Guernsey
+│   │       │   ├── Helsinki
+│   │       │   ├── Isle_of_Man
+│   │       │   ├── Istanbul
+│   │       │   ├── Jersey
+│   │       │   ├── Kaliningrad
+│   │       │   ├── Kiev -> Kyiv
+│   │       │   ├── Kirov
+│   │       │   ├── Kyiv
+│   │       │   ├── Lisbon
+│   │       │   ├── Ljubljana
+│   │       │   ├── London
+│   │       │   ├── Luxembourg
+│   │       │   ├── Madrid
+│   │       │   ├── Malta
+│   │       │   ├── Mariehamn -> Helsinki
+│   │       │   ├── Minsk
+│   │       │   ├── Monaco
+│   │       │   ├── Moscow
+│   │       │   ├── Nicosia -> ../Asia/Nicosia
+│   │       │   ├── Oslo
+│   │       │   ├── Paris
+│   │       │   ├── Podgorica -> Belgrade
+│   │       │   ├── Prague
+│   │       │   ├── Riga
+│   │       │   ├── Rome
+│   │       │   ├── Samara
+│   │       │   ├── San_Marino -> Rome
+│   │       │   ├── Sarajevo
+│   │       │   ├── Saratov
+│   │       │   ├── Simferopol
+│   │       │   ├── Skopje
+│   │       │   ├── Sofia
+│   │       │   ├── Stockholm
+│   │       │   ├── Tallinn
+│   │       │   ├── Tirane
+│   │       │   ├── Tiraspol -> Chisinau
+│   │       │   ├── Ulyanovsk
+│   │       │   ├── Uzhgorod -> Kyiv
+│   │       │   ├── Vaduz
+│   │       │   ├── Vatican -> Rome
+│   │       │   ├── Vienna
+│   │       │   ├── Vilnius
+│   │       │   ├── Volgograd
+│   │       │   ├── Warsaw
+│   │       │   ├── Zagreb
+│   │       │   ├── Zaporozhye -> Kyiv
+│   │       │   └── Zurich
+│   │       ├── Factory
+│   │       ├── GB -> Europe/London
+│   │       ├── GB-Eire -> Europe/London
+│   │       ├── GMT -> Etc/GMT
+│   │       ├── GMT+0 -> Etc/GMT
+│   │       ├── GMT-0 -> Etc/GMT
+│   │       ├── GMT0 -> Etc/GMT
+│   │       ├── Greenwich -> Etc/GMT
+│   │       ├── Hongkong -> Asia/Hong_Kong
+│   │       ├── HST
+│   │       ├── Iceland -> Africa/Abidjan
+│   │       ├── Indian
+│   │       │   ├── Antananarivo
+│   │       │   ├── Chagos
+│   │       │   ├── Christmas
+│   │       │   ├── Cocos
+│   │       │   ├── Comoro
+│   │       │   ├── Kerguelen
+│   │       │   ├── Mahe
+│   │       │   ├── Maldives
+│   │       │   ├── Mauritius
+│   │       │   ├── Mayotte
+│   │       │   └── Reunion
+│   │       ├── Iran -> Asia/Tehran
+│   │       ├── iso3166.tab
+│   │       ├── Israel -> Asia/Jerusalem
+│   │       ├── Jamaica -> America/Jamaica
+│   │       ├── Japan -> Asia/Tokyo
+│   │       ├── Kwajalein -> Pacific/Kwajalein
+│   │       ├── leapseconds
+│   │       ├── leap-seconds.list
+│   │       ├── Libya -> Africa/Tripoli
+│   │       ├── localtime -> /etc/localtime
+│   │       ├── MET
+│   │       ├── Mexico
+│   │       │   ├── BajaNorte -> ../America/Tijuana
+│   │       │   ├── BajaSur -> ../America/Mazatlan
+│   │       │   └── General -> ../America/Mexico_City
+│   │       ├── MST
+│   │       ├── MST7MDT
+│   │       ├── Navajo -> America/Denver
+│   │       ├── NZ -> Pacific/Auckland
+│   │       ├── NZ-CHAT -> Pacific/Chatham
+│   │       ├── Pacific
+│   │       │   ├── Apia
+│   │       │   ├── Auckland
+│   │       │   ├── Bougainville
+│   │       │   ├── Chatham
+│   │       │   ├── Chuuk
+│   │       │   ├── Easter
+│   │       │   ├── Efate
+│   │       │   ├── Enderbury -> Kanton
+│   │       │   ├── Fakaofo
+│   │       │   ├── Fiji
+│   │       │   ├── Funafuti
+│   │       │   ├── Galapagos
+│   │       │   ├── Gambier
+│   │       │   ├── Guadalcanal
+│   │       │   ├── Guam
+│   │       │   ├── Honolulu
+│   │       │   ├── Johnston -> Honolulu
+│   │       │   ├── Kanton
+│   │       │   ├── Kiritimati
+│   │       │   ├── Kosrae
+│   │       │   ├── Kwajalein
+│   │       │   ├── Majuro
+│   │       │   ├── Marquesas
+│   │       │   ├── Midway
+│   │       │   ├── Nauru
+│   │       │   ├── Niue
+│   │       │   ├── Norfolk
+│   │       │   ├── Noumea
+│   │       │   ├── Pago_Pago
+│   │       │   ├── Palau
+│   │       │   ├── Pitcairn
+│   │       │   ├── Pohnpei
+│   │       │   ├── Ponape -> Guadalcanal
+│   │       │   ├── Port_Moresby
+│   │       │   ├── Rarotonga
+│   │       │   ├── Saipan
+│   │       │   ├── Samoa -> Pago_Pago
+│   │       │   ├── Tahiti
+│   │       │   ├── Tarawa
+│   │       │   ├── Tongatapu
+│   │       │   ├── Truk -> Port_Moresby
+│   │       │   ├── Wake
+│   │       │   ├── Wallis
+│   │       │   └── Yap -> Port_Moresby
+│   │       ├── Poland -> Europe/Warsaw
+│   │       ├── Portugal -> Europe/Lisbon
+│   │       ├── posix
+│   │       │   ├── Africa -> ../Africa
+│   │       │   ├── America -> ../America
+│   │       │   ├── Antarctica -> ../Antarctica
+│   │       │   ├── Arctic -> ../Arctic
+│   │       │   ├── Asia -> ../Asia
+│   │       │   ├── Atlantic -> ../Atlantic
+│   │       │   ├── Australia -> ../Australia
+│   │       │   ├── Brazil -> ../Brazil
+│   │       │   ├── Canada -> ../Canada
+│   │       │   ├── CET -> ../CET
+│   │       │   ├── Chile -> ../Chile
+│   │       │   ├── CST6CDT -> ../CST6CDT
+│   │       │   ├── Cuba -> ../America/Havana
+│   │       │   ├── EET -> ../EET
+│   │       │   ├── Egypt -> ../Africa/Cairo
+│   │       │   ├── Eire -> ../Europe/Dublin
+│   │       │   ├── EST -> ../EST
+│   │       │   ├── EST5EDT -> ../EST5EDT
+│   │       │   ├── Etc -> ../Etc
+│   │       │   ├── Europe -> ../Europe
+│   │       │   ├── Factory -> ../Factory
+│   │       │   ├── GB -> ../Europe/London
+│   │       │   ├── GB-Eire -> ../Europe/London
+│   │       │   ├── GMT -> ../Etc/GMT
+│   │       │   ├── GMT+0 -> ../Etc/GMT
+│   │       │   ├── GMT-0 -> ../Etc/GMT
+│   │       │   ├── GMT0 -> ../Etc/GMT
+│   │       │   ├── Greenwich -> ../Etc/GMT
+│   │       │   ├── Hongkong -> ../Asia/Hong_Kong
+│   │       │   ├── HST -> ../HST
+│   │       │   ├── Iceland -> ../Africa/Abidjan
+│   │       │   ├── Indian -> ../Indian
+│   │       │   ├── Iran -> ../Asia/Tehran
+│   │       │   ├── Israel -> ../Asia/Jerusalem
+│   │       │   ├── Jamaica -> ../America/Jamaica
+│   │       │   ├── Japan -> ../Asia/Tokyo
+│   │       │   ├── Kwajalein -> ../Pacific/Kwajalein
+│   │       │   ├── Libya -> ../Africa/Tripoli
+│   │       │   ├── MET -> ../MET
+│   │       │   ├── Mexico -> ../Mexico
+│   │       │   ├── MST -> ../MST
+│   │       │   ├── MST7MDT -> ../MST7MDT
+│   │       │   ├── Navajo -> ../America/Denver
+│   │       │   ├── NZ -> ../Pacific/Auckland
+│   │       │   ├── NZ-CHAT -> ../Pacific/Chatham
+│   │       │   ├── Pacific -> ../Pacific
+│   │       │   ├── Poland -> ../Europe/Warsaw
+│   │       │   ├── Portugal -> ../Europe/Lisbon
+│   │       │   ├── PRC -> ../Asia/Shanghai
+│   │       │   ├── PST8PDT -> ../PST8PDT
+│   │       │   ├── ROC -> ../Asia/Taipei
+│   │       │   ├── ROK -> ../Asia/Seoul
+│   │       │   ├── Singapore -> ../Asia/Singapore
+│   │       │   ├── Turkey -> ../Europe/Istanbul
+│   │       │   ├── UCT -> ../Etc/UTC
+│   │       │   ├── Universal -> ../Etc/UTC
+│   │       │   ├── US -> ../US
+│   │       │   ├── UTC -> ../Etc/UTC
+│   │       │   ├── WET -> ../WET
+│   │       │   ├── W-SU -> ../Europe/Moscow
+│   │       │   └── Zulu -> ../Etc/UTC
+│   │       ├── posixrules -> America/New_York
+│   │       ├── PRC -> Asia/Shanghai
+│   │       ├── PST8PDT
+│   │       ├── right
+│   │       │   ├── Africa
+│   │       │   │   ├── Abidjan
+│   │       │   │   ├── Accra
+│   │       │   │   ├── Addis_Ababa
+│   │       │   │   ├── Algiers
+│   │       │   │   ├── Asmara
+│   │       │   │   ├── Asmera -> Nairobi
+│   │       │   │   ├── Bamako
+│   │       │   │   ├── Bangui
+│   │       │   │   ├── Banjul
+│   │       │   │   ├── Bissau
+│   │       │   │   ├── Blantyre
+│   │       │   │   ├── Brazzaville
+│   │       │   │   ├── Bujumbura
+│   │       │   │   ├── Cairo
+│   │       │   │   ├── Casablanca
+│   │       │   │   ├── Ceuta
+│   │       │   │   ├── Conakry
+│   │       │   │   ├── Dakar
+│   │       │   │   ├── Dar_es_Salaam
+│   │       │   │   ├── Djibouti
+│   │       │   │   ├── Douala
+│   │       │   │   ├── El_Aaiun
+│   │       │   │   ├── Freetown
+│   │       │   │   ├── Gaborone
+│   │       │   │   ├── Harare
+│   │       │   │   ├── Johannesburg
+│   │       │   │   ├── Juba
+│   │       │   │   ├── Kampala
+│   │       │   │   ├── Khartoum
+│   │       │   │   ├── Kigali
+│   │       │   │   ├── Kinshasa
+│   │       │   │   ├── Lagos
+│   │       │   │   ├── Libreville
+│   │       │   │   ├── Lome
+│   │       │   │   ├── Luanda
+│   │       │   │   ├── Lubumbashi
+│   │       │   │   ├── Lusaka
+│   │       │   │   ├── Malabo
+│   │       │   │   ├── Maputo
+│   │       │   │   ├── Maseru
+│   │       │   │   ├── Mbabane
+│   │       │   │   ├── Mogadishu
+│   │       │   │   ├── Monrovia
+│   │       │   │   ├── Nairobi
+│   │       │   │   ├── Ndjamena
+│   │       │   │   ├── Niamey
+│   │       │   │   ├── Nouakchott
+│   │       │   │   ├── Ouagadougou
+│   │       │   │   ├── Porto-Novo
+│   │       │   │   ├── Sao_Tome
+│   │       │   │   ├── Timbuktu -> Abidjan
+│   │       │   │   ├── Tripoli
+│   │       │   │   ├── Tunis
+│   │       │   │   └── Windhoek
+│   │       │   ├── America
+│   │       │   │   ├── Adak
+│   │       │   │   ├── Anchorage
+│   │       │   │   ├── Anguilla
+│   │       │   │   ├── Antigua
+│   │       │   │   ├── Araguaina
+│   │       │   │   ├── Argentina
+│   │       │   │   │   ├── Buenos_Aires
+│   │       │   │   │   ├── Catamarca
+│   │       │   │   │   ├── ComodRivadavia -> Catamarca
+│   │       │   │   │   ├── Cordoba
+│   │       │   │   │   ├── Jujuy
+│   │       │   │   │   ├── La_Rioja
+│   │       │   │   │   ├── Mendoza
+│   │       │   │   │   ├── Rio_Gallegos
+│   │       │   │   │   ├── Salta
+│   │       │   │   │   ├── San_Juan
+│   │       │   │   │   ├── San_Luis
+│   │       │   │   │   ├── Tucuman
+│   │       │   │   │   └── Ushuaia
+│   │       │   │   ├── Aruba
+│   │       │   │   ├── Asuncion
+│   │       │   │   ├── Atikokan
+│   │       │   │   ├── Atka -> Adak
+│   │       │   │   ├── Bahia
+│   │       │   │   ├── Bahia_Banderas
+│   │       │   │   ├── Barbados
+│   │       │   │   ├── Belem
+│   │       │   │   ├── Belize
+│   │       │   │   ├── Blanc-Sablon
+│   │       │   │   ├── Boa_Vista
+│   │       │   │   ├── Bogota
+│   │       │   │   ├── Boise
+│   │       │   │   ├── Buenos_Aires -> Argentina/Buenos_Aires
+│   │       │   │   ├── Cambridge_Bay
+│   │       │   │   ├── Campo_Grande
+│   │       │   │   ├── Cancun
+│   │       │   │   ├── Caracas
+│   │       │   │   ├── Catamarca -> Argentina/Catamarca
+│   │       │   │   ├── Cayenne
+│   │       │   │   ├── Cayman
+│   │       │   │   ├── Chicago
+│   │       │   │   ├── Chihuahua
+│   │       │   │   ├── Ciudad_Juarez
+│   │       │   │   ├── Coral_Harbour -> Panama
+│   │       │   │   ├── Cordoba -> Argentina/Cordoba
+│   │       │   │   ├── Costa_Rica
+│   │       │   │   ├── Coyhaique
+│   │       │   │   ├── Creston
+│   │       │   │   ├── Cuiaba
+│   │       │   │   ├── Curacao
+│   │       │   │   ├── Danmarkshavn
+│   │       │   │   ├── Dawson
+│   │       │   │   ├── Dawson_Creek
+│   │       │   │   ├── Denver
+│   │       │   │   ├── Detroit
+│   │       │   │   ├── Dominica
+│   │       │   │   ├── Edmonton
+│   │       │   │   ├── Eirunepe
+│   │       │   │   ├── El_Salvador
+│   │       │   │   ├── Ensenada -> Tijuana
+│   │       │   │   ├── Fortaleza
+│   │       │   │   ├── Fort_Nelson
+│   │       │   │   ├── Fort_Wayne -> Indiana/Indianapolis
+│   │       │   │   ├── Glace_Bay
+│   │       │   │   ├── Godthab -> Nuuk
+│   │       │   │   ├── Goose_Bay
+│   │       │   │   ├── Grand_Turk
+│   │       │   │   ├── Grenada
+│   │       │   │   ├── Guadeloupe
+│   │       │   │   ├── Guatemala
+│   │       │   │   ├── Guayaquil
+│   │       │   │   ├── Guyana
+│   │       │   │   ├── Halifax
+│   │       │   │   ├── Havana
+│   │       │   │   ├── Hermosillo
+│   │       │   │   ├── Indiana
+│   │       │   │   │   ├── Indianapolis
+│   │       │   │   │   ├── Knox
+│   │       │   │   │   ├── Marengo
+│   │       │   │   │   ├── Petersburg
+│   │       │   │   │   ├── Tell_City
+│   │       │   │   │   ├── Vevay
+│   │       │   │   │   ├── Vincennes
+│   │       │   │   │   └── Winamac
+│   │       │   │   ├── Indianapolis -> Indiana/Indianapolis
+│   │       │   │   ├── Inuvik
+│   │       │   │   ├── Iqaluit
+│   │       │   │   ├── Jamaica
+│   │       │   │   ├── Jujuy -> Argentina/Jujuy
+│   │       │   │   ├── Juneau
+│   │       │   │   ├── Kentucky
+│   │       │   │   │   ├── Louisville
+│   │       │   │   │   └── Monticello
+│   │       │   │   ├── Knox_IN -> Indiana/Knox
+│   │       │   │   ├── Kralendijk -> Puerto_Rico
+│   │       │   │   ├── La_Paz
+│   │       │   │   ├── Lima
+│   │       │   │   ├── Los_Angeles
+│   │       │   │   ├── Louisville -> Kentucky/Louisville
+│   │       │   │   ├── Lower_Princes -> Puerto_Rico
+│   │       │   │   ├── Maceio
+│   │       │   │   ├── Managua
+│   │       │   │   ├── Manaus
+│   │       │   │   ├── Marigot -> Puerto_Rico
+│   │       │   │   ├── Martinique
+│   │       │   │   ├── Matamoros
+│   │       │   │   ├── Mazatlan
+│   │       │   │   ├── Mendoza -> Argentina/Mendoza
+│   │       │   │   ├── Menominee
+│   │       │   │   ├── Merida
+│   │       │   │   ├── Metlakatla
+│   │       │   │   ├── Mexico_City
+│   │       │   │   ├── Miquelon
+│   │       │   │   ├── Moncton
+│   │       │   │   ├── Monterrey
+│   │       │   │   ├── Montevideo
+│   │       │   │   ├── Montreal -> Toronto
+│   │       │   │   ├── Montserrat
+│   │       │   │   ├── Nassau
+│   │       │   │   ├── New_York
+│   │       │   │   ├── Nipigon -> Toronto
+│   │       │   │   ├── Nome
+│   │       │   │   ├── Noronha
+│   │       │   │   ├── North_Dakota
+│   │       │   │   │   ├── Beulah
+│   │       │   │   │   ├── Center
+│   │       │   │   │   └── New_Salem
+│   │       │   │   ├── Nuuk
+│   │       │   │   ├── Ojinaga
+│   │       │   │   ├── Panama
+│   │       │   │   ├── Pangnirtung -> Iqaluit
+│   │       │   │   ├── Paramaribo
+│   │       │   │   ├── Phoenix
+│   │       │   │   ├── Port-au-Prince
+│   │       │   │   ├── Porto_Acre -> Rio_Branco
+│   │       │   │   ├── Port_of_Spain
+│   │       │   │   ├── Porto_Velho
+│   │       │   │   ├── Puerto_Rico
+│   │       │   │   ├── Punta_Arenas
+│   │       │   │   ├── Rainy_River -> Winnipeg
+│   │       │   │   ├── Rankin_Inlet
+│   │       │   │   ├── Recife
+│   │       │   │   ├── Regina
+│   │       │   │   ├── Resolute
+│   │       │   │   ├── Rio_Branco
+│   │       │   │   ├── Rosario -> Argentina/Cordoba
+│   │       │   │   ├── Santa_Isabel -> Tijuana
+│   │       │   │   ├── Santarem
+│   │       │   │   ├── Santiago
+│   │       │   │   ├── Santo_Domingo
+│   │       │   │   ├── Sao_Paulo
+│   │       │   │   ├── Scoresbysund
+│   │       │   │   ├── Shiprock -> Denver
+│   │       │   │   ├── Sitka
+│   │       │   │   ├── St_Barthelemy -> Puerto_Rico
+│   │       │   │   ├── St_Johns
+│   │       │   │   ├── St_Kitts
+│   │       │   │   ├── St_Lucia
+│   │       │   │   ├── St_Thomas
+│   │       │   │   ├── St_Vincent
+│   │       │   │   ├── Swift_Current
+│   │       │   │   ├── Tegucigalpa
+│   │       │   │   ├── Thule
+│   │       │   │   ├── Thunder_Bay -> Toronto
+│   │       │   │   ├── Tijuana
+│   │       │   │   ├── Toronto
+│   │       │   │   ├── Tortola
+│   │       │   │   ├── Vancouver
+│   │       │   │   ├── Virgin -> Puerto_Rico
+│   │       │   │   ├── Whitehorse
+│   │       │   │   ├── Winnipeg
+│   │       │   │   ├── Yakutat
+│   │       │   │   └── Yellowknife -> Edmonton
+│   │       │   ├── Antarctica
+│   │       │   │   ├── Casey
+│   │       │   │   ├── Davis
+│   │       │   │   ├── DumontDUrville
+│   │       │   │   ├── Macquarie
+│   │       │   │   ├── Mawson
+│   │       │   │   ├── McMurdo
+│   │       │   │   ├── Palmer
+│   │       │   │   ├── Rothera
+│   │       │   │   ├── South_Pole -> ../Pacific/Auckland
+│   │       │   │   ├── Syowa
+│   │       │   │   ├── Troll
+│   │       │   │   └── Vostok
+│   │       │   ├── Arctic
+│   │       │   │   └── Longyearbyen -> ../Europe/Berlin
+│   │       │   ├── Asia
+│   │       │   │   ├── Aden
+│   │       │   │   ├── Almaty
+│   │       │   │   ├── Amman
+│   │       │   │   ├── Anadyr
+│   │       │   │   ├── Aqtau
+│   │       │   │   ├── Aqtobe
+│   │       │   │   ├── Ashgabat
+│   │       │   │   ├── Ashkhabad -> Ashgabat
+│   │       │   │   ├── Atyrau
+│   │       │   │   ├── Baghdad
+│   │       │   │   ├── Bahrain
+│   │       │   │   ├── Baku
+│   │       │   │   ├── Bangkok
+│   │       │   │   ├── Barnaul
+│   │       │   │   ├── Beirut
+│   │       │   │   ├── Bishkek
+│   │       │   │   ├── Brunei
+│   │       │   │   ├── Calcutta -> Kolkata
+│   │       │   │   ├── Chita
+│   │       │   │   ├── Choibalsan -> Ulaanbaatar
+│   │       │   │   ├── Chongqing -> Shanghai
+│   │       │   │   ├── Chungking -> Shanghai
+│   │       │   │   ├── Colombo
+│   │       │   │   ├── Dacca -> Dhaka
+│   │       │   │   ├── Damascus
+│   │       │   │   ├── Dhaka
+│   │       │   │   ├── Dili
+│   │       │   │   ├── Dubai
+│   │       │   │   ├── Dushanbe
+│   │       │   │   ├── Famagusta
+│   │       │   │   ├── Gaza
+│   │       │   │   ├── Harbin -> Shanghai
+│   │       │   │   ├── Hebron
+│   │       │   │   ├── Ho_Chi_Minh
+│   │       │   │   ├── Hong_Kong
+│   │       │   │   ├── Hovd
+│   │       │   │   ├── Irkutsk
+│   │       │   │   ├── Istanbul -> ../Europe/Istanbul
+│   │       │   │   ├── Jakarta
+│   │       │   │   ├── Jayapura
+│   │       │   │   ├── Jerusalem
+│   │       │   │   ├── Kabul
+│   │       │   │   ├── Kamchatka
+│   │       │   │   ├── Karachi
+│   │       │   │   ├── Kashgar -> Urumqi
+│   │       │   │   ├── Kathmandu
+│   │       │   │   ├── Katmandu -> Kathmandu
+│   │       │   │   ├── Khandyga
+│   │       │   │   ├── Kolkata
+│   │       │   │   ├── Krasnoyarsk
+│   │       │   │   ├── Kuala_Lumpur
+│   │       │   │   ├── Kuching
+│   │       │   │   ├── Kuwait
+│   │       │   │   ├── Macao -> Macau
+│   │       │   │   ├── Macau
+│   │       │   │   ├── Magadan
+│   │       │   │   ├── Makassar
+│   │       │   │   ├── Manila
+│   │       │   │   ├── Muscat
+│   │       │   │   ├── Nicosia
+│   │       │   │   ├── Novokuznetsk
+│   │       │   │   ├── Novosibirsk
+│   │       │   │   ├── Omsk
+│   │       │   │   ├── Oral
+│   │       │   │   ├── Phnom_Penh
+│   │       │   │   ├── Pontianak
+│   │       │   │   ├── Pyongyang
+│   │       │   │   ├── Qatar
+│   │       │   │   ├── Qostanay
+│   │       │   │   ├── Qyzylorda
+│   │       │   │   ├── Rangoon -> Yangon
+│   │       │   │   ├── Riyadh
+│   │       │   │   ├── Saigon -> Ho_Chi_Minh
+│   │       │   │   ├── Sakhalin
+│   │       │   │   ├── Samarkand
+│   │       │   │   ├── Seoul
+│   │       │   │   ├── Shanghai
+│   │       │   │   ├── Singapore
+│   │       │   │   ├── Srednekolymsk
+│   │       │   │   ├── Taipei
+│   │       │   │   ├── Tashkent
+│   │       │   │   ├── Tbilisi
+│   │       │   │   ├── Tehran
+│   │       │   │   ├── Tel_Aviv -> Jerusalem
+│   │       │   │   ├── Thimbu -> Thimphu
+│   │       │   │   ├── Thimphu
+│   │       │   │   ├── Tokyo
+│   │       │   │   ├── Tomsk
+│   │       │   │   ├── Ujung_Pandang -> Makassar
+│   │       │   │   ├── Ulaanbaatar
+│   │       │   │   ├── Ulan_Bator -> Ulaanbaatar
+│   │       │   │   ├── Urumqi
+│   │       │   │   ├── Ust-Nera
+│   │       │   │   ├── Vientiane
+│   │       │   │   ├── Vladivostok
+│   │       │   │   ├── Yakutsk
+│   │       │   │   ├── Yangon
+│   │       │   │   ├── Yekaterinburg
+│   │       │   │   └── Yerevan
+│   │       │   ├── Atlantic
+│   │       │   │   ├── Azores
+│   │       │   │   ├── Bermuda
+│   │       │   │   ├── Canary
+│   │       │   │   ├── Cape_Verde
+│   │       │   │   ├── Faeroe -> Faroe
+│   │       │   │   ├── Faroe
+│   │       │   │   ├── Jan_Mayen -> ../Europe/Berlin
+│   │       │   │   ├── Madeira
+│   │       │   │   ├── Reykjavik
+│   │       │   │   ├── South_Georgia
+│   │       │   │   ├── Stanley
+│   │       │   │   └── St_Helena
+│   │       │   ├── Australia
+│   │       │   │   ├── ACT -> Sydney
+│   │       │   │   ├── Adelaide
+│   │       │   │   ├── Brisbane
+│   │       │   │   ├── Broken_Hill
+│   │       │   │   ├── Canberra -> Sydney
+│   │       │   │   ├── Currie -> Hobart
+│   │       │   │   ├── Darwin
+│   │       │   │   ├── Eucla
+│   │       │   │   ├── Hobart
+│   │       │   │   ├── LHI -> Lord_Howe
+│   │       │   │   ├── Lindeman
+│   │       │   │   ├── Lord_Howe
+│   │       │   │   ├── Melbourne
+│   │       │   │   ├── North -> Darwin
+│   │       │   │   ├── NSW -> Sydney
+│   │       │   │   ├── Perth
+│   │       │   │   ├── Queensland -> Brisbane
+│   │       │   │   ├── South -> Adelaide
+│   │       │   │   ├── Sydney
+│   │       │   │   ├── Tasmania -> Hobart
+│   │       │   │   ├── Victoria -> Melbourne
+│   │       │   │   ├── West -> Perth
+│   │       │   │   └── Yancowinna -> Broken_Hill
+│   │       │   ├── Brazil
+│   │       │   │   ├── Acre -> ../America/Rio_Branco
+│   │       │   │   ├── DeNoronha -> ../America/Noronha
+│   │       │   │   ├── East -> ../America/Sao_Paulo
+│   │       │   │   └── West -> ../America/Manaus
+│   │       │   ├── Canada
+│   │       │   │   ├── Atlantic -> ../America/Halifax
+│   │       │   │   ├── Central -> ../America/Winnipeg
+│   │       │   │   ├── Eastern -> ../America/Toronto
+│   │       │   │   ├── Mountain -> ../America/Edmonton
+│   │       │   │   ├── Newfoundland -> ../America/St_Johns
+│   │       │   │   ├── Pacific -> ../America/Vancouver
+│   │       │   │   ├── Saskatchewan -> ../America/Regina
+│   │       │   │   └── Yukon -> ../America/Whitehorse
+│   │       │   ├── CET
+│   │       │   ├── Chile
+│   │       │   │   ├── Continental -> ../America/Santiago
+│   │       │   │   └── EasterIsland -> ../Pacific/Easter
+│   │       │   ├── CST6CDT
+│   │       │   ├── Cuba -> America/Havana
+│   │       │   ├── EET
+│   │       │   ├── Egypt -> Africa/Cairo
+│   │       │   ├── Eire -> Europe/Dublin
+│   │       │   ├── EST
+│   │       │   ├── EST5EDT
+│   │       │   ├── Etc
+│   │       │   │   ├── GMT
+│   │       │   │   ├── GMT+0 -> GMT
+│   │       │   │   ├── GMT-0 -> GMT
+│   │       │   │   ├── GMT0 -> GMT
+│   │       │   │   ├── GMT+1
+│   │       │   │   ├── GMT-1
+│   │       │   │   ├── GMT+10
+│   │       │   │   ├── GMT-10
+│   │       │   │   ├── GMT+11
+│   │       │   │   ├── GMT-11
+│   │       │   │   ├── GMT+12
+│   │       │   │   ├── GMT-12
+│   │       │   │   ├── GMT-13
+│   │       │   │   ├── GMT-14
+│   │       │   │   ├── GMT+2
+│   │       │   │   ├── GMT-2
+│   │       │   │   ├── GMT+3
+│   │       │   │   ├── GMT-3
+│   │       │   │   ├── GMT+4
+│   │       │   │   ├── GMT-4
+│   │       │   │   ├── GMT+5
+│   │       │   │   ├── GMT-5
+│   │       │   │   ├── GMT+6
+│   │       │   │   ├── GMT-6
+│   │       │   │   ├── GMT+7
+│   │       │   │   ├── GMT-7
+│   │       │   │   ├── GMT+8
+│   │       │   │   ├── GMT-8
+│   │       │   │   ├── GMT+9
+│   │       │   │   ├── GMT-9
+│   │       │   │   ├── Greenwich -> GMT
+│   │       │   │   ├── UCT -> UTC
+│   │       │   │   ├── Universal -> UTC
+│   │       │   │   ├── UTC
+│   │       │   │   └── Zulu -> UTC
+│   │       │   ├── Europe
+│   │       │   │   ├── Amsterdam
+│   │       │   │   ├── Andorra
+│   │       │   │   ├── Astrakhan
+│   │       │   │   ├── Athens
+│   │       │   │   ├── Belfast -> London
+│   │       │   │   ├── Belgrade
+│   │       │   │   ├── Berlin
+│   │       │   │   ├── Bratislava -> Prague
+│   │       │   │   ├── Brussels
+│   │       │   │   ├── Bucharest
+│   │       │   │   ├── Budapest
+│   │       │   │   ├── Busingen -> Zurich
+│   │       │   │   ├── Chisinau
+│   │       │   │   ├── Copenhagen
+│   │       │   │   ├── Dublin
+│   │       │   │   ├── Gibraltar
+│   │       │   │   ├── Guernsey
+│   │       │   │   ├── Helsinki
+│   │       │   │   ├── Isle_of_Man
+│   │       │   │   ├── Istanbul
+│   │       │   │   ├── Jersey
+│   │       │   │   ├── Kaliningrad
+│   │       │   │   ├── Kiev -> Kyiv
+│   │       │   │   ├── Kirov
+│   │       │   │   ├── Kyiv
+│   │       │   │   ├── Lisbon
+│   │       │   │   ├── Ljubljana
+│   │       │   │   ├── London
+│   │       │   │   ├── Luxembourg
+│   │       │   │   ├── Madrid
+│   │       │   │   ├── Malta
+│   │       │   │   ├── Mariehamn -> Helsinki
+│   │       │   │   ├── Minsk
+│   │       │   │   ├── Monaco
+│   │       │   │   ├── Moscow
+│   │       │   │   ├── Nicosia -> ../Asia/Nicosia
+│   │       │   │   ├── Oslo
+│   │       │   │   ├── Paris
+│   │       │   │   ├── Podgorica -> Belgrade
+│   │       │   │   ├── Prague
+│   │       │   │   ├── Riga
+│   │       │   │   ├── Rome
+│   │       │   │   ├── Samara
+│   │       │   │   ├── San_Marino -> Rome
+│   │       │   │   ├── Sarajevo
+│   │       │   │   ├── Saratov
+│   │       │   │   ├── Simferopol
+│   │       │   │   ├── Skopje
+│   │       │   │   ├── Sofia
+│   │       │   │   ├── Stockholm
+│   │       │   │   ├── Tallinn
+│   │       │   │   ├── Tirane
+│   │       │   │   ├── Tiraspol -> Chisinau
+│   │       │   │   ├── Ulyanovsk
+│   │       │   │   ├── Uzhgorod -> Kyiv
+│   │       │   │   ├── Vaduz
+│   │       │   │   ├── Vatican -> Rome
+│   │       │   │   ├── Vienna
+│   │       │   │   ├── Vilnius
+│   │       │   │   ├── Volgograd
+│   │       │   │   ├── Warsaw
+│   │       │   │   ├── Zagreb
+│   │       │   │   ├── Zaporozhye -> Kyiv
+│   │       │   │   └── Zurich
+│   │       │   ├── Factory
+│   │       │   ├── GB -> Europe/London
+│   │       │   ├── GB-Eire -> Europe/London
+│   │       │   ├── GMT -> Etc/GMT
+│   │       │   ├── GMT+0 -> Etc/GMT
+│   │       │   ├── GMT-0 -> Etc/GMT
+│   │       │   ├── GMT0 -> Etc/GMT
+│   │       │   ├── Greenwich -> Etc/GMT
+│   │       │   ├── Hongkong -> Asia/Hong_Kong
+│   │       │   ├── HST
+│   │       │   ├── Iceland -> Africa/Abidjan
+│   │       │   ├── Indian
+│   │       │   │   ├── Antananarivo
+│   │       │   │   ├── Chagos
+│   │       │   │   ├── Christmas
+│   │       │   │   ├── Cocos
+│   │       │   │   ├── Comoro
+│   │       │   │   ├── Kerguelen
+│   │       │   │   ├── Mahe
+│   │       │   │   ├── Maldives
+│   │       │   │   ├── Mauritius
+│   │       │   │   ├── Mayotte
+│   │       │   │   └── Reunion
+│   │       │   ├── Iran -> Asia/Tehran
+│   │       │   ├── Israel -> Asia/Jerusalem
+│   │       │   ├── Jamaica -> America/Jamaica
+│   │       │   ├── Japan -> Asia/Tokyo
+│   │       │   ├── Kwajalein -> Pacific/Kwajalein
+│   │       │   ├── Libya -> Africa/Tripoli
+│   │       │   ├── MET
+│   │       │   ├── Mexico
+│   │       │   │   ├── BajaNorte -> ../America/Tijuana
+│   │       │   │   ├── BajaSur -> ../America/Mazatlan
+│   │       │   │   └── General -> ../America/Mexico_City
+│   │       │   ├── MST
+│   │       │   ├── MST7MDT
+│   │       │   ├── Navajo -> America/Denver
+│   │       │   ├── NZ -> Pacific/Auckland
+│   │       │   ├── NZ-CHAT -> Pacific/Chatham
+│   │       │   ├── Pacific
+│   │       │   │   ├── Apia
+│   │       │   │   ├── Auckland
+│   │       │   │   ├── Bougainville
+│   │       │   │   ├── Chatham
+│   │       │   │   ├── Chuuk
+│   │       │   │   ├── Easter
+│   │       │   │   ├── Efate
+│   │       │   │   ├── Enderbury -> Kanton
+│   │       │   │   ├── Fakaofo
+│   │       │   │   ├── Fiji
+│   │       │   │   ├── Funafuti
+│   │       │   │   ├── Galapagos
+│   │       │   │   ├── Gambier
+│   │       │   │   ├── Guadalcanal
+│   │       │   │   ├── Guam
+│   │       │   │   ├── Honolulu
+│   │       │   │   ├── Johnston -> Honolulu
+│   │       │   │   ├── Kanton
+│   │       │   │   ├── Kiritimati
+│   │       │   │   ├── Kosrae
+│   │       │   │   ├── Kwajalein
+│   │       │   │   ├── Majuro
+│   │       │   │   ├── Marquesas
+│   │       │   │   ├── Midway
+│   │       │   │   ├── Nauru
+│   │       │   │   ├── Niue
+│   │       │   │   ├── Norfolk
+│   │       │   │   ├── Noumea
+│   │       │   │   ├── Pago_Pago
+│   │       │   │   ├── Palau
+│   │       │   │   ├── Pitcairn
+│   │       │   │   ├── Pohnpei
+│   │       │   │   ├── Ponape -> Guadalcanal
+│   │       │   │   ├── Port_Moresby
+│   │       │   │   ├── Rarotonga
+│   │       │   │   ├── Saipan
+│   │       │   │   ├── Samoa -> Pago_Pago
+│   │       │   │   ├── Tahiti
+│   │       │   │   ├── Tarawa
+│   │       │   │   ├── Tongatapu
+│   │       │   │   ├── Truk -> Port_Moresby
+│   │       │   │   ├── Wake
+│   │       │   │   ├── Wallis
+│   │       │   │   └── Yap -> Port_Moresby
+│   │       │   ├── Poland -> Europe/Warsaw
+│   │       │   ├── Portugal -> Europe/Lisbon
+│   │       │   ├── PRC -> Asia/Shanghai
+│   │       │   ├── PST8PDT
+│   │       │   ├── ROC -> Asia/Taipei
+│   │       │   ├── ROK -> Asia/Seoul
+│   │       │   ├── Singapore -> Asia/Singapore
+│   │       │   ├── Turkey -> Europe/Istanbul
+│   │       │   ├── UCT -> Etc/UTC
+│   │       │   ├── Universal -> Etc/UTC
+│   │       │   ├── US
+│   │       │   │   ├── Alaska -> ../America/Anchorage
+│   │       │   │   ├── Aleutian -> ../America/Adak
+│   │       │   │   ├── Arizona -> ../America/Phoenix
+│   │       │   │   ├── Central -> ../America/Chicago
+│   │       │   │   ├── Eastern -> ../America/New_York
+│   │       │   │   ├── East-Indiana -> ../America/Indiana/Indianapolis
+│   │       │   │   ├── Hawaii -> ../Pacific/Honolulu
+│   │       │   │   ├── Indiana-Starke -> ../America/Indiana/Knox
+│   │       │   │   ├── Michigan -> ../America/Detroit
+│   │       │   │   ├── Mountain -> ../America/Denver
+│   │       │   │   ├── Pacific -> ../America/Los_Angeles
+│   │       │   │   └── Samoa -> ../Pacific/Pago_Pago
+│   │       │   ├── UTC -> Etc/UTC
+│   │       │   ├── WET
+│   │       │   ├── W-SU -> Europe/Moscow
+│   │       │   └── Zulu -> Etc/UTC
+│   │       ├── ROC -> Asia/Taipei
+│   │       ├── ROK -> Asia/Seoul
+│   │       ├── Singapore -> Asia/Singapore
+│   │       ├── Turkey -> Europe/Istanbul
+│   │       ├── tzdata.zi
+│   │       ├── UCT -> Etc/UTC
+│   │       ├── Universal -> Etc/UTC
+│   │       ├── US
+│   │       │   ├── Alaska -> ../America/Anchorage
+│   │       │   ├── Aleutian -> ../America/Adak
+│   │       │   ├── Arizona -> ../America/Phoenix
+│   │       │   ├── Central -> ../America/Chicago
+│   │       │   ├── Eastern -> ../America/New_York
+│   │       │   ├── East-Indiana -> ../America/Indiana/Indianapolis
+│   │       │   ├── Hawaii -> ../Pacific/Honolulu
+│   │       │   ├── Indiana-Starke -> ../America/Indiana/Knox
+│   │       │   ├── Michigan -> ../America/Detroit
+│   │       │   ├── Mountain -> ../America/Denver
+│   │       │   ├── Pacific -> ../America/Los_Angeles
+│   │       │   └── Samoa -> ../Pacific/Pago_Pago
+│   │       ├── UTC -> Etc/UTC
+│   │       ├── WET
+│   │       ├── W-SU -> Europe/Moscow
+│   │       ├── zone1970.tab
+│   │       ├── zone.tab
+│   │       └── Zulu -> Etc/UTC
+│   └── src
+└── var
+    ├── backups
+    ├── cache
+    ├── lib
+    │   ├── dpkg
+    │   │   └── status.d
+    │   │       ├── base-files
+    │   │       ├── base-files.md5sums
+    │   │       ├── libc6
+    │   │       ├── libc6.md5sums
+    │   │       ├── libssl3
+    │   │       ├── libssl3.md5sums
+    │   │       ├── media-types
+    │   │       ├── media-types.md5sums
+    │   │       ├── netbase
+    │   │       ├── netbase.md5sums
+    │   │       ├── tzdata
+    │   │       └── tzdata.md5sums
+    │   └── misc
+    ├── local
+    ├── lock
+    ├── log
+    ├── run
+    ├── spool
+    └── tmp
+
+130 directories, 1620 files
+</pre>
+</div>
+
+ <ul class="org-ul"> <li>共有ライブラリや設定ファイルがある</li>
+ <li>たしかにツール類の実行可能バイナリは入ってなさそうである</li>
+</ul></div>
+</div>
+ <div id="outline-container-org047463c" class="outline-2">
+ <h2 id="org047463c"> <a href="#org047463c">関連</a></h2>
+ <div class="outline-text-2" id="text-org047463c">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250913T214118--kdoc-466-ディストロレスコンテナに何が入っているのか見る__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250913T214118--kdoc-466-ディストロレスコンテナに何が入っているのか見る__permanent.html</id>
+  <updated>2025-11-04T01:38:13+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 477: 『Docker-Kubernetesネットワークのしくみ』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgc2012eb" class="outline-2">
+ <h2 id="orgc2012eb"> <a href="#orgc2012eb">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgc2012eb">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org0c89223" class="outline-2">
+ <h2 id="org0c89223"> <a href="#org0c89223">概要</a></h2>
+</div>
+ <div id="outline-container-orgccc6682" class="outline-2">
+ <h2 id="orgccc6682"> <a href="#orgccc6682">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgccc6682">
+ <ul class="org-ul"> <li>VXLANはVLANの拡張で、大規模なネットワークを仮想的に分割できる。EthernetフレームをUDP/IPパケットでカプセル化する。このカプセル化により、Ethernetフレームは自身のIPアドレスやMACアドレスを変更することなく、異なるネットワークセグメント間を移動できポータビリティが向上する(p15)</li>
+ <li>Networ Namespace(netns)を使用することでネットワークスタックを異なるNamespaceに分離し、互いに独立して動作させられる(p15)</li>
+</ul> <div class="org-src-container">
+ <pre class="src src-nil">アプリ
+  - HTTP
+
+|
+| システムコール
+v------
+
+カーネル
+  - TCP
+  - IP
+  - Ethernet
+|
+|------
+v
+- ハードウェア
+  - NIC
+</pre>
+</div>
+
+ <ul class="org-ul"> <li>ソケットにはIPアドレスとポート番号の組み合わせが記録され、通信元と通信先を指定している(p19)</li>
+ <li>3way handshake のメリット(p20)
+ <ul class="org-ul"> <li>相手先に転送を始めることを通知できる</li>
+ <li>要求のあったポートを受け入れられるかチェックできる</li>
+ <li>再送制御や流量制御ができる</li>
+</ul></li>
+ <li>IP層の役割は、TCP層から受け取ったデータにIPパケットを付与し、下位レイヤのL2にデータを送ること(p21)</li>
+ <li>ルーティングテーブルはルーティングプロトコルによって作成され、パケットが目的地に到達するための最良の経路を記録するしくみになっている。ルーティングプロトコルにはRIP, OSPF, BGPなどがある(p24)</li>
+ <li>Dockerではdocker0という仮想ブリッジがデフォルトで設定されている。このブリッジはコンテナが外部と通信するためのゲートウェイの役割を果たす(p25)</li>
+</ul> <div class="org-src-container">
+ <pre class="src src-shell">apt install bridge-utils
+brctl show docker0
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">bridge name	bridge id		STP enabled	interfaces
+docker0		8000.0242014087d9	no		veth8461c84
+							vethd66994d
+</pre>
+</div>
+
+ <ul class="org-ul"> <li>VLANは、物理ポートにIDを設定し、セグメントを分ける技術である。VLANを使わない場合は１つのスイッチに対して１つのセグメントしか設定できない(p34)</li>
+ <li>VLANの利点の１つは、複数のスイッチにまたがっても同一セグメント(Ethernetフレームをもとに通信が行われる範囲)として扱えることである。複数のスイッチを連携させて１つの大規模なL2ネットワークを構築できる。Ethernetフレームだけを見るのでIPアドレスのセグメントは変わらない(p34)</li>
+ <li>VXLANとは、同じL2ネットワーク上のEthernetフレームをL3ネットワークを介して送り届けられる技術である(p35)</li>
+ <li>パケットはネットワークデバイスを通過するときルーティングのためにそのパケットのヘッダ情報が書き換えられる(p36)</li>
+ <li>VXLANはL3ネットワーク上に仮想的なL2ネットワークを作り出すことからネットワークオーバーレイと呼ばれる(p35)</li>
+ <li>VXLANはEthernetフレームをUDP/IPでカプセル化するため、元のEthernetフレームの外側にさらにEthernetヘッダやIPヘッダがつけられる。これを「外部ヘッダ」という。もともとのEthernetフレーム内のヘッダは「内部ヘッダ」という(p35)</li>
+ <li>iptables の項目(p55)
+ <ul class="org-ul"> <li>テーブル: 処理機能を設定する</li>
+ <li>チェイン: ルールを適用するタイミングを設定する</li>
+ <li>ターゲット: iptablesルールに一致したパケットに対してどのようなアクションを取るか定義する</li>
+</ul></li>
+ <li>PREROUTINGチェインによるNAT変換が行われたあとにINPUT, OUTPUT, FORWARDが適用される。そのためフィルタリングルールを設定するときにはNAT変換後の情報を使うことが重要である(p57)</li>
+ <li>iptables から、Dockerをインストールした状態のチェインの流れを図示する(p60)</li>
+ <li>natテーブルのPOSTROUTINGチェインで、送信元アドレスはホストインターフェースのIPアドレスに変換される。インターネット上のデバイスやサーバはDockerコンテナのIPアドレスを知らず、ホストのIPアドレスしか知らないから変換が必要になる</li>
+ <li>ホストのIP:8888へのアクセスがコンテナのIP:80に割り振られるような場合、NAPTで変換が実行されている(p67)</li>
+ <li>Dockerをインストールした直後はデフォルトで3種類のネットワークが作成される(p74)
+ <ul class="org-ul"> <li>bridge: デフォルトで作成されるネットワーク。コンテナを起動するときネットワークを指定しないとデフォルトでこのネットワークに所属する</li>
+ <li>host: ホストのネットワーク。ホストと同じネットワークにコンテナを所属させる</li>
+ <li>none: どのネットワークにも所属させない</li>
+</ul></li>
+ <li>ip netns コマンドはネットワーク名前空間の作成、削除、表示が主な機能であるのに対し、nsenterコマンドはネットワークのみならずプロセスやユーザなどさまざまなタイプの名前空間に入るために使用される(p77)</li>
+ <li>macvlan ドライバを使うとコンテナに独自のMACアドレスを割り当てられる。これにより、物理ネットワーク上でコンテナを直接通信させられる(p81)</li>
+ <li>外部からリクエストしてコンテナに流れていく様子(p98)</li>
+ <li>ポートフォワードは送信先/元IPの管理が必要である。オーバーレイネットワークの場合はあらかじめ環境を構築すればそのあとはコンテナのIPアドレスを指定するだけで通信でき、ホストのIPアドレスは不要となる(p113)</li>
+</ul> <p>
+疑問や感想。
+</p>
+
+ <ul class="org-ul"> <li>ブリッジ・スイッチ・ルーターの違い</li>
+ <li>フレームとパケットの違い</li>
+ <li>コンテナにもMACアドレスがある</li>
+ <li>コンテナのフラッティングとARPの違いがわからない(p27)</li>
+ <li>veth がよくわからないな</li>
+ <li>解説の薄い用語の整理
+ <ul class="org-ul"> <li>enX0: 物理NIC – 実際のネットワークへの接続</li>
+ <li>vxlan0: 仮想トンネル/VXLAN – L2 を L3 上で運ぶ overlay network</li>
+ <li>bridge: 仮想スイッチ – L2スイッチ。ケーブルが集まるハブ</li>
+ <li>veth: 仮想ケーブル/ペア – namespace / コンテナとの接続</li>
+</ul></li>
+ <li>vxlan: 別のホスト間でL2ネットワークを拡張したい</li>
+ <li>bridge: 複数のvethをまとめる、振り分ける</li>
+ <li>veth: 同一ホスト内で異なるネットワーク名前空間を接続したい</li>
+</ul></div>
+</div>
+ <div id="outline-container-org4d8f760" class="outline-2">
+ <h2 id="org4d8f760"> <a href="#org4d8f760">関連</a></h2>
+ <div class="outline-text-2" id="text-org4d8f760">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251023T173743--kdoc-477-『docker-kubernetesネットワークのしくみ』__draft_book.html"/>
+  <id>https://kijimad.github.io/roam/20251023T173743--kdoc-477-『docker-kubernetesネットワークのしくみ』__draft_book.html</id>
+  <updated>2025-11-04T01:37:57+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 467: Webアプリケーション全体について質問すること</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org03d51f5" class="outline-2">
+ <h2 id="org03d51f5"> <a href="#org03d51f5">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org03d51f5">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-09-14 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-02 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgaee1b70" class="outline-2">
+ <h2 id="orgaee1b70"> <a href="#orgaee1b70">概要</a></h2>
+ <div class="outline-text-2" id="text-orgaee1b70">
+ <p>
+生成AIなどに調べさせてWebアプリケーション全体をおおまかに把握したいことがある。観点をまとめる。
+</p>
+
+ <ul class="org-ul"> <li>UX
+ <ul class="org-ul"> <li>アプリケーションの目的</li>
+ <li>ドメイン知識</li>
+ <li>使用フロー</li>
+ <li>関係者の種別(顧客、社内担当者、社内承認者、システム管理者 …)</li>
+</ul></li>
+ <li>認証・認可
+ <ul class="org-ul"> <li>認証の仕組み</li>
+ <li>認証を維持する仕組み</li>
+ <li>認可の仕組み</li>
+ <li>使用するトークンの種類/目的/保存場所/発行/更新/無効</li>
+</ul></li>
+ <li>通信の流れ
+ <ul class="org-ul"> <li>クライアントがサーバーにリクエストしてからレスポンスが返るまでの流れ</li>
+ <li>経路にあるプロトコル</li>
+ <li>経路にあるインフラ(リバースプロキシ / API Gateway / CDN …)</li>
+ <li>キャッシュ(ブラウザキャッシュ / CDNキャッシュ / サーバーサイドキャッシュ …)</li>
+</ul></li>
+ <li>フロントエンド
+ <ul class="org-ul"> <li>アーキテクチャ</li>
+ <li>フロントエンド配信の方法(署名付きURLやキャッシュ制御)</li>
+ <li>ページ描画の種別(SPA, SSR, …)と方法</li>
+ <li>認証情報の保存場所(Cookie, LocalStorage, Memory, …)</li>
+</ul></li>
+ <li>バックエンド
+ <ul class="org-ul"> <li>アーキテクチャ</li>
+ <li>API の役割とエンドポイントの設計</li>
+ <li>データベースとのやりとり(ORM, クエリ, トランザクション)</li>
+ <li>セッション管理・状態管理(ステートフル / ステートレス)</li>
+ <li>ユーザ管理(作成、削除)</li>
+</ul></li>
+ <li>データ
+ <ul class="org-ul"> <li>永続化データ種別(RDBMS, NoSQL, 静的ファイル)</li>
+ <li>テーブル構造</li>
+ <li>マイグレーション方法</li>
+ <li>シーディング方法(開発環境)</li>
+ <li>静的ファイルアップロード方法</li>
+ <li>テーブルごとのデータ量
+ <ul class="org-ul"> <li>読み書き量の統計</li>
+</ul></li>
+</ul></li>
+ <li>インフラ
+ <ul class="org-ul"> <li>アーキテクチャ</li>
+ <li>使用するクラウドサービス(AWS Lambda, ECS, Kubernetes, RDS, S3…)</li>
+ <li>各サービスの目的(ストレージ、計算、ネットワーク)</li>
+ <li>インフラとアプリケーションの連携方法(環境変数、Secrets Manager、VPC内通信)</li>
+ <li>各インスタンスのサブネットでの位置</li>
+</ul></li>
+ <li>セキュリティ
+ <ul class="org-ul"> <li>通信の暗号化(TLS)</li>
+ <li>秘密情報の管理(APIキー、DBパスワード)</li>
+ <li>脆弱性対策(XSS, CSRF, SQL Injection)</li>
+</ul></li>
+ <li>運用・監視
+ <ul class="org-ul"> <li>ログの収集と可視化の方法(アプリログ、アクセスログ、監査ログ)</li>
+ <li>メトリクス収集(リクエスト数、エラーレート、レスポンスタイム)</li>
+ <li>アラート設計と対応フロー</li>
+ <li>デプロイ戦略(Blue/Green, Canary, Rolling Update)</li>
+ <li>メンテナンスSQLを実行する方法</li>
+ <li>スケーリング手法</li>
+</ul></li>
+ <li>開発プロセス
+ <ul class="org-ul"> <li>CI/CD の流れ</li>
+ <li>テストのカバー範囲</li>
+ <li>テスト手法、粒度(ユニットテスト、統合テスト、E2Eテスト)</li>
+ <li>IaC(Terraform, CloudFormation)によるインフラ管理方法</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org6ae307a" class="outline-2">
+ <h2 id="org6ae307a"> <a href="#org6ae307a">関連</a></h2>
+ <div class="outline-text-2" id="text-org6ae307a">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250913T215858--kdoc-467-webアプリケーション全体について質問すること__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250913T215858--kdoc-467-webアプリケーション全体について質問すること__permanent.html</id>
+  <updated>2025-11-04T01:37:57+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 481: Route53がパブリックIPのないELBを解決する様子を見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgeebb100" class="outline-2">
+ <h2 id="orgeebb100"> <a href="#orgeebb100">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgeebb100">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org2aa1326" class="outline-2">
+ <h2 id="org2aa1326"> <a href="#org2aa1326">概要</a></h2>
+ <div class="outline-text-2" id="text-org2aa1326">
+ <p>
+AWSのDNSサービスRoute53には、AWS内のサービスをパブリックIPなしで登録できる。どうやっているか。
+</p>
+
+ <p>
+リクエストしてみる。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>リクエストしたドメインは内部的にRoute53, ALBを使用している。ドメイン名はxxxxに置き換えていて、“xxxx.com”へリクエストしたわけではない</label> <pre class="src src-shell">dig xxxx.com
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">
+; <<>> DiG 9.18.30-0ubuntu0.24.04.1-Ubuntu <<>> xxxx.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 24329
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;xxxx.com.	IN	A
+
+;; ANSWER SECTION:
+xxxx.com.	60 IN	A	52.198.233.137
+xxxx.com.	60 IN	A	18.180.41.67
+
+;; Query time: 55 msec
+;; SERVER: 127.0.0.53#53(127.0.0.53) (UDP)
+;; WHEN: Sat Nov 01 11:29:44 JST 2025
+;; MSG SIZE  rcvd: 91
+
+</pre>
+</div>
+
+ <p>
+ここから観察できること。
+</p>
+
+ <ul class="org-ul"> <li>グローバルIPが登録されている。固定IPではないので、しばらくすると変わる</li>
+ <li>リクエストしたドメインに紐づいたALBは2つのアベイラビリティゾーンを使っているので、2つのAレコードが登録されている</li>
+</ul> <p>
+また、外からは観察できないこととして、AWSコンソール上で見ると、Route53, ロードバランサにはAWSドメインが割り当てられている。
+</p>
+
+ <ul class="org-ul"> <li>ロードバランサには xxxx.ap-northeast-1.elb.amazonaws.com が割り当てられている。</li>
+ <li>Route53 のロードバランサに関するレコードには  <code>dig</code> で観察できる結果とは異なり ↑のドメイン名が割り当てられている</li>
+</ul> <p>
+2段階のDNSがあるように見える。
+</p>
+
+ <ul class="org-ul"> <li>1段階: リクエストされたドメインをAWS内部ドメインに変換する(エイリアス)
+ <ul class="org-ul"> <li>xxxx.com -> xxxx.ap-northeast-1.elb.amazonaws.com</li>
+</ul></li>
+ <li>2段階: AWS内部ドメインをグローバルIPに解決する
+ <ul class="org-ul"> <li>xxxx.ap-northeast-1.elb.amazonaws.com -> 52.198.233.137</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org415bd5f" class="outline-2">
+ <h2 id="org415bd5f"> <a href="#org415bd5f">関連</a></h2>
+ <div class="outline-text-2" id="text-org415bd5f">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251101T111146--kdoc-481-route53がパブリックipのないelbを解決する様子を見る__draft_permanent.html"/>
+  <id>https://kijimad.github.io/roam/20251101T111146--kdoc-481-route53がパブリックipのないelbを解決する様子を見る__draft_permanent.html</id>
+  <updated>2025-11-04T01:37:56+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 464: RSA署名を公開鍵で検証する流れを見る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgfe24151" class="outline-2">
+ <h2 id="orgfe24151"> <a href="#orgfe24151">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgfe24151">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-27 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-30 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgfe23d7a" class="outline-2">
+ <h2 id="orgfe23d7a"> <a href="#orgfe23d7a">概要</a></h2>
+ <div class="outline-text-2" id="text-orgfe23d7a">
+ <p>
+署名の検証は単にそういう関数としか把握してなかった。内部でどうしているのか、公開鍵をどう使うのかが説明できなかった。
+</p>
+
+ <p>
+RSA署名の場合を調べた。
+</p>
+
+ <p>
+送信。
+</p>
+
+ <ol class="org-ol"> <li>データを用意する</li>
+ <li>ハッシュ化する</li>
+ <li>秘密鍵でハッシュを変換する(署名する)</li>
+ <li>data + signature を相手に送る</li>
+</ol> <p>
+送るデータ。
+</p>
+
+ <ul class="org-ul"> <li>data</li>
+ <li>signature</li>
+</ul> <p>
+受信。
+</p>
+
+ <ol class="org-ol"> <li>data + signature を受け取る</li>
+ <li>dataからハッシュを再計算する</li>
+ <li>signatureを公開鍵でハッシュに戻す</li>
+ <li>求めた2つのハッシュを一致比較する</li>
+</ol></div>
+</div>
+ <div id="outline-container-org2186537" class="outline-2">
+ <h2 id="org2186537"> <a href="#org2186537">関連</a></h2>
+ <div class="outline-text-2" id="text-org2186537">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250913T212619--kdoc-464-rsa署名を公開鍵で検証する流れを見る__wiki.html"/>
+  <id>https://kijimad.github.io/roam/20250913T212619--kdoc-464-rsa署名を公開鍵で検証する流れを見る__wiki.html</id>
+  <updated>2025-11-04T01:37:55+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 472: 遊就館を観察する</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org4e7f943" class="outline-2">
+ <h2 id="org4e7f943"> <a href="#org4e7f943">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org4e7f943">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org3b4b905" class="outline-2">
+ <h2 id="org3b4b905"> <a href="#org3b4b905">概要</a></h2>
+ <div class="outline-text-2" id="text-org3b4b905">
+ <p>
+ <a href="https://www.yasukuni.or.jp/yusyukan/">遊就館</a>は、東京都千代田区にある、戦争についての博物館である。
+</p>
+
+ <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3906.88685795192!2d139.74103601198647!3d35.694994772468355!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188ddec973a031%3A0xeeb1eede2dcb876!2sYushukan%20Museum!5e1!3m2!1sen!2sjp!4v1762044827869!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+</div>
+ <div id="outline-container-orgb924c00" class="outline-2">
+ <h2 id="orgb924c00"> <a href="#orgb924c00">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgb924c00">
+ <ul class="org-ul"> <li>靖国神社の隣にある、戦争に関する博物館。宗教施設の隣にあるということが、ほかのどの博物館とも異なる</li>
+ <li>明治以降の対外戦争を詳細に解説・展示している。歴史の授業ではさらっと流されてしまう戦争にも、フェーズや戦場があったことがわかる</li>
+ <li>外国人も多くいた。何を感じるのか心配になった</li>
+ <li>老若男女の観覧者で非常に混雑していて、ゆっくり解説を見るのが難しい。若いカップルも多くいて、意外に感じた。何を楽しむのだろうか</li>
+ <li>他国の戦争博物館と全く同じような感じがした。政治に関する記述は、国や政府のバイアスを認識して観覧すると違いを楽しめるように見える</li>
+ <li>国内での戦争系博物館のスタンスの違いを認識するのも面白い。戦争を賛美しているところはレアに見える</li>
+ <li>ギリシャ時代の日常と戦争を解説するように、良悪ではなく技術や当時について淡々と解説して「解釈は観る人に委ねる」が多くの博物館のデフォルトなのだ、と認識した。この博物館はそうではない</li>
+ <li>スポンサーが元軍人なので、寄るのはしょうがないようにも見える</li>
+</ul> <p>
+感想。
+</p>
+
+ <ul class="org-ul"> <li>歴史のバイアスで日清・日露戦争は勝つのが必然、太平洋戦争は負けるのが必然、と考えてしまいがちだが、それは正しくない</li>
+ <li>兵器なども多く展示してある。宗教施設の一部として先祖を祀るための展示なのはわかるのだが、兵器が並べられているのは、収集・展示コンセプトをよく理解できていない、と感じた。自分なりに解釈すると、戦争賛美寄りに見える。全肯定することが慰霊になると考えているように見える</li>
+</ul></div>
+</div>
+ <div id="outline-container-org0c33d38" class="outline-2">
+ <h2 id="org0c33d38"> <a href="#org0c33d38">関連</a></h2>
+ <div class="outline-text-2" id="text-org0c33d38">
+ <p>
+なし。
+</p>
+</div>
+</div>
+ <div id="outline-container-org1aaa5d2" class="outline-2">
+ <h2 id="org1aaa5d2"> <a href="#org1aaa5d2">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-org1aaa5d2">
+ <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
+</ul></div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251013T082731--kdoc-472-遊就館を観察する__draft_book.html"/>
+  <id>https://kijimad.github.io/roam/20251013T082731--kdoc-472-遊就館を観察する__draft_book.html</id>
+  <updated>2025-11-04T01:37:54+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 482: 日本オリンピックミュージアムを観察する</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orge1caf60" class="outline-2">
+ <h2 id="orge1caf60"> <a href="#orge1caf60">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orge1caf60">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgdae7747" class="outline-2">
+ <h2 id="orgdae7747"> <a href="#orgdae7747">概要</a></h2>
+ <div class="outline-text-2" id="text-orgdae7747">
+ <p>
+ <a href="https://japan-olympicmuseum.jp/jp/">日本オリンピックミュージアム</a>は、東京都新宿区にあるオリンピックの博物館である。
+</p>
+
+ <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3907.8700487139677!2d139.7126084119856!3d35.67492027247497!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188dd5f0e67841%3A0x9400bc4765094194!2sJapan%20Olympic%20Museum!5e1!3m2!1sen!2sjp!4v1762059791573!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+</div>
+ <div id="outline-container-org2903869" class="outline-2">
+ <h2 id="org2903869"> <a href="#org2903869">メモ</a></h2>
+ <div class="outline-text-2" id="text-org2903869">
+ <ul class="org-ul"> <li>フロアが広々としている。人が少なくて快適であった</li>
+ <li>オリンピックの歴史、2度の東京オリンピックやパラリンピックなどを解説している</li>
+ <li>近代オリンピックは古代オリンピックと直接の関係はない。近代オリンピックはあくまで古代から着想を得たにすぎない</li>
+ <li>現在のオリンピックがあまりに巨大なので考えにくいが、最初はひとりのアイデアから始まった「発明」であった</li>
+ <li>近代オリンピックはスポーツを教育と結びつけて生まれた。その考え方は当時革新的であった</li>
+ <li>開会式や聖火など、オリンピックとセットになっているイベントは、はじめからそうだったわけではない。会ごとで新しい試みとして行われて、うまくいったものを取り込んで今の形になっている</li>
+ <li>勝敗や特定のスポーツだけに注目しがちだが、沿革を思い出し、純粋に驚くべき人体の動きや国際理解として見る視点もあると考えた</li>
+ <li>重さを体感したりプロと自分のジャンプをカメラで比較したりアクティビティも充実していたように見える</li>
+ <li>実物の展示が多い。単なるテレビに平面に映っていたシンボルが、現実に存在するのだと感じられた</li>
+ <li>1960年の東京オリンピックのポスターは出来がよすぎるように見える</li>
+ <li>巨大な曲面に投影された映像コーナーは躍動、驚くべき肉体、開催国での開会宣言の映像が流れていた。何も言葉はないのだが、強く訴えかけてくるものがあってすべて見た</li>
+ <li>映像コンテンツは全体的に画面が大きく、快適に見られた。博物館での映像解説を立ち止まって見ることは少ないのだが、快適でほとんど見た</li>
+</ul></div>
+</div>
+ <div id="outline-container-org65d832f" class="outline-2">
+ <h2 id="org65d832f"> <a href="#org65d832f">関連</a></h2>
+ <div class="outline-text-2" id="text-org65d832f">
+ <p>
+なし。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgde83bc4" class="outline-2">
+ <h2 id="orgde83bc4"> <a href="#orgde83bc4">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-orgde83bc4">
+ <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
+</ul></div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251102T140220--kdoc-482-日本オリンピックミュージアムを観察する__draft_essay.html"/>
+  <id>https://kijimad.github.io/roam/20251102T140220--kdoc-482-日本オリンピックミュージアムを観察する__draft_essay.html</id>
+  <updated>2025-11-04T01:37:51+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 465: 署名と暗号化の処理の違いはなにか?</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org30d58ce" class="outline-2">
+ <h2 id="org30d58ce"> <a href="#org30d58ce">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org30d58ce">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-09-14 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-30 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org3af9cbe" class="outline-2">
+ <h2 id="org3af9cbe"> <a href="#org3af9cbe">概要</a></h2>
+ <div class="outline-text-2" id="text-org3af9cbe">
+ <p>
+署名と暗号化は明らかに目的が異なるが、処理の違いは何だろうか。じっさいに署名したあとや暗号化したあとのデータはどのようになるかイメージできていない。
+</p>
+</div>
+</div>
+ <div id="outline-container-org6700354" class="outline-2">
+ <h2 id="org6700354"> <a href="#org6700354">関連</a></h2>
+ <div class="outline-text-2" id="text-org6700354">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250913T212851--kdoc-465-署名と暗号化の処理の違いはなにか__permanent.html"/>
+  <id>https://kijimad.github.io/roam/20250913T212851--kdoc-465-署名と暗号化の処理の違いはなにか__permanent.html</id>
+  <updated>2025-11-04T01:37:51+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 475: 各桁の合計をスマートに得る</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org8642949" class="outline-2">
+ <h2 id="org8642949"> <a href="#org8642949">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org8642949">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-orgd387b84" class="outline-2">
+ <h2 id="orgd387b84"> <a href="#orgd387b84">概要</a></h2>
+ <div class="outline-text-2" id="text-orgd387b84">
+ <p>
+各桁の合計をスマートに得る方法。
+</p>
+
+ <p>
+ <code>% 10</code> で右端の桁の数字を得ること、  <code>/=</code> で右端の桁の数字を落とすのがポイントに見える。
+</p>
+
+ <div class="org-src-container">
+ <pre class="src src-go">package main
+
+import "fmt"
+
+func sum(target int) int {
+        result := 0
+        for target > 0 {
+                result += target % 10
+                target /= 10
+        }
+        return result
+}
+
+func main() {
+        fmt.Println(sum(1024))
+        fmt.Println(sum(55))
+        fmt.Println(sum(5555))
+}
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">7
+10
+20
+</pre>
+</div>
+</div>
+</div>
+ <div id="outline-container-orgf605738" class="outline-2">
+ <h2 id="orgf605738"> <a href="#orgf605738">関連</a></h2>
+ <div class="outline-text-2" id="text-orgf605738">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251019T091811--kdoc-475-各桁の合計をスマートに得る__wiki.html"/>
+  <id>https://kijimad.github.io/roam/20251019T091811--kdoc-475-各桁の合計をスマートに得る__wiki.html</id>
+  <updated>2025-11-04T01:37:49+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 474: 『Go言語による並行処理』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgeb3618b" class="outline-2">
+ <h2 id="orgeb3618b"> <a href="#orgeb3618b">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgeb3618b">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org3d724e0" class="outline-2">
+ <h2 id="org3d724e0"> <a href="#org3d724e0">概要</a></h2>
+ <div class="outline-text-2" id="text-org3d724e0">
+ <p>
+『Go言語による並行処理』は、並行処理を解説する本である。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgee1b2b7" class="outline-2">
+ <h2 id="orgee1b2b7"> <a href="#orgee1b2b7">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgee1b2b7">
+ <ul class="org-ul"> <li>並列性はランタイムの性質であって、コードの性質ではない(p24)
+ <ul class="org-ul"> <li>並列で走ってほしいと考えて並行なコードを書いている</li>
+</ul></li>
+ <li>コードの結果を別のコードに共有したい場合、これはデータの所有権を移動していることになる。並行プログラムを安全にするには、一度に1つの並行処理のコンテキストのみがデータの所有権を持つようにする(p33)</li>
+ <li>構造体の内部の状態を保護している場合はメモリアクセス同期を使うべきで、チャネルを使うべきではない(p34)</li>
+ <li>メモリアクセスするべきか、チャネルを使うべきかの判断基準がある</li>
+ <li>ゴルーチンは一時停止や再エントリーのポイントを定義していない。Goのランタイムはゴルーチンの実行時の振る舞いを観察して自動的に一時停止したり再開する(p38)</li>
+ <li>Goがゴルーチンを管理する機構はM:Nスケジューラという実装になっている。M個のグリーンスレッドをN個のOSスレッドに対応させる。ゴルーチンはグリーンスレッドにスケジュールされる(p39)</li>
+ <li>ゴルーチンは未来の任意のタイミングにスケジュールされる。ループ内でゴルーチンを発行していたら、順番に実行される保証はない</li>
+ <li>WaitGroupの使い方。
+ <ul class="org-ul"> <li>Add カウンタを増やす – 監視対象のゴルーチンの外で行う。いつゴルーチンが実行されるかはわからない。競合する可能性があるから</li>
+ <li>Done カウンタを減らす</li>
+ <li>Wait ゼロになるまでメインゴルーチンをブロック</li>
+</ul></li>
+ <li>Sync, Cond, WaitGroup, Once, Pool</li>
+ <li>オブジェクトプールデザインパターンはオブジェクトを要求するがインスタンス化のあとすぐにオブジェクトを捨てる並行処理のプロセスがある場合あるいはオブジェクトの生成がメモリに悪影響を与える場合に最適である(p64)</li>
+ <li>一方向チャネルを宣言するには  <code><-</code> 演算子を使う(p66)
+ <ul class="org-ul"> <li>読み込み専用チャネル: chan<-</li>
+ <li>書き込み専用チャネル: <-chan</li>
+</ul></li>
+ <li>Goは双方向チャネルを必要に応じて暗黙的に一方向チャネルに変換してくれる(p66)</li>
+ <li>チャネルをrange処理すると、チャネルが閉じたときに自動的にループを終了する(p69)</li>
+ <li>チャネルを閉じるとチャネルの読み込みブロックが解除される。閉じたチャネルは無限に読み込める(p70)</li>
+ <li>チャネルが満杯のときはチャネルへの書き込みによってブロックし、チャネルが空のときはチャネルからの読み込みによってブロックする(p71)</li>
+ <li>nilチャネルの扱い。nilチャネルからの読み込み、書き込み、close。チャネルを扱うときは常に、確実に初期化する(p75)</li>
+ <li>読み込み
+ <ul class="org-ul"> <li>nil -> ブロック</li>
+ <li>Openで空ではない -> 値を取得</li>
+ <li>Openで空 -> ブロック</li>
+ <li>Closed -> デフォルト値、false</li>
+ <li>書き込み専用 -> コンパイルエラー</li>
+</ul></li>
+ <li>書き込み
+ <ul class="org-ul"> <li>nil -> ブロック</li>
+ <li>Openで満杯 -> ブロック</li>
+ <li>Openで満杯ではない -> 値を書き込み</li>
+ <li>Closed -> panic</li>
+ <li>読み込み専用 -> コンパイルエラー</li>
+</ul></li>
+ <li>Close
+ <ul class="org-ul"> <li>nil -> panic</li>
+ <li>Openで空ではない -> チャネルを閉じる。読み込みはチャネルの中身がなくなるまで成功する。その後読み込みはデフォルト値を読み込む</li>
+ <li>Openで空 -> チャネルを閉じる。デフォルト値を読み込む</li>
+ <li>Closed -> panic</li>
+ <li>読み込み専用 -> コンパイルエラー</li>
+</ul></li>
+ <li>どのゴルーチンがチャネルを所有しているかはっきりさせることが重要である。所有しているゴルーチンにはチャネルに対する書き込み権限がある。利用しているだけのゴルーチンには読み込み専用権限しかない(p77)</li>
+</ul> <p>
+selectでタイムアウトを実現する簡潔な方法。
+</p>
+
+ <div class="org-src-container">
+ <label class="org-src-name"> <span class="listing-number">Listing 1: </span>time.After は送信チャネルを返す</label> <pre class="src src-go">package main
+
+import (
+ 	"time"
+ 	"fmt"
+)
+
+func main() {
+	var c <- chan int
+	select {
+	case <-c: // 決してブロックは解放されない
+	case <-time.After(1 * time.Second):
+		fmt.Println("Timed out.")
+	}
+}
+</pre>
+</div>
+
+ <div class="org-src-container">
+ <pre class="src src-nil">Timed out.
+</pre>
+</div>
+
+ <ul class="org-ul"> <li>もしあるゴルーチンがゴルーチンの生成の責任を負っているのであれば、そのゴルーチンを停止できるようにする責任もある(p96)</li>
+ <li>外部から終了させるためのチャネルを返させるパターン</li>
+ <li>チャネルの合成パターン(p98)</li>
+ <li>パイプライン構築のベストプラクティス(p106)</li>
+ <li>パイプライン全体を割り込み可能にする(p111)</li>
+ <li>キューの真の実用性は、あるステージの実行時間が他のステージの実行時間に影響を与えないようにステージを分離することにある(p129)</li>
+ <li>Contextパッケージの2つの目的(p135)
+ <ul class="org-ul"> <li>コールグラフの各枝をキャンセルするAPIを提供する</li>
+ <li>コールグラフを通じてリクエストに関するデータを渡すデータの置き場所を提供する</li>
+</ul></li>
+ <li>Contextに保存するガイドライン(p147)</li>
+ <li>エラーで表示する必要のあること(p150)
+ <ul class="org-ul"> <li>何が起きたか</li>
+ <li>いつどこでエラーが発生したか</li>
+ <li>1行程度のわかりやすいメッセージ</li>
+ <li>さらに情報を得るにはどうすればよいか(スタックトレースなど)</li>
+</ul></li>
+ <li>エラーを包む必要があるのは自分のコードが有益なエラーコンテキストを追加しうるときだけである。たいていのコードでエラーを包む必要はない(p152)</li>
+ <li>きちんとした形式のエラーが持つべき情報をすべて含む独自のエラー型を作る(p153)</li>
+ <li>並行処理のプロセスを設計するときには、タイムアウトとキャンセル処理を考慮する(p164)</li>
+ <li>トークンバケットアルゴリズムによる流量制限(p180)</li>
+ <li>複数の流量制限ルール(時間、日、…)を適用する実装例(p187)</li>
+ <li>ゴルーチンの健全性を監視する実装例(p192)</li>
+</ul> <p>
+感想。
+</p>
+
+ <ul class="org-ul"> <li>デススパイラルの話がよくわからない(p132)</li>
+ <li>ハートビートの話がよくわからない(p171)</li>
+</ul></div>
+</div>
+ <div id="outline-container-org90ba138" class="outline-2">
+ <h2 id="org90ba138"> <a href="#org90ba138">関連</a></h2>
+ <div class="outline-text-2" id="text-org90ba138">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251016T010331--kdoc-474-『go言語による並行処理』__draft_book.html"/>
+  <id>https://kijimad.github.io/roam/20251016T010331--kdoc-474-『go言語による並行処理』__draft_book.html</id>
+  <updated>2025-11-04T01:37:48+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 476: 『AWSネットワーク入門』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgd00711c" class="outline-2">
+ <h2 id="orgd00711c"> <a href="#orgd00711c">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgd00711c">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-03 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org93de014" class="outline-2">
+ <h2 id="org93de014"> <a href="#org93de014">概要</a></h2>
+ <div class="outline-text-2" id="text-org93de014">
+ <p>
+『AWSネットワーク入門』は、AWSサービスのなかの特にネットワークに絞って解説した本である。
+</p>
+</div>
+</div>
+ <div id="outline-container-org7be578b" class="outline-2">
+ <h2 id="org7be578b"> <a href="#org7be578b">メモ</a></h2>
+ <div class="outline-text-2" id="text-org7be578b">
+ <ul class="org-ul"> <li>サービスの種類によって、グローバル、リージョン、アベイラビリティゾーンのどの範囲で提供されるのか異なる(p20)
+ <ul class="org-ul"> <li>グローバルサービス: IAM, CDN, Route53…</li>
+ <li>リージョンサービス: VPC, S3, …</li>
+ <li>アベイラビリティゾーンサービス: EC2, …</li>
+</ul></li>
+ <li>非VPCサービスとVPCサービスがある(p22)
+ <ul class="org-ul"> <li>グローバルネットワークを利用する非VPCサービス: CloudFront, Route53, S3, …</li>
+ <li>プライベートネットワークを利用するVPCサービス: EC2, RDS, …</li>
+</ul></li>
+ <li>VPCにプライベートIPアドレスを割り当てて運用する(p22)</li>
+ <li>セキュリティグループはEC2インスタンスとネットワークの間にあり、パケットフィルタリング型ファイアウォールを提供する。ENIに対して設定する(p24)</li>
+ <li>セキュリティグループはインスタンスを対象とし、ネットワークACLはサブネットを対象としている(p26)</li>
+ <li>ルーターを設置する操作をしなくても、VPCには必ず1つルーターが暗黙に置かれる。サブネットが増えたとき、暗黙的な1つのルーターを経由して互いにつながる(p26)</li>
+ <li>VPCはリージョン全体をまたぐが、サブネットはそれぞれのアベイラビリティゾーンに属する。サブネットがアベイラビリティゾーンをまたぐことはない(p30)</li>
+ <li>VPCに割り当てるIPアドレス範囲は、プライベートIPアドレスのネットワーク範囲のなかから任意のものを指定する(p31)</li>
+ <li>VPCをインターネットに接続するときは、インターネットゲートウェイという一種のNATを構成することで、「プライベートIPアドレスに加えてパブリックIPアドレスを追加で割り当てる」という構成にする(p32)</li>
+ <li>VPCのIPアドレス範囲は変更できない(p32)</li>
+ <li>CIDER。数万台の端末は1つのネットワークに接続した運用はパフォーマンス・メンテナンス的に望ましくないので、普通はネットワークを小さい単位に分割する。なのでたとえば  <code>10.0.0.0/16</code> より  <code>10.0.0.0/24</code> のほうが一般的。  <code>/24</code> の場合は256個のサブネット、256個のIPアドレスになる(p34)</li>
+ <li>それぞれのリージョンには契約者ごとにVPCが1つ作られている。この用意されているVPCはデフォルトのVPCと呼ばれていて、他のVPCと少し構成が異なる。デフォルトのVPCはすぐにインターネットに接続できるようにする目的に作られた特別なVPCである(p36)</li>
+ <li>VPC > アベイラビリティゾーン > サブネット</li>
+ <li>AWSのサブネット上ではDHCPサーバ機能が動作している。そのためサブネットにEC2インスタンスを設置して起動すると、そのDHCPサーバからENIに対してサブネットで利用可能なプライベートIPアドレスが動的に割り当てられる(p48)</li>
+ <li>AWSにおけるパブリックIPアドレスは、NATによる運用がなされている。パブリックIPアドレスを割り当てたとしても、EC2インスタンスにはプライベートIPアドレスしか割り当てられない。そのかわりにNATでプライベートIPアドレスとパブリックIPアドレスを相互変換している(p78)</li>
+ <li>メインのルートテーブルの初期状態は 送信先:  <code>10.0.0.0/16</code> ターゲット:  <code>local</code> である。なので、VPCで用いているネットワーク範囲のものはlocal(このネットワーク内)で処理されるが、それ以外はルートの登録がないのですべて破棄される。つまりインターネットに出ていけない。インターネットにつなぐにはルートテーブルを作成し、インターネットゲートウェイをデフォルトゲートウェイとする必要がある(p90)</li>
+ <li>ルートテーブルで送信先: 0.0.0.0/0 ターゲット: インターネットゲートウェイとすることで、ほかのルート情報でターゲットの定まらないパケットは破棄されずにインターネットゲートウェイにルーティングされる。0.0.0.0は「すべての宛先」を表す特別なルート(p93)</li>
+ <li>EC2のパブリックIPアドレスに対してpingコマンドを実行しても応答はない。デフォルトのセキュリティグループでICMP通信を遮断する設定になっているため(p96)</li>
+ <li>AWSネットワーク上には  <code>169.254.169.254</code> というIPアドレスが付けられた特別なサーバがある。アクセスしたEC2インスタンスに関するさまざまな情報を返すメタデータサーバである(p102)</li>
+ <li>インスタンスにElastic IPアドレスを割り当てても、OSから見えるのはプライベートIPアドレスだけなのは変わらない(p112)</li>
+ <li>ENIとセキュリティグループは多対多の関係である(p120)</li>
+ <li>プライベートサブネットからインターネットに接続したいとき(p145)
+ <ul class="org-ul"> <li>NATゲートウェイをパブリックサブネットに配置する</li>
+ <li>プライベートサブネットのデフォルトゲートウェイをNATゲートウェイに向けるようにルートテーブルを編集する</li>
+</ul></li>
+ <li>ポートフォワードの利点は、SSHの鍵を踏み台のサーバに置く必要がないので、鍵が盗まれるおそれがない点(p168)</li>
+ <li>IPアドレスとホスト名を関連付けるには、ゾーンを作成してAレコードとして登録する。ELBなど、DNS名が登録されているものへの別名を設定するにはエイリアスとして設定する(p243)</li>
+ <li>S3はパブリックIPで提供されているサービスなので、プライベートIP環境からは利用できない。パブリックIPが割り当てられていないとVPC外に出られないから(p265)</li>
+</ul></div>
+</div>
+ <div id="outline-container-org6601a76" class="outline-2">
+ <h2 id="org6601a76"> <a href="#org6601a76">関連</a></h2>
+ <div class="outline-text-2" id="text-org6601a76">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251020T112602--kdoc-476-『awsネットワーク入門』__book.html"/>
+  <id>https://kijimad.github.io/roam/20251020T112602--kdoc-476-『awsネットワーク入門』__book.html</id>
+  <updated>2025-11-04T01:37:47+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 470: 『人生は、運よりも実力よりも「勘違いさせる力」で決まっている』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org4a6d002" class="outline-2">
+ <h2 id="org4a6d002"> <a href="#org4a6d002">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org4a6d002">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-31 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-31 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org49c091a" class="outline-2">
+ <h2 id="org49c091a"> <a href="#org49c091a">概要</a></h2>
+ <div class="outline-text-2" id="text-org49c091a">
+ <p>
+ <code>『人生は、運よりも実力よりも「勘違いさせる力」で決まっている』</code> はキャリア、心理学についての本。
+</p>
+</div>
+</div>
+ <div id="outline-container-org482640a" class="outline-2">
+ <h2 id="org482640a"> <a href="#org482640a">メモ</a></h2>
+ <div class="outline-text-2" id="text-org482640a">
+ <ul class="org-ul"> <li>わかりやすい実績は、どれも「思考の錯覚」を生み出す。たとえそれが実力でなく、上司/同僚/顧客のおかげで達成できた実績であったとしても、強力な思考の錯覚を生み出す(位置90)</li>
+ <li>「人々が自分に対して持っている、自分に都合のいい思考の錯覚」は、一種の資産として機能する。本書ではそれを「錯覚資産」と呼ぶ(位置90)</li>
+ <li>「実力がある」からよいポジションを手に入れられるのではなく、「実力があると周囲が錯覚する」からよいポジションを手に入れられている部分が大きい(位置135)</li>
+ <li>「初日の成績がよかった人が2日目の成績もいい」という傾向はほとんど見られない(位置200)</li>
+ <li>ハロー効果は、なにか1点が優れていると、なにもかもが優れて見える錯覚のこと(位置319)</li>
+ <li>思考の錯覚は成功者の成功確率を一般人の何十倍、何百倍も高くする。「失敗は成功の母」というが、実際には成功のほうがはるかに成功の母だ。次の成功を生む(位置392)</li>
+ <li>成功者の場合、「信用」と呼ばれるもののうち、かなりの部分が錯覚資産である。人柄や実力がハロー効果で底上げされている(位置443)</li>
+ <li>「作者は起業した会社を上場させた」、と聞くと、本に説得力を感じるだろう。しかしその人の発言内容の正しさには何の関係もない。錯覚にすぎないのだ。しかし錯覚とわかっていても、正しいように聞こえる(位置489)</li>
+ <li>成功するためには錯覚資産が必要である。錯覚資産を手に入れるためには成功する必要がある。どうすればジレンマを解決できるか。確変が入るまでは小さく賭け、確変が入ったら全力で投資する。うまくいくかは運次第であるから、いろいろチャレンジしてサイコロを振ってみる。たまたまうまくいってハロー効果を手に入れたら、そのハロー効果を使ってよりよい環境を手に入れる(位置531)</li>
+ <li>ハロー効果には射程がある。具体的な数値を伴う成功は射程が長い。初めて会った人に対してまで威力を発揮する。数値は印象に残りやすく、思い浮かびやすくなる。そのため資産価値の高い錯覚になる。だから具体的な数値が作れそうな案件は積極的に受けたほうが得である。勝ち馬に乗れる案件はそれが実力によるものでなくてもハロー効果は生じる(位置539)
+ <ul class="org-ul"> <li>半期で1.5億円売り上げた</li>
+ <li>クラウドファンディングで5000万円を獲得した</li>
+ <li>ユーザ数が43%増えた</li>
+</ul></li>
+ <li>公演をしたり本を書いたりするのもハロー効果を作り出すのに効果的である。労力に比べると金銭的報酬は多くないが、錯覚資産の獲得手段としては本の執筆は投資対効果が高い。小さなハロー効果をテコにしてより大きなハロー効果を獲得していく(位置549)</li>
+ <li>他人の本当の実力などわからない。大部分、思考の錯覚で人を判断する。しかし錯覚で判断している自覚はない(位置566)</li>
+ <li>才能があるかなんて自分にも他人にもわからない。結果的にヒットしたら「才能があったからヒットしたのだ」と知覚されるだけだ。未来のヒットが、過去にさかのぼって、才能のあるなしを書きかえる(位置583)</li>
+ <li>成功者は「自分のやり方が正しかったから成功したのだ」というフリをしたほうが得である。やり方によってならば、人や金が集まってくるから(位置592)</li>
+ <li>「当たると、当たる確率が上がる運ゲー」であることが重要である。当たりが出て、確変が入ったときに大きく賭けると勝率が高くなる。運ゲーではあるが、運任せでは勝てない運ゲーである(位置612)</li>
+ <li>優秀だから成功するのではない。成功したから「優秀だった」と記憶が書き換えられる(位置692)</li>
+ <li>人間はコントロールしたいという強い欲求を持っている。それがコントロールできないものをコントロールできるという幻想であっても。ほとんどの人は21世紀においても日々雨乞いと同じことをやり続けている(位置765)</li>
+ <li>100年後の人々は生活や仕事のやり方を、雨乞いをする中世の人々を見るような目で見るだろう(位置765)</li>
+ <li>人間には実力という要因をプラス方向/マイナス方向に「大幅に過大評価」してしまう認知バイアスがある。じっさいの成功・失敗は
+はるかに実力以外の要因で決まっている。実力という要素の影響力を自分が考える半分程度に見積もったほうがいい(位置909)</li>
+ <li>ハロー効果はマイナスにも作用する。パフォーマンスを発揮できてない場合はマイナスのハロー効果によって直感が汚染されている可能性が高いので汚染を取り除く選択肢を検討したほうがよい(位置940)</li>
+ <li>「いろいろ嫌なことはあるけど、今の会社にいるのが一番マシだ」と考えるのは、「デフォルト値効果」という認知バイアスの影響を大きく受けている可能性がある(位置984)</li>
+ <li>判断が難しいときに直感が出す答えは、思考の錯覚に汚染されている可能性が高い(位置1001)</li>
+ <li>錯覚資産の大きさは「錯覚資産の大きさ」x「成果のアピール」で決まる(位置1039)</li>
+ <li>錯覚資産のアプローチ(位置1069)
+ <ul class="org-ul"> <li>錯覚資産を増やすことばかりして実力を磨くことを怠ると1つのループが回らなくなる</li>
+ <li>スキルアップばかりやって錯覚資産を増やすことを怠るとすべてのループが回らなくなる</li>
+</ul></li>
+ <li>ITエンジニアであれば、エンジニアの勉強会に顔を出してみる。そこでできるだけ多くの人に知ってもらえば、自分を思い浮かべてもらいやすくなる(位置1179)</li>
+ <li>自分の「優秀さ」をアピールするより、自分がどういうポジションなら力を発揮できるかの具体的なイメージを相手にインプットするほうがよい。実際に現場で戦力として活躍しているということを相手に印象づけるようにする。思い浮かびやすくしておくと、意外なところから、意外なチャンスが降ってくる(位置1179)</li>
+ <li>思考の錯覚の網を広げる。連絡を取っていない友人知人と飯を食べたり勉強会に行く。網を広げ、網をメンテすることに大きな時間を投資しなければならない。幸運を引き当てる確率は、網が大きければ大きいほど高くなる。運ゲーだが、やり方次第で当たる確率を飛躍的に高められる運ゲーである(位置1199)</li>
+ <li>1人でコツコツやるより環境に恵まれたほうがはるかに効率よくスキルアップできるし、ハロー効果を生むような「見栄えのいい」実績、錯覚資産を作り込みやすい。環境がスキルと錯覚資産を育む。「スキルアップしやすい環境を手に入れること」というメタレベルに投資するほうが「スキルアップそのもの」に時間投資するより投資効率がよい(位置1231)</li>
+ <li>「時間」という資源をPV向上とCVR向上のどちらにどれだけ投資するかという投資戦略の問題だ。CVRが10分の1でも、PVが10倍なら、コンバージョン数は同じ(位置1231)</li>
+ <li>成功の主要な要因が運であるということは、「サイコロを振る回数を増やさないことには、成功確率はなかなか上がらない」ということを意味する。PVの絶対数を増やさなければいい環境にはありつけない(位置1255)</li>
+ <li>高学歴の人の成功確率が高いのは、単に彼らが優秀だからというだけではない。彼らの「高学歴」がハロー効果を引き起こすから成功確率が高い(位置1268)</li>
+ <li>ほとんどの人は実際には学歴で人を判断しながら、錯覚と欺瞞によって「自分は学歴で人を判断しない」と考えている(位置1281)</li>
+ <li>脳は、「報酬が少ない」ことを整合させるために「面白い作業だった」と自分を思い込ませることがある。ウソをつくわけではなく本当にそう感じる(位置1343)</li>
+ <li>現実世界の敗者が、自分の脳内世界で価値評価を捏造し、脳内世界で密かに復讐を遂げる。自覚がない。この状態になると現実を動かす力を失っていく。マイナスの状態から抜け出せなくなる(位置1368)
+ <ul class="org-ul"> <li>ブサイクな人が「見た目じゃなくて中身が大切だ」という</li>
+ <li>貧乏な人が「卑怯なことをやった人間が金持ちになる」という</li>
+</ul></li>
+ <li>プラスの価値はすべて利用資源であって、それを脳内で否定すると損をする
+ <ul class="org-ul"> <li>強い</li>
+ <li>美しい</li>
+ <li>豊か</li>
+ <li>健康</li>
+ <li>賢い</li>
+</ul></li>
+ <li>現実世界で価値があるが自分の状態がマイナスなのを改善できない場合は、「他人の属性を利用しようと待ち構えている状態：として認識するとよい(位置1404)</li>
+ <li>成功者たちが見つけ出したのが、錯覚資産に「信用」とか「ブランド」というラベルを貼って、その醜悪さを隠蔽するという錬金術だったのだ(位置1489)</li>
+ <li>なにかを主張するときには「一貫して偏ったストーリー」を語る。しかし自分の人生を選択するときは、徹底的に「正しい判断」することにこだわる(位置1506)</li>
+ <li>両方の側から「一貫して偏ったストーリー」を考えると、簡単には騙されなくなる。作者のブログで行っていたこと。 <a href="https://www.furomuda.com/">分裂勘違い君劇場 by ふろむだ</a>(位置1538)</li>
+ <li>人は無自覚に感情で多くを判断している。その作者の好感度が高ければ、たいしたことない作品でも、ファンにとっては感情ヒューリスティックによって「とても面白い作品」だと知覚される。感情ヒューリスティックは、「人に好かれる」ということを、比喩ではなく現金に換金可能な資産にしてくれる(位置1645)</li>
+ <li>年収、昇進、割振…答えるのが難しい重大な質問には、上司は、結局、直感を頼りに答えを出す。だから、サラリーマンをやっている限り、上司に好感を持たれるように、十分な注意を払わなければならない(位置1665)</li>
+ <li>「一貫性、原因、結論」の3つを過剰に求める傾向に注意すれば、自分の思考の錯覚に気づいて修正しやすくなる。他人の思考の錯覚を利用して、自分に有利に物事を進められる(位置1748)</li>
+ <li>錯覚資産は複利で増大する。実力増大と錯覚資産の増大が相乗効果を引き起こしながら増える。錯覚資産を意識的に増やす人間とそうでない人間では、錯覚資産の増加率が異なるため、短期的には小さな差でも、長期的にはとんでもなく大きな差になる(位置1891)</li>
+</ul> <p>
+感想。
+</p>
+
+ <ul class="org-ul"> <li>自分は基本的に、社会でデフォルトになっているように見える「実力」や「才能」モデルで社会を捉えていた。まさにハロー効果で何人かの偉人を尊敬しロールモデルにしてきた。いっぽうでうまくいっている同年代の人たちや、他人との競争には目をつぶり、逃避してきた</li>
+ <li>現実の社会をより正確に捉えた切り口を理解させるだけでなく、それをわかったうえでどう利用してやるか、というところは奮い立たせられる。現状を正しく認識して初めて、正しい方向性の努力を考えられる</li>
+ <li>タイトルの時点で最強にパンチが効いていて、興味を持ちやすい</li>
+</ul></div>
+</div>
+ <div id="outline-container-org4dcfd0e" class="outline-2">
+ <h2 id="org4dcfd0e"> <a href="#org4dcfd0e">関連</a></h2>
+ <div class="outline-text-2" id="text-org4dcfd0e">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250929T084749--kdoc-470-『人生は、運よりも実力よりも「勘違いさせる力」で決まっている』__book.html"/>
+  <id>https://kijimad.github.io/roam/20250929T084749--kdoc-470-『人生は、運よりも実力よりも「勘違いさせる力」で決まっている』__book.html</id>
+  <updated>2025-11-04T01:37:47+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 480: Route53の由来はポート番号である</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org04c012f" class="outline-2">
+ <h2 id="org04c012f"> <a href="#org04c012f">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org04c012f">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul> <ul class="org-ul"> <li>レビュー
+ <ul class="org-ul"> <li class="off"> <input type="checkbox"></input> <署名></li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org2822012" class="outline-2">
+ <h2 id="org2822012"> <a href="#org2822012">概要</a></h2>
+ <div class="outline-text-2" id="text-org2822012">
+</div>
+</div>
+ <div id="outline-container-org06b631c" class="outline-2">
+ <h2 id="org06b631c"> <a href="#org06b631c">関連</a></h2>
+ <div class="outline-text-2" id="text-org06b631c">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251029T205958--kdoc-480-route53の由来はポート番号である__draft_essay.html"/>
+  <id>https://kijimad.github.io/roam/20251029T205958--kdoc-480-route53の由来はポート番号である__draft_essay.html</id>
+  <updated>2025-11-04T01:37:42+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 469: 『初めての不動産投資必勝ルール』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-orgc0cf943" class="outline-2">
+ <h2 id="orgc0cf943"> <a href="#orgc0cf943">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-orgc0cf943">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-09-25 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-31 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org9bd9fb1" class="outline-2">
+ <h2 id="org9bd9fb1"> <a href="#org9bd9fb1">概要</a></h2>
+ <div class="outline-text-2" id="text-org9bd9fb1">
+ <p>
+『初めての不動作投資必勝ルール』は不動産投資についての入門本である。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgf5a87ab" class="outline-2">
+ <h2 id="orgf5a87ab"> <a href="#orgf5a87ab">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgf5a87ab">
+ <ul class="org-ul"> <li>不動産業界では東京23区から5区を除いた地域を18区と予備、競争力があると考えられている(位置853)</li>
+ <li>ロードマップ(位置1732)
+ <ol class="org-ol"> <li>資金を貯める</li>
+ <li>物件を探し続ける</li>
+ <li>金融機関巡りをする</li>
+ <li>意味のある勉強をする</li>
+ <li>リスクのある物件に挑戦して次につなげる</li>
+</ol></li>
+ <li>1度投資のスイッチが入ってしまうと今買わねばと考える人が多い(位置1915)</li>
+ <li>日経平均は不動産市況を見るうえで1番簡単な指標の1つである(位置2080)</li>
+ <li>投資の好機をとらえるためには株価と不動産(賃貸と売買)の相場は継続的に見ておくべきである(位置2098)</li>
+ <li>今が上り坂なのか下り坂なのかを知ることは不動産投資でも必須であり、感覚を養うことが重要である。不動産会社の店頭に貼ってある物件情報も、週1度程度見ておくと相場観が養われる(位置2115)</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgdcb7fe1" class="outline-2">
+ <h2 id="orgdcb7fe1"> <a href="#orgdcb7fe1">関連</a></h2>
+ <div class="outline-text-2" id="text-orgdcb7fe1">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250925T190733--kdoc-469-『初めての不動産投資必勝ルール』__book.html"/>
+  <id>https://kijimad.github.io/roam/20250925T190733--kdoc-469-『初めての不動産投資必勝ルール』__book.html</id>
+  <updated>2025-11-04T01:37:39+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 468: 帰還者たちの記憶ミュージアムを観察する</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org4dbb9a5" class="outline-2">
+ <h2 id="org4dbb9a5"> <a href="#org4dbb9a5">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org4dbb9a5">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-02 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-11-02 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org19df43a" class="outline-2">
+ <h2 id="org19df43a"> <a href="#org19df43a">概要</a></h2>
+ <div class="outline-text-2" id="text-org19df43a">
+ <p>
+ <a href="https://ja.wikipedia.org/wiki/%E5%B9%B3%E5%92%8C%E7%A5%88%E5%BF%B5%E5%B1%95%E7%A4%BA%E8%B3%87%E6%96%99%E9%A4%A8">平和祈念展示資料館</a>(愛称: 帰還者たちの記憶ミュージアム)は、東京都新宿区にある戦争での引揚者や強制抑留者についての博物館である。
+</p>
+
+ <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7814.123893987978!2d139.69001481198617!3d35.691420572469674!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x60188cd51910d86f%3A0x7d7b6cd0978ae3fe!2sMemorial%20Museum%20for%20Soldiers%2C%20Detainees%20in%20Siberia%2C%20and%20Postwar%20Repatriates!5e1!3m2!1sen!2sjp!4v1762043967383!5m2!1sen!2sjp" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+</div>
+</div>
+ <div id="outline-container-org899135c" class="outline-2">
+ <h2 id="org899135c"> <a href="#org899135c">メモ</a></h2>
+ <div class="outline-text-2" id="text-org899135c">
+ <ul class="org-ul"> <li>抑留者の服装で写真が撮れるコーナーがある。どんなことでも、服装によって少しでも体験できる</li>
+ <li>招集・抑留・引揚にフォーカスしている。戦争と普段の生活の転換点であって、単に「戦争」といったときに彼らに自分と変わらない日常生活が存在していたリアリティを感じた
+ <ul class="org-ul"> <li>赤紙の展示</li>
+ <li>戦争が終わって無一文で帰国したあとの暮らし。戦争が終わってすぐ日常生活、では全くない</li>
+</ul></li>
+ <li>外地での暮らし。大平原の畑で、農家が列になっての集合写真が印象的だった。外地にいたのは兵士だけでない。その地で生活を根付かせた人たちも多くいた</li>
+ <li>本物の文書が展示されている。本物の名前、住所、部隊名。日常生活の延長線上に確かに存在することを感じさせた</li>
+ <li>中には撮影NGな写真があって、それは許可が取れてない(撮影対象もしくは撮影者)ため、ということだった。当時のさまざまな資料は個人情報の塊なことを認識した</li>
+ <li>展示テーマに比べてあまり暗澹たる気持ちになることはなく、淡々とニュートラルに、生活について想像させるものだったように見える。博物館として望ましい態度に感じる</li>
+</ul></div>
+</div>
+ <div id="outline-container-orgda43659" class="outline-2">
+ <h2 id="orgda43659"> <a href="#orgda43659">関連</a></h2>
+ <div class="outline-text-2" id="text-orgda43659">
+ <p>
+なし。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgefad57b" class="outline-2">
+ <h2 id="orgefad57b"> <a href="#orgefad57b">Backlinks</a></h2>
+ <div class="outline-text-2" id="text-orgefad57b">
+ <ul class="org-ul"> <li> <a href="./20240908T180537--kdoc-238-他人の博物館を観察して参考にする__project.html">KDOC 238: 他人の博物館を観察して参考にする</a></li>
+</ul></div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20250921T190642--kdoc-468-帰還者たちの記憶ミュージアムを観察する__essay.html"/>
+  <id>https://kijimad.github.io/roam/20250921T190642--kdoc-468-帰還者たちの記憶ミュージアムを観察する__essay.html</id>
+  <updated>2025-11-04T01:37:38+09:00</updated>
+</entry>
+<entry>
+  <title>KDOC 471: 『マスタリングTCP/IP』</title>
+  <author><name>kijimaD</name></author>
+  <content type="html"><![CDATA[<div id="content" class="content">
+
+ <div id="outline-container-org171c94b" class="outline-2">
+ <h2 id="org171c94b"> <a href="#org171c94b">この文書のステータス</a></h2>
+ <div class="outline-text-2" id="text-org171c94b">
+ <ul class="org-ul"> <li>作成
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-15 貴島</li>
+</ul></li>
+ <li>レビュー
+ <ul class="org-ul"> <li class="on"> <input type="checkbox" checked="checked"></input> 2025-10-31 貴島</li>
+</ul></li>
+</ul></div>
+</div>
+ <div id="outline-container-org5723f29" class="outline-2">
+ <h2 id="org5723f29"> <a href="#org5723f29">概要</a></h2>
+ <div class="outline-text-2" id="text-org5723f29">
+ <p>
+『マスタリングTCP/IP 入門編』は、ネットワークについて解説する本である。TCP/IPに限らずネットワークについて幅広く解説する。
+</p>
+</div>
+</div>
+ <div id="outline-container-orgbdd4e00" class="outline-2">
+ <h2 id="orgbdd4e00"> <a href="#orgbdd4e00">メモ</a></h2>
+ <div class="outline-text-2" id="text-orgbdd4e00">
+ <ul class="org-ul"> <li>8.8.8.8 は地域ごとにつながる。電話機の110番のようなもの。同じIPアドレスが複数のサーバに設定される(p320)</li>
+ <li>WWWの3つの定義(p479)
+ <ul class="org-ul"> <li>情報へのアクセス手段と位置の定義(URI)</li>
+ <li>情報の表現フォーマットの定義(HTML)</li>
+ <li>情報の転送(HTTP)</li>
+</ul></li>
+ <li>URLはインターネットの資源の場所を表す俗称。URIはインターネットの資源に限らずあらゆる資源を識別する識別子(p479)</li>
+ <li>共通鍵暗号方式は処理速度が早いが鍵の管理が困難、公開鍵暗号方式は鍵の管理はしやすいが処理速度が遅い、という特徴がある。TLSは両者の欠点を補い利点を活かすために両者を使う方法をとる(p548)</li>
+</ul></div>
+</div>
+ <div id="outline-container-orge3b405b" class="outline-2">
+ <h2 id="orge3b405b"> <a href="#orge3b405b">関連</a></h2>
+ <div class="outline-text-2" id="text-orge3b405b">
+ <p>
+なし。
+</p>
+</div>
+</div>
+</div>]]></content>
+  <link href="https://kijimad.github.io/roam/20251011T120323--kdoc-471-『マスタリングtcpip』__book.html"/>
+  <id>https://kijimad.github.io/roam/20251011T120323--kdoc-471-『マスタリングtcpip』__book.html</id>
+  <updated>2025-11-04T01:37:37+09:00</updated>
+</entry>
+</feed>

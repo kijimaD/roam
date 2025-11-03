@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:45Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 201: スクリーンルーラーを作る</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 201: スクリーンルーラーを作る</h1>
+<div id="outline-container-orgebd3f65" class="outline-2">
+<h2 id="orgebd3f65"><a href="#orgebd3f65">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgebd3f65">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-07-20 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-07-22 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6211bbb" class="outline-2">
+<h2 id="org6211bbb"><a href="#org6211bbb"><span class="done DONE">DONE</span> プロジェクトのステータス</a></h2>
+<div class="outline-text-2" id="text-org6211bbb">
+<p>
+プロジェクトは完了である。
+</p>
+</div>
+</div>
+<div id="outline-container-org7cfa206" class="outline-2">
+<h2 id="org7cfa206"><a href="#org7cfa206">概要</a></h2>
+<div class="outline-text-2" id="text-org7cfa206">
+<p>
+<a href="20240721122010-x_window_system.html#ID-1319483b-3976-4a2c-b5b9-08f79fcc32be">X Window System</a>でスクリーンルーラーを作る。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/kijimaD/xruler">kijimaD/xruler</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbd1d714" class="outline-2">
+<h2 id="orgbd1d714"><a href="#orgbd1d714">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgbd1d714">
+</div>
+<div id="outline-container-org55b7e79" class="outline-3">
+<h3 id="org55b7e79"><a href="#org55b7e79"><span class="todo TODO">TODO</span> イベントループを使う</a></h3>
+<div class="outline-text-3" id="text-org55b7e79">
+<p>
+ルーラー追従を、単純なループにsleepを入れて実装していてすごいダサい。カーソルイベントを受け取って同期したい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf081f4b" class="outline-3">
+<h3 id="orgf081f4b"><a href="#orgf081f4b"><span class="done DONE">DONE</span> 動作するようにする</a></h3>
+<div class="outline-text-3" id="text-orgf081f4b">
+<p>
+<a href="https://github.com/swillner/highlight-pointer">swillner/highlight-pointer</a>的な感じで自作したい。
+</p>
+
+<ul class="org-ul">
+<li>極小のウィンドウを作って、それをカーソル周辺に描画しているように見える</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>この部分がないとクリックできなくなる</label><pre class="src src-C"><span class="org-type">XRectangle</span> <span class="org-variable-name">rect</span>;
+<span class="org-type">XserverRegion</span> <span class="org-variable-name">region</span> = XFixesCreateRegion(dpy, &amp;rect, 1);
+<span class="org-function-name">XFixesSetWindowShapeRegion</span>(dpy, win, ShapeInput, 0, 0, region);
+<span class="org-function-name">XFixesDestroyRegion</span>(dpy, region);
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>ウィンドウを動かしている部分</label><pre class="src src-git-permalink">https://github.com/swillner/highlight-pointer/blob/32bf4c60696a4764e8060574ca3031f4fb4ca20d/highlight-pointer.c#L353-L357
+</pre>
+</div>
+
+<div class="results" id="orgd0a6897">
+<p>
+} else if (highlight_visible) {
+    get_pointer_position(&amp;x, &amp;y);
+    XMoveWindow(dpy, win, x - total_radius - 1, y - total_radius - 1);
+    <i>* unfortunately, this causes increase of the X server&rsquo;s cpu usage *</i>
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>ここで背景を透明にしている。ないとハイライトまわりが白くなる</label><pre class="src src-git-permalink">https://github.com/swillner/highlight-pointer/blob/32bf4c60696a4764e8060574ca3031f4fb4ca20d/highlight-pointer.c#L155
+</pre>
+</div>
+
+<div class="results" id="orgf364b16">
+<p>
+static void set_window_mask() {
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>カーソルを描画している</label><pre class="src src-git-permalink">https://github.com/swillner/highlight-pointer/blob/32bf4c60696a4764e8060574ca3031f4fb4ca20d/highlight-pointer.c#L245-L253
+</pre>
+</div>
+
+<div class="results" id="org672071a">
+<p>
+static void redraw() {
+    XSetForeground(dpy, gc, button_pressed ? pressed_color.pixel : released_color.pixel);
+    if (options.outline) {
+        XSetLineAttributes(dpy, gc, options.outline, LineSolid, CapButt, JoinBevel);
+        XDrawArc(dpy, win, gc, options.outline, options.outline, 2 * options.radius + 1, 2 * options.radius + 1, 0, 360 * 64);
+    } else {
+        XFillArc(dpy, win, gc, options.outline, options.outline, 2 * options.radius + 1, 2 * options.radius + 1, 0, 360 * 64);
+    }
+}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>これがないと枠すら表示されない。移動したときのイベントで何か処理をしているのか</label><pre class="src src-git-permalink">https://github.com/swillner/highlight-pointer/blob/32bf4c60696a4764e8060574ca3031f4fb4ca20d/highlight-pointer.c#L130-L146
+</pre>
+</div>
+
+<div class="results" id="orgeb152cd">
+<p>
+static int init_events() {
+    XIEventMask events;
+    unsigned char mask[(XI_LASTEVENT + 7) / 8];
+    memset(mask, 0, sizeof(mask));
+</p>
+
+<p>
+XISetMask(mask, XI_RawButtonPress);
+XISetMask(mask, XI_RawButtonRelease);
+XISetMask(mask, XI_RawMotion);
+</p>
+
+<p>
+events.deviceid = XIAllMasterDevices;
+events.mask = mask;
+events.mask_len = sizeof(mask);
+</p>
+
+<p>
+XISelectEvents(dpy, root, &amp;events, 1);
+</p>
+
+<p>
+    return 0;
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>イベントマスクとは、特定のイベントが発生したときに通知を受け取るための機構。一般的に、イベントマスクはビットマスクとして表現され、各ビットが特定のイベントタイプに対応している</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>ここをコメントアウトするとカーソルが何も表示されなくなる。カーソルのある点で描画しているのはこいつか</label><pre class="src src-git-permalink">https://github.com/swillner/highlight-pointer/blob/32bf4c60696a4764e8060574ca3031f4fb4ca20d/highlight-pointer.c#L115-L123
+</pre>
+</div>
+
+<div class="results" id="orgce0dd5e">
+<p>
+static void show_highlight() {
+    int x, y;
+    int total_radius = options.radius + options.outline;
+    get_pointer_position(&amp;x, &amp;y);
+    XMoveWindow(dpy, win, x - total_radius - 1, y - total_radius - 1);
+    XMapWindow(dpy, win);
+    redraw();
+    highlight_visible = 1;
+}
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>新しく作成されるウィンドウはウィンドウマネージャによって制御されず、直接画面に表示される</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>クセのあるシグネチャ</label><pre class="src src-git-permalink">func (w *Window) Create(parent xproto.Window, x, y, width, height,
+	valueMask int, valueList ...uint32) {
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>valueMaskで、ビット形式で指定したマスクに対して、可変長引数の値を設定していく</li>
+<li>xfixesで対象領域のクリックを無視する</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>xfixesを実行すると出るエラー。原因がわからない</label><pre class="src src-nil">BadRequest {NiceName: Request, Sequence: 2, BadValue: 0, MinorOpcode: 5, MajorOpcode: 138}
+exit status 1
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>コード一覧</label><pre class="src src-shell">xdpyinfo -queryExtensions | grep opcode
+</pre>
+</div>
+
+<div class="results" id="org3ebee63">
+<p>
+BIG-REQUESTS  (opcode: 133)
+Composite  (opcode: 142)
+DAMAGE  (opcode: 143, base event: 91, base error: 152)
+DOUBLE-BUFFER  (opcode: 145, base error: 153)
+DPMS  (opcode: 147)
+DRI2  (opcode: 155, base event: 119)
+DRI3  (opcode: 149)
+GLX  (opcode: 152, base event: 95, base error: 158)
+Generic Event Extension  (opcode: 128)
+MIT-SCREEN-SAVER  (opcode: 144, base event: 92)
+MIT-SHM  (opcode: 130, base event: 65, base error: 128)
+Present  (opcode: 148)
+RANDR  (opcode: 140, base event: 89, base error: 147)
+RECORD  (opcode: 146, base error: 154)
+RENDER  (opcode: 139, base error: 142)
+SECURITY  (opcode: 137, base event: 86, base error: 138)
+SHAPE  (opcode: 129, base event: 64)
+SYNC  (opcode: 134, base event: 83, base error: 134)
+X-Resource  (opcode: 150)
+XC-MISC  (opcode: 136)
+XFIXES  (opcode: 138, base event: 87, base error: 140)
+XFree86-DGA  (opcode: 154, base event: 112, base error: 179)
+XFree86-VidModeExtension  (opcode: 153, base error: 172)
+XINERAMA  (opcode: 141)
+XInputExtension  (opcode: 131, base event: 66, base error: 129)
+XKEYBOARD  (opcode: 135, base event: 85, base error: 137)
+XTEST  (opcode: 132)
+XVideo  (opcode: 151, base event: 93, base error: 155)
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li><p>
+コードは138で、 <code>XFIXES</code> である。ここからは何もわからない
+</p></li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-sh">xtrace -o output.log ./xpoint
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>エラー周辺のログ</label><pre class="src src-nil">001:&lt;:0003: 16: XFIXES-Request(138,5): CreateRegion region=0x05600001 rectangles={x=0 y=0 w=0 h=0};
+001:&lt;:0004:  4: Request(43): GetInputFocus
+001:&gt;:0003:Error 1=Request: major=138, minor=5, bad=0x00000000, seq=0003
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>正常なプログラム</label><pre class="src src-nil">000:&lt;:0009: 12: XFIXES-Request(138,0): QueryVersion major version=6 minor version=0
+000:&gt;:0009:32: Reply to QueryVersion: major version=6 minor version=0
+000:&lt;:000a: 16: XFIXES-Request(138,5): CreateRegion region=0x05400002 rectangles={x=0 y=0 w=0 h=0};
+000:&lt;:000b: 20: XFIXES-Request(138,21): SetWindowShapeRegion window=0x05400001 kind=Input(0x02) x offset=0 y offset=0 region=0x05400002
+000:&lt;:000c:  8: XFIXES-Request(138,10): DestroyRegion region=0x05400002
+000:&lt;:000d: 24: Request(98): QueryExtension name='XInputExtension'
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>正常なプログラムではXFIXESがまとまって存在しているが、エラーが起きるコードでは見知らぬGetInputFocusが混じっている。こいつがうまくいっていない可能性がある</li>
+<li>なぜか先にバージョンを確認すると動作するようになった</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge0dc7c1" class="outline-3">
+<h3 id="orge0dc7c1"><a href="#orge0dc7c1"><span class="done DONE">DONE</span> 透明度を設定する</a></h3>
+<div class="outline-text-3" id="text-orge0dc7c1">
+<p>
+半透明にする。
+</p>
+
+<ul class="org-ul">
+<li>comptonが起動してないと透明にならない</li>
+<li>X Window Systemは透明の表示をサポートしてない。受け取れるが描画はできない</li>
+<li>comptonはコンポジットマネージャ。コンポジットマネージャはウィンドウを描画し合成する責任を持つ</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0bbf20d" class="outline-3">
+<h3 id="org0bbf20d"><a href="#org0bbf20d"><span class="done DONE">DONE</span> コード整理する</a></h3>
+<div class="outline-text-3" id="text-org0bbf20d">
+<p>
+きれいにする。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgbf5e3e8" class="outline-2">
+<h2 id="orgbf5e3e8"><a href="#orgbf5e3e8">関連</a></h2>
+<div class="outline-text-2" id="text-orgbf5e3e8">
+<p>
+なし。
+</p>
+</div>
+</div>
+<div id="outline-container-org30898cb" class="outline-2">
+<h2 id="org30898cb"><a href="#org30898cb">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org30898cb">
+<ul class="org-ul">
+<li><a href="./20240714T172201--kdoc-200-x-windowのログを見る__wiki.html">KDOC 200: X windowのログを見る</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

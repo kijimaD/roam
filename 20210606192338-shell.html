@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:45Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shell</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Shell</h1>
+<div id="outline-container-org3790e6f" class="outline-2">
+<h2 id="org3790e6f"><a href="#org3790e6f">概要</a></h2>
+<div class="outline-text-2" id="text-org3790e6f">
+<p>
+シェルスクリプトはUnixシェルで使われる<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>。
+</p>
+</div>
+</div>
+<div id="outline-container-org40b9723" class="outline-2">
+<h2 id="org40b9723"><a href="#org40b9723">Memo</a></h2>
+<div class="outline-text-2" id="text-org40b9723">
+</div>
+<div id="outline-container-org5db1923" class="outline-3">
+<h3 id="org5db1923"><a href="#org5db1923">bluetoothデバイス再起動</a></h3>
+<div class="outline-text-3" id="text-org5db1923">
+<p>
+systemctlでbluetoothサービスを再起動しても、bluetoothアダプタを認識しなくなることがある。カーネルモジュールを再起動すると直る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>カーネルモジュールを再起動する</label><pre class="src src-shell">sudo modprobe -r btusb
+sudo modprobe btusb
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3d60cf8" class="outline-3">
+<h3 id="org3d60cf8"><a href="#org3d60cf8">ファイルが配置されているディレクトリをカレントディレクトリとする</a></h3>
+<div class="outline-text-3" id="text-org3d60cf8">
+<p>
+ディレクトリが関係するシェルスクリプトの場合、実行場所によって結果が変わってしまうことがある。最初にファイルが配置されているディレクトリに移動すればどこでも実行できるようになる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>/tmp/test.sh にある場合、そこに移動する</label><pre class="src src-shell"><span class="org-builtin">cd</span> <span class="org-sh-quoted-exec">`dirname $0`</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org856e532" class="outline-3">
+<h3 id="org856e532"><a href="#org856e532">高速転送</a></h3>
+<div class="outline-text-3" id="text-org856e532">
+<p>
+<a href="https://qiita.com/ueokande/items/99710724d26c810f7c32">SSH経由のディレクトリ転送を効率的に行う #Linux - Qiita</a>のメモ。
+</p>
+
+<p>
+SSHで大きなディレクトリを転送したいときが稀にある。普通に考えるとscp(と再帰オプション)で送るものだが、tar+sshで送ると圧倒的に早い。ファイル1つ1つ送るscpは時間がかかる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>早い</label><pre class="src src-shell">tar cf - &lt;&#12525;&#12540;&#12459;&#12523;&gt; | ssh &lt;&#12507;&#12473;&#12488;&gt; <span class="org-string">'tar xf - -C &lt;&#36578;&#36865;&#20808;&gt;'</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>遅い</label><pre class="src src-shell">scp -C -r data {HOST}:/dest
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0d35d3e" class="outline-3">
+<h3 id="org0d35d3e"><a href="#org0d35d3e">xオプションでデバッグする</a></h3>
+<div class="outline-text-3" id="text-org0d35d3e">
+<p>
+xオプションを使うと、実行トレースを表示する。デバッグに使える。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>xオプション</label><pre class="src src-shell">bash -x example.sh
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org21917d9" class="outline-3">
+<h3 id="org21917d9"><a href="#org21917d9">プログラムの実行状態を表示する</a></h3>
+<div class="outline-text-3" id="text-org21917d9">
+<p>
+キャリッジリターンのよくある利用法の1つは、プログラムの実行状態を表示するために用いるというもの。毎回行頭に戻り、直前に表示した文字列を上書きしているので、パーセントだけが変わっているように見える。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>実行状態を表示するのに用いる</label><pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">! /bin/</span><span class="org-keyword">sh</span><span class="org-comment">
+</span><span class="org-keyword">for</span> i<span class="org-keyword"> in</span> <span class="org-sh-quoted-exec">`seq 100`</span>
+<span class="org-keyword">do</span>
+    printf <span class="org-string">'Loading object files...%3d%%\r'</span> $<span class="org-variable-name">i</span>
+    sleep 0.05
+<span class="org-keyword">done</span>
+<span class="org-builtin">echo</span> <span class="org-string">'Loading object files ... Done'</span>
+</pre>
+</div>
+
+<p>
+<a href="https://www.amazon.co.jp/%E7%8B%AC%E7%BF%92%E3%82%A2%E3%82%BB%E3%83%B3%E3%83%96%E3%83%A9-%E6%96%B0%E7%89%88-%E5%A4%A7%E5%B4%8E-%E5%8D%9A%E4%B9%8B/dp/4798170291">独習アセンブラ</a>に載っていた。
+</p>
+</div>
+</div>
+<div id="outline-container-orge92e9ea" class="outline-3">
+<h3 id="orge92e9ea"><a href="#orge92e9ea">水平タブは表を揃えるのに便利</a></h3>
+<div class="outline-text-3" id="text-orge92e9ea">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>文字の長さに幅があってやや表示が崩れているが、揃って見やすい</label><pre class="src src-shell">ls -l . | awk <span class="org-string">'{ printf "%s\t%s\t%s\n", $9,$5,$3 }'</span> | head
+</pre>
+</div>
+
+<div class="results" id="orga435949">
+<p>
+
+</p>
+
+<p>
+20210508233810-org_roam.org 15343	orange
+20210508234743-emacs.org	63296	orange
+20210509095513-ruby.org	59766	orange
+20210509095946-rails.org	57004	orange
+20210509100112-javascript.org	26017	orange
+20210509101246-programming_language.org 29086	orange
+20210509122633-emacs_lisp.org 55114	orange
+20210511013549-textlint.org	11189	orange
+20210512001700-create_link.org 9776	orange
+</p>
+
+</div>
+
+<p>
+タブを使わないバージョン。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>タブを使わない場合、ガタガタして見にくい</label><pre class="src src-shell">ls -l . | awk <span class="org-string">'{ printf "%s, %s, %s\n", $9,$5,$3 }'</span> | head
+</pre>
+</div>
+
+<div class="results" id="org11733e8">
+<p>
+, ,
+20210508233810-org_roam.org, 15343, orange
+20210508234743-emacs.org, 63296, orange
+20210509095513-ruby.org, 59766, orange
+20210509095946-rails.org, 57004, orange
+20210509100112-javascript.org, 26017, orange
+20210509101246-programming_language.org, 29086, orange
+20210509122633-emacs_lisp.org, 55114, orange
+20210511013549-textlint.org, 11189, orange
+20210512001700-create_link.org, 9776, orange
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org3f75744" class="outline-3">
+<h3 id="org3f75744"><a href="#org3f75744">sudoでセットされる環境変数は異なる</a></h3>
+<div class="outline-text-3" id="text-org3f75744">
+<p>
+普通の実行時とsudo時で、セットされている環境変数は異なる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>これらは異なる結果になる</label><pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">TEST</span>=1
+env <span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12428;&#12399;TEST&#12434;&#21547;&#12416;
+</span>sudo env <span class="org-comment-delimiter"># </span><span class="org-comment">TEST&#12364;&#12394;&#12356;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org31d10fa" class="outline-3">
+<h3 id="org31d10fa"><a href="#org31d10fa">シェルのバックグラウンド実行</a></h3>
+<div class="outline-text-3" id="text-org31d10fa">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>再帰で処理する</label><pre class="src src-git-permalink">https://github.com/kd-collective/NetBSD/blob/89341ae2e1875e7f91cefa9b1dcc0e4549edcde0/bin/sh/jobs.c#L1716-L1865
+</pre>
+</div>
+
+<div class="results" id="org5f4bced">
+<p>
+STATIC void
+cmdtxt(union node *n)
+{
+	union node *np;
+	struct nodelist *lp;
+	const char *p;
+	int i;
+</p>
+
+<p>
+	if (n <code>= NULL || cmdnleft &lt;</code> 0)
+		return;
+	switch (n-&gt;type) {
+	case NSEMI:
+		cmdtxt(n-&gt;nbinary.ch1);
+		cmdputs(&ldquo;; &rdquo;);
+		cmdtxt(n-&gt;nbinary.ch2);
+		break;
+	case NAND:
+		cmdtxt(n-&gt;nbinary.ch1);
+		cmdputs(&ldquo; &amp;&amp; &rdquo;);
+		cmdtxt(n-&gt;nbinary.ch2);
+		break;
+	case NOR:
+		cmdtxt(n-&gt;nbinary.ch1);
+		cmdputs(&ldquo; || &rdquo;);
+		cmdtxt(n-&gt;nbinary.ch2);
+		break;
+	case NDNOT:
+		cmdputs(&ldquo;! &rdquo;);
+		<i>* FALLTHROUGH *</i>
+	case NNOT:
+		cmdputs(&ldquo;! &rdquo;);
+		cmdtxt(n-&gt;nnot.com);
+		break;
+	case NPIPE:
+		for (lp = n-&gt;npipe.cmdlist ; lp ; lp = lp-&gt;next) {
+			cmdtxt(lp-&gt;n);
+			if (lp-&gt;next)
+				cmdputs(&ldquo; | &rdquo;);
+		}
+		if (n-&gt;npipe.backgnd)
+			cmdputs(&ldquo; &amp;&rdquo;);
+		break;
+	case NSUBSHELL:
+		cmdputs(&ldquo;(&rdquo;);
+		cmdtxt(n-&gt;nredir.n);
+		cmdputs(&ldquo;)&rdquo;);
+		break;
+	case NREDIR:
+	case NBACKGND:
+		cmdtxt(n-&gt;nredir.n);
+		break;
+	case NIF:
+		cmdputs(&ldquo;if &rdquo;);
+		cmdtxt(n-&gt;nif.test);
+		cmdputs(&ldquo;; then &rdquo;);
+		cmdtxt(n-&gt;nif.ifpart);
+		if (n-&gt;nif.elsepart) {
+			cmdputs(&ldquo;; else &rdquo;);
+			cmdtxt(n-&gt;nif.elsepart);
+		}
+		cmdputs(&ldquo;; fi&rdquo;);
+		break;
+	case NWHILE:
+		cmdputs(&ldquo;while &rdquo;);
+		goto until;
+	case NUNTIL:
+		cmdputs(&ldquo;until &rdquo;);
+ until:
+		cmdtxt(n-&gt;nbinary.ch1);
+		cmdputs(&ldquo;; do &rdquo;);
+		cmdtxt(n-&gt;nbinary.ch2);
+		cmdputs(&ldquo;; done&rdquo;);
+		break;
+	case NFOR:
+		cmdputs(&ldquo;for &rdquo;);
+		cmdputs(n-&gt;nfor.var);
+		cmdputs(&ldquo; in &rdquo;);
+		cmdlist(n-&gt;nfor.args, 1);
+		cmdputs(&ldquo;; do &rdquo;);
+		cmdtxt(n-&gt;nfor.body);
+		cmdputs(&ldquo;; done&rdquo;);
+		break;
+	case NCASE:
+		cmdputs(&ldquo;case &rdquo;);
+		cmdputs(n-&gt;ncase.expr-&gt;narg.text);
+		cmdputs(&ldquo; in &rdquo;);
+		for (np = n-&gt;ncase.cases; np; np = np-&gt;nclist.next) {
+			cmdtxt(np-&gt;nclist.pattern);
+			cmdputs(&ldquo;) &rdquo;);
+			cmdtxt(np-&gt;nclist.body);
+			switch (n-&gt;type) {	<i>* switch (not if) for later *</i>
+			case NCLISTCONT:
+				cmdputs(&ldquo;;&amp; &rdquo;);
+				break;
+			default:
+				cmdputs(&ldquo;;; &rdquo;);
+				break;
+			}
+		}
+		cmdputs(&ldquo;esac&rdquo;);
+		break;
+	case NDEFUN:
+		cmdputs(n-&gt;narg.text);
+		cmdputs(&ldquo;() { &#x2026; }&rdquo;);
+		break;
+	case NCMD:
+		cmdlist(n-&gt;ncmd.args, 1);
+		cmdlist(n-&gt;ncmd.redirect, 0);
+		if (n-&gt;ncmd.backgnd)
+			cmdputs(&ldquo; &amp;&rdquo;);
+		break;
+	case NARG:
+		cmdputs(n-&gt;narg.text);
+		break;
+	case NTO:
+		p = &ldquo;&gt;&rdquo;;  i = 1;  goto redir;
+	case NCLOBBER:
+		p = &ldquo;&gt;|&rdquo;;  i = 1;  goto redir;
+	case NAPPEND:
+		p = &ldquo;&gt;&gt;&rdquo;;  i = 1;  goto redir;
+	case NTOFD:
+		p = &ldquo;&gt;&amp;&rdquo;;  i = 1;  goto redir;
+	case NFROM:
+		p = &ldquo;&lt;&rdquo;;  i = 0;  goto redir;
+	case NFROMFD:
+		p = &ldquo;&lt;&amp;&rdquo;;  i = 0;  goto redir;
+	case NFROMTO:
+		p = &ldquo;&lt;&gt;&rdquo;;  i = 0;  goto redir;
+ redir:
+		if (n-&gt;nfile.fd != i)
+			cmdputi(n-&gt;nfile.fd);
+		cmdputs(p);
+		if (n-&gt;type <code>= NTOFD || n-&gt;type =</code> NFROMFD) {
+			if (n-&gt;ndup.dupfd &lt; 0)
+				cmdputs(&ldquo;-&rdquo;);
+			else
+				cmdputi(n-&gt;ndup.dupfd);
+		} else {
+			cmdtxt(n-&gt;nfile.fname);
+		}
+		break;
+	case NHERE:
+	case NXHERE:
+		cmdputs(&ldquo;&lt;&lt;&#x2026;&rdquo;);
+		break;
+	default:
+		cmdputs(&ldquo;???&rdquo;);
+		break;
+	}
+}
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org3d6684d" class="outline-3">
+<h3 id="org3d6684d"><a href="#org3d6684d">カレントディレクトリのファイルサイズ</a></h3>
+<div class="outline-text-3" id="text-org3d6684d">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>-s: 総容量だけ、-h 適当なファイルサイズで表示</label><pre class="src src-shell">du -sh .
+</pre>
+</div>
+
+<div class="results" id="org09b73bf">
+<p>
+388M	.
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgbe5aec3" class="outline-3">
+<h3 id="orgbe5aec3"><a href="#orgbe5aec3">ファイルサイズのランキング</a></h3>
+<div class="outline-text-3" id="text-orgbe5aec3">
+<p>
+サイズ順に、もっとも大きい10ディレクトリを表示する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>-s: 総容量だけ、 -k キロバイト</label><pre class="src src-shell">du -sk * | sort -rn | head -10
+</pre>
+</div>
+
+<div class="results" id="org2d34f8e">
+<p>
+360676	node_modules
+3696	public
+196	package-lock.json
+124	20210624232811-digger.org
+100	20210910122240-bookmarks.org
+72	20210926143813-clojure.org
+68	20210907223510-haskell.org
+64	20210508234743-emacs.org
+56	20210911113057-go.org
+56	20210901101339-rust.org
+</p>
+
+</div>
+
+<p>
+比較するディレクトリサイズによって単位オプションをKBやMBにする。ソートが機能しなくなるので-hオプションは使用しない。
+</p>
+</div>
+</div>
+<div id="outline-container-org50a0db4" class="outline-3">
+<h3 id="org50a0db4"><a href="#org50a0db4">エラー: 公開鍵を利用できないため、以下の署名は検証できませんでした を解決する</a></h3>
+<div class="outline-text-3" id="text-org50a0db4">
+<p>
+sudo apt-get updateしたとき、GPGエラーが出る解決法。
+</p>
+
+<blockquote>
+<p>
+GPG エラー: <a href="https://">https://</a>&#x2026;. focal InRelease: 公開鍵を利用できないため、以下の署名は検証できませんでした: NO_PUBKEY &#x2026;
+</p>
+</blockquote>
+
+<p>
+表示されているpubkeyをコピペして、追加する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys aaaaaa... <span class="org-comment-delimiter"># </span><span class="org-comment">aaaaaa...&#12395;&#12289;&#20844;&#38283;&#37749;&#12434;&#21033;&#29992;&#12391;&#12365;&#12394;&#12356;&#12383;&#12417;&#12289;&#20197;&#19979;&#12398;&#32626;&#21517;&#12399;&#26908;&#35388;&#12391;&#12365;&#12414;&#12379;&#12435;&#12391;&#12375;&#12383;: NO_PUBKEY ...&#8592; &#12434;&#20837;&#12428;&#12427;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org39c8fec" class="outline-3">
+<h3 id="org39c8fec"><a href="#org39c8fec">cinnamonを再起動する</a></h3>
+<div class="outline-text-3" id="text-org39c8fec">
+<p>
+ウィンドウマネージャを再起動したいときがある。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">cinnamon --replace
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org35deb19" class="outline-3">
+<h3 id="org35deb19"><a href="#org35deb19">sourceコマンド</a></h3>
+<div class="outline-text-3" id="text-org35deb19">
+<p>
+sourceは環境変数関係を再読み込みするのによく使う。
+<code>source ~~/.bashrc</code> みたいに。
+</p>
+
+<p>
+bashでは、 <code>.</code> でもできる。
+つまり、 <code>. ~~/.bashrc</code> と書いても同じ意味になる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb910e78" class="outline-3">
+<h3 id="orgb910e78"><a href="#orgb910e78">sshが切れたときに処理が止まらないようにする</a></h3>
+<div class="outline-text-3" id="text-orgb910e78">
+<p>
+nohupをつけて実行すると、SSHが切れても実行され続ける。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>ssh先のターミナルにて</label><pre class="src src-shell">nohup make long_job &amp;
+</pre>
+</div>
+
+<p>
+<a href="https://qiita.com/f0o0o/items/7f9dfaf3f7392c0ce52f">sshが切れた時に処理が止まらないようにする - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org460f446" class="outline-3">
+<h3 id="org460f446"><a href="#org460f446">コマンドの実行と出力結果を記録する</a></h3>
+<div class="outline-text-3" id="text-org460f446">
+<p>
+<code>script</code> コマンドが便利。
+実行してオンになると、 <code>exit</code> するまでの履歴をファイルに保存できる。
+</p>
+
+<p>
+<a href="https://staffblog.amelieff.jp/entry/2020/04/20/130000">簡単にコマンドの実行ログをファイルに記録する方法 - アメリエフの技術ブログ</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org6ad8655" class="outline-3">
+<h3 id="org6ad8655"><a href="#org6ad8655">踏み台を経由したssh</a></h3>
+<div class="outline-text-3" id="text-org6ad8655">
+<p>
+普通にやると、2回sshコマンドを実行するので面倒。
+configに記入しておいて、一度に実行する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>.ssh/config</label><pre class="src src-nil">Host &lt;alias_name&gt;
+  HostName &lt;target_server&gt;
+  User &lt;target_user&gt;
+  IdentityFile &lt;target_id_rsa&gt;
+  ProxyCommand ssh -W %h:%p -i &lt;bastion_id_rsa&gt; -p &lt;bastion_port&gt; &lt;bastion_user&gt;@&lt;bastion_server&gt;
+</pre>
+</div>
+
+<p>
+<a href="https://qiita.com/hkak03key/items/3b0c4752bfbcc52e676d">踏み台サーバを飛び越えて一発で目的のサーバへsshする方法 - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org7f79e07" class="outline-3">
+<h3 id="org7f79e07"><a href="#org7f79e07">input関係の設定を.bash_profile等でしてはいけない理由</a></h3>
+<div class="outline-text-3" id="text-org7f79e07">
+<p>
+<a href="https://wiki.archlinux.jp/index.php/Fcitx#.E6.97.A5.E6.9C.AC.E8.AA.9E">Fcitx - ArchWiki</a>
+</p>
+
+<blockquote>
+<p>
+上記の設定を .bashrc でしないでください。.bashrc はインタラクティブな bash セッションを初期化するときに使われます。インタラクティブでないセッションや X セッションの初期化では用いられません。さらに、.bashrc で環境変数を設定すると、コマンドラインから実行した診断ツールに誤解を与えて、X セッションでは環境変数が使われていないのに正しく設定されているかのように表示されることがあります。
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-org9623c87" class="outline-3">
+<h3 id="org9623c87"><a href="#org9623c87">cronで通知する</a></h3>
+<div class="outline-text-3" id="text-org9623c87">
+<p>
+cronで時報を通知したいけど、表示されないことがある。これはcronがCLI向けのコマンドであって、画面出力があることを想定してないから。
+</p>
+
+<p>
+指定する。普通はこれでOK。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>GUIが関係するコマンドを実行するときはDISPLAY=:0をつける</label><pre class="src src-shell"><span class="org-builtin">export</span> <span class="org-variable-name">DISPLAY</span>=:0 &amp;&amp; notify-send <span class="org-string">"&#26178;&#22577;"</span> <span class="org-string">"$(date +\%H):00!"</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>実行ログを見る</label><pre class="src src-shell">cat /var/log/syslog
+</pre>
+</div>
+
+<p>
+<a href="20210905140122-exwm.html#ID-eb196529-bdbd-48c5-9d5b-a156fe5c2f41">EXWM</a> + dunstの環境でうまくいかなかった。
+DBUS_SESSION_BUS_ADDRESSの設定が必要なよう。参考サイトをコピペすると通知できるようになった。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">00 * * * * <span class="org-variable-name">DISPLAY</span>=:0 <span class="org-variable-name">DBUS_SESSION_BUS_ADDRESS</span>=unix:<span class="org-variable-name">path</span>=/run/user/1000/bus setpriv --euid=1000 notify-send <span class="org-string">"Timebot"</span> <span class="org-string">"$(date +\%H):00!"</span>
+</pre>
+</div>
+<p>
+<a href="https://bbs.archlinux.org/viewtopic.php?id=223050">Cannot run notify-send from cron job / Newbie Corner / Arch Linux Forums</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgb29188a" class="outline-3">
+<h3 id="orgb29188a"><a href="#orgb29188a">xargsで一括削除</a></h3>
+<div class="outline-text-3" id="text-orgb29188a">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>.logファイルを一括削除する</label><pre class="src src-shell">find . -name <span class="org-string">"*.log"</span> | xargs rm -fv
+</pre>
+</div>
+
+<p>
+findでファイルのリストを作成して、xargsに渡す。
+xargsはファイルを1つずつrmに渡す。
+</p>
+
+<p>
+xargsにはdry-runモードがある。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>pオプションがついてると生成コマンドを確認するだけで実行しない</label><pre class="src src-shell">find . -name <span class="org-string">"*.log"</span> | xargs -p rm -fv
+</pre>
+</div>
+
+<p>
+<a href="https://techblog.kyamanak.com/entry/2018/02/12/202256">【Linux】xargs コマンドの使い方がよく分からない - きゃまなかのブログ</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org09d5741" class="outline-3">
+<h3 id="org09d5741"><a href="#org09d5741">xargsでリポジトリ内一括置換</a></h3>
+<div class="outline-text-3" id="text-org09d5741">
+<p>
+git grep、xargs、sedを組み合わせる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>リポジトリの2.6.5という文字列を2.7.1に置換する例</label><pre class="src src-shell">git grep -l <span class="org-string">'2\.6\.5'</span> | xargs sed -i <span class="org-string">'s/2\.6\.5/2.7.1/g'</span>
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>git grepの <code>l</code> オプションはヒットしたファイル名を出力する。</li>
+<li>xargsは標準出力からリストを読み込み、出力を次のコマンドの引数に渡すコマンド。</li>
+<li>sedは置換。 <code>i</code> オプションは結果を画面出力しないオプション。 本来は <code>sed -i "s/aaa/bbb/s" Gemfile</code> みたいな順だが、xargsで自動で渡されている。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6d7029a" class="outline-3">
+<h3 id="org6d7029a"><a href="#org6d7029a">一括git clone</a></h3>
+<div class="outline-text-3" id="text-org6d7029a">
+<p>
+<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>から、
+個人 or 組織のリポジトリをすべてダウンロードする方法。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">curl https://api.github.com/users/{USER}/repos?<span class="org-variable-name">per_page</span>=100 | jq .[].ssh_url | xargs -n 1 git clone
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">curl https://api.github.com/orgs/{ORG}/repos?<span class="org-variable-name">per_page</span>=100  | jq .[].ssh_url | xargs -n 1 git clone
+</pre>
+</div>
+
+<p>
+<code>?per_page=100</code> をつけないとデフォルトの30件しか取ってこないので注意。
+100を超えるとページを指定する必要がある。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://tic40.hatenablog.com/entry/2018/03/26/073000">https://tic40.hatenablog.com/entry/2018/03/26/073000</a></li>
+</ul>
+
+<p>
+参考に読む用リポジトリは、organizationにまとめておく。
+ローカルですぐ閲覧できて便利。
+</p>
+</div>
+</div>
+<div id="outline-container-org0381d49" class="outline-3">
+<h3 id="org0381d49"><a href="#org0381d49">Cinnamonのコントロールパネルを出す</a></h3>
+<div class="outline-text-3" id="text-org0381d49">
+<p>
+これが起動できればサウンドやディスプレイ設定もできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">cinnamon-settings
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2e44fde" class="outline-3">
+<h3 id="org2e44fde"><a href="#org2e44fde">失敗時例外を出す</a></h3>
+<div class="outline-text-3" id="text-org2e44fde">
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">!/bin/</span><span class="org-keyword">bash</span><span class="org-comment">
+</span>
+<span class="org-builtin">set</span> -e
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">...</span>
+</pre>
+</div>
+<p>
+というように、しておくと、実行時できなかったときにエラーメッセージを出す。
+何も指定しないと、どこで失敗したのか把握するのが困難。
+ローカル環境だといいのだが、CIだと確認コストがかかるので必ず指定しておくとよい。
+</p>
+</div>
+</div>
+<div id="outline-container-org44e948d" class="outline-3">
+<h3 id="org44e948d"><a href="#org44e948d">デバッグメッセージ出力</a></h3>
+<div class="outline-text-3" id="text-org44e948d">
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-comment-delimiter">#</span><span class="org-comment">!/bin/</span><span class="org-keyword">bash</span><span class="org-comment"> -x
+</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">...</span>
+</pre>
+</div>
+<p>
+-xをつけると評価結果を逐一出力する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgeccf62a" class="outline-3">
+<h3 id="orgeccf62a"><a href="#orgeccf62a">GNOMEの音量調整</a></h3>
+<div class="outline-text-3" id="text-orgeccf62a">
+<div class="org-src-container">
+<pre class="src src-shell">pactl set-sink-volume @DEFAULT_SINK@ +5%
+pactl set-sink-volume @DEFAULT_SINK@ -5%
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4d52948" class="outline-3">
+<h3 id="org4d52948"><a href="#org4d52948">カレントディレクトリ行数カウント</a></h3>
+<div class="outline-text-3" id="text-org4d52948">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>行数カウント</label><pre class="src src-shell">wc -l <span class="org-sh-quoted-exec">`find ./ -name '*.el'`</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>文字数カウント</label><pre class="src src-shell">git ls-files *.org | xargs wc -c | sort -n
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdfaa06b" class="outline-3">
+<h3 id="orgdfaa06b"><a href="#orgdfaa06b">ディレクトリの全ファイルで実行する</a></h3>
+<div class="outline-text-3" id="text-orgdfaa06b">
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-keyword">for</span> file<span class="org-keyword"> in</span> <span class="org-sh-quoted-exec">`\find ./src -name '*.py'`</span>;
+<span class="org-keyword">do</span>
+<span class="org-builtin">echo</span> $<span class="org-variable-name">file</span>
+python $<span class="org-variable-name">file</span> | sed -e s/.*[0-9]m// &gt;&gt; ./docs/query.org
+<span class="org-keyword">done</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb760b78" class="outline-3">
+<h3 id="orgb760b78"><a href="#orgb760b78">port検索する</a></h3>
+<div class="outline-text-3" id="text-orgb760b78">
+<p>
+port already in used. が出たとき。
+</p>
+
+<p>
+プロセスを探す。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo lsof -i:5432
+</pre>
+</div>
+
+<p>
+ポートを使ってるプロセスを削除する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo lsof -t -i tcp:5432 | sudo xargs kill -9
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf9d302c" class="outline-3">
+<h3 id="orgf9d302c"><a href="#orgf9d302c">LinuxでWindowsのブートメディアを作成する</a></h3>
+<div class="outline-text-3" id="text-orgf9d302c">
+<p>
+woeusbというパッケージをインストールして行う。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">sudo add-apt-repository ppa:tomtomtom/woeusb
+sudo apt update &amp;&amp; sudo apt install woeusb-frontend-wxgtk
+</pre>
+</div>
+<p>
+<a href="https://www.omgubuntu.co.uk/2017/06/create-bootable-windows-10-usb-ubuntu">https://www.omgubuntu.co.uk/2017/06/create-bootable-windows-10-usb-ubuntu</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgeb7a69a" class="outline-3">
+<h3 id="orgeb7a69a"><a href="#orgeb7a69a">aptコマンド</a></h3>
+<div class="outline-text-3" id="text-orgeb7a69a">
+<p>
+aptはdebian系ディストリビューションで用いられるパッケージマネージャ。
+</p>
+<ul class="org-ul">
+<li>パッケージ検索</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-shell">apt search libffi
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org83d0ee2" class="outline-3">
+<h3 id="org83d0ee2"><a href="#org83d0ee2">suspendする</a></h3>
+<div class="outline-text-3" id="text-org83d0ee2">
+<p>
+コマンドでサスペンドする方法。
+</p>
+
+<p>
+Ubuntuのとき。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">systemctl suspend -i
+</pre>
+</div>
+
+<p>
+GNU Guixのとき。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">loginctl suspend
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgeafc049" class="outline-3">
+<h3 id="orgeafc049"><a href="#orgeafc049">プロセスを止める</a></h3>
+<div class="outline-text-3" id="text-orgeafc049">
+<p>
+簡単に検索、killできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">pgrep firefox
+pkill firefox
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org55a0385" class="outline-2">
+<h2 id="org55a0385"><a href="#org55a0385">Tasks</a></h2>
+<div class="outline-text-2" id="text-org55a0385">
+</div>
+<div id="outline-container-orgeb80004" class="outline-3">
+<h3 id="orgeb80004"><a href="#orgeb80004"><a href="https://hackmd.io/@jyami/HJzohRn2D">シェルってなに？コマンドラインインタプリタってなに？ - シェルもどきをgoで自作する#1 - HackMD</a></a></h3>
+<div class="outline-text-3" id="text-orgeb80004">
+<p>
+シェルを自作する。
+</p>
+</div>
+</div>
+<div id="outline-container-org169e6bd" class="outline-3">
+<h3 id="org169e6bd"><a href="#org169e6bd"><span class="todo TODO">TODO</span> <a href="https://qiita.com/ko1nksm/items/9650ed1fc21d668f2732">シェルスクリプトは変数代入で = の前後にスペースを置けない！･･･の本当の理由を知ると優れた文法が見えてくる - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-org169e6bd">
+<p>
+詳しい解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orgce530cb" class="outline-3">
+<h3 id="orgce530cb"><a href="#orgce530cb"><span class="todo TODO">TODO</span> <a href="https://www.itmedia.co.jp/enterprise/articles/0811/20/news019.html">インストール済みUbuntuのクローンを新しいハードディスクに作成する：Linux Hacks（1/2 ページ） - ITmedia エンタープライズ</a></a></h3>
+<div class="outline-text-3" id="text-orgce530cb">
+<p>
+まとめておく。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org0bec75d" class="outline-2">
+<h2 id="org0bec75d"><a href="#org0bec75d">References</a></h2>
+<div class="outline-text-2" id="text-org0bec75d">
+</div>
+<div id="outline-container-org8d40cf3" class="outline-3">
+<h3 id="org8d40cf3"><a href="#org8d40cf3"><a href="https://github.com/stedolan/jq">stedolan/jq: Command-line JSON processor</a></a></h3>
+<div class="outline-text-3" id="text-org8d40cf3">
+<p>
+jsonを扱う便利コマンド。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgab7ec1b" class="outline-2">
+<h2 id="orgab7ec1b"><a href="#orgab7ec1b">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgab7ec1b">
+<ul class="org-ul">
+<li><a href="./20210508234743-emacs.html">Emacs</a></li>
+<li><a href="./20210831231046-fish.html">fish</a></li>
+<li><a href="./20210901101339-rust.html">Rust</a></li>
+<li><a href="./20210922010155-nushell.html">nushell</a></li>
+<li><a href="./20240213T235930--kdoc-94-2&gt;1の意味を見る__wiki.html">KDOC 94: 2&gt;&amp;1の意味を見る</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

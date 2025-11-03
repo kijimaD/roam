@@ -1,0 +1,3207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:36Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ruby</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Ruby</h1>
+<div id="outline-container-orgd447117" class="outline-2">
+<h2 id="orgd447117"><a href="#orgd447117">概要</a></h2>
+<div class="outline-text-2" id="text-orgd447117">
+<p>
+Rubyはオブジェクト指向の<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>である。
+Webフレームワークの<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>が有名で、採用されるケースはRailsを使うためが多い。
+</p>
+
+<p>
+コンパイル不要なスクリプト言語、動的型付け、WEBに使用される、といった点で<a href="20210725134208-python.html#ID-a6c9c9ad-d9b1-4e13-8992-75d8590e464c">Python</a>と競合している。
+</p>
+</div>
+</div>
+<div id="outline-container-org91943e7" class="outline-2">
+<h2 id="org91943e7"><a href="#org91943e7">Memo</a></h2>
+<div class="outline-text-2" id="text-org91943e7">
+</div>
+<div id="outline-container-orgf93cc77" class="outline-3">
+<h3 id="orgf93cc77"><a href="#orgf93cc77">countにブロックを渡す</a></h3>
+<div class="outline-text-3" id="text-orgf93cc77">
+<p>
+countにブロックを渡して配列の数を調べられる。
+↓二行は同じ意味。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">expect(item_type_pool.types.select { |t| t.category == <span class="org-constant">:canon</span> }.length).to be &gt; 10
+expect(item_type_pool.types.count { |t| t.category == <span class="org-constant">:canon</span> }).to be &gt; 10
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orge5453f6" class="outline-3">
+<h3 id="orge5453f6"><a href="#orge5453f6">継承関係を辿る</a></h3>
+<div class="outline-text-3" id="text-orge5453f6">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-constant">true</span>.class.ancestors
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6d25031" class="outline-3">
+<h3 id="org6d25031"><a href="#org6d25031">オブジェクトのメソッド一覧を見る</a></h3>
+<div class="outline-text-3" id="text-org6d25031">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-constant">true</span>.public_methods
+</pre>
+</div>
+
+<p>
+falseを渡すと祖先のメソッドを表示しない。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-constant">true</span>.public_methods(<span class="org-constant">false</span>)
+=<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [:===, :^, :inspect, :to_s, :&amp;, :|]</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org5fa64f4" class="outline-3">
+<h3 id="org5fa64f4"><a href="#org5fa64f4">group_by</a></h3>
+<div class="outline-text-3" id="text-org5fa64f4">
+<p>
+<code>Enumerable#group_by</code>
+ブロックを評価した結果をキー、対応する要素の配列を値とするハッシュを返す。
+</p>
+
+<p>
+QueryMethodの <code>where</code> で取った値をハッシュにして、後で使いまわせる。N+1問題の回避に使える。QueryMethodぽい名前だが無関係。
+</p>
+</div>
+</div>
+<div id="outline-container-org85fcae9" class="outline-3">
+<h3 id="org85fcae9"><a href="#org85fcae9">index_by</a></h3>
+<div class="outline-text-3" id="text-org85fcae9">
+<p>
+viewで何かモデルに関することをループさせないといけないときに役立つ。モデルを一度にハッシュとして取ることで、パフォーマンスを改善できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org1d42bf3" class="outline-3">
+<h3 id="org1d42bf3"><a href="#org1d42bf3">インスタンスメソッドを調査する</a></h3>
+<div class="outline-text-3" id="text-org1d42bf3">
+<p>
+<code>String.instance_methods(false).sort</code>
+<code>false</code> によってクラスの継承メソッドを表示しないため、クラス単体を調べるのに役立つ。
+</p>
+</div>
+</div>
+<div id="outline-container-org348af96" class="outline-3">
+<h3 id="org348af96"><a href="#org348af96">トップレベルで実行できる理由</a></h3>
+<div class="outline-text-3" id="text-org348af96">
+<p>
+クラスがなくトップレベルで定義されたメソッドのレシーバーは <code>Object</code> クラス。クラスの中にないトップレベルメソッドでさまざまなことが行えるのは、 <code>Object</code> のおかげ。 <code>ruby -e 'p Kernel.private_instance_methods.sort'</code> でチェックできる。
+</p>
+<ul class="org-ul">
+<li><code>puts</code> がレシーバーなしで呼び出せるのは、 <code>Object</code> クラスが <code>puts</code> のある <code>Kernel</code> クラスをincludeしているから。</li>
+<li><code>.to_d</code> - BigDecimalに変換する。</li>
+<li><code>index</code> - 配列を検索して添字を返す。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7185490" class="outline-3">
+<h3 id="org7185490"><a href="#org7185490">何のメソッドがわからないとき</a></h3>
+<div class="outline-text-3" id="text-org7185490">
+<ul class="org-ul">
+<li><a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>だと <code>robe-doc</code> がとても便利。すでにあるローカルにあるドキュメントを活用するべき。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org88c5f48" class="outline-3">
+<h3 id="org88c5f48"><a href="#org88c5f48">when句</a></h3>
+<div class="outline-text-3" id="text-org88c5f48">
+<p>
+<a href="https://stackoverflow.com/questions/3908380/ruby-class-types-and-case-statements/3908411">https://stackoverflow.com/questions/3908380/ruby-class-types-and-case-statements/3908411</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">case</span> item
+<span class="org-keyword">when</span> <span class="org-type">MyClass</span>
+...
+<span class="org-keyword">when</span> <span class="org-type">Array</span>
+...
+<span class="org-keyword">when</span> <span class="org-type">String</span>
+...
+</pre>
+</div>
+<p>
+is really
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">if</span> <span class="org-type">MyClass</span> === item
+...
+<span class="org-keyword">elsif</span> <span class="org-type">Array</span> === item
+...
+<span class="org-keyword">elsif</span> <span class="org-type">String</span> === item
+...
+</pre>
+</div>
+
+<p>
+<code>===</code> は内部的に <code>is_a?</code> を使っている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">if</span> item.is_a?(<span class="org-type">MyClass</span>)
+...
+<span class="org-keyword">elsif</span> item.is_a?(<span class="org-type">Array</span>)
+...
+<span class="org-keyword">elsif</span> item.is_a?(<span class="org-type">String</span>)
+...
+</pre>
+</div>
+<p>
+をcaseに書き換えるには一番上の書き方でよい。たぶん。
+</p>
+</div>
+</div>
+<div id="outline-container-orgf069403" class="outline-3">
+<h3 id="orgf069403"><a href="#orgf069403">singletonをクリーンにテストする</a></h3>
+<div class="outline-text-3" id="text-orgf069403">
+<p>
+singletonをそのまま使うと状況依存のテストになるため、毎回newする必要がある。
+</p>
+
+<p>
+<a href="https://stackoverflow.com/questions/1909181/how-to-test-a-singleton-class">https://stackoverflow.com/questions/1909181/how-to-test-a-singleton-class</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">instance</span>
+  <span class="org-variable-name">@instance</span> ||= new
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">private_class_method</span> <span class="org-constant">:new</span>
+</pre>
+</div>
+
+<p>
+So you can bypass the memoization altogether by calling the private method new using send
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">let(<span class="org-constant">:instance</span>) { <span class="org-type">GlobalClass</span>.send(<span class="org-constant">:new</span>) }
+</pre>
+</div>
+<p>
+A nice benefit of this way is that no global state is modified as a result of your tests running.
+</p>
+
+<p>
+Probably a better way, from this answer:
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">let(<span class="org-constant">:instance</span>) { <span class="org-type">Class</span>.new(<span class="org-type">GlobalClass</span>).instance }
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb6b3647" class="outline-3">
+<h3 id="orgb6b3647"><a href="#orgb6b3647">評価結果アノテーションを付与するxmpfilter</a></h3>
+<div class="outline-text-3" id="text-orgb6b3647">
+<p>
+便利ツールを集めた <a href="https://github.com/rcodetools/rcodetools">https://github.com/rcodetools/rcodetools</a> というgemがある。
+そのなかにインラインで実行した結果を表示するスクリプトがある。
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>用のコードもある。<a href="https://github.com/rcodetools/rcodetools/blob/master/misc/rcodetools.el">https://github.com/rcodetools/rcodetools/blob/master/misc/rcodetools.el</a> rubykitch氏作成。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">1.to_s <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; "1"</span>
+</pre>
+</div>
+<p>
+というように、irbのように挿入してくれる。とても便利。
+</p>
+</div>
+</div>
+<div id="outline-container-org0c6cf76" class="outline-3">
+<h3 id="org0c6cf76"><a href="#org0c6cf76">bundle installの並列数</a></h3>
+<div class="outline-text-3" id="text-org0c6cf76">
+<p>
+<code>bundle install --jobs 4</code> などとして並列処理数を指定できる。
+このマックスの数の調べ方。
+</p>
+
+<p>
+<code>getconf _NPROCESSORS_ONLN</code>
+</p>
+
+<p>
+なので、マシンごとで最速の設定で実行するためには。
+</p>
+
+<p>
+<code>bundle install --jobs `getconf _NPROCESSORS_ONLN`</code> とする。
+<a href="https://stackoverflow.com/questions/39163758/bundle-how-many-parallel-jobs">https://stackoverflow.com/questions/39163758/bundle-how-many-parallel-jobs</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org7b0e082" class="outline-3">
+<h3 id="org7b0e082"><a href="#org7b0e082">transform_values</a></h3>
+<div class="outline-text-3" id="text-org7b0e082">
+<p>
+<code>map { } .to_h</code> はtransform_valuesで書き直せる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">h = { <span class="org-constant">a:</span> 1, <span class="org-constant">b:</span> 2 }
+h.map { |k, v| [k, v.to_s] }.to_h
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">h = { <span class="org-constant">a:</span> 1, <span class="org-constant">b:</span> 2 }
+h.transform_values(&amp;<span class="org-constant">:to_s</span>)
+</pre>
+</div>
+
+<p>
+<a href="https://github.com/rubocop/rubocop-jp/issues/33">https://github.com/rubocop/rubocop-jp/issues/33</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org0eab0cc" class="outline-3">
+<h3 id="org0eab0cc"><a href="#org0eab0cc">日付計算でのRational</a></h3>
+<div class="outline-text-3" id="text-org0eab0cc">
+<p>
+日付計算でDate同士を計算するときがある。
+そのとき返ってくる値を表示すると-1/1みたいに表示される。
+これはRational(有理数)オブジェクトである。
+.to_iで整数に変換できる。
+</p>
+
+<p>
+<a href="https://docs.ruby-lang.org/ja/2.4.0/method/Date/i/=2d.html">Date#- (Ruby 2.4.0 リファレンスマニュアル)</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org88d1031" class="outline-3">
+<h3 id="org88d1031"><a href="#org88d1031">マッチした部分文字列の配列を返すscan</a></h3>
+<div class="outline-text-3" id="text-org88d1031">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>2文字づつ分割</label><pre class="src src-ruby"><span class="org-string">"foobar"</span>.scan(<span class="org-string">/../</span>)
+</pre>
+</div>
+
+<div class="results" id="orge849047">
+<p>
+[&ldquo;fo&rdquo;, &ldquo;ob&rdquo;, &ldquo;ar&rdquo;]
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>数字クラスごとで分割</label><pre class="src src-ruby"><span class="org-string">"1 2 3"</span>.scan(<span class="org-string">/\d+/</span>)
+</pre>
+</div>
+
+<div class="results" id="org6fab0d5">
+<p>
+[&ldquo;1&rdquo;, &ldquo;2&rdquo;, &ldquo;3&rdquo;]
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>セパレータが違っても↑と同じ結果を返す</label><pre class="src src-ruby"><span class="org-string">"1, 2, 3"</span>.scan(<span class="org-string">/\d+/</span>)
+</pre>
+</div>
+
+<div class="results" id="org43e7932">
+<p>
+[&ldquo;1&rdquo;, &ldquo;2&rdquo;, &ldquo;3&rdquo;]
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org0b525ea" class="outline-3">
+<h3 id="org0b525ea"><a href="#org0b525ea">メモリ使用量を調べる</a></h3>
+<div class="outline-text-3" id="text-org0b525ea">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>すべてのメモリ使用量を調べる</label><pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">'objspace'</span>
+<span class="org-builtin">puts</span> <span class="org-string">"</span><span class="org-variable-name">#{ObjectSpace.memsize_of_all / (1000.0 * 1000.0)}</span><span class="org-string"> MB"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orge12b97a" class="outline-3">
+<h3 id="orge12b97a"><a href="#orge12b97a">irbでgemを読み込む</a></h3>
+<div class="outline-text-3" id="text-orge12b97a">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">'rspec'</span>
+<span class="org-builtin">include</span> <span class="org-type">RSpec</span>::<span class="org-type">Matchers</span>
+
+<span class="org-builtin">include</span> <span class="org-type">ActionView</span>::<span class="org-type">Helpers</span>::<span class="org-type">OutputSafetyHelper</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd82c4f0" class="outline-3">
+<h3 id="orgd82c4f0"><a href="#orgd82c4f0">クラスの読み込み順</a></h3>
+<div class="outline-text-3" id="text-orgd82c4f0">
+<p>
+親(抽象)クラスは、子(具体)クラスよりも先に読み込む必要がある。
+普通に開発していると1つのファイルに入れることはないので気づきにくい、はまりやすい。
+</p>
+
+<p>
+↓はエラーになる。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>Bが名前解決できずエラー</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">A</span> &lt; <span class="org-type">B</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">B</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org03e5abc" class="outline-3">
+<h3 id="org03e5abc"><a href="#org03e5abc">親クラスから子クラスの定数にアクセス</a></h3>
+<div class="outline-text-3" id="text-org03e5abc">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>具体クラスの定数が入る。子クラスに移譲できる</label><pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Abstruct</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">print_child_constant</span>
+    <span class="org-keyword">self</span>.class::<span class="org-type">NAME</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">A</span> &lt; <span class="org-type">Abstruct</span>
+  <span class="org-type">NAME</span> = <span class="org-string">'AA'</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">B</span> &lt; <span class="org-type">Abstruct</span>
+  <span class="org-type">NAME</span> = <span class="org-string">'BB'</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> <span class="org-type">A</span>.new.print_child_constant <span class="org-comment-delimiter"># </span><span class="org-comment">AA</span>
+</pre>
+</div>
+
+<p>
+<a href="https://easyramble.com/access-subclass-constant-from-superclass.html">Rubyで親クラスから子クラスの定数を参照 | EasyRamble</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgca47b20" class="outline-3">
+<h3 id="orgca47b20"><a href="#orgca47b20">配列をマージ/結合</a></h3>
+<div class="outline-text-3" id="text-orgca47b20">
+<p>
+<code>merge</code> メソッドはHashクラスのメソッドであり、配列では使えない。
+</p>
+
+<p>
+単純な結合。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>結合</label><pre class="src src-ruby">[<span class="org-string">'a'</span>, <span class="org-string">'b'</span>] + [<span class="org-string">'a'</span>, <span class="org-string">'b'</span>]
+</pre>
+</div>
+
+<div class="results" id="org1ea8417">
+<p>
+[&ldquo;a&rdquo;, &ldquo;b&rdquo;, &ldquo;a&rdquo;, &ldquo;b&rdquo;]
+</p>
+
+</div>
+
+<p>
+マージ(=かぶってたら削除)。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>マージ</label><pre class="src src-ruby">[<span class="org-string">'a'</span>, <span class="org-string">'b'</span>] | [<span class="org-string">'a'</span>, <span class="org-string">'b'</span>]
+</pre>
+</div>
+
+<div class="results" id="org7beb261">
+<p>
+[&ldquo;a&rdquo;, &ldquo;b&rdquo;]
+</p>
+
+</div>
+
+<p>
+uniqでも同じ。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>uniq</label><pre class="src src-ruby">([<span class="org-string">'a'</span>, <span class="org-string">'b'</span>] + [<span class="org-string">'a'</span>, <span class="org-string">'b'</span>]).uniq
+</pre>
+</div>
+
+<div class="results" id="org5e95cf8">
+<p>
+[&ldquo;a&rdquo;, &ldquo;b&rdquo;]
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgaee33ba" class="outline-3">
+<h3 id="orgaee33ba"><a href="#orgaee33ba">Struct(構造体クラス)</a></h3>
+<div class="outline-text-3" id="text-orgaee33ba">
+<p>
+structは簡易的なclassのようなもの。
+データをまとめるのに使う。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>structで定義する</label><pre class="src src-ruby">user = <span class="org-type">Struct</span>.new(<span class="org-constant">:name</span>, <span class="org-constant">:age</span>)
+user.new(<span class="org-string">'taro'</span>, 15)
+</pre>
+</div>
+
+<div class="results" id="org06421ff">
+<p>
+#&lt;struct name=&ldquo;taro&rdquo;, age=15&gt;
+</p>
+
+</div>
+
+<p>
+<a href="https://qiita.com/k-penguin-sato/items/54189d5ed4e5f7463266">【Ruby】Struct(構造体クラス)を理解する - Qiita</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org4bd318d" class="outline-3">
+<h3 id="org4bd318d"><a href="#org4bd318d">thor</a></h3>
+<div class="outline-text-3" id="text-org4bd318d">
+<p>
+thorはコマンドを作るgem。
+同じようなライブラリにrakeがあるが、rakeは引数を渡す方法が特殊なのでthorが好まれる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Gemat</span>
+  <span class="org-keyword">class</span> <span class="org-type">Cli</span> &lt; <span class="org-type">Thor</span>
+    class_options <span class="org-constant">input:</span> <span class="org-constant">:string</span>, <span class="org-constant">output:</span> <span class="org-constant">:string</span>, <span class="org-constant">columns:</span> <span class="org-constant">:array</span>, <span class="org-constant">all:</span> <span class="org-constant">:boolean</span>
+    <span class="org-comment-delimiter"># </span><span class="org-comment">&#12513;&#12477;&#12483;&#12489;&#20849;&#36890;&#12398;&#12458;&#12503;&#12471;&#12519;&#12531;
+</span>
+    desc <span class="org-string">'csv'</span>, <span class="org-string">'csv command description'</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">csv</span>
+    <span class="org-keyword">end</span>
+
+    desc md, <span class="org-string">'md command description'</span>
+    <span class="org-keyword">def</span> <span class="org-function-name">md</span>
+    <span class="org-keyword">end</span>
+
+    no_tasks <span class="org-keyword">do</span>
+      <span class="org-keyword">def</span> <span class="org-function-name">command</span>(options, method_name)
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">$ gemat csv
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org1fb55be" class="outline-3">
+<h3 id="org1fb55be"><a href="#org1fb55be">pp</a></h3>
+<div class="outline-text-3" id="text-org1fb55be">
+<p>
+Hashが見づらいときは、 <code>pp</code> を使うと綺麗に表示できる。
+<a href="https://docs.ruby-lang.org/ja/latest/library/pp.html">https://docs.ruby-lang.org/ja/latest/library/pp.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgc83426b" class="outline-3">
+<h3 id="orgc83426b"><a href="#orgc83426b">map</a></h3>
+<div class="outline-text-3" id="text-orgc83426b">
+<p>
+mapの返り値は、ブロックの最後の値である。
+だから↓みたく途中でセットしたい、というときは最後配列に入れたいものを置く必要がある。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">options[<span class="org-constant">:columns</span>].map <span class="org-keyword">do</span> |column|
+  od = <span class="org-type">OutDsl</span>.new(column)
+  od.idx = index
+  od <span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12371;
+</span><span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+mapは1行で書くこと多いので忘れがち。
+</p>
+</div>
+</div>
+<div id="outline-container-org7b45d96" class="outline-3">
+<h3 id="org7b45d96"><a href="#org7b45d96">rubygemsのcredential入手</a></h3>
+<div class="outline-text-3" id="text-org7b45d96">
+<p>
+<a href="https://rubygems.org/">https://rubygems.org/</a> であらかじめログインしておく。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">curl -u {user&#21517;} https<span class="org-constant">:/</span>/rubygems.org/api/v1/api_key.yaml &gt; ~<span class="org-string">/.gem/</span>credentials; chmod 0600 ~<span class="org-string">/.gem/</span>credentials
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">rake release
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org2566532" class="outline-3">
+<h3 id="org2566532"><a href="#org2566532">presense</a></h3>
+<div class="outline-text-3" id="text-org2566532">
+<p>
+<code>present?</code> の結果がtrueのときレシーバ自身を返す。falseのときはnilを返す。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">object.present? ? object : <span class="org-constant">nil</span>
+object.presense
+</pre>
+</div>
+
+<p>
+これらは等価である。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://apidock.com/rails/Object/presence">https://apidock.com/rails/Object/presence</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6054fb0" class="outline-3">
+<h3 id="org6054fb0"><a href="#org6054fb0">tap</a></h3>
+<div class="outline-text-3" id="text-org6054fb0">
+<p>
+処理に関わらずselfを返す。
+メソッドチェーンへのデバッグに便利。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> ( 1 .. 5 )
+.tap{|obj| <span class="org-builtin">puts</span> obj.class}
+.to_a.tap{|obj| <span class="org-builtin">puts</span> obj.class}
+</pre>
+</div>
+
+<div class="results" id="org7ec09a0">
+<p>
+Range
+Array
+[1, 2, 3, 4, 5]
+</p>
+
+</div>
+
+<p>
+メソッドチェーンの途中で分岐として使えそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org2832886" class="outline-3">
+<h3 id="org2832886"><a href="#org2832886">min_by</a></h3>
+<div class="outline-text-3" id="text-org2832886">
+<p>
+配列から最大/最小の値を取りたいというとき、min_byが便利。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">[5, -8, 3, 9].min_by{|num| num.abs }
+</pre>
+</div>
+
+<pre class="example">
+3
+</pre>
+
+
+<p>
+order → first と冗長に書いてしまいがち。
+</p>
+</div>
+</div>
+<div id="outline-container-org8056775" class="outline-3">
+<h3 id="org8056775"><a href="#org8056775">&amp;: 記法</a></h3>
+<div class="outline-text-3" id="text-org8056775">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-string">%w{ a b c }</span>.map(&amp;<span class="org-constant">:capitalize</span>)
+</pre>
+</div>
+<ul class="org-ul">
+<li>&amp; -&gt; <code>to_proc</code> trigger</li>
+<li>: -&gt; symbol</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf737447" class="outline-3">
+<h3 id="orgf737447"><a href="#orgf737447">ファイルを作らずにファイルオブジェクトを作ってテストする</a></h3>
+<div class="outline-text-3" id="text-orgf737447">
+<p>
+ファイル入力のあるプログラムがあるとする。
+テストするとき、普通はファイルを作って読み込むことになる。
+しかしいちいちファイルを用意するほどではない、みたいな場合もある。
+そのときは <code>StringIO</code> を使うと気軽に試せる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">require</span> <span class="org-string">'stringio'</span>
+string = <span class="org-string">&lt;&lt;EOM
+  aaa
+  "aaa"
+EOM
+</span>
+file1 = <span class="org-type">StringIO</span>.new(string)
+file.read <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; aaa\n"aaa"
+</span>file2 = <span class="org-type">StringIO</span>.new(<span class="org-string">''</span>)
+file.read <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; ""</span>
+</pre>
+</div>
+<p>
+としておいて、あとは普通のFIleオブジェクトにするように、 <code>StringIO</code> オブジェクトに対して各種操作ができる。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org99c8eb7" class="outline-2">
+<h2 id="org99c8eb7"><a href="#org99c8eb7">Mastering Ruby Closure</a></h2>
+<div class="outline-text-2" id="text-org99c8eb7">
+<p>
+DEADLINE: <span class="timestamp-wrapper"><span class="timestamp">&lt;2021-11-21 日&gt;</span></span>
+</p>
+<ul class="org-ul">
+<li>10, 15, 20, 36, 38, 55, 57, 61, 68</li>
+</ul>
+</div>
+<div id="outline-container-org29c5de5" class="outline-3">
+<h3 id="org29c5de5"><a href="#org29c5de5">定義</a></h3>
+<div class="outline-text-3" id="text-org29c5de5">
+<ul class="org-ul">
+<li>関数を必要とする</li>
+<li>親スコープで定義される変数を参照する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4050af4" class="outline-3">
+<h3 id="org4050af4"><a href="#org4050af4">レキシカルバインディング</a></h3>
+<div class="outline-text-3" id="text-org4050af4">
+<div class="org-src-container">
+<pre class="src src-ruby">msg = <span class="org-string">"aaa"</span>
+3.times <span class="org-keyword">do</span>
+  prefix = <span class="org-string">"I"</span>
+  <span class="org-builtin">puts</span> <span class="org-string">"</span><span class="org-variable-name">#{prefix}</span><span class="org-string"> </span><span class="org-variable-name">#{msg}</span><span class="org-string">"</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="results" id="org8b4a590">
+<p>
+I aaa
+I aaa
+I aaa
+</p>
+
+</div>
+
+<p>
+ブロックの内側から外側にはアクセスできる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">msg = <span class="org-string">"aaa"</span>
+3.times <span class="org-keyword">do</span>
+  prefix = <span class="org-string">"I"</span>
+  <span class="org-builtin">puts</span> <span class="org-string">"</span><span class="org-variable-name">#{prefix}</span><span class="org-string"> </span><span class="org-variable-name">#{msg}</span><span class="org-string">"</span>
+<span class="org-keyword">end</span>
+prefix
+</pre>
+</div>
+
+<p>
+ブロックの外側から内側にアクセスできない。
+</p>
+</div>
+</div>
+<div id="outline-container-org8d7f53a" class="outline-3">
+<h3 id="org8d7f53a"><a href="#org8d7f53a">自由変数</a></h3>
+<div class="outline-text-3" id="text-org8d7f53a">
+<div class="org-src-container">
+<pre class="src src-ruby">chalkboard_gag = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |msg|
+  <span class="org-builtin">lambda</span> <span class="org-keyword">do</span>
+    prefix = <span class="org-string">"I will not"</span>
+    <span class="org-string">"</span><span class="org-variable-name">#{prefix}</span><span class="org-string"> </span><span class="org-variable-name">#{msg}</span><span class="org-string">"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+chalkboard_gag
+inner_lambda = chalkboard_gag.call(<span class="org-string">"drive the car"</span>)
+inner_lambda.call
+</pre>
+</div>
+
+<div class="results" id="org0388372">
+<p>
+I will not drive the car
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org0c60063" class="outline-3">
+<h3 id="org0c60063"><a href="#org0c60063">例) カウンター</a></h3>
+<div class="outline-text-3" id="text-org0c60063">
+<p>
+2つ目のlambdaから見ると、 <code>x</code> は注入されてるので自由変数。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">counter = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span>
+  x = 0
+  get_x = <span class="org-builtin">lambda</span> { <span class="org-builtin">p</span> x } <span class="org-comment-delimiter"># </span><span class="org-comment">x is free variable
+</span>  incr = <span class="org-builtin">lambda</span> { <span class="org-builtin">p</span> x += 1 }
+  decr = <span class="org-builtin">lambda</span> { <span class="org-builtin">p</span> x -= 1 }
+
+  {<span class="org-constant">get_x:</span> get_x, <span class="org-constant">incr:</span> incr, <span class="org-constant">decr:</span> decr}
+<span class="org-keyword">end</span>
+c1 = counter.call
+c1[<span class="org-constant">:incr</span>].call
+c1[<span class="org-constant">:incr</span>].call
+c1[<span class="org-constant">:incr</span>].call
+c1[<span class="org-constant">:get_x</span>].call
+c1[<span class="org-constant">:decr</span>].call
+c1[<span class="org-constant">:decr</span>].call
+
+c2 = counter.call
+c2[<span class="org-constant">:get_x</span>].call
+</pre>
+</div>
+
+<div class="results" id="orgc81c008">
+<p>
+1
+2
+3
+3
+2
+1
+0
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org1a01f8a" class="outline-3">
+<h3 id="org1a01f8a"><a href="#org1a01f8a">コールバック関数</a></h3>
+<div class="outline-text-3" id="text-org1a01f8a">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Generator</span>
+  <span class="org-builtin">attr_reader</span> <span class="org-constant">:report</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(report)
+    <span class="org-variable-name">@report</span> = report
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">run</span>
+    report.to_csv
+  <span class="org-keyword">end</span>
+
+<span class="org-type">Notifier</span>.new(<span class="org-type">Generator</span>.new(good_report),
+             <span class="org-constant">on_success:</span> <span class="org-builtin">lambda</span> { |r| <span class="org-builtin">puts</span> <span class="org-string">"Send </span><span class="org-variable-name">#{r}</span><span class="org-string"> to boss"</span> },
+             <span class="org-constant">on_failure:</span> <span class="org-builtin">lambda</span> { <span class="org-builtin">puts</span> <span class="org-string">"Send to ben"</span> }
+            ).tap <span class="org-keyword">do</span> |n|
+  n.run
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">is_even = <span class="org-builtin">lambda</span> { |x| x % 2 == 0 }
+is_even.call(3)
+</pre>
+</div>
+
+<div class="results" id="org4a79688">
+<p>
+false
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">is_even = <span class="org-builtin">lambda</span> { |x| x % 2 == 0 }
+<span class="org-keyword">def</span> <span class="org-function-name">complement</span>(predicate, value)
+  <span class="org-keyword">not</span> predicate.call(value)
+<span class="org-keyword">end</span>
+complement(is_even, 3)
+</pre>
+</div>
+
+<div class="results" id="orgd154591">
+<p>
+true
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">is_even = <span class="org-builtin">lambda</span> { |x| x % 2 == 0 }
+<span class="org-keyword">def</span> <span class="org-function-name">complement</span>(predicate)
+  <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |value|
+    <span class="org-keyword">not</span> predicate.call(value)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+complement(is_even).call(4)
+complement(is_even).call(5)
+</pre>
+</div>
+
+<div class="results" id="orgfe24e6a">
+<p>
+true
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Generator</span>
+  <span class="org-builtin">attr_reader</span> <span class="org-constant">:report</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(report)
+    <span class="org-variable-name">@report</span> = report
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">run</span>
+    report.to_csv
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Notifier</span>
+  <span class="org-builtin">attr_reader</span> <span class="org-constant">:generator</span>, <span class="org-constant">:callbacks</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(generator, callbacks)
+    <span class="org-variable-name">@generator</span> = generator
+    <span class="org-variable-name">@callbacks</span> = callbacks
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">run</span>
+    result = generator.run
+    <span class="org-keyword">if</span> result
+      callbacks.fetch(<span class="org-constant">:on_success</span>).call(result)
+    <span class="org-keyword">else</span>
+      callbacks.fetch(<span class="org-constant">:on_failure</span>).call
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+good_report = <span class="org-type">OpenStruct</span>.new(<span class="org-constant">to_csv:</span> <span class="org-string">"59.99, Great Success"</span>)
+
+<span class="org-type">Notifier</span>.new(<span class="org-type">Generator</span>.new(good_report),
+             <span class="org-constant">on_success:</span> <span class="org-builtin">lambda</span> { |r| <span class="org-builtin">puts</span> <span class="org-string">"Send </span><span class="org-variable-name">#{r}</span><span class="org-string"> to boss"</span> },
+             <span class="org-constant">on_failure:</span> <span class="org-builtin">lambda</span> { <span class="org-builtin">puts</span> <span class="org-string">"Send email to ben"</span> }
+            ).tap <span class="org-keyword">do</span> |n|
+  n.run <span class="org-comment-delimiter">#</span><span class="org-comment">=&gt; send 59.99, great succes to boss
+</span><span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">good_report = <span class="org-type">OpenStruct</span>.new(<span class="org-constant">to_csv:</span> <span class="org-constant">nil</span>)
+
+<span class="org-type">Notifier</span>.new(<span class="org-type">Generator</span>.new(good_report),
+             <span class="org-constant">on_success:</span> <span class="org-builtin">lambda</span> { |r| <span class="org-builtin">puts</span> <span class="org-string">"Send </span><span class="org-variable-name">#{r}</span><span class="org-string"> to boss"</span> },
+             <span class="org-constant">on_failure:</span> <span class="org-builtin">lambda</span> { <span class="org-builtin">puts</span> <span class="org-string">"Send email to ben"</span> }
+            ).tap <span class="org-keyword">do</span> |n|
+  n.run <span class="org-comment-delimiter">#</span><span class="org-comment">=&gt; ben
+</span><span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+元のNotifierクラスに手を加えることなく、ログ機能を追加できた。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbe2e593" class="outline-3">
+<h3 id="orgbe2e593"><a href="#orgbe2e593">reduce</a></h3>
+<div class="outline-text-3" id="text-orgbe2e593">
+<p>
+既存のreduceの例。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">[1, 2, 3, 4, 5].reduce(10) { |acc, x| <span class="org-builtin">p</span> <span class="org-string">"</span><span class="org-variable-name">#{acc}</span><span class="org-string">, </span><span class="org-variable-name">#{x}</span><span class="org-string">"</span>; acc + x }
+</pre>
+</div>
+
+<div class="results" id="org33d8f0f">
+<p>
+25
+</p>
+
+</div>
+
+<p>
+eachを使わずに実装。再帰になる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">adder = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |acc, arr|
+  <span class="org-keyword">if</span> arr.empty?
+    acc
+  <span class="org-keyword">else</span>
+    adder.call(acc + arr.first, arr.drop(1))
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+adder.call(10, [1, 2, 3, 4, 5])
+</pre>
+</div>
+
+<div class="results" id="orgfbd9a44">
+<p>
+25
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">multiplier = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |acc, arr|
+  <span class="org-keyword">if</span> arr.empty?
+    acc
+  <span class="org-keyword">else</span>
+    multiplier.call(acc * arr.first, arr.drop(1))
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+multiplier.call(10, [1, 2, 3, 4, 5])
+</pre>
+</div>
+
+<div class="results" id="orgcd25f69">
+<p>
+1200
+</p>
+
+</div>
+
+<p>
+変わったのは演算子だけで、DRYでない。
+抽象化する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">reducer = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |acc, arr, binary_function|
+  <span class="org-keyword">if</span> arr.empty?
+    acc
+  <span class="org-keyword">else</span>
+    reducer.call(binary_function.call(acc, arr.first), arr.drop(1), binary_function)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+reducer.call(1, [1, 2, 3, 4, 5], <span class="org-builtin">lambda</span> { |x, y| x + y })
+</pre>
+</div>
+
+<div class="results" id="org47a0df4">
+<p>
+16
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">reducer = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |acc, arr, binary_function|
+  reducer_aux = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |acc, arr|
+    <span class="org-keyword">if</span> arr.empty?
+      acc
+    <span class="org-keyword">else</span>
+      reducer_aux.call(binary_function.call(acc, arr.first), arr.drop(1))
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+
+  reducer_aux.call(acc, arr)
+<span class="org-keyword">end</span>
+
+reducer.call(1, [1, 2, 3, 4, 5], <span class="org-builtin">lambda</span> { |x, y| x + y })
+</pre>
+</div>
+
+<div class="results" id="org1a44497">
+<p>
+16
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orge015e33" class="outline-3">
+<h3 id="orge015e33"><a href="#orge015e33">ex1</a></h3>
+<div class="outline-text-3" id="text-orge015e33">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">is_larger_than</span>(amount)
+  <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |a|
+    a &gt; amount <span class="org-comment-delimiter"># </span><span class="org-comment">amount is free variable
+</span>  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+larger_than_5 = is_larger_than(5)
+larger_than_5.call(7)
+larger_than_5.call(3)
+</pre>
+</div>
+
+<div class="results" id="org3b5b1d9">
+<p>
+false
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">new_db = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span>
+  db = {}
+  insert = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |key, value|
+    <span class="org-builtin">p</span> db.store(key, value)
+  <span class="org-keyword">end</span>
+  dump = <span class="org-builtin">lambda</span> { <span class="org-builtin">p</span> db }
+  delete = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |key|
+    <span class="org-builtin">p</span> db.delete(key)
+  <span class="org-keyword">end</span>
+  {<span class="org-constant">insert:</span> insert, <span class="org-constant">dump:</span> dump, <span class="org-constant">delete:</span> delete}
+<span class="org-keyword">end</span>
+db = new_db.call
+db[<span class="org-constant">:insert</span>].call(<span class="org-string">"this is key"</span>, <span class="org-string">"this is value"</span>)
+db[<span class="org-constant">:dump</span>].call
+db[<span class="org-constant">:delete</span>].call(<span class="org-string">"this is key"</span>)
+db[<span class="org-constant">:dump</span>].call
+</pre>
+</div>
+
+<div class="results" id="orgde628c3">
+<p>
+&ldquo;this is value&rdquo;
+{&ldquo;this is key&rdquo;=&gt;&ldquo;this is value&rdquo;}
+&ldquo;this is value&rdquo;
+{}
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">complement = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |function|
+  <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |arg|
+    <span class="org-keyword">not</span> function.call(arg)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+is_even = <span class="org-builtin">lambda</span> { |x| x % 2 == 0 }
+complement.call(is_even).call(5)
+</pre>
+</div>
+
+<div class="results" id="orgb5d2371">
+<p>
+true
+</p>
+
+</div>
+
+<p>
+この部分遅延させる感じが本質か。
+</p>
+
+<p>
+畳み込み演算の配列バージョン。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">[1, 2, 3, 4, 5].reduce(<span class="org-type">Array</span>.new()) { |result, item| result &lt;&lt; item * 2 }
+</pre>
+</div>
+
+<div class="results" id="org19e97e9">
+<p>
+[2, 4, 6, 8, 10]
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org795f143" class="outline-3">
+<h3 id="org795f143"><a href="#org795f143">ブロック</a></h3>
+<div class="outline-text-3" id="text-org795f143">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">do_it</span>
+  <span class="org-keyword">yield</span>
+<span class="org-keyword">end</span>
+do_it {<span class="org-string">"I'm doing it."</span>}
+</pre>
+</div>
+
+<div class="results" id="org0d801ff">
+<p>
+I&rsquo;m doing it.
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">do_it</span>
+  <span class="org-keyword">yield</span>
+<span class="org-keyword">end</span>
+do_it { [1, 2, 3] &lt;&lt; 4}
+</pre>
+</div>
+
+<div class="results" id="org343bd9a">
+<p>
+[1, 2, 3, 4]
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">do_it</span>(x, y)
+  <span class="org-keyword">yield</span>(x, y)
+<span class="org-keyword">end</span>
+do_it(2, 3) { |x, y| x + y }
+do_it(<span class="org-string">"Ohai"</span>, <span class="org-string">"Dictator"</span>) <span class="org-keyword">do</span> |greeting, title|
+    <span class="org-string">"</span><span class="org-variable-name">#{greeting}</span><span class="org-string">, </span><span class="org-variable-name">#{title}</span><span class="org-string">!!!"</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="results" id="orgad585f3">
+<p>
+Ohai, Dictator!!!
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">do_it</span>(x)
+  <span class="org-keyword">yield</span> x
+<span class="org-keyword">end</span>
+do_it(42) { |num, line| <span class="org-string">"</span><span class="org-variable-name">#{num}</span><span class="org-string">: </span><span class="org-variable-name">#{line}</span><span class="org-string">"</span> }
+</pre>
+</div>
+
+<div class="results" id="org2b92e78">
+<p>
+42:
+</p>
+
+</div>
+
+<p>
+ブロックは無名関数に似ている。名前がかぶると外側にあっても上書きする。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">x = <span class="org-string">"outside x"</span>
+1.times { x = <span class="org-string">"modified from the outside block"</span> }
+x
+</pre>
+</div>
+
+<div class="results" id="org879c251">
+<p>
+modified from the outside block
+</p>
+
+</div>
+
+<p>
+ブロック変数を使うとブロック外を上書きしない。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">x = <span class="org-string">"outside x"</span>
+1.times { |;x| x = <span class="org-string">"modified from the outside block"</span> }
+x
+</pre>
+</div>
+
+<div class="results" id="org889dd84">
+<p>
+outside x
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orge9d26bb" class="outline-3">
+<h3 id="orge9d26bb"><a href="#orge9d26bb">Fixnum#times</a></h3>
+<div class="outline-text-3" id="text-orge9d26bb">
+<p>
+↓みたいなことができるのはどうしてか。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">3.times { <span class="org-builtin">puts</span> <span class="org-string">"D'oh!"</span> }
+</pre>
+</div>
+
+<div class="results" id="org46daa87">
+<p>
+D&rsquo;oh!
+D&rsquo;oh!
+D&rsquo;oh!
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Fixnum</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">times</span>
+    <span class="org-builtin">puts</span> <span class="org-string">"This does nothing yet!"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+3.times { <span class="org-builtin">puts</span> <span class="org-string">"D'oh!"</span> }
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Array</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">each</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+<span class="org-string">%w(look ma no for loops)</span>.each <span class="org-keyword">do</span> |x|
+  <span class="org-builtin">puts</span> x
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+eachを作ってみる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Array</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">each</span>
+    x = 0
+    <span class="org-keyword">while</span> x &lt; <span class="org-keyword">self</span>.length
+      <span class="org-keyword">yield</span> <span class="org-keyword">self</span>[x]
+      x += 1
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-string">%w(look me no for loops)</span>.each <span class="org-keyword">do</span> |x|
+  <span class="org-builtin">puts</span> x
+<span class="org-keyword">end</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">look
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">me
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">no
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">for
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">loops</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orga322977" class="outline-3">
+<h3 id="orga322977"><a href="#orga322977">IO close利用</a></h3>
+<div class="outline-text-3" id="text-orga322977">
+<p>
+ブロックはファイルクローズのし忘れ防止にも使える。これはどうやって実装しているか。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-type">File</span>.open() <span class="org-keyword">do</span> |f|
+  f &lt;&lt; <span class="org-string">"aaa"</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+実装してみる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">File</span>
+  <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">open</span>(name, mode)
+    file = new(name, mode)
+    <span class="org-keyword">return</span> file <span class="org-keyword">unless</span> <span class="org-builtin">block_given?</span>
+    <span class="org-keyword">yield</span>(file)
+  <span class="org-keyword">ensure</span>
+    file.close
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3b717b5" class="outline-3">
+<h3 id="org3b717b5"><a href="#org3b717b5">オブジェクトの初期化</a></h3>
+<div class="outline-text-3" id="text-org3b717b5">
+<p>
+ブロックはオブジェクトの初期化にも使える。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Twitter</span>
+  <span class="org-keyword">module</span> <span class="org-type">REST</span>
+    <span class="org-keyword">class</span> <span class="org-type">Client</span>
+      <span class="org-builtin">attr_accessor</span> <span class="org-constant">:consumer_key</span>, <span class="org-constant">:consumer_secret</span>,
+                    <span class="org-constant">:access_token</span>, <span class="org-constant">:access_token_secret</span>
+      <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>
+        <span class="org-keyword">yield</span> <span class="org-keyword">self</span> <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+client = <span class="org-type">Twitter</span>::<span class="org-type">REST</span>::<span class="org-type">Client</span>.new <span class="org-keyword">do</span> |config|
+  config.consumer_key        = <span class="org-string">"YOUR_CONSUMER_KEY"</span>
+  config.consumer_secret     = <span class="org-string">"YOUR_CONSUMER_SECRET"</span>
+  config.access_token        = <span class="org-string">"YOUR_ACCESS_TOKEN"</span>
+  config.access_token_secret = <span class="org-string">"YOUR_ACCESS_SECRET"</span>
+<span class="org-keyword">end</span>
+
+<span class="org-comment-delimiter">#</span><span class="org-comment">&lt;Twitter::REST::Client:0x000056204ff8f410 @consumer_key="YOUR_CONSUMER_KEY", @consumer_secret="YOUR_CONSUMER_SECRET", @access_token="YOUR_ACCESS_TOKEN", @access_token_secret="YOUR_ACCESS_SECRET"&gt;</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Router</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>
+    <span class="org-keyword">yield</span> <span class="org-keyword">self</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">match</span>(route)
+    <span class="org-builtin">puts</span> route
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+routes = <span class="org-type">Router</span>.new <span class="org-keyword">do</span> |r|
+  r.match <span class="org-string">'/about'</span> =&gt; <span class="org-string">'home#about'</span>
+  r.match <span class="org-string">'/users'</span> =&gt; <span class="org-string">'users#index'</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+<a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a>のrouterでやっているように、ここからどうやってレシーバーの <code>r</code> を使わずに指定できるのか。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">foo</span>
+  <span class="org-keyword">yield</span> <span class="org-keyword">self</span>
+<span class="org-keyword">end</span>
+
+foo <span class="org-keyword">do</span>
+  <span class="org-builtin">puts</span> <span class="org-keyword">self</span>
+<span class="org-keyword">end</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; main</span>
+</pre>
+</div>
+
+<p>
+ブロック内のselfはブロックが定義されたところのselfになる。ということで、selfを変えたければブロックが定義されるコンテキストを変えなければならない。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Router</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(&amp;block)
+    instance_eval &amp;block
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">match</span>(route)
+    <span class="org-builtin">puts</span> route
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+routes = <span class="org-type">Router</span>.new <span class="org-keyword">do</span>
+  match <span class="org-string">'/about'</span> =&gt; <span class="org-string">'home#about'</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+Routerコンテキストになるので、デフォルトレシーバーでmatchが呼べる。
+</p>
+
+<p>
+オプションをハッシュで受け取る。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Twitter</span>
+  <span class="org-keyword">module</span> <span class="org-type">REST</span>
+    <span class="org-keyword">class</span> <span class="org-type">Client</span>
+      <span class="org-builtin">attr_accessor</span> <span class="org-constant">:consumer_key</span>, <span class="org-constant">:consumer_secret</span>,
+                    <span class="org-constant">:access_token</span>, <span class="org-constant">:access_token_secret</span>
+
+      <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(options = {}, &amp;block)
+        options.each { |k, v| send(<span class="org-string">"</span><span class="org-variable-name">#{k}</span><span class="org-string">="</span>, v) }
+        instance_eval(&amp;block) <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+client = <span class="org-type">Twitter</span>::<span class="org-type">REST</span>::<span class="org-type">Client</span>.new({<span class="org-constant">consumer_key:</span> <span class="org-string">"YOUR_CONSUMER_KEY"</span>}) <span class="org-keyword">do</span>
+  consumer_secret     = <span class="org-string">"YOUR_CONSUMER_SECRET"</span>
+  access_token        = <span class="org-string">"YOUR_ACCESS_TOKEN"</span>
+  access_token_secret = <span class="org-string">"YOUR_ACCESS_SECRET"</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+<p>
+オプションハッシュを使うか、ブロックを使うか、あるいは両方を使うか選択できる。
+</p>
+</div>
+</div>
+<div id="outline-container-org730923a" class="outline-3">
+<h3 id="org730923a"><a href="#org730923a">ex2</a></h3>
+<div class="outline-text-3" id="text-org730923a">
+<p>
+eachを使ってmapを実装する。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Array</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">map</span>
+    array = []
+    each <span class="org-keyword">do</span> |x|
+      array.push(<span class="org-keyword">yield</span> x)
+    <span class="org-keyword">end</span>
+    array
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+goal = <span class="org-string">%w(look ma no for loops)</span>.map <span class="org-keyword">do</span> |x|
+  x.upcase
+<span class="org-keyword">end</span>
+<span class="org-builtin">p</span> goal
+
+</pre>
+</div>
+
+<p>
+each_wordを実装する。
+例えば↓みたいな動作イメージ。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-string">"Nothing lasts forever but cold November Rain"</span>.each_word <span class="org-keyword">do</span> |x|
+  <span class="org-builtin">puts</span> x
+<span class="org-keyword">end</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; Nothing
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; lasts
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; forever ...</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">String</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">each_word</span>
+    split.each <span class="org-keyword">do</span> |x|
+      <span class="org-keyword">yield</span> x
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-string">"Nothing lasts forever but cold November Rain"</span>.each_word <span class="org-keyword">do</span> |x|
+  <span class="org-builtin">puts</span> x
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+Active RecordのDSLを実装する。
+例えば。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-type">ActiveRecord</span>::<span class="org-type">Schema</span>.define(<span class="org-constant">version:</span> 20130314230445) <span class="org-keyword">do</span>
+  create_table <span class="org-string">"microposts"</span>, <span class="org-constant">force:</span> <span class="org-constant">true</span> <span class="org-keyword">do</span> |t|
+    t.string <span class="org-string">"content"</span>
+    t.integer <span class="org-string">"user_id"</span>
+    t.datetime <span class="org-string">"created_at"</span>
+    t.datetime <span class="org-string">"updated_at"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">ActiveRecord</span>
+  <span class="org-keyword">class</span> <span class="org-type">Schema</span>
+    <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">define</span>(version, &amp;block)
+      version
+      instance_eval(&amp;block) <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+    <span class="org-keyword">end</span>
+
+    <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">create_table</span>(table_name, options = {}, &amp;block)
+      t = <span class="org-type">Table</span>.new(table_name, options)
+      <span class="org-keyword">yield</span> t <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Table</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(name, options)
+    <span class="org-variable-name">@name</span> = name
+    <span class="org-variable-name">@options</span> = options
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">string</span>(value)
+    <span class="org-builtin">puts</span> <span class="org-string">"Creating column of type string named </span><span class="org-variable-name">#{value}</span><span class="org-string">"</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">integer</span>(value)
+    <span class="org-builtin">puts</span> <span class="org-string">"Creating column of type integer named </span><span class="org-variable-name">#{value}</span><span class="org-string">"</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">datetime</span>(value)
+    <span class="org-builtin">puts</span> <span class="org-string">"Creating column of type datetime named </span><span class="org-variable-name">#{value}</span><span class="org-string">"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-type">ActiveRecord</span>::<span class="org-type">Schema</span>.define(<span class="org-constant">version:</span> 20130315230445) <span class="org-keyword">do</span>
+  create_table <span class="org-string">"microposts"</span>, <span class="org-constant">force:</span> <span class="org-constant">true</span> <span class="org-keyword">do</span> |t|
+    t.string <span class="org-string">"content"</span>
+    t.integer <span class="org-string">"user_id"</span>
+    t.datetime <span class="org-string">"created_at"</span>
+    t.datetime <span class="org-string">"updated_at"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">Output
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">Creating column of type string named content
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">Creating column of type string named user_id
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">Creating column of type string named created_at
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">Creating column of type string named updated_at</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3d37a2c" class="outline-3">
+<h3 id="org3d37a2c"><a href="#org3d37a2c">Proc</a></h3>
+<div class="outline-text-3" id="text-org3d37a2c">
+<p>
+ブロックは単体で存在できないが、ProcとLambdaは単体でオブジェクトとして存在できる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">p = <span class="org-builtin">proc</span> { |x, y| x + y }
+</pre>
+</div>
+
+<div class="results" id="orgee7d4d7">
+<p>
+#&lt;Proc:0x000055b7801c80d0 -:3&gt;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">p = <span class="org-type">Kernel</span>.proc { |x, y| x + y }
+</pre>
+</div>
+
+<div class="results" id="org2d29b3e">
+<p>
+#&lt;Proc:0x0000557970bb7a58 -:3&gt;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">p = <span class="org-builtin">proc</span> { |x, y| <span class="org-builtin">p</span> x + y }
+p.call(<span class="org-string">"oh"</span>, <span class="org-string">"ai"</span>)
+p.call(4, 2)
+</pre>
+</div>
+
+<div class="results" id="org5748674">
+<p>
+&ldquo;ohai&rdquo;
+6
+</p>
+
+</div>
+
+<p>
+短縮記法もある。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">p = <span class="org-builtin">proc</span> { |x, y| <span class="org-builtin">p</span> x + y }
+p.(<span class="org-string">"oh"</span>, <span class="org-string">"ai"</span>)
+p.(1, 2)
+</pre>
+</div>
+
+<div class="results" id="orgf3f3652">
+<p>
+&ldquo;ohai&rdquo;
+3
+</p>
+
+</div>
+
+<p>
+この記法は、call()が実装されているクラスならどこでも使用できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Carly</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">call</span>(who)
+    <span class="org-string">"call </span><span class="org-variable-name">#{who}</span><span class="org-string">, maybe"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+c = <span class="org-type">Carly</span>.new
+c.(<span class="org-string">"me"</span>)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">even = <span class="org-builtin">proc</span> { |x| x % 2 == 0 }
+<span class="org-builtin">p</span> even === 11
+<span class="org-builtin">p</span> even === 10
+</pre>
+</div>
+
+<div class="results" id="org5fd6886">
+<p>
+false
+true
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org99afd42" class="outline-3">
+<h3 id="org99afd42"><a href="#org99afd42">Lambda</a></h3>
+<div class="outline-text-3" id="text-org99afd42">
+<p>
+lambdaのクラスはProcである。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">lambda</span> {}.class
+</pre>
+</div>
+
+<div class="results" id="org2edfdf9">
+<p>
+Proc
+</p>
+
+</div>
+
+<p>
+procのクラスはProcである。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">proc</span> {}.class
+</pre>
+</div>
+
+<div class="results" id="org61033f9">
+<p>
+Proc
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">lambda</span> { |x, y| x + y }.call(x, y)
+<span class="org-builtin">lambda</span> { |x, y| x + y }[x, y]
+<span class="org-builtin">lambda</span> { |x, y| x + y }.(x, y)
+<span class="org-builtin">lambda</span> { |x, y| x + y } === [x, y]
+
+-&gt; (x, y){ x + y }.call(x, y)
+-&gt; (x, y){ x + y }[x, y]
+-&gt; (x, y){ x + y }.(x, y)
+-&gt; (x, y){ x + y } === [x, y]
+</pre>
+</div>
+
+<div class="results" id="orgc626b80">
+
+</div>
+
+<p>
+-&gt;がよくラムダ計算表記に使われるのは、λに似てるかららしい。まじか。
+</p>
+
+<p>
+procは引数の数が合ってなくてもエラーにならない。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">l = <span class="org-builtin">lambda</span> { |x, y| <span class="org-builtin">puts</span> <span class="org-string">"x: </span><span class="org-variable-name">#{x}</span><span class="org-string">, y: </span><span class="org-variable-name">#{y}</span><span class="org-string">"</span> }
+l.call(<span class="org-string">"Ohai"</span>, <span class="org-string">"Gentle Reader"</span>)
+p = <span class="org-builtin">proc</span> { |x, y| <span class="org-builtin">puts</span> <span class="org-string">"x: </span><span class="org-variable-name">#{x}</span><span class="org-string">, y: </span><span class="org-variable-name">#{y}</span><span class="org-string">"</span> }
+p.call(<span class="org-string">"Ohai"</span>, <span class="org-string">"Gentle Reader"</span>)
+p.call(<span class="org-string">"Ohai"</span>)
+</pre>
+</div>
+
+<div class="results" id="org539bceb">
+<p>
+x: Ohai, y: Gentle Reader
+x: Ohai, y: Gentle Reader
+x: Ohai, y:
+</p>
+
+</div>
+
+<p>
+lambdaは引数の数が合ってないとエラーになる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">l = <span class="org-builtin">lambda</span> { |x, y| <span class="org-builtin">puts</span> <span class="org-string">"x: </span><span class="org-variable-name">#{x}</span><span class="org-string">, y: </span><span class="org-variable-name">#{y}</span><span class="org-string">"</span> }
+l.call(<span class="org-string">"Ohai"</span>)
+</pre>
+</div>
+
+<div class="results" id="orgc0d6a52">
+<p>
+-:3:in `block in main&rsquo;: wrong number of arguments (given 1, expected 2) (ArgumentError)
+	from -:4:in `main&rsquo;
+	from -:6:in `&lt;main&gt;&rsquo;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">SomeClass</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">method_that_calls_proc_or_lambda</span>(procy)
+    <span class="org-builtin">puts</span> <span class="org-string">"calling </span><span class="org-variable-name">#{proc_or_lambda(procy)}</span><span class="org-string"> now!"</span>
+    procy.call
+    <span class="org-builtin">puts</span> <span class="org-string">"</span><span class="org-variable-name">#{proc_or_lambda(procy)}</span><span class="org-string"> gets called!"</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">proc_or_lambda</span>(proc_like_thing)
+    proc_like_thing.lambda? ? <span class="org-string">"lambda"</span> : <span class="org-string">"Proc"</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+c = <span class="org-type">SomeClass</span>.new
+c.method_that_calls_proc_or_lambda <span class="org-builtin">lambda</span> { <span class="org-keyword">return</span> } <span class="org-comment-delimiter"># </span><span class="org-comment">OK
+</span>c.method_that_calls_proc_or_lambda <span class="org-builtin">proc</span> { <span class="org-keyword">return</span> } <span class="org-comment-delimiter"># </span><span class="org-comment">gets called&#12414;&#12391;&#21040;&#36948;&#12375;&#12394;&#12356;&#12290;proc&#12399;main&#12467;&#12531;&#12486;&#12461;&#12473;&#12488;&#12391;&#20316;&#12425;&#12428;&#12427;&#12290;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7c61071" class="outline-3">
+<h3 id="org7c61071"><a href="#org7c61071">Symbol#to_proc</a></h3>
+<div class="outline-text-3" id="text-org7c61071">
+<p>
+Rubyでは、 <code>&amp;</code> があるとprocに変換しようとする。
+なので↓は。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">[<span class="org-string">"a"</span>, <span class="org-string">"i"</span>, <span class="org-string">"u"</span>].map { |s| s.length }
+</pre>
+</div>
+
+<div class="results" id="orgd97352a">
+<p>
+[1, 1, 1]
+</p>
+
+</div>
+
+<p>
+省略記法で書ける。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">[<span class="org-string">"a"</span>, <span class="org-string">"i"</span>, <span class="org-string">"u"</span>].map(&amp;<span class="org-constant">:length</span>)
+</pre>
+</div>
+
+<div class="results" id="org84c3036">
+<p>
+[1, 1, 1]
+</p>
+
+</div>
+
+<p>
+これは引数がProcでないのでエラーになる。
+Objectクラスがprocへの変換のやり方を知らないため。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">obj = <span class="org-type">Object</span>.new
+[1, 2, 3].map &amp;obj
+</pre>
+</div>
+
+<p>
+↓こうするとエラーにはならない。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Object</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">to_proc</span>
+    <span class="org-builtin">proc</span> {}
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+obj = <span class="org-type">Object</span>.new
+<span class="org-builtin">p</span> [1, 2, 3].map &amp;obj <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [nil, nil, nil]</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Object</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">to_proc</span>
+    <span class="org-builtin">proc</span> { |x| <span class="org-string">"Here's </span><span class="org-variable-name">#{x}</span><span class="org-string">!"</span> }
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+obj = <span class="org-type">Object</span>.new
+<span class="org-builtin">p</span> [1, 2, 3].map(&amp;obj) <span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; ["Here's 1!", "Here's 2!", "Here's 3!"]</span>
+</pre>
+</div>
+
+<p>
+汎用化させる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Symbol</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">to_proc</span>
+    <span class="org-builtin">proc</span> { |obj| obj.send(<span class="org-keyword">self</span>) }
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+<span class="org-builtin">p</span> [<span class="org-string">"ai"</span>, <span class="org-string">"iue"</span>, <span class="org-string">"u"</span>].map(&amp;<span class="org-constant">:length</span>)
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [2, 3, 1]
+</span><span class="org-builtin">p</span> [<span class="org-string">"ai"</span>, <span class="org-string">"iue"</span>, <span class="org-string">"u"</span>].map(&amp;<span class="org-constant">:upcase</span>)
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; ["AI", "IUE", "U"]</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> [1, 2, 3].inject(0) { |result, element| result + element }
+<span class="org-builtin">p</span> [1, 2, 3].inject(&amp;<span class="org-constant">:+</span>)
+</pre>
+</div>
+
+<div class="results" id="org4a13ae5">
+<p>
+6
+6
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Symbol</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">to_proc</span>
+    <span class="org-builtin">lambda</span> { |obj, args| obj.send(<span class="org-keyword">self</span>, *args) }
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+<span class="org-builtin">p</span> [1, 2, 3].inject(&amp;<span class="org-constant">:+</span>)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org32bf921" class="outline-3">
+<h3 id="org32bf921"><a href="#org32bf921">カリー化</a></h3>
+<div class="outline-text-3" id="text-org32bf921">
+<p>
+評価を遅延させること。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">discriminant = <span class="org-builtin">lambda</span> { |a| <span class="org-builtin">lambda</span> { |b| <span class="org-builtin">lambda</span> { |c| b **2 - 4*a*c } } }
+discriminant.call(5).call(6).call(7)
+</pre>
+</div>
+
+<div class="results" id="orgdb18d98">
+<p>
+-104
+</p>
+
+</div>
+
+<p>
+同じ意味で、簡潔に書ける。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">discriminant = <span class="org-builtin">lambda</span> { |a, b, c| b**2 - 4*a*c }.curry
+discriminant.call(5).call(6).call(7)
+</pre>
+</div>
+
+<div class="results" id="orgbd08066">
+<p>
+-104
+</p>
+
+</div>
+
+<p>
+これが利用できるシチュエーションを考える。
+↓は重複がたくさんある。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">sum_ints = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |start,stop|
+  (start..stop).inject{ |sum,x| sum + x }
+<span class="org-keyword">end</span>
+
+sum_of_squares= <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |start,stop|
+  (start..stop).inject{ |sum,x| sum + x*x }
+<span class="org-keyword">end</span>
+
+sum_of_cubes = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |start,stop|
+  (start..stop).inject{ |sum,x| sum + x*x*x}
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+共通化できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">sum = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |fun, start, stop|
+  (start..stop).inject { |sum, x| sum + fun.call(x) }
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> sum_of_ints = sum.(<span class="org-builtin">lambda</span> { |x| x }, 1, 10)
+<span class="org-builtin">p</span> sum_of_square = sum.(<span class="org-builtin">lambda</span> { |x| x*x }, 1, 10)
+<span class="org-builtin">p</span> sum_of_cubes = sum.(<span class="org-builtin">lambda</span> { |x| x*x*x }, 1, 10)
+</pre>
+</div>
+
+<div class="results" id="orgb7d0cb3">
+<p>
+55
+385
+3025
+</p>
+
+</div>
+
+<p>
+さらにカリー化。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">sum = <span class="org-builtin">lambda</span> <span class="org-keyword">do</span> |fun, start, stop|
+  (start..stop).inject { |sum, x| sum + fun.call(x) }
+<span class="org-keyword">end</span>
+
+sum_of_squares = sum.curry.(<span class="org-builtin">lambda</span> { |x| x*x })
+sum_of_squares.(1).(10)
+sum_of_squares.(50).(100)
+</pre>
+</div>
+
+<div class="results" id="orgff49744">
+<p>
+295475
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgcf47d28" class="outline-3">
+<h3 id="orgcf47d28"><a href="#orgcf47d28">ex3</a></h3>
+<div class="outline-text-3" id="text-orgcf47d28">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Symbol</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">to_proc</span>
+    <span class="org-builtin">proc</span> { |obj, args| obj.send(<span class="org-keyword">self</span>, *args) }
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-string">"aaaa"</span>.send(<span class="org-constant">:length</span>)
+</pre>
+</div>
+
+<div class="results" id="org87fcc85">
+<p>
+4
+</p>
+
+</div>
+
+<p>
+to_procを初期化に使うことができる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">SpiceGirl</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(name, nick)
+    <span class="org-variable-name">@name</span> = name
+    <span class="org-variable-name">@nick</span> = nick
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">inspect</span>
+    <span class="org-string">"</span><span class="org-variable-name">#{@name}</span><span class="org-string"> (</span><span class="org-variable-name">#{@nick}</span><span class="org-string"> Spice)"</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-keyword">self</span>.<span class="org-function-name">to_proc</span>
+    <span class="org-builtin">proc</span> { |obj| <span class="org-keyword">self</span>.new(obj[0], obj[1]) }
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+spice_girls = [[<span class="org-string">"tarou"</span>, <span class="org-string">"T"</span>], [<span class="org-string">"jirou"</span>, <span class="org-string">"J"</span>]]
+<span class="org-builtin">p</span> spice_girls.map(&amp;<span class="org-type">SpiceGirl</span>)
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [tarou (T Spice), jirou (J Spice)]</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> <span class="org-builtin">proc</span> {}.class
+<span class="org-builtin">p</span> <span class="org-builtin">proc</span> {}.lambda?
+<span class="org-builtin">p</span> <span class="org-builtin">lambda</span> {}.class
+<span class="org-builtin">p</span> <span class="org-builtin">lambda</span> {}.lambda?
+<span class="org-builtin">p</span> -&gt; {}.class
+<span class="org-builtin">p</span> <span class="org-builtin">lambda</span> {}.lambda?
+</pre>
+</div>
+
+<div class="results" id="org7544855">
+<p>
+Proc
+false
+Proc
+true
+Proc
+true
+</p>
+
+</div>
+
+<p>
+lambdaは引数の数が合わないとエラーになる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby">j1 = <span class="org-builtin">proc</span>   { |x,y,z| <span class="org-string">"</span><span class="org-variable-name">#{x}</span><span class="org-string">, </span><span class="org-variable-name">#{y}</span><span class="org-string">, </span><span class="org-variable-name">#{z}</span><span class="org-string">"</span> }
+j2 = <span class="org-builtin">lambda</span> { |x,y,z| <span class="org-string">"</span><span class="org-variable-name">#{x}</span><span class="org-string">, </span><span class="org-variable-name">#{y}</span><span class="org-string">, </span><span class="org-variable-name">#{z}</span><span class="org-string">"</span> }
+j1.call(<span class="org-string">"hello"</span>, <span class="org-string">"world"</span>)
+<span class="org-comment-delimiter"># </span><span class="org-comment">j2.call("hello", "world") # argument error</span>
+</pre>
+</div>
+
+<div class="results" id="org6c299d7">
+<p>
+hello, world,
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">j1 = <span class="org-builtin">proc</span> { |x,y,z| x + y + z }
+j2 = <span class="org-builtin">lambda</span> { |x,y,z| x + y + z }
+<span class="org-comment-delimiter"># </span><span class="org-comment">j1.call(1, 2) # -:3:in `+': nil can't be coerced into Integer (TypeError)
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">j2.call(1, 2) # -:4:in `block in main': wrong number of arguments (given 2, expected 3) (ArgumentError)</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdb2b0fa" class="outline-3">
+<h3 id="orgdb2b0fa"><a href="#orgdb2b0fa">enumerable</a></h3>
+<div class="outline-text-3" id="text-orgdb2b0fa">
+<ul class="org-ul">
+<li>enumerable: 機能を持ったモジュール(ArrayとかHashと同列)。include先のクラスが持つ each メソッドを元に、様々なメソッドを提供する。</li>
+<li>enumerator: 実際にenumerateするオブジェクト。each 以外のメソッドにも Enumerable の機能を提供するためのラッパークラス。外部イテレータとしても使える。</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>) <span class="org-comment-delimiter"># </span><span class="org-comment">&#35413;&#20385;&#12379;&#12378;&#12458;&#12502;&#12472;&#12455;&#12463;&#12488;&#12434;&#36820;&#12377;
+</span><span class="org-builtin">p</span> 1.upto(5).to_a <span class="org-comment-delimiter"># </span><span class="org-comment">&#35413;&#20385;&#12377;&#12427;
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">p 1.upto(Float::INFINITY).to_a # &#20966;&#29702;&#12399;&#32066;&#12431;&#12425;&#12394;&#12356;</span>
+</pre>
+</div>
+
+<div class="results" id="orgb943f29">
+<p>
+#&lt;Enumerator: 1:upto(Infinity)&gt;
+[1, 2, 3, 4, 5]
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lazy.map { |x| x * x }
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lazy.map { |x| x * x }.take(10)
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lazy.map { |x| x * x }.take(10).to_a
+</pre>
+</div>
+
+<div class="results" id="org7375248">
+<p>
+#&lt;Enumerator::Lazy: #&lt;Enumerator::Lazy: #&lt;Enumerator: 1:upto(Infinity)&gt;&gt;:map&gt;
+#&lt;Enumerator::Lazy: #&lt;Enumerator::Lazy: #&lt;Enumerator::Lazy: #&lt;Enumerator: 1:upto(Infinity)&gt;&gt;:map&gt;:take(10)&gt;
+[1, 4, 9, 16, 25, 36, 49, 64, 81, 100]
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org5225654" class="outline-3">
+<h3 id="org5225654"><a href="#org5225654">internal iterationとexternal iteration</a></h3>
+<div class="outline-text-3" id="text-org5225654">
+<p>
+internalは、Arrayオブジェクトがiterateをコントロールする。戻れない。
+externalは、包んでいる外部のオブジェクトがiterateをコントロールする。状態を持っているので戻ったり止めたりできる。
+</p>
+
+<p>
+EnumeratorはEnumerableを包んでいる。
+Arrayを入れてみる。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-builtin">p</span> e = <span class="org-type">Enumerator</span>.new([1, 2, 3])
+<span class="org-builtin">p</span> e.next
+<span class="org-builtin">p</span> e.next
+<span class="org-builtin">p</span> e.next
+</pre>
+</div>
+
+<div class="results" id="org658a553">
+<p>
+#&lt;Enumerator: [1, 2, 3]:each&gt;
+1
+2
+3
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby">e = <span class="org-type">Enumerator</span>.new <span class="org-keyword">do</span> |yielder|
+  [1, 2, 3].each <span class="org-keyword">do</span> |val|
+    yielder &lt;&lt; val
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+fiberクラスは内部iteratorを外部iteratorに変換する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">f = <span class="org-type">Fiber</span>.new <span class="org-keyword">do</span>
+  x = 0
+  <span class="org-builtin">loop</span> <span class="org-keyword">do</span>
+    <span class="org-type">Fiber</span>.yield x
+    x += 1
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> f.resume
+<span class="org-builtin">p</span> f.resume
+<span class="org-builtin">p</span> f.resume
+</pre>
+</div>
+
+<div class="results" id="org40ba58e">
+<p>
+0
+1
+2
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org42c35d9" class="outline-3">
+<h3 id="org42c35d9"><a href="#org42c35d9">EnumerableとEnumerator</a></h3>
+<div class="outline-text-3" id="text-org42c35d9">
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Enumerable</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">lax</span>
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Lax</span> &lt; <span class="org-type">Enumerator</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(receiver)
+    <span class="org-keyword">super</span>() <span class="org-keyword">do</span> |yielder|
+      receiver.each <span class="org-keyword">do</span> |val|
+        yielder &lt;&lt; val
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+e = 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax
+<span class="org-builtin">p</span> e.next <span class="org-comment-delimiter"># </span><span class="org-comment">1
+</span><span class="org-builtin">p</span> e.next <span class="org-comment-delimiter"># </span><span class="org-comment">2</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Enumerable</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">lax</span>
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Lax</span> &lt; <span class="org-type">Enumerator</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(receiver)
+    <span class="org-keyword">super</span>() <span class="org-keyword">do</span> |yielder|
+      receiver.each <span class="org-keyword">do</span> |val|
+        <span class="org-builtin">puts</span> <span class="org-string">"add: </span><span class="org-variable-name">#{val}</span><span class="org-string">"</span>
+        yielder &lt;&lt; val
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+lax = <span class="org-type">Lax</span>.new([1, 2, 3])
+lax.map { |x| <span class="org-builtin">puts</span> <span class="org-string">"map: </span><span class="org-variable-name">#{x}</span><span class="org-string">; x"</span> }
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">add: 1
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">map: 1; x
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">add: 2
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">map: 2; x
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">add: 3
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">map: 3; x</span>
+</pre>
+</div>
+
+<p>
+lazy mapの実装。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">module</span> <span class="org-type">Enumerable</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">lax</span>
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>)
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-keyword">class</span> <span class="org-type">Lax</span> &lt; <span class="org-type">Enumerator</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(receiver)
+    <span class="org-keyword">super</span>() <span class="org-keyword">do</span> |yielder|
+      receiver.each <span class="org-keyword">do</span> |val|
+        <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+          <span class="org-keyword">yield</span>(yielder, val)
+        <span class="org-keyword">else</span>
+          yielder &lt;&lt; val
+        <span class="org-keyword">end</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">map</span>(&amp;block)
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+      yielder &lt;&lt; block.call(val)
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.map { |x| x*x }.map { |x| x+1 }.first(5)
+<span class="org-comment-delimiter"># </span><span class="org-comment">[2, 5, 10, 17, 26]</span>
+</pre>
+</div>
+
+<p>
+lazy takeの実装。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">take</span>(n)
+  taken = 0
+  <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+    <span class="org-keyword">if</span> taken &lt; n
+      yielder &lt;&lt; val
+      taken += 1
+    <span class="org-keyword">else</span>
+      <span class="org-builtin">raise</span> <span class="org-type">StopIteration</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.take(5).first(5)
+<span class="org-comment-delimiter"># </span><span class="org-comment">[1, 2, 3, 4, 5]</span>
+</pre>
+</div>
+
+<p>
+まとめ。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">class</span> <span class="org-type">Lax</span> &lt; <span class="org-type">Enumerator</span>
+  <span class="org-keyword">def</span> <span class="org-function-name">initialize</span>(receiver)
+    <span class="org-keyword">super</span>() <span class="org-keyword">do</span> |yielder|
+      receiver.each <span class="org-keyword">do</span> |val|
+        <span class="org-keyword">if</span> <span class="org-builtin">block_given?</span>
+          <span class="org-keyword">yield</span>(yielder, val)
+        <span class="org-keyword">else</span>
+          yielder &lt;&lt; val
+        <span class="org-keyword">end</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">rescue</span> <span class="org-type">StopIteration</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">map</span>(&amp;block)
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+      yielder &lt;&lt; block.call(val)
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+
+  <span class="org-keyword">def</span> <span class="org-function-name">take</span>(n)
+    taken = 0
+    <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+      <span class="org-keyword">if</span> taken &lt; n
+        yielder &lt;&lt; val
+        taken += 1
+      <span class="org-keyword">else</span>
+        <span class="org-builtin">raise</span> <span class="org-type">StopIteration</span>
+      <span class="org-keyword">end</span>
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.map { |x| x*x }.map { |x| x+1 }.first(5)
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.map { |x| x*x }.map { |x| x+1 }.take(5).to_a <span class="org-comment-delimiter"># </span><span class="org-comment">&#8593;&#12392;&#32080;&#26524;&#12399;&#21516;&#12376;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgced5611" class="outline-3">
+<h3 id="orgced5611"><a href="#orgced5611">ex4</a></h3>
+<div class="outline-text-3" id="text-orgced5611">
+<p>
+selectのlazy版。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">select</span>(&amp;block)
+  <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+    <span class="org-keyword">if</span> block.call(val)
+      yielder &lt;&lt; val
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.take(5).select { |x| x % 2 == 0 }.to_a
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [2, 4]</span>
+</pre>
+</div>
+
+<p>
+dropのlazy版。
+</p>
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">drop</span>(n)
+  dropped = 0
+  <span class="org-type">Lax</span>.new(<span class="org-keyword">self</span>) <span class="org-keyword">do</span> |yielder, val|
+    <span class="org-keyword">if</span> dropped &lt; n
+      dropped += 1
+    <span class="org-keyword">else</span>
+      yielder &lt;&lt; val
+    <span class="org-keyword">end</span>
+  <span class="org-keyword">end</span>
+<span class="org-keyword">end</span>
+
+<span class="org-builtin">p</span> 1.upto(<span class="org-type">Float</span>::<span class="org-type">INFINITY</span>).lax.take(5).drop(3).to_a
+<span class="org-comment-delimiter"># </span><span class="org-comment">=&gt; [4, 5]</span>
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orga44de8e" class="outline-2">
+<h2 id="orga44de8e"><a href="#orga44de8e">Ruby kaigi 2021</a></h2>
+<div class="outline-text-2" id="text-orga44de8e">
+</div>
+<div id="outline-container-orgb8a6656" class="outline-3">
+<h3 id="orgb8a6656"><a href="#orgb8a6656">VSCode extension for ruby type</a></h3>
+<div class="outline-text-3" id="text-orgb8a6656">
+<p>
+<a href="https://www.slideshare.net/mametter/typeprof-for-ide-enrich-development-experience-without-annotations">https://www.slideshare.net/mametter/typeprof-for-ide-enrich-development-experience-without-annotations</a>
+</p>
+
+<ul class="org-ul">
+<li>言語自体を変えなくても、現代的なIDEの恩恵を受けられる。</li>
+<li>特に静的型付け言語だと引数の型などを表示できる。</li>
+<li id="RBS">ruby official type definition language</li>
+<li>型レベルに抽象化して情報を解析する。</li>
+
+<li><a href="https://github.com/usaito">https://github.com/usaito</a> Special Thanksに載ってた人。年下だ…。本物の工学の人。</li>
+<li>あまり専門的な内容には触れなかった。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfaa0815" class="outline-3">
+<h3 id="orgfaa0815"><a href="#orgfaa0815">Why Ruby&rsquo;s JIT was slow</a></h3>
+<div class="outline-text-3" id="text-orgfaa0815">
+<ul class="org-ul">
+<li>RubyのJITの状況、高速化。</li>
+<li>方式の違い。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgcb1c5a7" class="outline-3">
+<h3 id="orgcb1c5a7"><a href="#orgcb1c5a7">RuboCop in 2021: Stable and Beyond</a></h3>
+<div class="outline-text-3" id="text-orgcb1c5a7">
+<ul class="org-ul">
+<li>Rubocopの状況。過去、現在、未来。</li>
+<li>autocorrectが安全な修正をするように設計。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc667541" class="outline-3">
+<h3 id="orgc667541"><a href="#orgc667541">The Art of Execution Control for Ruby&rsquo;s Debugger</a></h3>
+<div class="outline-text-3" id="text-orgc667541">
+<ul class="org-ul">
+<li>歯のメンテナンス</li>
+<li>新しいデバッガ: <code>debug.gem</code> Rails7からこれを使うようになるよう</li>
+<li>rubyにおけるデバッガーの状況、ツール作った理由、使い方。</li>
+<li>gem <code>rdbg</code></li>
+<li><code>info</code> コマンド</li>
+<li>一部分だけトレースできる。</li>
+<li>PostMortem debugging…検死、なぜプログラムが終了したか調べる。</li>
+<li>Record and play debug…戻れる。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org781e2e5" class="outline-3">
+<h3 id="org781e2e5"><a href="#org781e2e5">Toycol: Define your own application protocol</a></h3>
+<div class="outline-text-3" id="text-org781e2e5">
+<ul class="org-ul">
+<li>プロトコルの各レイヤーが責任を持つ</li>
+<li>プロトコルをサーバとクライアントが知っているものであれば、なんだって通信。自作プロトコルでも。</li>
+<li>自作プロトコルの使い方と動作の仕組み</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org194f5c0" class="outline-3">
+<h3 id="org194f5c0"><a href="#org194f5c0">dRuby in the real-world embedded systems</a></h3>
+<div class="outline-text-3" id="text-org194f5c0">
+<ul class="org-ul">
+<li>CT装置</li>
+<li>胆石</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org24b42ee" class="outline-3">
+<h3 id="org24b42ee"><a href="#org24b42ee">Regular Expressions: Amazing and Dangerous</a></h3>
+<div class="outline-text-3" id="text-org24b42ee">
+<p>
+なぜ危険か。
+</p>
+<ul class="org-ul">
+<li><code>+?</code> によって非常に時間がかかる<a href="20210910104106-regular_expression.html#ID-f054b2d4-c7f9-4bf2-be9c-e29a7f97cb45">Regular Expression</a>になる可能性がある。文字列が非常に長い場合、組み合わせ数が爆発的に増えるため。</li>
+<li>サービスがダウンすることもある。Stack Overflow, Cloudflare, Atom&#x2026;であったインシデントのいくつか&#x2026;はRubyの<a href="20210910104106-regular_expression.html#ID-f054b2d4-c7f9-4bf2-be9c-e29a7f97cb45">Regular Expression</a>由来のものだった</li>
+<li>gemの中から危険な表現が使われているところを検索する。多くヒットした</li>
+</ul>
+
+<p>
+対策。
+</p>
+<ul class="org-ul">
+<li><code>//x</code> を使う</li>
+<li>正規表現のテストを書く。カバレッジは正規表現の中までは見ない…</li>
+<li>入力の長さを制限する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2e48f3a" class="outline-3">
+<h3 id="org2e48f3a"><a href="#org2e48f3a">Demystifying DSLs for better analysis and understanding</a></h3>
+<div class="outline-text-3" id="text-org2e48f3a">
+<ul class="org-ul">
+<li>Domain Specific Language</li>
+<li><a href="20210910104106-regular_expression.html#ID-f054b2d4-c7f9-4bf2-be9c-e29a7f97cb45">Regular Expression</a>, Rakefile, RSpec&#x2026;</li>
+<li><a href="20210509095946-rails.html#ID-e04aa1a3-509c-45b2-ac64-53d69c961214">Rails</a> provide many DSL</li>
+<li>Tapioca gem</li>
+<li>generate rbi file from Model</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org20a2fda" class="outline-3">
+<h3 id="org20a2fda"><a href="#org20a2fda">The Future Shape of Ruby Objects</a></h3>
+<div class="outline-text-3" id="text-org20a2fda">
+<ul class="org-ul">
+<li>Rubyのオブジェクトの実装を見ながら解説。</li>
+<li>オブジェクト指向言語<a href="20210910102223-smalltalk.html#ID-2a420174-482b-4a3e-868a-3a447572f1be">Smalltalk</a>のselfオブジェクト</li>
+<li>classとshape</li>
+<li><a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>とかのプロトタイプ言語的アプローチ。</li>
+<li><a href="https://github.com/Shopify/truffleruby">Shopify/truffleruby</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org59419f3" class="outline-3">
+<h3 id="org59419f3"><a href="#org59419f3">PRK Firmware: Keyboard is Essentially Ruby</a></h3>
+<div class="outline-text-3" id="text-org59419f3">
+<ul class="org-ul">
+<li>自作キーボードを制御するfirmwareをRubyで書く</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org84a3002" class="outline-3">
+<h3 id="org84a3002"><a href="#org84a3002">The newsletter of RBS updates</a></h3>
+<div class="outline-text-3" id="text-org84a3002">
+<ul class="org-ul">
+<li><a href="https://github.com/ruby/rbs">ruby/rbs</a></li>
+<li>RBS → Rubyで型を定義するためのDSL</li>
+<li>サードパーティgemのRBSコレクションを作成している</li>
+<li>Railsに導入する方法</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org01a227d" class="outline-3">
+<h3 id="org01a227d"><a href="#org01a227d">Parsing Ruby</a></h3>
+<div class="outline-text-3" id="text-org01a227d">
+<ul class="org-ul">
+<li>Rubyの記法の変遷。パーサの変遷</li>
+<li>コアに追従することは難しい</li>
+<li>少しの文法の変更でも大きな影響範囲がある</li>
+<li>少しの変更も拡張が難しい</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org686d067" class="outline-3">
+<h3 id="org686d067"><a href="#org686d067">Use Macro all the time ~ マクロを使いまくろ ~</a></h3>
+<div class="outline-text-3" id="text-org686d067">
+<ul class="org-ul">
+<li>ASTレベルでRubyコードを置き換える</li>
+<li>パッケージの紹介</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org18f0e09" class="outline-3">
+<h3 id="org18f0e09"><a href="#org18f0e09">Charty: Statistical data visualization in Ruby</a></h3>
+<div class="outline-text-3" id="text-org18f0e09">
+<ul class="org-ul">
+<li>Rubyでのグラフ描画ツール、charty</li>
+<li>パッケージの紹介</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdfa3ce5" class="outline-3">
+<h3 id="orgdfa3ce5"><a href="#orgdfa3ce5">Dive into Encoding</a></h3>
+<div class="outline-text-3" id="text-orgdfa3ce5">
+<ul class="org-ul">
+<li>Relineのバグ修正で文字コードを深く知るきっかけ</li>
+<li>文字コードを実装して学ぶ</li>
+<li>Coded Charcter Set</li>
+<li>Character Encoding Scheme</li>
+<li>Conversion table</li>
+<li>Encoding constant</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org248f3fa" class="outline-3">
+<h3 id="org248f3fa"><a href="#org248f3fa">How to develop the Standard Libraries of Ruby</a></h3>
+<div class="outline-text-3" id="text-org248f3fa">
+<ul class="org-ul">
+<li>標準ライブラリの作り方</li>
+<li>gemification - 本体添付からgemに切り離す</li>
+<li><a href="https://github.com/rubygems/rubygems">rubygems/rubygems</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5ee7a68" class="outline-3">
+<h3 id="org5ee7a68"><a href="#org5ee7a68">Ruby, Ractor, QUIC</a></h3>
+<div class="outline-text-3" id="text-org5ee7a68">
+<ul class="org-ul">
+<li>QUICはGoogleによって開発された高速なプロトコル。</li>
+<li>クラウドゲーミングでは高速性が必要</li>
+<li>TCPとUDPの特性の違い</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org15ad034" class="outline-3">
+<h3 id="org15ad034"><a href="#org15ad034">10 years of Ruby-powered citizen science</a></h3>
+<div class="outline-text-3" id="text-org15ad034">
+<ul class="org-ul">
+<li><a href="https://github.com/Safecast/safecastapi">Safecast/safecastapi: The app that powers api.safecast.org</a></li>
+<li>放射線の観測デバイス</li>
+<li>デバイスが送信する観測データを各クラウドにキャストする</li>
+<li>Dashboardで加工、アクセスできるようにする</li>
+<li>マップ、グラフ、UI/UX、データバリデーション…課題はまだまだある</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb0c629b" class="outline-3">
+<h3 id="orgb0c629b"><a href="#orgb0c629b">Matz Keynote</a></h3>
+<div class="outline-text-3" id="text-orgb0c629b">
+<ul class="org-ul">
+<li>Ruby 3.0</li>
+<li>互換性大事</li>
+<li>静的型付け言語が流行している。ほかの動的言語にも導入されている。Rubyにはどうか、答えはNo。</li>
+<li>言語仕様としては型を実装することはない。周辺ツールで行う</li>
+<li>型,LSP,チェッカ,&#x2026;ツールを応援する</li>
+<li>パフォーマンスは重要。動機づけになる、問題を解決する</li>
+<li>パフォーマンスは評判に直結する</li>
+<li>マイクロベンチマーク(素数解析とか、単純な計算をもとにパフォーマンスを示す)は現実世界に影響するか → 実際にはしないけど、人々は信用しがちなので重要ではある</li>
+<li id="Ruby3x3">Ruby3.XはRuby3.0より3倍早い</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org917105c" class="outline-3">
+<h3 id="org917105c"><a href="#org917105c">Graphical Terminal User Interface of Ruby 3.1</a></h3>
+<div class="outline-text-3" id="text-org917105c">
+<ul class="org-ul">
+<li>沢登り</li>
+<li>irbに補完機能をつける</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org06f8c45" class="outline-3">
+<h3 id="org06f8c45"><a href="#org06f8c45">Ruby Committers vs the World</a></h3>
+<div class="outline-text-3" id="text-org06f8c45">
+<ul class="org-ul">
+<li>Rubyコミッターの人たちによる座談会</li>
+<li>cool</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org46c3400" class="outline-2">
+<h2 id="org46c3400"><a href="#org46c3400">Source code</a></h2>
+<div class="outline-text-2" id="text-org46c3400">
+<p>
+本体コードで気になったところのメモ。
+</p>
+</div>
+<div id="outline-container-orge766979" class="outline-3">
+<h3 id="orge766979"><a href="#orge766979">概要</a></h3>
+<div class="outline-text-3" id="text-orge766979">
+<ul class="org-ul">
+<li>文法規則ファイル parse.y</li>
+<li>実際に字句解析する関数 parser_yylex</li>
+<li>予約語の一覧 ./defs/keywords</li>
+<li>Rubyは<a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C言語</a>で用いられるLex字句解析ツールは使用しない。パフォーマンス、特殊なルールが必要だったために字句解析のコードを自前で用意している</li>
+<li>字句解析-&gt;(トークン列)-&gt;構文解析-&gt;(ASTノード)-&gt;コンパイル。構文解析の段階でシンタックスチェックを行う</li>
+<li>Rubyをビルドする過程で、<a href="20220508115739-bison.html#ID-3466af69-175d-4c59-977a-7b8216514999">Bison</a>という<a href="20220508115155-parser_generator.html#ID-df0c9fc5-2c5c-4026-b451-b8485bbd26cd">parser generator</a>を使ってパーサコードを生成する。Bisonは文法規則ルール(parse.y)からパーサコード(parse.c)を生成する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org387b51f" class="outline-3">
+<h3 id="org387b51f"><a href="#org387b51f">Ripper</a></h3>
+<div class="outline-text-3" id="text-org387b51f">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>字句解析ライブラリRipperによって、ソースコードに対して生成するトークン列を確認できる。[0.コード位置、1.シンボルとして表示したトークン、2.対応したテキスト文字列、3.元の値]。</label><pre class="src src-ruby">  <span class="org-builtin">require</span> <span class="org-string">'ripper'</span>
+  <span class="org-builtin">require</span> <span class="org-string">'pp'</span>
+  code = <span class="org-string">&lt;&lt;STR
+10.times do |n|
+  puts n
+end
+STR
+</span>  <span class="org-builtin">puts</span> code
+  pp <span class="org-type">Ripper</span>.lex(code)
+</pre>
+</div>
+
+<div class="results" id="orgdae45fe">
+<p>
+10.times do |n|
+  puts n
+end
+[[[1, 0], :on_int, &ldquo;10&rdquo;, END],
+ [[1, 2], :on_period, &ldquo;.&rdquo;, DOT],
+ [[1, 3], :on_ident, &ldquo;times&rdquo;, ARG],
+ [[1, 8], :on_sp, &ldquo; &rdquo;, ARG],
+ [[1, 9], :on_kw, &ldquo;do&rdquo;, BEG],
+ [[1, 11], :on_sp, &ldquo; &rdquo;, BEG],
+ [[1, 12], :on_op, &ldquo;|&rdquo;, BEG|LABEL],
+ [[1, 13], :on_ident, &ldquo;n&rdquo;, ARG],
+ [[1, 14], :on_op, &ldquo;|&rdquo;, BEG|LABEL],
+ [[1, 15], :on_ignored_nl, &ldquo;\n&rdquo;, BEG|LABEL],
+ [[2, 0], :on_sp, &ldquo;  &rdquo;, BEG|LABEL],
+ [[2, 2], :on_ident, &ldquo;puts&rdquo;, CMDARG],
+ [[2, 6], :on_sp, &ldquo; &rdquo;, CMDARG],
+ [[2, 7], :on_ident, &ldquo;n&rdquo;, END|LABEL],
+ [[2, 8], :on_nl, &ldquo;\n&rdquo;, BEG],
+ [[3, 0], :on_kw, &ldquo;end&rdquo;, END],
+ [[3, 3], :on_nl, &ldquo;\n&rdquo;, BEG]]
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org0df5f7f" class="outline-3">
+<h3 id="org0df5f7f"><a href="#org0df5f7f">attr_accessor</a></h3>
+<div class="outline-text-3" id="text-org0df5f7f">
+<ul class="org-ul">
+<li><a href="https://github.com/kd-collective/ruby/blob/f5829e293583aa6ba6a1f1314ee22881d58a5f96/object.c#L2204">https://github.com/kd-collective/ruby/blob/f5829e293583aa6ba6a1f1314ee22881d58a5f96/object.c#L2204</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org18dcd7e" class="outline-2">
+<h2 id="org18dcd7e"><a href="#org18dcd7e">Tasks</a></h2>
+<div class="outline-text-2" id="text-org18dcd7e">
+</div>
+<div id="outline-container-org94d2b36" class="outline-3">
+<h3 id="org94d2b36"><a href="#org94d2b36"><span class="todo TODO">TODO</span> <a href="https://techracho.bpsinc.jp/hachi8833/2024_07_08/142763">Ruby研究シリーズ1: メソッド定義構文はどう決定され、どう進化したか（翻訳）｜TechRacho by BPS株式会社</a></a></h3>
+<div class="outline-text-3" id="text-org94d2b36">
+<p>
+構文について。
+</p>
+</div>
+</div>
+<div id="outline-container-org5344726" class="outline-3">
+<h3 id="org5344726"><a href="#org5344726"><span class="todo TODO">TODO</span> <a href="https://gihyo.jp/book/2016/978-4-7741-7802-8">APIデザインケーススタディ ――Rubyの実例から学ぶ。問題に即したデザインと普遍の考え方：書籍案内｜技術評論社</a></a></h3>
+<div class="outline-text-3" id="text-org5344726">
+<p>
+RubyライブラリをテーマにしたAPI設計の本。
+</p>
+</div>
+</div>
+<div id="outline-container-org71368c4" class="outline-3">
+<h3 id="org71368c4"><a href="#org71368c4"><span class="todo TODO">TODO</span> Rubyのしくみ: Ruby Under a microscope</a></h3>
+<div class="outline-text-3" id="text-org71368c4">
+<ul class="org-ul">
+<li>JavaコードをJVM命令列にコンパイルするように、Rubyコード(ASTノード)をYARV命令列&#x2026;Rubyコードを実行する仮想マシンにコンパイルする
+<ul class="org-ul">
+<li>コンパイルして、C言語と機械語になる</li>
+</ul></li>
+<li>RubyVM::InstructionSequence で、Rubyでコードをどうコンパイルするかを確認できる</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>YARVバイトコードを出力する</label><pre class="src src-ruby">code = <span class="org-string">"a = 1+2; a"</span>
+<span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<div class="results" id="org5d8e4aa">
+<p>
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,10)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 putobject                              2
+0003 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;[CcCr]
+0005 setlocal_WC_0                          a@0
+0007 getlocal_WC_0                          a@0
+0009 leave
+</p>
+
+</div>
+
+<p>
+計算に必要な1と2をpushしたあと、足し算している。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">code = <span class="org-string">"a = 'hello' + 'world'; a"</span>
+<span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<div class="results" id="orgc6a5601">
+<p>
+== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,24)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putstring                              &ldquo;hello&rdquo;                   (   1)[Li]
+0002 putstring                              &ldquo;world&rdquo;
+0004 opt_plus                               &lt;calldata!mid:+, argc:1, ARGS_SIMPLE&gt;[CcCr]
+0006 setlocal_WC_0                          a@0
+0008 getlocal_WC_0                          a@0
+0010 leave
+</p>
+
+</div>
+
+<p>
+文字列でも同様。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby">code = <span class="org-string">"a=[1, 2, 3]; a[0]=100;"</span>
+<span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(code).disasm
+</pre>
+</div>
+
+<div class="results" id="org2a88f7b">
+<p>
+<code>= disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,22)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 duparray                               [1, 2, 3]                 (   1)[Li]
+0002 setlocal_WC_0                          a@0
+0004 putnil
+0005 getlocal_WC_0                          a@0
+0007 putobject_INT2FIX_0_
+0008 putobject                              100
+0010 setn                                   3
+0012 opt_aset                               &lt;calldata!mid:[]</code>, argc:2, ARGS_SIMPLE&gt;[CcCr]
+0014 pop
+0015 leave
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgd2082bf" class="outline-3">
+<h3 id="orgd2082bf"><a href="#orgd2082bf"><span class="todo TODO">TODO</span> Refactoring: Rubyエディション</a></h3>
+<div class="outline-text-3" id="text-orgd2082bf">
+</div>
+</div>
+<div id="outline-container-orgfdd28ce" class="outline-3">
+<h3 id="orgfdd28ce"><a href="#orgfdd28ce"><span class="todo TODO">TODO</span> <a href="https://danieljamescolson.com/blog/meta-factory">Metaprogramming All The Way Down</a></a></h3>
+<div class="outline-text-3" id="text-orgfdd28ce">
+<p>
+FactoryBotの詳細な説明。
+</p>
+</div>
+</div>
+<div id="outline-container-org9bd32ba" class="outline-3">
+<h3 id="org9bd32ba"><a href="#org9bd32ba"><span class="todo TODO">TODO</span> <a href="https://docs.ruby-lang.org/ja/latest/method/Enumerable/i/inject.html">Enumerable#inject (Ruby 3.0.0 リファレンスマニュアル)</a></a></h3>
+<div class="outline-text-3" id="text-org9bd32ba">
+<p>
+使えるようにしておく。まとめる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaeb63ee" class="outline-3">
+<h3 id="orgaeb63ee"><a href="#orgaeb63ee"><span class="todo TODO">TODO</span> <a href="http://ruby-operators.herokuapp.com/rose_memoization">Ruby Operators</a></a></h3>
+<div class="outline-text-3" id="text-orgaeb63ee">
+<p>
+Rubyの特殊な演算子の名前と説明。
+</p>
+</div>
+</div>
+<div id="outline-container-org399aad5" class="outline-3">
+<h3 id="org399aad5"><a href="#org399aad5"><span class="todo TODO">TODO</span> Practical Ruby Project</a></h3>
+<div class="outline-text-3" id="text-org399aad5">
+<ul class="org-ul">
+<li>254, 265, 272, 283</li>
+</ul>
+
+<p>
+Rubyでのちょっと変わった、面白いプロジェクトを紹介している。
+</p>
+<ul class="org-ul">
+<li>経済ゲームを作る</li>
+<li>Lispを実装</li>
+<li>パーサを実装</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga86d651" class="outline-3">
+<h3 id="orga86d651"><a href="#orga86d651"><span class="todo TODO">TODO</span> <a href="https://magazine.rubyist.net/articles/0061/0061-ForeWord.html">0061号 コンピュータサイエンスが気になるプログラマに勧める書籍リスト</a></a></h3>
+<div class="outline-text-3" id="text-orga86d651">
+<p>
+書籍リスト。
+</p>
+</div>
+</div>
+<div id="outline-container-org0347631" class="outline-3">
+<h3 id="org0347631"><a href="#org0347631"><span class="todo TODO">TODO</span> <a href="https://i.loveruby.net/ja/rhg/book/">Rubyソースコード完全解説</a></a></h3>
+<div class="outline-text-3" id="text-org0347631">
+<p>
+Rubyのコードの解説。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org74bb7b7" class="outline-2">
+<h2 id="org74bb7b7"><a href="#org74bb7b7">Archives</a></h2>
+<div class="outline-text-2" id="text-org74bb7b7">
+</div>
+<div id="outline-container-org3168034" class="outline-3">
+<h3 id="org3168034"><a href="#org3168034"><span class="done DONE">DONE</span> The well-grounded rubyist <code>[100%]</code></a></h3>
+<div class="outline-text-3" id="text-org3168034">
+</div>
+<div id="outline-container-org2952568" class="outline-4">
+<h4 id="org2952568"><a href="#org2952568"><span class="done DONE">DONE</span> 420</a></h4>
+<div class="outline-text-4" id="text-org2952568">
+</div>
+</div>
+<div id="outline-container-org7adb1c0" class="outline-4">
+<h4 id="org7adb1c0"><a href="#org7adb1c0"><span class="done DONE">DONE</span> 430</a></h4>
+<div class="outline-text-4" id="text-org7adb1c0">
+</div>
+</div>
+<div id="outline-container-orge0aa92e" class="outline-4">
+<h4 id="orge0aa92e"><a href="#orge0aa92e"><span class="done DONE">DONE</span> 440</a></h4>
+<div class="outline-text-4" id="text-orge0aa92e">
+</div>
+</div>
+<div id="outline-container-orgf04a7ea" class="outline-4">
+<h4 id="orgf04a7ea"><a href="#orgf04a7ea"><span class="done DONE">DONE</span> 450</a></h4>
+<div class="outline-text-4" id="text-orgf04a7ea">
+<p>
+
+</p>
+</div>
+</div>
+<div id="outline-container-orgaa4f3cf" class="outline-4">
+<h4 id="orgaa4f3cf"><a href="#orgaa4f3cf"><span class="done DONE">DONE</span> 460</a></h4>
+<div class="outline-text-4" id="text-orgaa4f3cf">
+<p>
+
+</p>
+</div>
+</div>
+<div id="outline-container-org555157e" class="outline-4">
+<h4 id="org555157e"><a href="#org555157e"><span class="done DONE">DONE</span> 470</a></h4>
+<div class="outline-text-4" id="text-org555157e">
+<p>
+
+</p>
+</div>
+</div>
+<div id="outline-container-org44b2979" class="outline-4">
+<h4 id="org44b2979"><a href="#org44b2979"><span class="done DONE">DONE</span> 480</a></h4>
+<div class="outline-text-4" id="text-org44b2979">
+<p>
+
+</p>
+</div>
+</div>
+<div id="outline-container-org6294c83" class="outline-4">
+<h4 id="org6294c83"><a href="#org6294c83"><span class="done DONE">DONE</span> 490</a></h4>
+<div class="outline-text-4" id="text-org6294c83">
+<p>
+
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf14851f" class="outline-3">
+<h3 id="orgf14851f"><a href="#orgf14851f"><span class="done CLOSE">CLOSE</span> 見てみるgemを選ぶ</a></h3>
+<div class="outline-text-3" id="text-orgf14851f">
+<p>
+まず探すのが大変なので、読んでみるgemを選ぶ。
+手軽にできるのが良い。
+</p>
+
+<p>
+曖昧なタスクなのでcloseする。
+</p>
+</div>
+</div>
+<div id="outline-container-org0c9df93" class="outline-3">
+<h3 id="org0c9df93"><a href="#org0c9df93"><span class="done DONE">DONE</span> Rubyの公式リファレンスが読めるようになる本</a></h3>
+<div class="outline-text-3" id="text-org0c9df93">
+<ul class="org-ul">
+<li><a href="https://zenn.dev/jnchito/books/how-to-read-ruby-reference">https://zenn.dev/jnchito/books/how-to-read-ruby-reference</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org85cd987" class="outline-3">
+<h3 id="org85cd987"><a href="#org85cd987"><span class="done CLOSE">CLOSE</span> おみくじ作り</a></h3>
+<div class="outline-text-3" id="text-org85cd987">
+<p>
+Ruby上で<a href="20210911183844-lisp.html#ID-18fbe00f-4ec8-4ca0-adfa-2d1381669642">LISP</a>を実装しておみくじを作ってみる。
+</p>
+
+<p>
+funcallを実装しようとして詰まる。単純な例だとできるようになったが、ネストしたときにうまく動いてない。
+テストをちゃんと書くことと、デバッグ方法をちゃんとしないと厳しい。
+</p>
+
+<p>
+1週間でできそうということではじめたが、時間がかかるので後回し。
+言語実装に取り組むのはもっとも抽象的で難しい。だが無限の可能性を持っていてめちゃくちゃ楽しい。
+もっとも難しいことをしたおかげで、ほかのことに自信をもって取り組みやすくなったように思える。ほとんどのことは言語を実装することに比べれば、簡単だ。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb9b956b" class="outline-3">
+<h3 id="orgb9b956b"><a href="#orgb9b956b"><span class="done DONE">DONE</span> 誤字修正</a></h3>
+<div class="outline-text-3" id="text-orgb9b956b">
+<p>
+るりまの誤字を発見した。いくつか発見してまとめてPRを送ろう。
+</p>
+
+<ul class="org-ul">
+<li>同じにように(Proc)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgcf6ad67" class="outline-3">
+<h3 id="orgcf6ad67"><a href="#orgcf6ad67"><span class="done DONE">DONE</span> <a href="https://softantenna.com/blog/gem-codesearch/">gem-codesearch – rubygemsをフルテキストサーチすることができる豪快なソフト | ソフトアンテナ</a></a></h3>
+<div class="outline-text-3" id="text-orgcf6ad67">
+<p>
+面白そう。
+</p>
+</div>
+</div>
+<div id="outline-container-orge116a19" class="outline-3">
+<h3 id="orge116a19"><a href="#orge116a19"><span class="done DONE">DONE</span> <a href="https://techracho.bpsinc.jp/hachi8833/2020_11_06/59639">Ruby: eachよりもmapなどのコレクションを積極的に使おう（社内勉強会）｜TechRacho by BPS株式会社</a></a></h3>
+<div class="outline-text-3" id="text-orge116a19">
+</div>
+</div>
+<div id="outline-container-org3aceeb8" class="outline-3">
+<h3 id="org3aceeb8"><a href="#org3aceeb8"><span class="done CLOSE">CLOSE</span> rubocop issue(allow multiline)</a></h3>
+<div class="outline-text-3" id="text-org3aceeb8">
+<p>
+<a href="https://github.com/rubocop/rubocop/issues/9365">https://github.com/rubocop/rubocop/issues/9365</a>
+どうにかなりそうではある。コメントルールをマルチラインに対応させる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12428;&#12399;&#26908;&#30693;&#12373;&#12428;&#12427;
+</span>foo(
+  <span class="org-comment-delimiter"># </span><span class="org-comment">aaaa
+</span>
+  22
+)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12371;&#12428;&#12399;&#12475;&#12540;&#12501;&#12290;&#12371;&#12428;&#12391;&#38291;&#12395;&#21512;&#12358;&#12424;&#12358;&#12395;&#24863;&#12376;&#12427;&#12290;
+</span>foo(
+  <span class="org-comment-delimiter"># </span><span class="org-comment">bbbb
+</span>  22
+)
+</pre>
+</div>
+
+<p>
+コメントのあとは空白行を無視したいらしいが、あまり意味を感じない。実装はできるが、目的があまりよくないように思える。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb8ef104" class="outline-3">
+<h3 id="orgb8ef104"><a href="#orgb8ef104"><span class="done CLOSE">CLOSE</span> rubocop issue(yoda expression)</a></h3>
+<div class="outline-text-3" id="text-orgb8ef104">
+<p>
+<a href="https://github.com/rubocop/rubocop/issues/9222">https://github.com/rubocop/rubocop/issues/9222</a>
+New cop for yoda expressions.
+</p>
+
+<p>
+TSLintにすでにあるので、実装の参考にすればいい。
+<a href="https://palantir.github.io/tslint/rules/binary-expression-operand-order/">Rule: binary-expression-operand-order</a>
+</p>
+
+<dl class="org-dl">
+<dt>二項演算子(Binary Operator)</dt><dd>式を書いたときに、被演算子（変数とか値）が2つ登場する演算子</dd>
+</dl>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-keyword">def</span> <span class="org-function-name">on_send</span>(node)
+  method = node.method_name
+  lhs = node.receiver
+  rhs = node.first_argument
+
+  <span class="org-comment-delimiter"># </span><span class="org-comment">a.+(b)
+</span>  <span class="org-comment-delimiter"># </span><span class="org-comment">a -&gt; lhs
+</span>  <span class="org-comment-delimiter"># </span><span class="org-comment">+ -&gt; method
+</span>  <span class="org-comment-delimiter"># </span><span class="org-comment">b -&gt; rhs
+</span><span class="org-keyword">end</span>
+</pre>
+</div>
+
+<p>
+conditionの方と合体させてもよさそう。TSLintはそうしてる。共通しているところは多い。全く別のcopにする方針で一応書けたが、本質的にcondition operatorとやってることは同じだ。
+</p>
+
+<p>
+方式が違うので難しいな。明らかにTSLintのやり方が簡潔に書かれているように見える。rubocopの方はゴテゴテと条件が多い。単に対応オペレータを増やすだけだが、よくわからない。conditionを前提に書かれているところも難しい。
+</p>
+
+<p>
+ちょっとやってどうにかなるものでなさそう。追加されないのには、理由があった。まず既存のがごちゃついてるので、それを整理する必要がある。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org34d158b" class="outline-2">
+<h2 id="org34d158b"><a href="#org34d158b">References</a></h2>
+<div class="outline-text-2" id="text-org34d158b">
+</div>
+<div id="outline-container-orgdb4acac" class="outline-3">
+<h3 id="orgdb4acac"><a href="#orgdb4acac"><a href="https://rurema.clear-code.com/3.0.0/doc/glossary.html">Ruby用語集 (Ruby 3.0.0)</a></a></h3>
+<div class="outline-text-3" id="text-orgdb4acac">
+<p>
+おもしろい。
+</p>
+</div>
+</div>
+<div id="outline-container-org6104e30" class="outline-3">
+<h3 id="org6104e30"><a href="#org6104e30"><a href="http://franzejr.github.io/best-ruby/">Introduction | Ruby Tricks, Idiomatic Ruby, Refactorings and Best Practices</a></a></h3>
+<div class="outline-text-3" id="text-org6104e30">
+<p>
+Rubyのベストプラクティス集。
+</p>
+</div>
+</div>
+<div id="outline-container-org3e98df3" class="outline-3">
+<h3 id="org3e98df3"><a href="#org3e98df3"><a href="https://practicingruby.com/articles/building-enumerable-and-enumerator">Building Enumerable &amp; Enumerator in Ruby</a></a></h3>
+<div class="outline-text-3" id="text-org3e98df3">
+<p>
+Enumerableの詳しい解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orgac00711" class="outline-3">
+<h3 id="orgac00711"><a href="#orgac00711"><a href="https://blog.freedom-man.com/try-rubygem-codereading">RubyGemコードリーディングのすすめ</a></a></h3>
+</div>
+<div id="outline-container-org2e427ea" class="outline-3">
+<h3 id="org2e427ea"><a href="#org2e427ea"><a href="http://www.aoky.net/articles/why_poignant_guide_to_ruby/index.html">ホワイの(感動的)Rubyガイド</a></a></h3>
+<div class="outline-text-3" id="text-org2e427ea">
+<p>
+ちょっと変わったRuby入門。
+</p>
+</div>
+</div>
+<div id="outline-container-org570b9e4" class="outline-3">
+<h3 id="org570b9e4"><a href="#org570b9e4"><a href="https://docs.ruby-lang.org/ja/">プログラミング言語 Ruby リファレンスマニュアル</a></a></h3>
+<div class="outline-text-3" id="text-org570b9e4">
+<p>
+rubyのドキュメント。
+</p>
+</div>
+</div>
+<div id="outline-container-org32b3ec4" class="outline-3">
+<h3 id="org32b3ec4"><a href="#org32b3ec4"><a href="https://rubular.com/">Rubular: a Ruby regular expression editor</a></a></h3>
+<div class="outline-text-3" id="text-org32b3ec4">
+<p>
+Rubyの正規表現チェッカ。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdc96e84" class="outline-2">
+<h2 id="orgdc96e84"><a href="#orgdc96e84">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgdc96e84">
+<ul class="org-ul">
+<li><a href="./20210508234743-emacs.html">Emacs</a></li>
+<li><a href="./20210509095946-rails.html">Rails</a></li>
+<li><a href="./20210615222732-project.html">project</a></li>
+<li><a href="./20210624232811-digger.html">ローグライク作り</a></li>
+<li><a href="./20210703105033-archive.html">Archive</a></li>
+<li><a href="./20210805005543-docker.html">Docker</a></li>
+<li><a href="./20210817003906-history.html">History</a></li>
+<li><a href="./20210831223434-rspec.html">RSpec</a></li>
+<li><a href="./20210831225930-test.html">Test</a></li>
+<li><a href="./20210911104632-c_language.html">C言語</a></li>
+<li><a href="./20210926150327-oss.html">OSS</a></li>
+<li><a href="./20211030122204-graphql.html">GraphQL</a></li>
+<li><a href="./20211107104950-linter.html">Linter</a></li>
+<li><a href="./20211127104120-gemat.html">gemat</a></li>
+<li><a href="./20220108003324-scala.html">Scala</a></li>
+<li><a href="./20220508115739-bison.html">Bison</a></li>
+<li><a href="./20240301T205049--kdoc-115-負の値が関わる剰余挙動の違い__wiki.html">KDOC 115: 負の値が関わる剰余挙動の違い</a></li>
+<li><a href="./20240623T212808--kdoc-193-プログラミング言語は共通言語として役立つ__essay.html">KDOC 193: プログラミング言語は共通言語として役立つ</a></li>
+<li><a href="./index.html">Insomnia</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:59Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>React</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">React</h1>
+<div id="outline-container-orga341e1c" class="outline-2">
+<h2 id="orga341e1c"><a href="#orga341e1c">概要</a></h2>
+<div class="outline-text-2" id="text-orga341e1c">
+<p>
+Reactは、Web開発に使われる<a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>ライブラリ。変更があった画面の一部だけを更新することで、リロードが必要のない、高速でリッチなWebサイトを構築できる。関数型プログラミングの考え方を背景に持つ。
+</p>
+</div>
+</div>
+<div id="outline-container-org3c532e0" class="outline-2">
+<h2 id="org3c532e0"><a href="#org3c532e0">Memo</a></h2>
+<div class="outline-text-2" id="text-org3c532e0">
+</div>
+<div id="outline-container-org6955074" class="outline-3">
+<h3 id="org6955074"><a href="#org6955074">引数を受け取るコンポーネントの例</a></h3>
+<div class="outline-text-3" id="text-org6955074">
+<ul class="org-ul">
+<li>複数の引数の受け取り方</li>
+<li>関数型の型指定の方法</li>
+</ul>
+
+<p>
+あたりが詰まりポイント。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-typescript">export const Square = ({
+  isLive,
+  click,
+}: {
+  isLive: boolean;
+  click: () =&gt; void;
+}) =&gt; {
+  return (
+    &lt;&gt;
+      {isLive ? (
+        &lt;button className="square live" onClick={click}&gt;&lt;/button&gt;
+      ) : (
+        &lt;button className="square death" onClick={click}&gt;&lt;/button&gt;
+      )}
+    &lt;/&gt;
+  );
+};
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0f527d2" class="outline-3">
+<h3 id="org0f527d2"><a href="#org0f527d2">setStateのインクリメント</a></h3>
+<div class="outline-text-3" id="text-org0f527d2">
+<p>
+引数で前の状態を取り出せる。これで取らないと値が、おかしくなることがある。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-typescript">const increment = () =&gt; setWidth((prevWidth) =&gt; prevWidth + 1);
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgb21e5c9" class="outline-3">
+<h3 id="orgb21e5c9"><a href="#orgb21e5c9">onClickは関数型をとる</a></h3>
+<div class="outline-text-3" id="text-orgb21e5c9">
+<p>
+プロパティonClickが取るのは関数型である。特に深く考えることなかったので詰まった。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>無名関数が入っている。正常</label><pre class="src src-typescript">&lt;button className="square death" onClick={() =&gt; console.log("テスト")}&gt;&lt;/button&gt;
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>間違った例。このとき、console.log(&ldquo;テスト&rdquo;)は評価されてundefinedが渡され、エラーになる</label><pre class="src src-typescript">&lt;button className="square death" onClick={console.log("テスト")}&gt;&lt;/button&gt;
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd05d943" class="outline-3">
+<h3 id="orgd05d943"><a href="#orgd05d943">hooksの作り方</a></h3>
+<div class="outline-text-3" id="text-orgd05d943">
+<p>
+hookの指針。汎用化できるようにする。
+<a href="https://zenn.dev/apple_yagi/articles/bc52d83ec61aee">REST APIと良い感じに通信するHookを自作する</a>
+</p>
+</div>
+</div>
+<div id="outline-container-orgea4ceb3" class="outline-3">
+<h3 id="orgea4ceb3"><a href="#orgea4ceb3">サーバーサイドレンダリング</a></h3>
+<div class="outline-text-3" id="text-orgea4ceb3">
+<p>
+読み込み時はコンポーネントをHTMLで静的に描画。あとからコンポーネントDOMに対してイベントをフックすることで操作できるようにする(ハイドレーション)。
+これによって、高速表示ができる。
+サーバーサイド(Node)と、クライアントサイド(ブラウザ環境)のAPIは一部異なる部分があるので、これを共通化する必要がある。
+</p>
+
+<p>
+通常の、ブラウザでDOMを描画するほうはクライアントサイドレンダリング。
+</p>
+</div>
+</div>
+<div id="outline-container-org8aa4a4a" class="outline-3">
+<h3 id="org8aa4a4a"><a href="#org8aa4a4a">便利ツール</a></h3>
+<div class="outline-text-3" id="text-org8aa4a4a">
+<p>
+さまざまなReactのためのlintが存在する。
+</p>
+<ul class="org-ul">
+<li>hook</li>
+<li>eslint-plugin-jsx-a11y</li>
+</ul>
+
+<p>
+ESLint はコードの正しさを保つのに対し、Prettier はコードの読みやすさを保つためのツール。
+同時に使うことができる。
+</p>
+<blockquote>
+<p>
+eslint-config-prettier は、ESLint のルールのうち、Prettier と相容れないものを無効化
+する共有設定です。一方の eslint-plugin-prettier は、Prettier のルールを ESLint のルー
+ルに統合するためのプラグインです。つまるところ、これらのパッケージにより、ESLint から
+Prettier を実行することが可能になります。
+</p>
+</blockquote>
+
+<p>
+prettier でコード形式を統一できる。
+</p>
+
+<p>
+<a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>のテンプレートで作成。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">npx create-react-app my-type --template typescript
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4ae5555" class="outline-3">
+<h3 id="org4ae5555"><a href="#org4ae5555">fiber</a></h3>
+<div class="outline-text-3" id="text-org4ae5555">
+<p>
+Reactの非同期でDOMの変更を検知する仕組みのこと。
+</p>
+</div>
+</div>
+<div id="outline-container-org62ce618" class="outline-3">
+<h3 id="org62ce618"><a href="#org62ce618">ステート</a></h3>
+<div class="outline-text-3" id="text-org62ce618">
+<p>
+プロパティはいわばRead-Onlyなデータで、一度コンポーネントが描画されると変更されない。
+一方、コンポーネントの描画後に変更されるデータをステートという。
+</p>
+
+<p>
+あるコンポーネントのステートの変更が、他のコンポーネントのプロパティに伝播し、それが全体に波及していく…。
+</p>
+</div>
+</div>
+<div id="outline-container-org4595a5f" class="outline-3">
+<h3 id="org4595a5f"><a href="#org4595a5f">Webpack</a></h3>
+<div class="outline-text-3" id="text-org4595a5f">
+<p>
+ReactだけではWEB機能を提供できない。
+ほかの機能もまとめてモジュール間を調整するのが、モジュールバンドラ。
+<code>Webpack</code>, <code>Browserify</code>, <code>Gulp</code>, <code>Grunt</code> などが存在する。
+一番使われているのがWebpack。
+</p>
+
+<p>
+<code>import</code> をたどって依存モジュールのグラフを作成する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">npm install --save-dev webpack webpack-cli
+npm install babel-loader @babel/core --save-dev
+npm install @babel/preset-env @babel/preset-react --save-dev
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>webpack.config.js</li>
+<li>.babelrc</li>
+</ul>
+
+<p>
+を設定する。
+</p>
+
+<p>
+単一のファイルにビルドするとエラーが起きたときの行番号がわからなくなる。
+<code>ソースマップ</code> を使うとどこで起きたかわかる。.mapと拡張子のついたファイル。
+webpackに設定を追加すると、ビルド時生成されるようになる。
+</p>
+
+<p>
+<code>create-react-app</code> を使うとこれらの作業を自動でやってくれる。
+</p>
+</div>
+</div>
+<div id="outline-container-org4c6a433" class="outline-3">
+<h3 id="org4c6a433"><a href="#org4c6a433">フラグメント</a></h3>
+<div class="outline-text-3" id="text-org4c6a433">
+<p>
+コンポーネントを並列に描画はできない。
+1つである必要があるが、いちいち包含コンポーネントを書くのは面倒。
+フラグメントを使うと簡潔に1つのコンポーネントにまとめられる。
+</p>
+<div class="org-src-container">
+<pre class="src src-javascript"><span class="org-keyword">function</span> <span class="org-function-name">Cat</span>({ name }) {
+    <span class="org-keyword">return</span> (
+        &lt;React.Fragment&gt;
+            &lt;h1&gt;The cat<span class="org-string">'s name is {name}&lt;/h1&gt;
+            &lt;p&gt;&lt;He'</span>s good.&lt;/p&gt;
+        &lt;React.Fragment&gt;
+    )
+}
+
+<span class="org-comment-delimiter">// </span><span class="org-comment">&#30465;&#30053;&#35352;&#27861;
+</span><span class="org-keyword">function</span> <span class="org-function-name">Cat</span>({ name }) {
+    <span class="org-keyword">return</span> (
+        &lt;&gt;
+            &lt;h1&gt;The cat<span class="org-string">'s name is {name}&lt;/h1&gt;
+            &lt;p&gt;&lt;He'</span>s good.&lt;/p&gt;
+        &lt;&gt;
+    )
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7b99de6" class="outline-3">
+<h3 id="org7b99de6"><a href="#org7b99de6">デストラクチャリングで簡潔に表示する</a></h3>
+<div class="outline-text-3" id="text-org7b99de6">
+<div class="org-src-container">
+<pre class="src src-javascript"><span class="org-comment-delimiter">// </span><span class="org-comment">&#8595;&#20351;&#12431;&#12394;&#12356;&#20363;
+</span><span class="org-keyword">function</span> <span class="org-function-name">Menu</span>(<span class="org-variable-name">props</span>) {
+    <span class="org-keyword">return</span> (
+        &lt;h1&gt;{props.title}&lt;/h1&gt;
+    )
+}
+
+<span class="org-comment-delimiter">// </span><span class="org-comment">&#8595;&#12487;&#12473;&#12488;&#12521;&#12463;&#12481;&#12515;&#12522;&#12531;&#12464;&#12434;&#20351;&#12358;&#12392;&#31777;&#28500;&#12395;&#26360;&#12369;&#12427;
+</span><span class="org-keyword">function</span> <span class="org-function-name">Menu</span>({title, recipes}) {
+    <span class="org-keyword">return</span> (
+        &lt;h1&gt;{title}&lt;/h1&gt;
+    )
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org8ce60fb" class="outline-3">
+<h3 id="org8ce60fb"><a href="#org8ce60fb">コンポーネント作成方法の変遷</a></h3>
+<div class="outline-text-3" id="text-org8ce60fb">
+<ol class="org-ol">
+<li>createClass関数(廃止)</li>
+<li>クラスコンポーネント(将来廃止)</li>
+<li>関数コンポーネント(最新)</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org05e7918" class="outline-3">
+<h3 id="org05e7918"><a href="#org05e7918">package.jsonの例</a></h3>
+<div class="outline-text-3" id="text-org05e7918">
+<div class="org-src-container">
+<pre class="src src-json">"scripts": {
+  "start": "react-scripts start",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "eject": "react-scripts eject",
+  "start:server": "ts-node -O '{\"module\": \"commonjs\"}' ./server/index.ts",
+  "dev": "concurrently --kill-others \"npm run start:server\" \"npm run start\""
+},
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgaaa8321" class="outline-3">
+<h3 id="orgaaa8321"><a href="#orgaaa8321">Provider</a></h3>
+<div class="outline-text-3" id="text-orgaaa8321">
+<p>
+props渡し地獄を回避するための組み込みの関数。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-react">&lt;ExampleContext.Provider value={resource.name}&gt;
+  &lt;NavigationComponent /&gt; // ← このコンポーネントではcontextで値を取得できるようになる。
+&lt;/ExampleContext.Provider&gt;
+</pre>
+</div>
+
+<dl class="org-dl">
+<dt>参考</dt><dd><a href="https://qiita.com/ryokkkke/items/dc25111fcf52ea579d58">React Contextの使い方 - Qiita</a></dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org10c8bd4" class="outline-3">
+<h3 id="org10c8bd4"><a href="#org10c8bd4">プロジェクトを新規作成するコマンド</a></h3>
+<div class="outline-text-3" id="text-org10c8bd4">
+<p>
+React+<a href="20210831232330-typescript.html#ID-ad1527ee-63b3-4a9b-a553-10899f57c234">TypeScript</a>、chapter03というディレクトリ名で作成する場合。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">npx create-react-app chapter03 --template typescript
+npm install -D tslint <span class="org-comment-delimiter"># </span><span class="org-comment">tslint&#23566;&#20837;
+</span>npx tslint --init <span class="org-comment-delimiter"># </span><span class="org-comment">tslint&#35373;&#23450;&#12501;&#12449;&#12452;&#12523;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orge84f9ae" class="outline-3">
+<h3 id="orge84f9ae"><a href="#orge84f9ae">Context</a></h3>
+<div class="outline-text-3" id="text-orge84f9ae">
+<p>
+contextはコンポーネント間で情報をやりとりしやすくするための関数。
+コンポーネント間でグローバルに値を共有できる。
+が、好き放題に値を変えられると安全性や可読性が下がるので、アクションを通してしか値を変化させられないようになっている。
+</p>
+</div>
+</div>
+<div id="outline-container-orga66f474" class="outline-3">
+<h3 id="orga66f474"><a href="#orga66f474">Reducer</a></h3>
+<div class="outline-text-3" id="text-orga66f474">
+<p>
+状態とアクションを元に、行うことを振り分ける関数。
+</p>
+</div>
+</div>
+<div id="outline-container-org299113c" class="outline-3">
+<h3 id="org299113c"><a href="#org299113c">Hook</a></h3>
+<div class="outline-text-3" id="text-org299113c">
+<p>
+hookはコンポーネントとは独立した関数で、コンポーネントに対して着脱可能な機能を取り付けるイメージ。ステートを追加したいなら <code>useState</code> 。
+</p>
+
+<p>
+<code>use</code> はReact hooksにつくプレフィクス。
+</p>
+<dl class="org-dl">
+<dt>参考</dt><dd><a href="https://qiita.com/seira/items/e62890f11e91f6b9653f">React hooksを基礎から理解する (useEffect編) - Qiita</a></dd>
+</dl>
+
+<p>
+hookという名の通り、実行タイミングに関係している。
+たとえば、 <code>useEffect</code> に渡された関数はレンダーの結果が画面に反映された後で動作する。
+</p>
+</div>
+</div>
+<div id="outline-container-org400cdd8" class="outline-3">
+<h3 id="org400cdd8"><a href="#org400cdd8">{} はオブジェクト</a></h3>
+<div class="outline-text-3" id="text-org400cdd8">
+<p>
+jsではオブジェクトを表す表記。
+</p>
+<div class="org-src-container">
+<pre class="src src-typescript">const { state, dispatch } = useAppState()
+</pre>
+</div>
+<p>
+は、通常のオブジェクトを作る{}と同じ。
+つまり、↓と同じ。
+</p>
+<div class="org-src-container">
+<pre class="src src-typescript">{
+  state,
+  dispatch
+}
+</pre>
+</div>
+
+<p>
+これらに関数の返り値が代入される、とそれだけのこと。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf1d6c6c" class="outline-2">
+<h2 id="orgf1d6c6c"><a href="#orgf1d6c6c">Tasks</a></h2>
+<div class="outline-text-2" id="text-orgf1d6c6c">
+</div>
+<div id="outline-container-orgb72989f" class="outline-3">
+<h3 id="orgb72989f"><a href="#orgb72989f"><span class="todo TODO">TODO</span> <a href="https://speakerdeck.com/recruitengineers/react">React - Speaker Deck</a></a></h3>
+<div class="outline-text-3" id="text-orgb72989f">
+<p>
+Reactの解説。
+</p>
+
+<ul class="org-ul">
+<li>jQueryではDOMをグローバル変数としていじらないといけなかった</li>
+<li>viewがテンプレートとjsで分離していて辛かった</li>
+<li>Reactは宣言的UI。「何」を記述する</li>
+<li>jQueryは命令的UIになりがち。「どうするか」を記述する</li>
+<li>Reactは状態が変わるごとにコンポーネントを毎回実行してDOMを新規に構築</li>
+<li>毎回新規にレンダリングするのと同等なので、画面の更新について考えることが減る</li>
+<li>仮想DOM&#x2026;DOMの代わりにjsのオブジェクト(軽量)で仮想的なDOMを構築する
+<ul class="org-ul">
+<li>仮想DOMを比較して、差分だけをDOMに反映する</li>
+</ul></li>
+<li>ReactはUI構築のためのライブラリ。フレームワークではない。Viewに特化している</li>
+<li>JSX &#x2026; js XML
+<ul class="org-ul">
+<li>jsの式としてXML風の構文を記述できる</li>
+<li>BabelやTS等のツールによってjsの式に変換される</li>
+</ul></li>
+<li>JSXとHTMLの違い
+<ul class="org-ul">
+<li>小文字と大文字を区別する</li>
+<li>キャメルケースを使う</li>
+<li>HTMLと異なる属性名がある</li>
+</ul></li>
+<li>コンポーネント
+<ul class="org-ul">
+<li>コンポーネントは状態を持てる</li>
+<li>関数コンポーネントは単なる関数で、関数自体は状態を持っていない</li>
+<li>状態はReactが管理する仮想DOM(Fiber構造体)によって管理される</li>
+<li>関数コンポーネントからReactが管理する情報とやりとりするためにHooksを使う</li>
+</ul></li>
+<li>useRef
+<ul class="org-ul">
+<li>OOPにおけるインスタンス変数の代わりに使用すう</li>
+<li>仮想DOMをインスタンスとみなす</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org9e8167c" class="outline-3">
+<h3 id="org9e8167c"><a href="#org9e8167c"><span class="todo TODO">TODO</span> <a href="https://future-architect.github.io/articles/20200501/">TypeScriptでReactをやるときは、小さいアプリでもReduxを最初から使ってもいいかもねというお話 | フューチャー技術ブログ</a></a></h3>
+<div class="outline-text-3" id="text-org9e8167c">
+<p>
+Redux Toolkitがなぜ使いやすいかの解説。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orge86570b" class="outline-2">
+<h2 id="orge86570b"><a href="#orge86570b">Reference</a></h2>
+<div class="outline-text-2" id="text-orge86570b">
+</div>
+<div id="outline-container-org8a9a643" class="outline-3">
+<h3 id="org8a9a643"><a href="#org8a9a643"><span class="todo TODO">TODO</span> <a href="https://www.oreilly.co.jp/books/9784873119380/">O&rsquo;Reilly Japan - Reactハンズオンラーニング 第2版</a></a></h3>
+<div class="outline-text-3" id="text-org8a9a643">
+<p>
+Reactの入門書。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgfe69920" class="outline-2">
+<h2 id="orgfe69920"><a href="#orgfe69920">Archives</a></h2>
+</div>
+
+
+<div id="outline-container-org56396f5" class="outline-2">
+<h2 id="org56396f5"><a href="#org56396f5">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org56396f5">
+<ul class="org-ul">
+<li><a href="./20210509095946-rails.html">Rails</a></li>
+<li><a href="./20210509100112-javascript.html">JavaScript</a></li>
+<li><a href="./20210817003906-history.html">History</a></li>
+<li><a href="./20211030122204-graphql.html">GraphQL</a></li>
+<li><a href="./20220417151711-flutter.html">Flutter</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

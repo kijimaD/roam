@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:55Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 64: バトルディッガー編のゲームデザインを考える</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 64: バトルディッガー編のゲームデザインを考える</h1>
+<div id="outline-container-org92e2e9b" class="outline-2">
+<h2 id="org92e2e9b"><a href="#org92e2e9b">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org92e2e9b">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 作成</li>
+<li class="on"><input type='checkbox' checked='checked' /> レビュー</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org444f63b" class="outline-2">
+<h2 id="org444f63b"><a href="#org444f63b">概要</a></h2>
+<div class="outline-text-2" id="text-org444f63b">
+<p>
+バトルディッガー編は、コナミのビデオゲーム「パワプロクンポケット10」に収録されたシナリオの1つである。古代の遺跡を戦車に乗って冒険するストーリー。ゲーム作成という観点から、参考にできそうなことのメモを書く。
+</p>
+</div>
+</div>
+<div id="outline-container-org5bcf79e" class="outline-2">
+<h2 id="org5bcf79e"><a href="#org5bcf79e">ゲームシステム</a></h2>
+<div class="outline-text-2" id="text-org5bcf79e">
+<p>
+ゲームシステムは、冒険部分はローグライクとシンボルエンカウントのRPGをミックスしたものになっている。シナリオ部分はアドベンチャーゲーム。序盤のイントロ以外は、すべて会話形式のテキストでストーリーが進行する。最初の勢力選択肢によってシナリオが分岐する。以降出現する選択肢次第で仲間が増える、アイテムを取得する、戦闘に突入する、が起こる。
+</p>
+
+<p>
+遺跡には5日に1回しか入れない。1章の冒険は50日までの制限がある。つまり行動ターンが全50回で、そのうち10回しか冒険する機会はない。遺跡へ潜る以外は「うろつき」選択肢によって消化し、各種イベントが発生する。
+</p>
+
+<p>
+遺跡クリア時にイベントが発生し、次の遺跡へ入れるようになる。
+</p>
+</div>
+<div id="outline-container-org65fd5bb" class="outline-3">
+<h3 id="org65fd5bb"><a href="#org65fd5bb">遺跡</a></h3>
+<div class="outline-text-3" id="text-org65fd5bb">
+<ul class="org-ul">
+<li>1つの遺跡をおおむね3回でクリアしなければならないモチベーションがある</li>
+<li>20階にゴールがある</li>
+<li>終盤になると強力な武器が出現する。性能に幅があり、店で売っているものより強力なことが多い</li>
+<li>敵の強さ(敵のレベルの高さ)はプレイヤーのレベルで変動する。難易度の補正は敵レベル変動で行われ、ダメージ量が変動するだけである</li>
+<li>2章ではストーリーがなく、ひたすら遺跡に潜って野球人形のパーツを拾う
+<ul class="org-ul">
+<li>レベルが変動するだけで、出現する敵は変わらない</li>
+<li>仲間や遺跡武器は増えないので、1章の蓄積を活用することになる</li>
+<li>システム的に、難化に対応してない
+<ul class="org-ul">
+<li>敵の種類(行動パターン、攻撃手段etc&#x2026;)、敵テーブルの変化があるとよさそう</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8e93c1c" class="outline-3">
+<h3 id="org8e93c1c"><a href="#org8e93c1c">戦闘</a></h3>
+<div class="outline-text-3" id="text-org8e93c1c">
+<ul class="org-ul">
+<li>主人公含めて3人パーティ</li>
+<li>味方には命令できない。主人公のみ操作できる</li>
+<li>乗車時、主人公はディッガーを操作する</li>
+<li>乗車時、全体攻撃以外はディッガーが敵の攻撃対象となる</li>
+<li>乗車時は味方が死なない(HP1でディッガーに避難する)</li>
+<li>乗車時は移動か足踏みでHPが回復する</li>
+<li>270歩歩くとシャドウゴーストが出現し、その階での探索が困難になる</li>
+<li>コマンド
+<ul class="org-ul">
+<li>攻撃
+<ul class="org-ul">
+<li>主砲</li>
+<li>副砲</li>
+<li>体当たり</li>
+<li>&#x2026;</li>
+</ul></li>
+<li>防御</li>
+<li>かばう</li>
+<li>アイテム</li>
+<li>逃げる</li>
+</ul></li>
+</ul>
+
+<p>
+降車時は弱い。ミスるとすぐ死ぬ。いかにギリギリの状態を作り出せるか。
+</p>
+
+<ul class="org-ul">
+<li>死亡原因の多くは降車時にシステムと戦闘になること。あとは弾薬やリペアが足りない状態で次の階層に行ってしまうこと</li>
+<li>十分にタイミングを図れば避けられるが、 完全によい状況を作るには時間がかかる</li>
+<li>システムのシンボルがある程度ランダムに動くので、追いつかれるときと追いつかれないときがある</li>
+<li>目先のお宝を優先すると、戦うことになる</li>
+<li>罠があるために、ステージは手動で作成しないと自動生成は難しそう</li>
+<li>降車時のザコ敵を利用してレベル上げできてしまう</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org3906da4" class="outline-2">
+<h2 id="org3906da4"><a href="#org3906da4">ストーリー</a></h2>
+<div class="outline-text-2" id="text-org3906da4">
+<ul class="org-ul">
+<li>主人公は遺跡調査の専門家
+<ul class="org-ul">
+<li>占拠している勢力は遺跡調査の専門家ではないため各勢力で重宝される</li>
+<li>主人公の目的は遺跡の謎を解き明かすこと</li>
+<li>珠を欲しているわけではない。各勢力では珠を渡すことを条件に探索を認められている</li>
+</ul></li>
+<li>勢力
+<ul class="org-ul">
+<li>レッドドラゴン: 犯罪組織</li>
+<li>ブラックタイガー: 宗教団体</li>
+<li>ホワイトベア: 兵隊くずれ</li>
+<li>勢力ごとに集める目的があり、主人公の目的と競合している</li>
+</ul></li>
+<li>オチタは非戦闘員。会話役</li>
+<li>世界の自然な説明
+<ul class="org-ul">
+<li>庶民は列車で旅する時代</li>
+<li>旅客機は高くて庶民は手を出せない</li>
+<li>飛行機は戦争でよく飛んでいた</li>
+<li>最近戦争が終わった</li>
+</ul></li>
+</ul>
+
+<p>
+ゲームシステムの背景説明。
+</p>
+
+<ul class="org-ul">
+<li>戦闘中に弾薬を補充できない
+<ul class="org-ul">
+<li>カートリッジ式で重すぎて戦闘中に交換できないから</li>
+</ul></li>
+</ul>
+
+<p>
+チュートリアル。
+</p>
+
+<ul class="org-ul">
+<li>土砂で埋まっている
+<ul class="org-ul">
+<li>土砂はディッガーで除去できるが、燃料を余分に消費する説明</li>
+</ul></li>
+<li>浅瀬はフロートがあれば進める</li>
+<li>扉はスイッチで開く
+<ul class="org-ul">
+<li>特定の敵を倒すか、床に設置されたスイッチで開く</li>
+</ul></li>
+<li>細い通路の先にあるスイッチを押すために、降りる必要がある
+<ul class="org-ul">
+<li>降りると危険だからできるだけディッガーに乗ったままで進みたい</li>
+<li>マップ上に表示されている敵は大型のモンスター</li>
+<li>ディッガーから降りているとマップには表示されない小型のモンスターに襲われることがある</li>
+<li>大型のモンスターは強いので降りているときに接触すると危険</li>
+</ul></li>
+<li>ディッガーに乗っていないとゲートに進めない。ディッガーを置いていくわけにはいかないから</li>
+<li>1フロア進むたびにディッガーを整備してHPが回復する
+<ul class="org-ul">
+<li>イベントが起こることもある</li>
+</ul></li>
+<li>同じフロアで長時間過ごすと死神、シャドウゴーストが出てくる</li>
+<li>ゲートとワープゲートがある
+<ul class="org-ul">
+<li>ワープゲートは遺跡の外に戻される</li>
+</ul></li>
+</ul>
+
+<p>
+酒場でのゲームプレイのアドバイス。
+</p>
+
+<ul class="org-ul">
+<li>無用な戦いはなるべく避ける</li>
+<li>一番のお宝は武器
+<ul class="org-ul">
+<li>遺跡で拾えるものは性能が異なる。店より強いことが多い</li>
+<li>弾数が増えているものが良い</li>
+</ul></li>
+</ul>
+
+<p>
+遺跡の設定が序盤で明らかになる。また、時代設定が随所で語られる。
+</p>
+
+<ul class="org-ul">
+<li>5日に1回しか入れない
+<ul class="org-ul">
+<li>各フロアは古代の空間移動装置で連結されていて、条件が合わないと扉の先がなくなる</li>
+<li>古代人はドアで旅行できた</li>
+</ul></li>
+<li>なぜ階段ではなくゲートを使っているか
+<ul class="org-ul">
+<li>遺跡が階層構造ではないから</li>
+<li>遺跡の各フロアは世界中の地下深くに散らばっていて、ゲートを順番にくぐっていくしか先に進む方法はない</li>
+<li>モンスターが倒されたり仕掛けを解かれたフロアは元の状態に戻す誰も入れないようにして、別のフロアへ代わりに飛ばされる
+<ul class="org-ul">
+<li>それで入るたびにフロアの形状が変わっている</li>
+</ul></li>
+</ul></li>
+<li>古代人がなぜこんな遺跡を作ったか、なんのために仕掛けやモンスターが配置されているかは謎</li>
+<li>小さな遺跡をいじくったら3つの遺跡が出現した</li>
+<li>古代人は解いてもらうために遺跡という謎を残した</li>
+<li>宝がおかしい
+<ul class="org-ul">
+<li>大砲、機関銃、弾薬、リペアの規格が合わせてある</li>
+<li>古代人の設定したゲーム説</li>
+<li>メタ設定へのミスリード</li>
+</ul></li>
+<li>50日目にムーングロウ帝国の残党刈りの名目でロイヤル合衆国が攻め込んでくる</li>
+<li>ロイヤル合衆国は最近までムーングロウ帝国と戦争をしていた</li>
+</ul>
+
+<p>
+複数の遺跡が存在している世界。
+</p>
+
+<ul class="org-ul">
+<li>すでに最下層に達している遺跡もある</li>
+<li>チャンバの街には最下層に達していない遺跡が3つあり、それはレアである</li>
+<li>チャンバの街は大陸に存在する</li>
+<li>チャンバの街がある国は内戦でガタガタなため、ヘルガの中隊(独立576中隊)がいても見逃されている</li>
+
+<li>遺跡で「ゾンビ」といったらモンスターの乗ってる戦車のこと
+<ul class="org-ul">
+<li>乗っ取っている</li>
+<li>動きは適当だから頭はよくない</li>
+<li>戦車を作ることもできそう</li>
+<li>戦車の数が多すぎるから</li>
+<li>使う武器に合わせて向こうも成長する</li>
+</ul></li>
+<li>バトルディッガーをモグラともいう。乗っている人をモグラ乗りという</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga246124" class="outline-2">
+<h2 id="orga246124"><a href="#orga246124">エフェクト</a></h2>
+<div class="outline-text-2" id="text-orga246124">
+<p>
+効果音がよく設定されている。リズムの良い戦闘と合わせて爽快感がある。
+</p>
+
+<ul class="org-ul">
+<li>カーソルの移動音</li>
+<li>カーソルの決定音</li>
+<li>砲撃/着弾音
+<ul class="org-ul">
+<li>砲によって異なる</li>
+</ul></li>
+<li>敵を倒したときのボイス</li>
+<li>カタナ</li>
+<li>戦車の移動音
+<ul class="org-ul">
+<li>キュラキュラ</li>
+</ul></li>
+<li>ワープ音
+<ul class="org-ul">
+<li>ワンワンワーン</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org68ac607" class="outline-2">
+<h2 id="org68ac607"><a href="#org68ac607">11との比較</a></h2>
+<div class="outline-text-2" id="text-org68ac607">
+<p>
+パワプロクンポケット11のハタ人間編との比較。
+</p>
+
+<ul class="org-ul">
+<li>✗ キャラのカスタマイズ性の低さ
+<ul class="org-ul">
+<li>ディッガーをカスタマイズできるが、中盤はほぼ固定になる</li>
+<li>ハタ人間編では装備を合成し変更できる。合成アイテムの種類が多い</li>
+<li>素材を集めるのが楽しい</li>
+</ul></li>
+<li>✗ 2章の単調さ
+<ul class="org-ul">
+<li>単にレベルが上がるだけで単調</li>
+<li>ハタ人間編では敵や合成アイテムが増えるので楽しめる</li>
+</ul></li>
+<li>✅ 探索のかけひき感
+<ul class="org-ul">
+<li>燃料や弾薬のマネジメント要素</li>
+<li>降車時のハラハラ感</li>
+<li>ハタ人間編の戦闘・フィールド探索はやや単調である</li>
+</ul></li>
+<li>✅ 戦闘の爽快感
+<ul class="org-ul">
+<li>迫力のある画像、アニメーション、効果音</li>
+</ul></li>
+<li>✅ 世界観
+<ul class="org-ul">
+<li>シリアスで重厚なストーリー</li>
+<li>第2次世界大戦あたりの時代感があちこちにある</li>
+<li>戦車、大砲のロマン</li>
+<li>ハタ人間編は現代〜未来な武器であり、リアリティはない。ホラー要素強め</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbea431a" class="outline-2">
+<h2 id="orgbea431a"><a href="#orgbea431a">関連</a></h2>
+<div class="outline-text-2" id="text-orgbea431a">
+<ul class="org-ul">
+<li><a href="20231128T074518--kdoc-59-ecsを使ってrpgを作る__project.html#ID-20231128T074518">KDOC 59: ECSを使ってRPGを作る</a>の設計で参考にした</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

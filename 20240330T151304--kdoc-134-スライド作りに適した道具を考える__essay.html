@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:43Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 134: スライド作りに適した道具を考える</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 134: スライド作りに適した道具を考える</h1>
+<div id="outline-container-org583fc10" class="outline-2">
+<h2 id="org583fc10"><a href="#org583fc10">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org583fc10">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-03-31 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-04-27 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org364a35d" class="outline-2">
+<h2 id="org364a35d"><a href="#org364a35d">概要</a></h2>
+<div class="outline-text-2" id="text-org364a35d">
+<p>
+いままでスライド作りにこれだという方法はなく、そのときどきの方法でやってきた<sup><a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>。バラバラの形式でクラウドやローカルのあちこちに散乱している。ちゃんと自分の中で決める。
+</p>
+</div>
+</div>
+<div id="outline-container-org575ccc5" class="outline-2">
+<h2 id="org575ccc5"><a href="#org575ccc5">スライド作り</a></h2>
+<div class="outline-text-2" id="text-org575ccc5">
+<p>
+求める条件。
+</p>
+
+<ul class="org-ul">
+<li>WYSIWYGで作れる。図を多用したいのでMarkDownから変換する形式は採用しない。MarkDownで表現できるならスライドにする必要がない。図を重視してドローソフトで作っている人さえいる</li>
+<li>ローカルに保存/編集できる
+<ul class="org-ul">
+<li>Webサービスで編集だとデータを書き戻すのが手間だから</li>
+<li>Git管理にしやすいから</li>
+<li>文書をまとめたリポジトリに一元化したい</li>
+</ul></li>
+<li>汎用性のある形式へ変換できる
+<ul class="org-ul">
+<li>PDFが鉄板か。誰でも見られてポータブル、Webにも載せやすい</li>
+</ul></li>
+<li>原本と変換先の差分更新の手間がない
+<ul class="org-ul">
+<li>あとから変更したくなることはよくある。そのときに面倒だと、変更しなくなる</li>
+<li>Webのスライド作成ツールはここで脱落する。編集したあとPDFを再度ダウンロードする必要があるから</li>
+<li>コマンドラインで変換できるとよい</li>
+<li>コマンドでビルドできればCIに乗せて反映を自動化できて良い</li>
+</ul></li>
+</ul>
+
+<p>
+これらを満たす方法は、drawioのSVG保存 → PDF変換だ。drawioのSVG形式は複数ページ保存をサポートしている。複数ページ保存してPDFへの変換をかけるとページ順に変換してくれる。これをスライドとする。
+</p>
+
+<p>
+編集はdrawioのWeb版、デスクトップ版、VSCode版があるので好きなのを使う。PDFへの変換はデスクトップ版で行う。デスクトップ版はコマンドラインツールとしても使える。<a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>で自動化した。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>drawioのLinux版をインストールする例</label><pre class="src src-shell"><span class="org-variable-name">FILE</span>=drawio-amd64-24.1.0.deb
+<span class="org-variable-name">URL</span>=https://github.com/jgraph/drawio-desktop/releases/download/v24.1.0/$<span class="org-variable-name">FILE</span>
+curl -sLO $<span class="org-variable-name">URL</span>
+sudo dpkg -i $<span class="org-variable-name">FILE</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>SVGをPDFへエクスポートする例</label><pre class="src src-shell">drawio -f pdf -x sample.svg
+<span class="org-comment-delimiter"># </span><span class="org-comment">sample.svg -&gt; sample.pdf</span>
+</pre>
+</div>
+
+<p>
+したがって、原本のSVGをdrawioで編集・コミット・デプロイという流れになった。あとは自動でPDFに変換される。
+</p>
+</div>
+</div>
+<div id="outline-container-orge474ba6" class="outline-2">
+<h2 id="orge474ba6"><a href="#orge474ba6">関連</a></h2>
+<div class="outline-text-2" id="text-orge474ba6">
+<p>
+なし。
+</p>
+</div>
+</div>
+<div id="outline-container-org3e9193d" class="outline-2">
+<h2 id="org3e9193d"><a href="#org3e9193d">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org3e9193d">
+<ul class="org-ul">
+<li><a href="./20240331T160315--kdoc-135-スライドのショーケースを作る__essay.html">KDOC 135: スライドのショーケースを作る</a></li>
+</ul>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+図の作成に関してはもう決まっている。drawioのSVG形式である。直接編集でき変換の必要がない。<a href="20210926103926-github.html#ID-6b889822-21f1-4a3e-9755-e3ca52fa0bc4">GitHub</a>でのプレビューも効くので最高。画像は保存したあとに再編集できるのが絶対の条件だと考えている。図をPNGやJPEGといったラスタファイルで書くべきでない。
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

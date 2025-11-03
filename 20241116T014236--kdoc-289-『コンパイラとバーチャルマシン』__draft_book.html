@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:45Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 289: 『コンパイラとバーチャルマシン』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 289: 『コンパイラとバーチャルマシン』</h1>
+<div id="outline-container-orgc2cf0e1" class="outline-2">
+<h2 id="orgc2cf0e1"><a href="#orgc2cf0e1">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgc2cf0e1">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org2bbe6cf" class="outline-2">
+<h2 id="org2bbe6cf"><a href="#org2bbe6cf">概要</a></h2>
+<div class="outline-text-2" id="text-org2bbe6cf">
+<p>
+<a href="https://www.ohmsha.co.jp/book/9784274133084/">『コンパイラとバーチャルマシン』</a>は、主にコンパイラを解説した本である。
+</p>
+</div>
+</div>
+<div id="outline-container-org4a59f2e" class="outline-2">
+<h2 id="org4a59f2e"><a href="#org4a59f2e">メモ</a></h2>
+<div class="outline-text-2" id="text-org4a59f2e">
+<ul class="org-ul">
+<li>前置記法はコンパイラでは使用しない(p12)</li>
+<li>日本語の項目名のバッカス記法で、例示のプログラミング言語が示されている。わかりやすい(p21)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-nil">式の構文規則
+式 → 項|式+項
+項 → 因子|項*因子
+因子 → 名前|(式)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>LL(k)構文解析
+<ul class="org-ul">
+<li>kは先読み記号を最大 <code>k</code> 個まで許すことを意味する。 <code>k</code> が1の場合には、バックトラックのない下向き構文解析が可能である</li>
+</ul></li>
+<li>上向き構文解析法は、葉を枝に、枝を木に…というように、個別の項目から全体の項目へ構文解析を進めていく</li>
+<li>下向き構文解析法は、次に何が来るかを仮定しながら構文解析を進めていく</li>
+<li>First, Follow, Director 集合</li>
+<li><code>項 → 項*因子</code> 名前と定義の両方に出現している。左再帰性をもつ、という</li>
+<li>下向き構文解析では左再帰性の問題を取り除くために構文を書き換えて対応する</li>
+<li>文法の定義として、チョムスキーによる句構造文法がある</li>
+<li>if文などは条件付き分岐命令を生成するが、まだthen側のオブジェクトコードを生成していないので、その時点では番地が確定しない。こういった場合、いったん命令を生成して先に進んだあとで後戻りしてその一部を修正する。バックパッチという</li>
+<li>データフロー解析で、到達するかを調べる。定義点と使用点を解析して、到達しない箇所を特定する</li>
+<li>ループ不変式の追い出し。ループ内で変化しない値はループの外に追い出して同じ計算を繰り返し行わないようにする</li>
+<li>ループ展開。ループの繰り返し部分を展開して、ループ繰り返し回数の計算と終了判定の条件分岐を除去する
+<ul class="org-ul">
+<li>一般にループ繰り返し回数はコンパイル時にはわからないので、4倍や8倍など2のべき乗の倍数で展開する。静的なオブジェクトコードの数は増えるが、実行するオブジェクトコードの数は減らせる</li>
+</ul></li>
+<li>定数伝播。変数の使用を定数で置き換えて静的にする</li>
+<li>静式評価。コンパイル時に計算できるものはコンパイル時に計算し、結果だけをオブジェクトコードに反映する</li>
+<li><code>a = b;</code> のような右辺に演算のない代入文をコピー文という。コピー伝播は、このような <code>a</code> の値の使用を、 <code>b</code> の値の使用で置き換える変換である
+<ul class="org-ul">
+<li>置き換える <code>a</code> の使用には、このコピー文からの使用定義連鎖だけしか届いていない、などの条件がある</li>
+</ul></li>
+<li>コンパイル時に実行できる部分、実行時にしか実行できない部分、がある</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf5e1647" class="outline-2">
+<h2 id="orgf5e1647"><a href="#orgf5e1647">関連</a></h2>
+<div class="outline-text-2" id="text-orgf5e1647">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

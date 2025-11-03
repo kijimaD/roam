@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:36Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 264: 『YARV Maniacs』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 264: 『YARV Maniacs』</h1>
+<div id="outline-container-orgfffa35c" class="outline-2">
+<h2 id="orgfffa35c"><a href="#orgfffa35c">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgfffa35c">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-17 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-19 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org102d4f3" class="outline-2">
+<h2 id="org102d4f3"><a href="#org102d4f3">概略</a></h2>
+<div class="outline-text-2" id="text-org102d4f3">
+<p>
+<a href="https://magazine.rubyist.net/articles/0006/0006-YarvManiacs.html">YARV Maniacs</a>はRubyのVM、YARVの作者が書いた記事シリーズ。
+</p>
+</div>
+</div>
+<div id="outline-container-org28946a0" class="outline-2">
+<h2 id="org28946a0"><a href="#org28946a0">メモ</a></h2>
+<div class="outline-text-2" id="text-org28946a0">
+<ul class="org-ul">
+<li>もっとも単純なディスパッチ処理はswitch/caseで分岐させること。つぎに関数ポインタを使った例がある。命令配列に関数ポインタを入れておいて命令を取り出す</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>関数ポインタの例。そのままコピペしてきた</label><pre class="src src-c"><span class="org-preprocessor">#define</span> <span class="org-variable-name">Ia</span> 0
+<span class="org-comment-delimiter">//</span><span class="org-comment">...
+</span>
+<span class="org-keyword">static</span> <span class="org-keyword">const</span> <span class="org-type">InsnFuncType</span> <span class="org-variable-name">InsnInstruction_bodies</span>[] = {
+  Ia_body, Ib_body, ..., Iz_body,
+};
+
+<span class="org-keyword">while</span>(1){
+  Instruction_bodies[iseq[pc]]();
+ }
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>switch/caseによる分岐は実際の機械語としてはif文の並びのようになる。たくさん分岐することになる。そこで、飛び先をテーブルにして、関数ポインタによる命令ディスパッチの例のように飛び先をテーブルに格納してジャンプできるようにする</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>最終的にこうなる。ダイレクトスレッデッドコードという。コピペしてきた</label><pre class="src src-c"><span class="org-constant">loop_start</span>:
+  <span class="org-keyword">goto</span> *iseq_ptr[PC];
+<span class="org-constant">Ia</span>:
+  <span class="org-function-name">Ia_body</span>();
+  <span class="org-keyword">goto</span> *iseq_ptr[PC];
+<span class="org-constant">Ib</span>:
+  <span class="org-function-name">Ib_body</span>();
+  <span class="org-keyword">goto</span> *iseq_ptr[PC];
+...
+Iz:
+  Iz_body();
+  <span class="org-keyword">goto</span> *iseq_ptr[PC];
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>こういう命令ディスパッチをするプログラムをスレッデッドコードという</li>
+<li><code>&amp;&amp;ラベル名</code> でラベルを値として扱う。その値としてのラベルにジャンプするには <code>goto *value</code> と記述する</li>
+<li>スレッデッドコードの利点はgotoが1個減っただけ。1命令減っただけに見えるが、さらにうれしいことがある。プロセッサの分岐予測の成功率が高くなる。switch/caseの場合は分岐予測が毎回外れるため遅い</li>
+<li>JITコンパイルは、VM命令の命令ディスパッチを必要としなくなる。でも実装が大変である、という</li>
+<li>YARVでは Rubyプログラム -&gt; YARV命令列 -&gt; C と変換するコンパイラを用意している。そのため命令ディスパッチ自体のオーバーヘッドは無い</li>
+<li>switch/case を利用した命令ディスパッチとスレッデッドコードを利用したプログラムはあまり見かけは変わらないのでマクロで書いておけば切り替えは簡単にできる。そうしているVMや処理系は多い、という</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>YARV命令列</label><pre class="src src-ruby">0003 send            <span class="org-constant">:puts</span>, 1, <span class="org-constant">false</span>, 0, &lt;ic&gt;
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>puts: putsメソッドの起動を表す</li>
+<li>1: 引数を1つで起動</li>
+<li>send命令は、引数の数分だけの値と、レシーバをスタックから取ってメソッドを起動する、という意味になる</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>何もしないプログラムは変換されない</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'true;false;123;:sym;/abc/;nil'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,29)&gt; (catch: FALSE)
+0000 putnil                                                           (   1)[Li]
+0001 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>stringはputstring命令を使う</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'a = "abc"'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,9)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putstring                              "abc"                     (   1)[Li]
+0002 dup
+0003 setlocal_WC_0                          a@0
+0005 leave
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>文字列オブジェクトは破壊的な変更が可能なのでmuutableといえる。たとえばプログラム上同じ位置にあっても文字列リテラルが返すオブジェクトは毎回異なる</li>
+<li>putobjectは毎回同じオブジェクトをスタックトップに置く。なので文字列ではputobject命令は使えない。代わりにputstringを使う</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>要素が文字列の場合はputstring</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'["a", "b", "c"]'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,15)&gt; (catch: FALSE)
+0000 putstring                              "a"                       (   1)[Li]
+0002 putstring                              "b"
+0004 putstring                              "c"
+0006 newarray                               3
+0008 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>要素がFixnumの場合</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'[1, 2, 3]'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,9)&gt; (catch: FALSE)
+0000 duparray                               [1, 2, 3]                 (   1)[Li]
+0002 leave
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>要素がすべてリテラル(putobject命令で済むもの)だった場合、毎回各要素をスタックに積まなくても作るものが決まっている。duparray命令1つ、配列オブジェクトをdupしてスタックトップに積む、でよくなる</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>インスタンス変数。専用の命令がある</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'@a = 1; a = @a'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,14)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 setinstancevariable                    :@a, &lt;is:0&gt;
+0004 getinstancevariable                    :@a, &lt;is:0&gt;
+0007 dup
+0008 setlocal_WC_0                          a@0
+0010 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>グローバル変数。専用の命令がある</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'$global = 1; a = $global'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,24)&gt; (catch: FALSE)
+local table (size: 1, argc: 0 [opts: 0, rest: -1, post: 0, block: -1, kw: -1@-1, kwrest: -1])
+[ 1] a@0
+0000 putobject_INT2FIX_1_                                             (   1)[Li]
+0001 setglobal                              :$global
+0003 getglobal                              :$global
+0005 dup
+0006 setlocal_WC_0                          a@0
+0008 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>現在のクラスを起点に探る</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'C'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,1)&gt; (catch: FALSE)
+0000 opt_getinlinecache                     9, &lt;is:0&gt;                 (   1)[Li]
+0003 putobject                              true
+0005 getconstant                            :C
+0007 opt_setinlinecache                     &lt;is:0&gt;
+0009 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>Object(トップレベル)のCを探る</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'::C'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,3)&gt; (catch: FALSE)
+0000 opt_getinlinecache                     12, &lt;is:0&gt;                (   1)[Li]
+0003 pop
+0004 putobject                              Object
+0006 putobject                              true
+0008 getconstant                            :C
+0010 opt_setinlinecache                     &lt;is:0&gt;
+0012 leave
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>Cを探り、Cの中のDを探る</label><pre class="src src-ruby"><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(<span class="org-string">'C::D'</span>).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(1,4)&gt; (catch: FALSE)
+0000 opt_getinlinecache                     13, &lt;is:0&gt;                (   1)[Li]
+0003 putobject                              true
+0005 getconstant                            :C
+0007 putobject                              false
+0009 getconstant                            :D
+0011 opt_setinlinecache                     &lt;is:0&gt;
+0013 leave
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>定数の検索は、処理系実装者から見るとかなり作るのが面倒な部分になっている。コンパイル時に定数検索パスが定まらないため</li>
+<li>メソッド定義の探索が計算負荷が大きい。そのためキャッシュを使う。グローバルメソッドキャッシュやインラインメソッドキャッシュ</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+
+0000 putnil             # スタックトップにnilを積む
+0001 dup                # スタックトップを複製する (c = nil用)
+0002 setlocal         c # スタックトップのnilをcに代入する
+0004 dup                # スタックトップを複製する (c = b用)
+0005 setlocal         b # スタックトップのnilをbに代入する
+0007 setlocal         a # スタックトップのnilをaに代入する
+
+
+0009 getlocal         a # aをスタックに積む
+0011 dup                # スタックトップを複製する
+0012 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0014 pop                # 片付ける
+0015 getlocal         b # bをスタックに積む
+0017 dup                # スタックトップを複製する
+0018 unless           23 # スタックトップが偽なら23行目に飛ぶ(終了)
+0020 pop                # 片付ける
+0021 getlocal         c # cはスタックに積むだけ
+0023 end
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>InstructionSequence(iseq) は、命令列</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby">str = &lt;&lt;<span class="org-string">"EOF"
+  class C
+    def m
+    end
+  end
+EOF
+</span><span class="org-builtin">puts</span> <span class="org-type">RubyVM</span>::<span class="org-type">InstructionSequence</span>.compile(str).disasm
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">== disasm: #&lt;ISeq:&lt;compiled&gt;@&lt;compiled&gt;:1 (1,0)-(4,5)&gt; (catch: FALSE)
+0000 putspecialobject                       3                         (   1)[Li]
+0002 putnil
+0003 defineclass                            :C, &lt;class:C&gt;, 0
+0007 leave
+
+== disasm: #&lt;ISeq:&lt;class:C&gt;@&lt;compiled&gt;:1 (1,2)-(4,5)&gt; (catch: FALSE)
+0000 definemethod                           :m, m                     (   2)[LiCl]
+0003 putobject                              :m
+0005 leave                                                            (   4)[En]
+
+== disasm: #&lt;ISeq:m@&lt;compiled&gt;:2 (2,4)-(3,7)&gt; (catch: FALSE)
+0000 putnil                                                           (   2)[Ca]
+0001 leave                                                            (   3)[Re]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>算術メソッドは高速化した特化命令にコンパイルされる。 <code>opt_plus</code> など
+<ul class="org-ul">
+<li>レシーバと引数がFixnumのとき、のように型の条件がある</li>
+<li><code>opt_plus</code> で実行するとメソッド呼び出し処理(メソッドフレームの準備、破棄)が起きず、早くなる</li>
+<li>チェックのオーバーヘッドがあるので、なんでもやればいいわけではない。よくある組み合わせに対して用意する</li>
+</ul></li>
+<li>C言語などでは1+2のような式はコンパイル時に3に変換する。この最適化を定数畳み込みという。YARVでは定数畳み込みをしていない。メソッドの再定義に対応するため。再定義はいつ起こるかコンパイル時にはわからない</li>
+<li>いわゆるJITコンパイルというと、機械語まで変換する、という意味で使うことが多い。Java仮想マシンの高速化技術という文脈で広がった、という</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdf3f303" class="outline-2">
+<h2 id="orgdf3f303"><a href="#orgdf3f303">用語</a></h2>
+<div class="outline-text-2" id="text-orgdf3f303">
+<dl class="org-dl">
+<dt>メソッドディスパッチ</dt><dd>オブジェクト指向でいうメソッドを実際に起動する機能。Rubyだとレシーバオブジェクトがあって、メソッド名があったとき、実際にメソッドを起動するときに処理をさせること</dd>
+<dt>命令ディスパッチ</dt><dd>命令によってそれに応じて処理をさせること</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org93b32aa" class="outline-2">
+<h2 id="org93b32aa"><a href="#org93b32aa">関連</a></h2>
+<div class="outline-text-2" id="text-org93b32aa">
+<ul class="org-ul">
+<li><a href="20240612T133312--kdoc-190-『rubyのしくみ-ruby-under-a-microscope』__book.html#ID-20240612T133312">KDOC 190: 『Rubyのしくみ Ruby Under a Microscope』</a>。Rubyの内部的な仕組みを解説する本つながり</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgc2c4910" class="outline-2">
+<h2 id="orgc2c4910"><a href="#orgc2c4910">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgc2c4910">
+<ul class="org-ul">
+<li><a href="./20241116T131247--kdoc-290-なぜjitコンパイルが必要なのか__permanent.html">KDOC 290: なぜJITコンパイルが必要なのか?</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

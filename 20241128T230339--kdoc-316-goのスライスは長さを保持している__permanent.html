@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:36Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 316: Goのスライスは長さを保持している</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 316: Goのスライスは長さを保持している</h1>
+<div id="outline-container-orgdfb1d04" class="outline-2">
+<h2 id="orgdfb1d04"><a href="#orgdfb1d04">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgdfb1d04">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-29 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-30 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgdbfd21a" class="outline-2">
+<h2 id="orgdbfd21a"><a href="#orgdbfd21a">概要</a></h2>
+<div class="outline-text-2" id="text-orgdbfd21a">
+<p>
+Go言語のスライスでは、容量と実長を管理している。多めに容量を確保しておいて、満杯になったら新しいスライスの領域を確保してコピーする。これによって実際の配列は固定長で伸ばしたりはできないのだが、プログラマからは動的な配列のように扱える。
+</p>
+
+<p>
+配列長(終端)を保持しているので、null終端などのマーカーは必要ない。
+</p>
+
+<p>
+長さを保持するのでその分のメモリを使い、配列を載せ替える仕組みやオーバヘッドもあるが、昨今のメモリやCPU事情だと問題にならないことが多い。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>sliceの定義</label><pre class="src src-git-permalink">https://github.com/kd-collective/go/blob/493edb29735fd2adf2087b32c60617dad11dc6e1/src/runtime/slice.go#L15-L19
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">type slice struct {
+	array unsafe.Pointer
+	len   int
+	cap   int
+}
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orga20514f" class="outline-2">
+<h2 id="orga20514f"><a href="#orga20514f">関連</a></h2>
+<div class="outline-text-2" id="text-orga20514f">
+<ul class="org-ul">
+<li><a href="20241127T213905--kdoc-310-なぜcの文字列はnull終端なのか__permanent.html#ID-20241127T213905">KDOC 310: なぜCの文字列はnull終端なのか?</a>。ほかと比較して考えることにした</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

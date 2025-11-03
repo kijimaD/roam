@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:51Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 278: パイプの詰まりを再現する</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 278: パイプの詰まりを再現する</h1>
+<div id="outline-container-orgd116d56" class="outline-2">
+<h2 id="orgd116d56"><a href="#orgd116d56">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgd116d56">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-09 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-14 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4a9cb2a" class="outline-2">
+<h2 id="org4a9cb2a"><a href="#org4a9cb2a">再現する</a></h2>
+<div class="outline-text-2" id="text-org4a9cb2a">
+<p>
+パイプにはバッファサイズがあり、いっぱいになると処理をブロックする。これを確かめる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>10000バイトずつ転送する</label><pre class="src src-shell">yes | pv -L 10000 | cat /dev/random &gt; /dev/null
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>実行結果。7秒からは書き込み速度が0になっている</label><pre class="src src-nil">9.77KiB 0:00:01 [9.02KiB/s]
+19.5KiB 0:00:02 [9.84KiB/s]
+29.3KiB 0:00:03 [9.84KiB/s]
+39.1KiB 0:00:04 [9.84KiB/s]
+48.8KiB 0:00:05 [9.84KiB/s]
+56.6KiB 0:00:06 [7.87KiB/s]
+56.6KiB 0:00:07 [0.00 B/s] # 👈 速度0
+56.6KiB 0:00:08 [0.00 B/s]
+56.6KiB 0:00:09 [0.00 B/s]
+56.6KiB 0:00:10 [0.00 B/s]
+</pre>
+</div>
+
+<p>
+また、straceをyesプロセスに使うとパイプのバッファに空きができ次第、書き込んでいる様子が確認できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>yesにstraceを仕込んでどのように動いているかを見る</label><pre class="src src-shell">strace yes | pv -L 10000 | cat /dev/random &gt; /dev/null
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>yesプロセスとつながっているパイプは最初に一瞬でいっぱいになる。yesの書き込み速度は非常に早い</li>
+<li>pvが動き出してyesプロセスとつながっているパイプのバッファを読み出し空きができると、都度yesプロセスが実行開始、またパイプに追加される</li>
+<li>catコマンド側のパイプがいっぱいになると、pvもバッファを書き込めなくなるため停止する。結果、yesプロセスとpvプロセスがどちらもつながっているパイプの空き待ちのSleepになる</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-nil">write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192) = 8192
+(略...)
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192) = 8192
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192) = 8192
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+9.77KiB 0:00:01 [8.99KiB/s]
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+19.5KiB 0:00:02 [9.84KiB/s]
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+29.3KiB 0:00:03 [9.84KiB/s]
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+39.1KiB 0:00:04 [9.84KiB/s]
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192) = 8192
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+48.8KiB 0:00:05 [9.84KiB/s]
+write(1, "y\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\ny\n"..., 8192
+56.6KiB 0:00:06 [7.87KiB/s]  56.6KiB 0:00:10 [0.00 B/s] # 👈 速度0
+</pre>
+</div>
+
+
+<div id="orga1e62f1" class="figure">
+<p><img src="./images/20241109-pipe.drawio.svg" alt="20241109-pipe.drawio.svg" class="org-svg">
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org28be019" class="outline-2">
+<h2 id="org28be019"><a href="#org28be019">メモ</a></h2>
+<div class="outline-text-2" id="text-org28be019">
+<ul class="org-ul">
+<li>strace は発行システムコールを表示するコマンド</li>
+<li>pv はパイプのデータの流れを確認するコマンド。-Lで書き込み速度を制限できる。pvを使って制限しないと一瞬で終わってしまうため観察できない</li>
+<li>cat /dev/random &gt; /dev/null は何もせず待ち受けるためのコマンド。要件:
+<ul class="org-ul">
+<li>実行し続ける</li>
+<li>パイプのバッファを消費しない</li>
+<li>パイプを閉じない</li>
+<li>出力を一切しない</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6d915c9" class="outline-2">
+<h2 id="org6d915c9"><a href="#org6d915c9">関連</a></h2>
+<div class="outline-text-2" id="text-org6d915c9">
+<ul class="org-ul">
+<li><a href="20240225T174224--kdoc-109-発行システムコールを調べる__wiki.html#ID-20240225T174224">KDOC 109: 発行システムコールを調べる</a>。straceで詳細に調べる方法</li>
+<li><a href="20241017T190613--kdoc-254-ジョブプロセスがsleepしていた理由を考える__wiki.html#ID-20241017T190613">KDOC 254: ジョブプロセスがSleepしていた理由を考える</a>。調べたきっかけとなる事象</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0b6c075" class="outline-2">
+<h2 id="org0b6c075"><a href="#org0b6c075">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org0b6c075">
+<ul class="org-ul">
+<li><a href="./20241109T135333--kdoc-279-パイプのバッファはいっぱいになるとwriteをブロックする__permanent.html">KDOC 279: パイプのバッファはいっぱいになるとwriteをブロックする</a></li>
+<li><a href="./20241109T174614--kdoc-282-単体だと終了しないプロセスでパイプを使うと終了するのはなぜか__permanent.html">KDOC 282: 単体だと終了しないプロセスでパイプを使うと終了するのはなぜか?</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

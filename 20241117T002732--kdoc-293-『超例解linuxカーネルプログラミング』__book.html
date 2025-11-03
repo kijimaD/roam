@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:41Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 293: 『超例解Linuxカーネルプログラミング』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 293: 『超例解Linuxカーネルプログラミング』</h1>
+<div id="outline-container-org91e8f40" class="outline-2">
+<h2 id="org91e8f40"><a href="#org91e8f40">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org91e8f40">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-24 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-11-27 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org238bdb3" class="outline-2">
+<h2 id="org238bdb3"><a href="#org238bdb3">概要</a></h2>
+<div class="outline-text-2" id="text-org238bdb3">
+<p>
+<a href="https://www.c-r.com/book/detail/1321">『超例解Linuxカーネルプログラミング』</a>は、カーネル開発を解説する本。
+</p>
+</div>
+</div>
+<div id="outline-container-org695bdb0" class="outline-2">
+<h2 id="org695bdb0"><a href="#org695bdb0">メモ</a></h2>
+<div class="outline-text-2" id="text-org695bdb0">
+<ul class="org-ul">
+<li>1章: Linuxカーネルの開発フロー</li>
+<li><a href="https://lwn.net/">LWN.net</a>は、Linux開発のニュースサイト(p29)</li>
+<li>Linuxカーネルは現場のプロによる修正が多く入っている。プロの修正が無償で見られることは、じつはすごいこと(p29)</li>
+<li>2章: ソフトウェアの品質とライセンス</li>
+<li>stableブランチに入れるソースコードに関して、ルールが定められている(p45)
+<ul class="org-ul">
+<li>ただしくテストされていなければならない</li>
+<li>1つのコンテキストにおいて、修正量が100行を超えてはならない</li>
+<li>たったひとつのバグが修正されなければならない</li>
+<li>ユーザを悩ましている本当のバグを修正しなければならない。憶測でバグ修正をしてはいけない</li>
+<li>クリティカルな問題が修正されなければならない。、つまりビルドエラー、カーネルパニック、ハングアップ、データ破損、セキュリティ問題など</li>
+<li>つまらない修正は含めてはならない。スペルミスの修正や空白の調整など</li>
+</ul></li>
+<li>Linuxのデバイスドライバは静的型と動的型に分類できる。静的型は直接カーネルにリンクされており、起動時にデバイスドライバも起動するもの。動的型はカーネルの動作中にデバイスドライバのモジュールを組み込んだり取り外せる(p56)</li>
+<li>rodataセクションは、const宣言された定数や文字列定数が配置される領域。rodataセクションに配置されたデータは静的なデータであり、動的に確保されたカーネルメモリではないので、メモリを確保する操作も不要である(p60)</li>
+<li>実際の修正例をもとに、起こしがちなバグを解説している</li>
+<li>ワークキューというカーネルの仕組みを利用すると、指定した関数を遅延実行させられる(p62)</li>
+<li>割り込みハンドラは登録したあとはいつ呼び出されるかわからない。登録する前に必要な初期設定をしておかないといけない(p80)</li>
+<li>ネットワークインターフェースが有効かどうかは、ipコマンドで見たときに「stateがUP」であるという意味。以前はifconfigが使われていたが、現在では非推奨となっている、という(p85)</li>
+<li>ネットワークカードから発生する割り込みを禁止する処理は、ネットワークカードのレジスタにゼロを書き込んでいる(p86)</li>
+<li>ポーリングモードの欠点はパケットの受信処理が遅くなること。割り込みモードとポーリングモードのどちらを選択するかは、カーネルへの負荷とネットワーク性能のトレードオフとなる</li>
+<li>SystemTapという仕組みを利用するのが手軽。SystemTap専用のスクリプト言語を使って簡単なコードを書くことで、自動的にカーネルコードが生成され、動作中のカーネルに組み込める(p89)
+<ul class="org-ul">
+<li><code>apt install systemtap</code></li>
+<li>手順: p90</li>
+</ul></li>
+<li>ネットワークインターフェイスをUPからダウンに変更中にネットワークから割り込みがきた場合が問題であるコード例(p95)</li>
+<li>ネットワークのパケットはいつ外部から入ってくるかわからないので、完全にネットワークドライバが停止していない限り、割り込みハンドラが呼び出されてしまう。割り込みはネットワークカードというハードウェアから上がってくるものなので、ソフトウェアで割り込み禁止にしない限り、延々と割り込みがくる。ハードウェアから見るといつまでも割り込みが処理されていないように見える。そして割り込みが無限に上がってくるとCPU1つを使い続けることになり、負荷が上がる(p95)</li>
+<li>ポインタはメモリ空間を指し示すアドレスなので、メモリ空間が4GBなのであれば、0から(4G-1)の数値を表現できる必要がある。32bitだとポインタのサイズが4バイト</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-ruby"><span class="org-comment-delimiter"># </span><span class="org-comment">32bit&#12395;&#26684;&#32013;&#12391;&#12365;&#12427;&#25972;&#25968;&#12398;&#25968;&#12434;GB&#12395;&#30452;&#12377;
+</span>2**32 / 1000 / 1000 / 1000.0
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">4.294
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>5章: 32bit/64bitに関する落とし穴</li>
+<li>カーネル関数の <code>printk()</code> は、C言語の <code>printf()</code> に似せて作られているという。従来、 <code>printk()</code> の「%p」はポインタのアドレスを表示していたが、セキュリュティ上があるということで、でたらめな値が表示されるように実装が変更された。ポインタのアドレスをハッシュ化して、元の値がいくつかをわからなくする。「%px」では本当のポインタアドレスを表示する(p101)</li>
+<li>Kprobesは、Linuxカーネルの動作中に任意の箇所にブレークポイントを仕掛けられ、そのブレークポイントにデバッグ用コードを設定できる仕組みのこと。SystemTapはKprovesの仕組みを利用したツールである(p103)</li>
+<li>Kprovesではデバッグしたい関数にブレークを設定するには関数のアドレス、つまり関数ポインタのアドレスが必要である(p104)</li>
+<li>ドライバをビルドして、 <code>insmod</code> でドライブを組み込む。不要になったドライバは <code>rmmod</code> で取り外せる(p106)
+<ul class="org-ul">
+<li>ドライバをロードしたことが <code>/var/log/syslog</code> にログ保存される</li>
+</ul></li>
+<li>6章: 処理終了の待ち合わせ</li>
+<li>I2Cとはシリアルバスのこと。組み込み分野ではよく用いられる</li>
+<li>DNA(Direct Memory Access)。I/OデバイスがCPUを介さずに直接メモリにアクセスできる(p116)</li>
+<li>Linuxカーネルのコンプリージョン機能。コンプリージョンを使うと処理完了まで待ち合わせできる。具体的にはユーザープロセスの状態を「割り込み不可なスリープ状態」にして通知を受けたら起動する。待ち合わせ中はユーザープロセスにSIGKILLを送ってもプロセスを強制終了できない(p118)</li>
+<li>ハードウェア割り込みは割り込みハンドラの登録解除しない限りいつ発生するかわからない。割り込みハンドラを登録解除してからメモリ解放しなければならない(p127)</li>
+<li>7章: シンプルなミス</li>
+<li>マイクロコード: CPUの命令コードの塊のようなもので、CPUのバグ修正をソフトウェアレベルで行える仕組み。CPUのメーカーからベンダーに提供され、BIOSやOSに組み込まれる(p146)</li>
+<li>8章: セキュリティ</li>
+<li>CPUの投機的実行を悪用した脆弱性。投機的実行はプログラムを先読みして実行していく仕組み。同時に実行することで範囲外アクセスが可能になったりする。1つのプロセスで読み込まれたデータはCPUのキャッシュに載るが、そのキャッシュデータを別のプロセスから読み出すことで本来読まれてはならないデータを読み出せるというもの(p153)</li>
+<li>CPU脆弱性問題
+<ul class="org-ul">
+<li>スペクターv1</li>
+<li>スペクターv2</li>
+<li>メルトダウン</li>
+</ul></li>
+<li>Linuxの端末実装は3つのレイヤーで構成される。最上位はキャラクタデバイスのインターフェースを提供し、中間層がldisc、最下位層はハードウェアおよび疑似端末と通信するドライバになる(p155)</li>
+<li>kfreeなどでメモリが解放されてもメモリの内容はそのままになっている。なので、情報漏えいしたらまずい内容をメモリに乗せる場合はメモリを解放する前にメモリをゼロクリアするのが定石である(p156)</li>
+<li>C言語によるプログラミングでは、文字列を表現するために終端にヌルが必要である。 <code>char buf[128]</code> という配列は大きさが128バイトであるから、最大127文字しか格納できない。なので文字列を127文字で切って、終端にヌルを入れるのが一般的である、という(p165)</li>
+<li>無条件にヌルを書き込む方式はセキュリティ的によくない。ユーザーが意図した文字列が意図せずに切り詰められ、別の文字列として実行される可能性がある(p165)</li>
+<li>shebang行が127文字で切り詰められることを前提にしたコードが使われている部分があり、後にrevertされた(p166)</li>
+<li><code>/proc/kallsyms</code> を参照してLinuxカーネルの全シンボル情報がわかる(p172)</li>
+<li>inotifyはファイルシステムの一種として実装されている(p172)</li>
+<li>intは-2147483648~2147483647まで扱える。argに2147483648以上の値を渡すと、以下のif文の条件が負になる。intにキャストして負数になるから(p182)
+<ul class="org-ul">
+<li><code>if (((int)arg &gt;= cdi-&gt;capacity))</code></li>
+<li>チェックをすり抜けたargは以降の処理で使われる。配列アクセスなどしていると、バッファオーバーフローできてしまう</li>
+</ul></li>
+<li>メモリのゼロクリア処理は、コンパイラの最適化で削除される可能性がある。削除されると困る場合は明示的にゼロクリアする関数を使う(p196)</li>
+<li>Linuxカーネルにはガベージコレクタの仕組みがない(p196)</li>
+<li>カーネル開発においては、関数の早期リターンは避けたほうがよい。メモリの解放漏れなどのバグを作り込むことになるから。代わりにgotoで関数の末尾に呼び、最後にまとめてリソース解放するとよい(p196)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org71eeef0" class="outline-2">
+<h2 id="org71eeef0"><a href="#org71eeef0">関連</a></h2>
+<div class="outline-text-2" id="text-org71eeef0">
+<p>
+なし。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd93eb9d" class="outline-2">
+<h2 id="orgd93eb9d"><a href="#orgd93eb9d">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgd93eb9d">
+<ul class="org-ul">
+<li><a href="./20241127T215611--kdoc-311-関数呼び出しをわかりやすく表記する案を考える__essay.html">KDOC 311: 関数呼び出しをわかりやすく表記する案を考える</a></li>
+<li><a href="./20241127T222339--kdoc-312-汎整数拡張を確かめる__wiki.html">KDOC 312: 汎整数拡張を確かめる</a></li>
+<li><a href="./20241127T225529--kdoc-313-cpuのビット数はレジスタのサイズである__wiki.html">KDOC 313: CPUのビット数はレジスタのサイズである</a></li>
+<li><a href="./20241129T001121--kdoc-318-カーネルモジュールをマウントして動作確認するとよい__permanent.html">KDOC 318: カーネルモジュールをマウントして動作確認するとよい</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,2202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:42Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>100knocks</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">100knocks</h1>
+<div id="outline-container-orgbf3404a" class="outline-2">
+<h2 id="orgbf3404a"><a href="#orgbf3404a">概要</a></h2>
+<div class="outline-text-2" id="text-orgbf3404a">
+<p>
+<a href="https://github.com/The-Japan-DataScientist-Society/100knocks-preprocess">データサイエンス100本ノック（構造化データ加工編）</a>はデータ解析を各種言語(<a href="20210725100835-sql.html#ID-8b69b8d4-1612-4dc5-8412-96b431fdd101">SQL</a>, R, <a href="20210725134208-python.html#ID-a6c9c9ad-d9b1-4e13-8992-75d8590e464c">Python</a>)で練習するためのリポジトリ。
+環境構築、データのセットが<a href="20210805005543-docker.html#ID-1658782a-d331-464b-9fd7-1f8233b8b7f8">Docker</a>で簡単に準備できる。
+標準はJupyter Notebookを使うようになっているが、使いにくいので<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>を使用してSQLを書く。
+</p>
+</div>
+</div>
+<div id="outline-container-orgce50ce9" class="outline-2">
+<h2 id="orgce50ce9"><a href="#orgce50ce9">環境構築</a></h2>
+<div class="outline-text-2" id="text-orgce50ce9">
+<p>
+<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a> / <a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>で実行できるようにする。
+</p>
+
+<ul class="org-ul">
+<li>Repository: <a href="https://github.com/The-Japan-DataScientist-Society/100knocks-preprocess">データサイエンス100本ノック</a></li>
+<li>READMEの通りに <code>docker-compose</code> を実行する。</li>
+<li>標準のJupyter Notebookで問題なくアクセスできることを確認する。</li>
+
+<li>init.elに追加。babelでSQLをロードする。これをしないと実行できない。</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((sql . t)))
+</pre>
+</div>
+<ul class="org-ul">
+<li><p>
+実行したいorgファイル見出しにDB接続設定を追加。100本ノックの<a href="20210905195215-postgresql.html#ID-752d725e-b834-4784-8110-c58f89bd4fa2">PostgreSQL</a>のデフォルト設定になっている(READMEに記載されてる)。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp"><span class="org-builtin">:PROPERTIES:</span>
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:results</span> table
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:engine</span> postgresql
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:dbhost</span> localhost
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:dbuser</span> postgres
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:dbpassword</span> postgres12345
+  <span class="org-builtin">:header-args+:</span> <span class="org-builtin">:database</span> dsdojo_db
+<span class="org-builtin">:END:</span>
+</pre>
+</div></li>
+<li>コードブロックで <code>C-c C-c</code> で実行できる。</li>
+</ul>
+<blockquote>
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> <span class="org-builtin">COUNT</span>(1) <span class="org-keyword">FROM</span> store <span class="org-keyword">CROSS</span> <span class="org-keyword">JOIN</span> product;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">531590</td>
+</tr>
+</tbody>
+</table>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgc02a552" class="outline-2">
+<h2 id="orgc02a552"><a href="#orgc02a552">Memo</a></h2>
+<div class="outline-text-2" id="text-orgc02a552">
+</div>
+<div id="outline-container-orgd4e5d5a" class="outline-3">
+<h3 id="orgd4e5d5a"><a href="#orgd4e5d5a">等しい場合は同一順位: RANK</a></h3>
+<div class="outline-text-3" id="text-orgd4e5d5a">
+<blockquote>
+<p>
+S-019: レシート明細テーブル（receipt）に対し、1件あたりの売上金額（amount）が高い順にランクを付与し、先頭10件を抽出せよ。項目は顧客ID（customer_id）、売上金額（amount）、付与したランクを表示させること。なお、売上金額（amount）が等しい場合は同一順位を付与するものとする。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> customer_id, amount, RANK() OVER(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount <span class="org-keyword">DESC</span>) <span class="org-keyword">AS</span> ranking
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">amount</th>
+<th scope="col" class="org-right">ranking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS011415000006</td>
+<td class="org-right">10925</td>
+<td class="org-right">1</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">6800</td>
+<td class="org-right">2</td>
+</tr>
+
+<tr>
+<td class="org-left">CS028605000002</td>
+<td class="org-right">5780</td>
+<td class="org-right">3</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5480</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5480</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015515000034</td>
+<td class="org-right">5480</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000089</td>
+<td class="org-right">5440</td>
+<td class="org-right">7</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5440</td>
+<td class="org-right">7</td>
+</tr>
+
+<tr>
+<td class="org-left">CS020515000102</td>
+<td class="org-right">5280</td>
+<td class="org-right">9</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000089</td>
+<td class="org-right">5280</td>
+<td class="org-right">9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org2294362" class="outline-3">
+<h3 id="org2294362"><a href="#org2294362">等しい場合でも別順位: ROW_NUMBER</a></h3>
+<div class="outline-text-3" id="text-org2294362">
+<blockquote>
+<p>
+S-020: レシート明細テーブル（receipt）に対し、1件あたりの売上金額（amount）が高い順にランクを付与し、先頭10件を抽出せよ。項目は顧客ID（customer_id）、売上金額（amount）、付与したランクを表示させること。なお、売上金額（amount）が等しい場合でも別順位を付与すること。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> customer_id, amount, ROW_NUMBER() OVER(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount <span class="org-keyword">DESC</span>) <span class="org-keyword">AS</span> ranking
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">amount</th>
+<th scope="col" class="org-right">ranking</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS011415000006</td>
+<td class="org-right">10925</td>
+<td class="org-right">1</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">6800</td>
+<td class="org-right">2</td>
+</tr>
+
+<tr>
+<td class="org-left">CS028605000002</td>
+<td class="org-right">5780</td>
+<td class="org-right">3</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015515000034</td>
+<td class="org-right">5480</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5480</td>
+<td class="org-right">5</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5480</td>
+<td class="org-right">6</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5440</td>
+<td class="org-right">7</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000089</td>
+<td class="org-right">5440</td>
+<td class="org-right">8</td>
+</tr>
+
+<tr>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-right">5280</td>
+<td class="org-right">9</td>
+</tr>
+
+<tr>
+<td class="org-left">CS009415000038</td>
+<td class="org-right">5280</td>
+<td class="org-right">10</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org61ad648" class="outline-3">
+<h3 id="org61ad648"><a href="#org61ad648">ユニーク件数</a></h3>
+<div class="outline-text-3" id="text-org61ad648">
+<blockquote>
+<p>
+S-022: レシート明細テーブル（receipt）の顧客ID（customer_id）に対し、ユニーク件数をカウントせよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> <span class="org-builtin">count</span>(<span class="org-keyword">distinct</span> customer_id) <span class="org-keyword">FROM</span> receipt
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">8307</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org7e86c23" class="outline-3">
+<h3 id="org7e86c23"><a href="#org7e86c23">GROUP BY, 日付でのMAX</a></h3>
+<div class="outline-text-3" id="text-org7e86c23">
+<blockquote>
+<p>
+S-024: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに最も新しい売上日（sales_ymd）を求め、10件表示せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">MAX</span>(sales_ymd)
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">max</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS001311000059</td>
+<td class="org-right">20180211</td>
+</tr>
+
+<tr>
+<td class="org-left">CS004614000122</td>
+<td class="org-right">20181228</td>
+</tr>
+
+<tr>
+<td class="org-left">CS003512000043</td>
+<td class="org-right">20180106</td>
+</tr>
+
+<tr>
+<td class="org-left">CS011615000061</td>
+<td class="org-right">20190503</td>
+</tr>
+
+<tr>
+<td class="org-left">CS029212000033</td>
+<td class="org-right">20180621</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007515000119</td>
+<td class="org-right">20190511</td>
+</tr>
+
+<tr>
+<td class="org-left">CS034515000123</td>
+<td class="org-right">20190708</td>
+</tr>
+
+<tr>
+<td class="org-left">CS004315000058</td>
+<td class="org-right">20170517</td>
+</tr>
+
+<tr>
+<td class="org-left">CS026414000014</td>
+<td class="org-right">20190720</td>
+</tr>
+
+<tr>
+<td class="org-left">CS001615000099</td>
+<td class="org-right">20170729</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org5409f48" class="outline-3">
+<h3 id="org5409f48"><a href="#org5409f48">集計結果に対する条件: HAVING</a></h3>
+<div class="outline-text-3" id="text-org5409f48">
+<blockquote>
+<p>
+S-026: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに最も新しい売上日（sales_ymd）と古い売上日を求め、両者が異なるデータを10件表示せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">MAX</span>(sales_ymd), <span class="org-builtin">MIN</span>(sales_ymd)
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+<span class="org-keyword">HAVING</span> <span class="org-builtin">MAX</span>(sales_ymd) != <span class="org-builtin">MIN</span>(sales_ymd)
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">max</th>
+<th scope="col" class="org-right">min</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS029212000033</td>
+<td class="org-right">20180621</td>
+<td class="org-right">20170318</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007515000119</td>
+<td class="org-right">20190511</td>
+<td class="org-right">20170201</td>
+</tr>
+
+<tr>
+<td class="org-left">CS034515000123</td>
+<td class="org-right">20190708</td>
+<td class="org-right">20170527</td>
+</tr>
+
+<tr>
+<td class="org-left">CS026414000014</td>
+<td class="org-right">20190720</td>
+<td class="org-right">20170718</td>
+</tr>
+
+<tr>
+<td class="org-left">CS010515000082</td>
+<td class="org-right">20181204</td>
+<td class="org-right">20180518</td>
+</tr>
+
+<tr>
+<td class="org-left">CS019315000045</td>
+<td class="org-right">20170920</td>
+<td class="org-right">20170423</td>
+</tr>
+
+<tr>
+<td class="org-left">CS008513000099</td>
+<td class="org-right">20190308</td>
+<td class="org-right">20170722</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007615000070</td>
+<td class="org-right">20191025</td>
+<td class="org-right">20170929</td>
+</tr>
+
+<tr>
+<td class="org-left">CS025415000155</td>
+<td class="org-right">20191026</td>
+<td class="org-right">20170314</td>
+</tr>
+
+<tr>
+<td class="org-left">CS016414000063</td>
+<td class="org-right">20190617</td>
+<td class="org-right">20170109</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org9cc6cd8" class="outline-3">
+<h3 id="org9cc6cd8"><a href="#org9cc6cd8">中央値: PERCENTILE_CONT</a></h3>
+<div class="outline-text-3" id="text-org9cc6cd8">
+<blockquote>
+<p>
+S-028: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の中央値を計算し、降順でTOP5を表示せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span>
+store_cd,
+PERCENTILE_CONT(0.5) WITHIN <span class="org-keyword">GROUP</span>(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount) <span class="org-keyword">as</span> amount_50per
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> store_cd
+<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount_50per <span class="org-keyword">desc</span>
+<span class="org-keyword">LIMIT</span> 5
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">store_cd</th>
+<th scope="col" class="org-right">amount_50per</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">S13052</td>
+<td class="org-right">190</td>
+</tr>
+
+<tr>
+<td class="org-left">S14010</td>
+<td class="org-right">188</td>
+</tr>
+
+<tr>
+<td class="org-left">S14050</td>
+<td class="org-right">185</td>
+</tr>
+
+<tr>
+<td class="org-left">S13003</td>
+<td class="org-right">180</td>
+</tr>
+
+<tr>
+<td class="org-left">S13018</td>
+<td class="org-right">180</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgfc90972" class="outline-3">
+<h3 id="orgfc90972"><a href="#orgfc90972">サブクエリ: WITH</a></h3>
+<div class="outline-text-3" id="text-orgfc90972">
+<blockquote>
+<p>
+S-029: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに商品コード（product_cd）の最頻値を求めよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> product_mode <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> store_cd,product_cd, <span class="org-builtin">COUNT</span>(1) <span class="org-keyword">as</span> mode_cnt,
+        RANK() OVER(PARTITION <span class="org-keyword">BY</span> store_cd <span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> <span class="org-builtin">COUNT</span>(1) <span class="org-keyword">DESC</span>) <span class="org-keyword">AS</span> rnk
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> store_cd,product_cd
+)
+<span class="org-keyword">SELECT</span> store_cd,product_cd, mode_cnt
+<span class="org-keyword">FROM</span> product_mode
+<span class="org-keyword">WHERE</span> rnk = 1
+<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> store_cd,product_cd;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">store_cd</th>
+<th scope="col" class="org-left">product_cd</th>
+<th scope="col" class="org-right">mode_cnt</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">S12007</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">72</td>
+</tr>
+
+<tr>
+<td class="org-left">S12013</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">107</td>
+</tr>
+
+<tr>
+<td class="org-left">S12014</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">65</td>
+</tr>
+
+<tr>
+<td class="org-left">S12029</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">92</td>
+</tr>
+
+<tr>
+<td class="org-left">S12030</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">115</td>
+</tr>
+
+<tr>
+<td class="org-left">S13001</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">67</td>
+</tr>
+
+<tr>
+<td class="org-left">S13002</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">78</td>
+</tr>
+
+<tr>
+<td class="org-left">S13003</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">65</td>
+</tr>
+
+<tr>
+<td class="org-left">S13004</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">88</td>
+</tr>
+
+<tr>
+<td class="org-left">S13005</td>
+<td class="org-left">P040503001</td>
+<td class="org-right">36</td>
+</tr>
+
+<tr>
+<td class="org-left">S13008</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">77</td>
+</tr>
+
+<tr>
+<td class="org-left">S13009</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">64</td>
+</tr>
+
+<tr>
+<td class="org-left">S13015</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">34</td>
+</tr>
+
+<tr>
+<td class="org-left">S13016</td>
+<td class="org-left">P071102001</td>
+<td class="org-right">32</td>
+</tr>
+
+<tr>
+<td class="org-left">S13017</td>
+<td class="org-left">P060101002</td>
+<td class="org-right">31</td>
+</tr>
+
+<tr>
+<td class="org-left">S13018</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">47</td>
+</tr>
+
+<tr>
+<td class="org-left">S13019</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">70</td>
+</tr>
+
+<tr>
+<td class="org-left">S13020</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">79</td>
+</tr>
+
+<tr>
+<td class="org-left">S13031</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">115</td>
+</tr>
+
+<tr>
+<td class="org-left">S13032</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">85</td>
+</tr>
+
+<tr>
+<td class="org-left">S13035</td>
+<td class="org-left">P040503001</td>
+<td class="org-right">39</td>
+</tr>
+
+<tr>
+<td class="org-left">S13037</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">88</td>
+</tr>
+
+<tr>
+<td class="org-left">S13038</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">41</td>
+</tr>
+
+<tr>
+<td class="org-left">S13039</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">36</td>
+</tr>
+
+<tr>
+<td class="org-left">S13041</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">70</td>
+</tr>
+
+<tr>
+<td class="org-left">S13043</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">56</td>
+</tr>
+
+<tr>
+<td class="org-left">S13044</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">96</td>
+</tr>
+
+<tr>
+<td class="org-left">S13051</td>
+<td class="org-left">P050102001</td>
+<td class="org-right">5</td>
+</tr>
+
+<tr>
+<td class="org-left">S13051</td>
+<td class="org-left">P071003001</td>
+<td class="org-right">5</td>
+</tr>
+
+<tr>
+<td class="org-left">S13051</td>
+<td class="org-left">P080804001</td>
+<td class="org-right">5</td>
+</tr>
+
+<tr>
+<td class="org-left">S13052</td>
+<td class="org-left">P050101001</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-left">S14006</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">70</td>
+</tr>
+
+<tr>
+<td class="org-left">S14010</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">68</td>
+</tr>
+
+<tr>
+<td class="org-left">S14011</td>
+<td class="org-left">P060101001</td>
+<td class="org-right">51</td>
+</tr>
+
+<tr>
+<td class="org-left">S14012</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">142</td>
+</tr>
+
+<tr>
+<td class="org-left">S14021</td>
+<td class="org-left">P060101001</td>
+<td class="org-right">30</td>
+</tr>
+
+<tr>
+<td class="org-left">S14022</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">71</td>
+</tr>
+
+<tr>
+<td class="org-left">S14023</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">70</td>
+</tr>
+
+<tr>
+<td class="org-left">S14024</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">96</td>
+</tr>
+
+<tr>
+<td class="org-left">S14025</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">46</td>
+</tr>
+
+<tr>
+<td class="org-left">S14026</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">40</td>
+</tr>
+
+<tr>
+<td class="org-left">S14027</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">152</td>
+</tr>
+
+<tr>
+<td class="org-left">S14028</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">140</td>
+</tr>
+
+<tr>
+<td class="org-left">S14033</td>
+<td class="org-left">P071401001</td>
+<td class="org-right">68</td>
+</tr>
+
+<tr>
+<td class="org-left">S14034</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">71</td>
+</tr>
+
+<tr>
+<td class="org-left">S14036</td>
+<td class="org-left">P040503001</td>
+<td class="org-right">19</td>
+</tr>
+
+<tr>
+<td class="org-left">S14036</td>
+<td class="org-left">P060101001</td>
+<td class="org-right">19</td>
+</tr>
+
+<tr>
+<td class="org-left">S14040</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">80</td>
+</tr>
+
+<tr>
+<td class="org-left">S14042</td>
+<td class="org-left">P050101001</td>
+<td class="org-right">34</td>
+</tr>
+
+<tr>
+<td class="org-left">S14045</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">33</td>
+</tr>
+
+<tr>
+<td class="org-left">S14046</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">71</td>
+</tr>
+
+<tr>
+<td class="org-left">S14047</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">36</td>
+</tr>
+
+<tr>
+<td class="org-left">S14048</td>
+<td class="org-left">P050101001</td>
+<td class="org-right">17</td>
+</tr>
+
+<tr>
+<td class="org-left">S14049</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">55</td>
+</tr>
+
+<tr>
+<td class="org-left">S14050</td>
+<td class="org-left">P060303001</td>
+<td class="org-right">9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org5d59b04" class="outline-3">
+<h3 id="org5d59b04"><a href="#org5d59b04">標本分散: VAR_SAMP</a></h3>
+<div class="outline-text-3" id="text-org5d59b04">
+<blockquote>
+<p>
+S-030: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の標本分散を計算し、降順でTOP5を表示せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> store_cd, var_samp(amount) <span class="org-keyword">as</span> vars_amount
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> store_cd
+<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> vars_amount <span class="org-keyword">desc</span>
+<span class="org-keyword">LIMIT</span> 5
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">store_cd</th>
+<th scope="col" class="org-right">vars_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">S13052</td>
+<td class="org-right">441863.252526233968</td>
+</tr>
+
+<tr>
+<td class="org-left">S14011</td>
+<td class="org-right">306442.242431568709</td>
+</tr>
+
+<tr>
+<td class="org-left">S14034</td>
+<td class="org-right">297068.392740060738</td>
+</tr>
+
+<tr>
+<td class="org-left">S13001</td>
+<td class="org-right">295558.842617712478</td>
+</tr>
+
+<tr>
+<td class="org-left">S13015</td>
+<td class="org-right">295427.197085853584</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orge7cbb7e" class="outline-3">
+<h3 id="orge7cbb7e"><a href="#orge7cbb7e">標本標準偏差: STDDEV_SAMP</a></h3>
+<div class="outline-text-3" id="text-orge7cbb7e">
+<blockquote>
+<p>
+S-031: レシート明細テーブル（receipt）に対し、店舗コード（store_cd）ごとに売上金額（amount）の標本標準偏差を計算し、降順でTOP5を表示せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> store_cd, stddev_samp(amount) <span class="org-keyword">as</span> stds_amount
+<span class="org-keyword">FROM</span> receipt
+<span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> store_cd
+<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> stds_amount <span class="org-keyword">desc</span>
+<span class="org-keyword">LIMIT</span> 5
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">store_cd</th>
+<th scope="col" class="org-right">stds_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">S13052</td>
+<td class="org-right">664.727953772244</td>
+</tr>
+
+<tr>
+<td class="org-left">S14011</td>
+<td class="org-right">553.572255836190</td>
+</tr>
+
+<tr>
+<td class="org-left">S14034</td>
+<td class="org-right">545.039808399406</td>
+</tr>
+
+<tr>
+<td class="org-left">S13001</td>
+<td class="org-right">543.653237475610</td>
+</tr>
+
+<tr>
+<td class="org-left">S13015</td>
+<td class="org-right">543.532149082144</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org9cbdb12" class="outline-3">
+<h3 id="org9cbdb12"><a href="#org9cbdb12">%刻み: PERCENTILE_CONT</a></h3>
+<div class="outline-text-3" id="text-org9cbdb12">
+<blockquote>
+<p>
+S-032: レシート明細テーブル（receipt）の売上金額（amount）について、25％刻みでパーセンタイル値を求めよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span>
+    PERCENTILE_CONT(0.25) WITHIN <span class="org-keyword">GROUP</span>(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount) <span class="org-keyword">as</span> amount_25per,
+    PERCENTILE_CONT(0.50) WITHIN <span class="org-keyword">GROUP</span>(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount) <span class="org-keyword">as</span> amount_50per,
+    PERCENTILE_CONT(0.75) WITHIN <span class="org-keyword">GROUP</span>(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount) <span class="org-keyword">as</span> amount_75per,
+    PERCENTILE_CONT(1.0) WITHIN <span class="org-keyword">GROUP</span>(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> amount) <span class="org-keyword">as</span> amount_100per
+<span class="org-keyword">FROM</span> receipt
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">amount_25per</th>
+<th scope="col" class="org-right">amount_50per</th>
+<th scope="col" class="org-right">amount_75per</th>
+<th scope="col" class="org-right">amount_100per</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">102</td>
+<td class="org-right">170</td>
+<td class="org-right">288</td>
+<td class="org-right">10925</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org82fab38" class="outline-3">
+<h3 id="org82fab38"><a href="#org82fab38">サブクエリ: WITH</a></h3>
+<div class="outline-text-3" id="text-org82fab38">
+<blockquote>
+<p>
+S-034: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに売上金額（amount）を合計して全顧客の平均を求めよ。ただし、顧客IDが&ldquo;Z&rdquo;から始まるのものは非会員を表すため、除外して計算すること。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> customer_amount <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">SUM</span>(amount) <span class="org-keyword">AS</span> sum_amount
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">WHERE</span> customer_id <span class="org-keyword">not</span> <span class="org-keyword">like</span> <span class="org-string">'Z%'</span>
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+)
+<span class="org-keyword">SELECT</span> <span class="org-builtin">AVG</span>(sum_amount) <span class="org-keyword">from</span> customer_amount
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">2547.7422345292559595</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org5220949" class="outline-3">
+<h3 id="org5220949"><a href="#org5220949">WHEREの条件に集約関数を使う</a></h3>
+<div class="outline-text-3" id="text-org5220949">
+<blockquote>
+<p>
+S-035: レシート明細テーブル（receipt）に対し、顧客ID（customer_id）ごとに売上金額（amount）を合計して全顧客の平均を求め、平均以上に買い物をしている顧客を抽出せよ。ただし、顧客IDが&ldquo;Z&rdquo;から始まるのものは非会員を表すため、除外して計算すること。なお、データは10件だけ表示させれば良い。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> customer_amount <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">SUM</span>(amount) <span class="org-keyword">AS</span> sum_amount
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">WHERE</span> customer_id <span class="org-keyword">not</span> <span class="org-keyword">like</span> <span class="org-string">'Z%'</span>
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+)
+<span class="org-keyword">SELECT</span> customer_id, sum_amount
+<span class="org-keyword">FROM</span> customer_amount
+<span class="org-keyword">WHERE</span> sum_amount &gt;= (<span class="org-keyword">SELECT</span> <span class="org-builtin">AVG</span>(sum_amount) <span class="org-keyword">from</span> customer_amount)
+<span class="org-keyword">limit</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">sum_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS029212000033</td>
+<td class="org-right">3604</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007515000119</td>
+<td class="org-right">7157</td>
+</tr>
+
+<tr>
+<td class="org-left">CS034515000123</td>
+<td class="org-right">3699</td>
+</tr>
+
+<tr>
+<td class="org-left">CS026414000014</td>
+<td class="org-right">6671</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007615000070</td>
+<td class="org-right">2975</td>
+</tr>
+
+<tr>
+<td class="org-left">CS016414000063</td>
+<td class="org-right">6207</td>
+</tr>
+
+<tr>
+<td class="org-left">CS012514000018</td>
+<td class="org-right">2562</td>
+</tr>
+
+<tr>
+<td class="org-left">CS029515000142</td>
+<td class="org-right">3420</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015215000021</td>
+<td class="org-right">3090</td>
+</tr>
+
+<tr>
+<td class="org-left">CS039814000011</td>
+<td class="org-right">8031</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org87591e3" class="outline-3">
+<h3 id="org87591e3"><a href="#org87591e3">結合のスマートな書き方</a></h3>
+<div class="outline-text-3" id="text-org87591e3">
+<blockquote>
+<p>
+S-036: レシート明細テーブル（receipt）と店舗テーブル（store）を内部結合し、レシート明細テーブルの全項目と店舗テーブルの店舗名（store_name）を10件表示させよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> r.*, s.store_name
+<span class="org-keyword">FROM</span> receipt r
+<span class="org-keyword">JOIN</span> store s
+<span class="org-keyword">ON</span> r.store_cd = s.store_cd
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-left">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">sales_ymd</th>
+<th scope="col" class="org-right">sales_epoch</th>
+<th scope="col" class="org-left">store_cd</th>
+<th scope="col" class="org-right">receipt_no</th>
+<th scope="col" class="org-right">receipt_sub_no</th>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-left">product_cd</th>
+<th scope="col" class="org-right">quantity</th>
+<th scope="col" class="org-right">amount</th>
+<th scope="col" class="org-left">store_name</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">20181103</td>
+<td class="org-right">1541203200</td>
+<td class="org-left">S14006</td>
+<td class="org-right">112</td>
+<td class="org-right">1</td>
+<td class="org-left">CS006214000001</td>
+<td class="org-left">P070305012</td>
+<td class="org-right">1</td>
+<td class="org-right">158</td>
+<td class="org-left">葛が谷店</td>
+</tr>
+
+<tr>
+<td class="org-right">20181118</td>
+<td class="org-right">1542499200</td>
+<td class="org-left">S13008</td>
+<td class="org-right">1132</td>
+<td class="org-right">2</td>
+<td class="org-left">CS008415000097</td>
+<td class="org-left">P070701017</td>
+<td class="org-right">1</td>
+<td class="org-right">81</td>
+<td class="org-left">成城店</td>
+</tr>
+
+<tr>
+<td class="org-right">20170712</td>
+<td class="org-right">1499817600</td>
+<td class="org-left">S14028</td>
+<td class="org-right">1102</td>
+<td class="org-right">1</td>
+<td class="org-left">CS028414000014</td>
+<td class="org-left">P060101005</td>
+<td class="org-right">1</td>
+<td class="org-right">170</td>
+<td class="org-left">二ツ橋店</td>
+</tr>
+
+<tr>
+<td class="org-right">20190205</td>
+<td class="org-right">1549324800</td>
+<td class="org-left">S14042</td>
+<td class="org-right">1132</td>
+<td class="org-right">1</td>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-left">P050301001</td>
+<td class="org-right">1</td>
+<td class="org-right">25</td>
+<td class="org-left">新山下店</td>
+</tr>
+
+<tr>
+<td class="org-right">20180821</td>
+<td class="org-right">1534809600</td>
+<td class="org-left">S14025</td>
+<td class="org-right">1102</td>
+<td class="org-right">2</td>
+<td class="org-left">CS025415000050</td>
+<td class="org-left">P060102007</td>
+<td class="org-right">1</td>
+<td class="org-right">90</td>
+<td class="org-left">大和店</td>
+</tr>
+
+<tr>
+<td class="org-right">20190605</td>
+<td class="org-right">1559692800</td>
+<td class="org-left">S13003</td>
+<td class="org-right">1112</td>
+<td class="org-right">1</td>
+<td class="org-left">CS003515000195</td>
+<td class="org-left">P050102002</td>
+<td class="org-right">1</td>
+<td class="org-right">138</td>
+<td class="org-left">狛江店</td>
+</tr>
+
+<tr>
+<td class="org-right">20181205</td>
+<td class="org-right">1543968000</td>
+<td class="org-left">S14024</td>
+<td class="org-right">1102</td>
+<td class="org-right">2</td>
+<td class="org-left">CS024514000042</td>
+<td class="org-left">P080101005</td>
+<td class="org-right">1</td>
+<td class="org-right">30</td>
+<td class="org-left">三田店</td>
+</tr>
+
+<tr>
+<td class="org-right">20190922</td>
+<td class="org-right">1569110400</td>
+<td class="org-left">S14040</td>
+<td class="org-right">1102</td>
+<td class="org-right">1</td>
+<td class="org-left">CS040415000178</td>
+<td class="org-left">P070501004</td>
+<td class="org-right">1</td>
+<td class="org-right">128</td>
+<td class="org-left">長津田店</td>
+</tr>
+
+<tr>
+<td class="org-right">20170504</td>
+<td class="org-right">1493856000</td>
+<td class="org-left">S13020</td>
+<td class="org-right">1112</td>
+<td class="org-right">2</td>
+<td class="org-left">ZZ000000000000</td>
+<td class="org-left">P071302010</td>
+<td class="org-right">1</td>
+<td class="org-right">770</td>
+<td class="org-left">十条仲原店</td>
+</tr>
+
+<tr>
+<td class="org-right">20191010</td>
+<td class="org-right">1570665600</td>
+<td class="org-left">S14027</td>
+<td class="org-right">1102</td>
+<td class="org-right">1</td>
+<td class="org-left">CS027514000015</td>
+<td class="org-left">P071101003</td>
+<td class="org-right">1</td>
+<td class="org-right">680</td>
+<td class="org-left">南藤沢店</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org71a5f1f" class="outline-3">
+<h3 id="org71a5f1f"><a href="#org71a5f1f">値がないときのデフォルト値: COALESCE</a></h3>
+<div class="outline-text-3" id="text-org71a5f1f">
+<blockquote>
+<p>
+S-038: 顧客テーブル（customer）とレシート明細テーブル（receipt）から、各顧客ごとの売上金額合計を求めよ。ただし、売上実績がない顧客については売上金額を0として表示させること。また、顧客は性別コード（gender_cd）が女性（1）であるものを対象とし、非会員（顧客IDが&rsquo;Z&rsquo;から始まるもの）は除外すること。なお、結果は10件だけ表示させれば良い。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> customer_amount <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">SUM</span>(amount) <span class="org-keyword">AS</span> sum_amount
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+)
+<span class="org-keyword">SELECT</span> c.customer_id, <span class="org-builtin">COALESCE</span>(a.sum_amount,0)
+<span class="org-keyword">FROM</span> customer c
+<span class="org-keyword">LEFT</span> <span class="org-keyword">JOIN</span> customer_amount a
+<span class="org-keyword">ON</span> c.customer_id = a.customer_id
+<span class="org-keyword">WHERE</span> c.gender_cd = <span class="org-string">'1'</span>
+      <span class="org-keyword">and</span> c.customer_id <span class="org-keyword">not</span> <span class="org-keyword">like</span> <span class="org-string">'Z%'</span>
+<span class="org-keyword">LIMIT</span> 10
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">coalesce</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS021313000114</td>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-left">CS031415000172</td>
+<td class="org-right">5088</td>
+</tr>
+
+<tr>
+<td class="org-left">CS028811000001</td>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-left">CS001215000145</td>
+<td class="org-right">875</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015414000103</td>
+<td class="org-right">3122</td>
+</tr>
+
+<tr>
+<td class="org-left">CS033513000180</td>
+<td class="org-right">868</td>
+</tr>
+
+<tr>
+<td class="org-left">CS035614000014</td>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-left">CS011215000048</td>
+<td class="org-right">3444</td>
+</tr>
+
+<tr>
+<td class="org-left">CS009413000079</td>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-left">CS040412000191</td>
+<td class="org-right">210</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orga5c0982" class="outline-3">
+<h3 id="orga5c0982"><a href="#orga5c0982">複数のWITH</a></h3>
+<div class="outline-text-3" id="text-orga5c0982">
+<blockquote>
+<p>
+S-039: レシート明細テーブル（receipt）から売上日数の多い顧客の上位20件と、売上金額合計の多い顧客の上位20件を抽出し、完全外部結合せよ。ただし、非会員（顧客IDが&rsquo;Z&rsquo;から始まるもの）は除外すること。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> customer_days <span class="org-keyword">AS</span> (
+    <span class="org-keyword">select</span> customer_id, <span class="org-builtin">count</span>(<span class="org-keyword">distinct</span> sales_ymd) come_days
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">WHERE</span> customer_id <span class="org-keyword">NOT</span> <span class="org-keyword">LIKE</span> <span class="org-string">'Z%'</span>
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+    <span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> come_days <span class="org-keyword">DESC</span> <span class="org-keyword">LIMIT</span> 20
+),
+customer_amount <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> customer_id, <span class="org-builtin">sum</span>(amount) buy_amount
+    <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">WHERE</span> customer_id <span class="org-keyword">NOT</span> <span class="org-keyword">LIKE</span> <span class="org-string">'Z%'</span>
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> customer_id
+    <span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> buy_amount <span class="org-keyword">DESC</span> <span class="org-keyword">LIMIT</span> 20
+)
+<span class="org-keyword">SELECT</span> <span class="org-builtin">COALESCE</span>(d.customer_id, a.customer_id), d.come_days, a.buy_amount
+<span class="org-keyword">FROM</span> customer_days d
+<span class="org-keyword">FULL</span> <span class="org-keyword">JOIN</span> customer_amount a
+<span class="org-keyword">ON</span> d.customer_id = a.customer_id;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">coalesce</th>
+<th scope="col" class="org-right">come_days</th>
+<th scope="col" class="org-right">buy_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS040214000008</td>
+<td class="org-right">23</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015415000185</td>
+<td class="org-right">22</td>
+<td class="org-right">20153</td>
+</tr>
+
+<tr>
+<td class="org-left">CS010214000010</td>
+<td class="org-right">22</td>
+<td class="org-right">18585</td>
+</tr>
+
+<tr>
+<td class="org-left">CS028415000007</td>
+<td class="org-right">21</td>
+<td class="org-right">19127</td>
+</tr>
+
+<tr>
+<td class="org-left">CS010214000002</td>
+<td class="org-right">21</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS017415000097</td>
+<td class="org-right">20</td>
+<td class="org-right">23086</td>
+</tr>
+
+<tr>
+<td class="org-left">CS016415000141</td>
+<td class="org-right">20</td>
+<td class="org-right">18372</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021514000045</td>
+<td class="org-right">19</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS022515000226</td>
+<td class="org-right">19</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS031414000051</td>
+<td class="org-right">19</td>
+<td class="org-right">19202</td>
+</tr>
+
+<tr>
+<td class="org-left">CS039414000052</td>
+<td class="org-right">19</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS014214000023</td>
+<td class="org-right">19</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000172</td>
+<td class="org-right">19</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS031414000073</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007515000107</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS014415000077</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000056</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS032415000209</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000211</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS022515000028</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-left">CS011415000006</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">16094</td>
+</tr>
+
+<tr>
+<td class="org-left">CS016415000101</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">16348</td>
+</tr>
+
+<tr>
+<td class="org-left">CS030415000034</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">15468</td>
+</tr>
+
+<tr>
+<td class="org-left">CS021515000089</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">17580</td>
+</tr>
+
+<tr>
+<td class="org-left">CS034415000047</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">16083</td>
+</tr>
+
+<tr>
+<td class="org-left">CS006515000023</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">18372</td>
+</tr>
+
+<tr>
+<td class="org-left">CS038415000104</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">17847</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015515000034</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">15300</td>
+</tr>
+
+<tr>
+<td class="org-left">CS032414000072</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">16563</td>
+</tr>
+
+<tr>
+<td class="org-left">CS011414000106</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">18338</td>
+</tr>
+
+<tr>
+<td class="org-left">CS001605000009</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">18925</td>
+</tr>
+
+<tr>
+<td class="org-left">CS009414000059</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">15492</td>
+</tr>
+
+<tr>
+<td class="org-left">CS035414000024</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">17615</td>
+</tr>
+
+<tr>
+<td class="org-left">CS007514000094</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">15735</td>
+</tr>
+</tbody>
+</table>
+
+<p>
+集計と、表示を分離するイメージ。with句で集計をやり、その結果をメインの句で好きに加工できる。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaba1b8a" class="outline-3">
+<h3 id="orgaba1b8a"><a href="#orgaba1b8a">直積: CROSS JOIN</a></h3>
+<div class="outline-text-3" id="text-orgaba1b8a">
+<blockquote>
+<p>
+S-040: 全ての店舗と全ての商品を組み合わせると何件のデータとなるか調査したい。店舗（store）と商品（product）を直積した件数を計算せよ。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> <span class="org-builtin">COUNT</span>(1) <span class="org-keyword">FROM</span> store <span class="org-keyword">CROSS</span> <span class="org-keyword">JOIN</span> product;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">531590</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgcdd2f10" class="outline-3">
+<h3 id="orgcdd2f10"><a href="#orgcdd2f10">差分: LAG</a></h3>
+<div class="outline-text-3" id="text-orgcdd2f10">
+<blockquote>
+<p>
+S-041: レシート明細テーブル（receipt）の売上金額（amount）を日付（sales_ymd）ごとに集計し、前日からの売上金額増減を計算せよ。なお、計算結果は10件表示すればよい。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> sales_amount_by_date <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> sales_ymd, <span class="org-builtin">SUM</span>(amount) <span class="org-keyword">as</span> amount <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> sales_ymd
+    <span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd
+)
+<span class="org-keyword">SELECT</span> sales_ymd, LAG(sales_ymd, 1) OVER(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd) lag_ymd,
+    amount,
+    LAG(amount, 1) OVER(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd) <span class="org-keyword">as</span> lag_amount,
+    amount - LAG(amount, 1) OVER(<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd) <span class="org-keyword">as</span> diff_amount
+<span class="org-keyword">FROM</span> sales_amount_by_date
+<span class="org-keyword">LIMIT</span> 10;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">sales_ymd</th>
+<th scope="col" class="org-right">lag_ymd</th>
+<th scope="col" class="org-right">amount</th>
+<th scope="col" class="org-right">lag_amount</th>
+<th scope="col" class="org-right">diff_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">20170101</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">33723</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+
+<tr>
+<td class="org-right">20170102</td>
+<td class="org-right">20170101</td>
+<td class="org-right">24165</td>
+<td class="org-right">33723</td>
+<td class="org-right">-9558</td>
+</tr>
+
+<tr>
+<td class="org-right">20170103</td>
+<td class="org-right">20170102</td>
+<td class="org-right">27503</td>
+<td class="org-right">24165</td>
+<td class="org-right">3338</td>
+</tr>
+
+<tr>
+<td class="org-right">20170104</td>
+<td class="org-right">20170103</td>
+<td class="org-right">36165</td>
+<td class="org-right">27503</td>
+<td class="org-right">8662</td>
+</tr>
+
+<tr>
+<td class="org-right">20170105</td>
+<td class="org-right">20170104</td>
+<td class="org-right">37830</td>
+<td class="org-right">36165</td>
+<td class="org-right">1665</td>
+</tr>
+
+<tr>
+<td class="org-right">20170106</td>
+<td class="org-right">20170105</td>
+<td class="org-right">32387</td>
+<td class="org-right">37830</td>
+<td class="org-right">-5443</td>
+</tr>
+
+<tr>
+<td class="org-right">20170107</td>
+<td class="org-right">20170106</td>
+<td class="org-right">23415</td>
+<td class="org-right">32387</td>
+<td class="org-right">-8972</td>
+</tr>
+
+<tr>
+<td class="org-right">20170108</td>
+<td class="org-right">20170107</td>
+<td class="org-right">24737</td>
+<td class="org-right">23415</td>
+<td class="org-right">1322</td>
+</tr>
+
+<tr>
+<td class="org-right">20170109</td>
+<td class="org-right">20170108</td>
+<td class="org-right">26718</td>
+<td class="org-right">24737</td>
+<td class="org-right">1981</td>
+</tr>
+
+<tr>
+<td class="org-right">20170110</td>
+<td class="org-right">20170109</td>
+<td class="org-right">20143</td>
+<td class="org-right">26718</td>
+<td class="org-right">-6575</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org84f19d7" class="outline-3">
+<h3 id="org84f19d7"><a href="#org84f19d7">複数のJOIN条件</a></h3>
+<div class="outline-text-3" id="text-org84f19d7">
+<blockquote>
+<p>
+S-042: レシート明細テーブル（receipt）の売上金額（amount）を日付（sales_ymd）ごとに集計し、各日付のデータに対し、１日前、２日前、３日前のデータを結合せよ。結果は10件表示すればよい。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">WITH</span> sales_amount_by_date <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> sales_ymd, <span class="org-builtin">SUM</span>(amount) <span class="org-keyword">as</span> amount <span class="org-keyword">FROM</span> receipt
+    <span class="org-keyword">GROUP</span> <span class="org-keyword">BY</span> sales_ymd
+    <span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd
+),
+sales_amount_lag_date <span class="org-keyword">AS</span> (
+    <span class="org-keyword">SELECT</span> sales_ymd,
+        <span class="org-builtin">COALESCE</span>(LAG(sales_ymd, 3) OVER (<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd),
+        <span class="org-builtin">MIN</span>(sales_ymd) OVER (PARTITION <span class="org-keyword">BY</span> <span class="org-keyword">NULL</span>)) <span class="org-keyword">as</span> lag_date_3,
+        amount
+    <span class="org-keyword">FROM</span> sales_amount_by_date
+)
+<span class="org-keyword">SELECT</span> a.sales_ymd, b.sales_ymd <span class="org-keyword">as</span> lag_ymd,
+    a.amount <span class="org-keyword">as</span> amount, b.amount <span class="org-keyword">as</span> lag_amount
+<span class="org-keyword">FROM</span> sales_amount_lag_date a
+<span class="org-keyword">JOIN</span> sales_amount_lag_date b
+<span class="org-keyword">ON</span> b.sales_ymd &gt;= a.lag_date_3
+    <span class="org-keyword">and</span> b.sales_ymd &lt; a.sales_ymd
+<span class="org-keyword">ORDER</span> <span class="org-keyword">BY</span> sales_ymd, lag_ymd
+<span class="org-keyword">LIMIT</span> 10;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-right">sales_ymd</th>
+<th scope="col" class="org-right">lag_ymd</th>
+<th scope="col" class="org-right">amount</th>
+<th scope="col" class="org-right">lag_amount</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-right">20170102</td>
+<td class="org-right">20170101</td>
+<td class="org-right">24165</td>
+<td class="org-right">33723</td>
+</tr>
+
+<tr>
+<td class="org-right">20170103</td>
+<td class="org-right">20170101</td>
+<td class="org-right">27503</td>
+<td class="org-right">33723</td>
+</tr>
+
+<tr>
+<td class="org-right">20170103</td>
+<td class="org-right">20170102</td>
+<td class="org-right">27503</td>
+<td class="org-right">24165</td>
+</tr>
+
+<tr>
+<td class="org-right">20170104</td>
+<td class="org-right">20170101</td>
+<td class="org-right">36165</td>
+<td class="org-right">33723</td>
+</tr>
+
+<tr>
+<td class="org-right">20170104</td>
+<td class="org-right">20170102</td>
+<td class="org-right">36165</td>
+<td class="org-right">24165</td>
+</tr>
+
+<tr>
+<td class="org-right">20170104</td>
+<td class="org-right">20170103</td>
+<td class="org-right">36165</td>
+<td class="org-right">27503</td>
+</tr>
+
+<tr>
+<td class="org-right">20170105</td>
+<td class="org-right">20170102</td>
+<td class="org-right">37830</td>
+<td class="org-right">24165</td>
+</tr>
+
+<tr>
+<td class="org-right">20170105</td>
+<td class="org-right">20170103</td>
+<td class="org-right">37830</td>
+<td class="org-right">27503</td>
+</tr>
+
+<tr>
+<td class="org-right">20170105</td>
+<td class="org-right">20170104</td>
+<td class="org-right">37830</td>
+<td class="org-right">36165</td>
+</tr>
+
+<tr>
+<td class="org-right">20170106</td>
+<td class="org-right">20170103</td>
+<td class="org-right">32387</td>
+<td class="org-right">27503</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-org01a79a4" class="outline-3">
+<h3 id="org01a79a4"><a href="#org01a79a4">日付の変換</a></h3>
+<div class="outline-text-3" id="text-org01a79a4">
+<blockquote>
+<p>
+S-045: 顧客テーブル（customer）の生年月日（birth_day）は日付型でデータを保有している。これをYYYYMMDD形式の文字列に変換し、顧客ID（customer_id）とともに抽出せよ。データは10件を抽出すれば良い。
+</p>
+</blockquote>
+
+<div class="org-src-container">
+<pre class="src src-sql"><span class="org-keyword">SELECT</span> customer_id, TO_CHAR(birth_day, <span class="org-string">'YYYYMMDD'</span>) <span class="org-keyword">FROM</span> customer <span class="org-keyword">LIMIT</span> 10;
+</pre>
+</div>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+</colgroup>
+<thead>
+<tr>
+<th scope="col" class="org-left">customer_id</th>
+<th scope="col" class="org-right">to_char</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="org-left">CS021313000114</td>
+<td class="org-right">19810429</td>
+</tr>
+
+<tr>
+<td class="org-left">CS037613000071</td>
+<td class="org-right">19520401</td>
+</tr>
+
+<tr>
+<td class="org-left">CS031415000172</td>
+<td class="org-right">19761004</td>
+</tr>
+
+<tr>
+<td class="org-left">CS028811000001</td>
+<td class="org-right">19330327</td>
+</tr>
+
+<tr>
+<td class="org-left">CS001215000145</td>
+<td class="org-right">19950329</td>
+</tr>
+
+<tr>
+<td class="org-left">CS020401000016</td>
+<td class="org-right">19740915</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015414000103</td>
+<td class="org-right">19770809</td>
+</tr>
+
+<tr>
+<td class="org-left">CS029403000008</td>
+<td class="org-right">19730817</td>
+</tr>
+
+<tr>
+<td class="org-left">CS015804000004</td>
+<td class="org-right">19310502</td>
+</tr>
+
+<tr>
+<td class="org-left">CS033513000180</td>
+<td class="org-right">19620711</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="outline-container-orgb607ebf" class="outline-3">
+<h3 id="orgb607ebf"><a href="#orgb607ebf">練習用</a></h3>
+<div class="outline-text-3" id="text-orgb607ebf">
+<div class="org-src-container">
+<pre class="src src-sql">
+</pre>
+</div>
+
+<table>
+
+
+</table>
+</div>
+</div>
+</div>
+<div id="outline-container-org1a76e63" class="outline-2">
+<h2 id="org1a76e63"><a href="#org1a76e63">Tasks</a></h2>
+<div class="outline-text-2" id="text-org1a76e63">
+</div>
+<div id="outline-container-orgad064ae" class="outline-3">
+<h3 id="orgad064ae"><a href="#orgad064ae"><span class="done DONE">DONE</span> 1~50問</a></h3>
+<div class="outline-text-3" id="text-orgad064ae">
+</div>
+</div>
+</div>
+<div id="outline-container-org0a0943b" class="outline-2">
+<h2 id="org0a0943b"><a href="#org0a0943b">Reference</a></h2>
+<div class="outline-text-2" id="text-org0a0943b">
+</div>
+<div id="outline-container-org15b6790" class="outline-3">
+<h3 id="org15b6790"><a href="#org15b6790"><a href="https://ja.wikipedia.org/wiki/%E6%96%87%E8%8A%B8%E7%9A%84%E3%83%97%E3%83%AD%E3%82%B0%E3%83%A9%E3%83%9F%E3%83%B3%E3%82%B0">文芸的プログラミング - Wikipedia</a></a></h3>
+</div>
+</div>
+<div id="outline-container-org16625d4" class="outline-2">
+<h2 id="org16625d4"><a href="#org16625d4">Archives</a></h2>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

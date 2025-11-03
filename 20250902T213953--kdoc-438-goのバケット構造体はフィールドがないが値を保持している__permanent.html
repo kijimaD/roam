@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:43Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 438: Goのバケット構造体はフィールドがないが値を保持している</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 438: Goのバケット構造体はフィールドがないが値を保持している</h1>
+<div id="outline-container-org73076a2" class="outline-2">
+<h2 id="org73076a2"><a href="#org73076a2">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org73076a2">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-09-14 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-09-16 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgd929add" class="outline-2">
+<h2 id="orgd929add"><a href="#orgd929add">概要</a></h2>
+<div class="outline-text-2" id="text-orgd929add">
+<p>
+ハッシュテーブルは、キー値のハッシュをインデックスとした配列に格納して実装されている。要素を全部見る必要がない分早い。1つ1つの配列をバケットという。
+</p>
+
+<ul class="org-ul">
+<li>&ldquo;key&rdquo; -&gt; ハッシュ化して11111111 -&gt; マップ配列[11111111] -&gt; バケット特定 -&gt; バケット(配列)の中でさらにハッシュあるいは値が一致するものを探す -&gt; &ldquo;value&rdquo;</li>
+</ul>
+
+<p>
+Goのmapのバケット構造体はこのように定義されている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>バケット構造体</label><pre class="src src-git-permalink">https://github.com/golang/go/blob/988a20c8c5e2c9eb49f8749e5ee94ce3c964fe59/src/runtime/map_noswiss.go#L149-L160
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">// A bucket for a Go map.
+type bmap struct {
+	// tophash generally contains the top byte of the hash value
+	// for each key in this bucket. If tophash[0] &lt; minTopHash,
+	// tophash[0] is a bucket evacuation state instead.
+	tophash [abi.OldMapBucketCount]uint8
+	// Followed by bucketCnt keys and then bucketCnt elems.
+	// NOTE: packing all the keys together and then all the elems together makes the
+	// code a bit more complicated than alternating key/elem/key/elem/... but it allows
+	// us to eliminate padding which would be needed for, e.g., map[int64]int8.
+	// Followed by an overflow pointer.
+}
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>フィールドはないがデータを保持している</li>
+<li>[key, key, key, &#x2026;, value, value, value] とメモリ配置させるためにGo外で管理している</li>
+<li>paddingと書いてあるとおり、メモリ上で交互に配置されて余分なスペースが生まれるのを防ぐため。キーの型と、値の型が異なると隙間が生まれやすい</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgff18506" class="outline-2">
+<h2 id="orgff18506"><a href="#orgff18506">関連</a></h2>
+<div class="outline-text-2" id="text-orgff18506">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

@@ -1,0 +1,2460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:59Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Common Lisp</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Common Lisp</h1>
+<div id="outline-container-orge6fb270" class="outline-2">
+<h2 id="orge6fb270"><a href="#orge6fb270">概要</a></h2>
+<div class="outline-text-2" id="text-orge6fb270">
+<p>
+Common Lispは<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>、<a href="20210911183844-lisp.html#ID-18fbe00f-4ec8-4ca0-adfa-2d1381669642">LISP</a>の方言の1つ。
+Lispファミリーではもっともメジャー。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdfc59c9" class="outline-2">
+<h2 id="orgdfc59c9"><a href="#orgdfc59c9">Memo</a></h2>
+</div>
+<div id="outline-container-org4d6eff9" class="outline-2">
+<h2 id="org4d6eff9"><a href="#org4d6eff9"><span class="todo TODO">TODO</span> <a href="https://www.oreilly.co.jp/books/9784873115870/">O&rsquo;Reilly Japan - Land of Lisp</a>&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Read">Read</span></span></a></h2>
+<div class="outline-text-2" id="text-org4d6eff9">
+</div>
+<div id="outline-container-org8cc7cea" class="outline-3">
+<h3 id="org8cc7cea"><a href="#org8cc7cea">_</a></h3>
+<div class="outline-text-3" id="text-org8cc7cea">
+<ul class="org-ul">
+<li>46, 48, 96, 103, 106, 132</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org0f9c79d" class="outline-3">
+<h3 id="org0f9c79d"><a href="#org0f9c79d">数あてゲーム</a></h3>
+<div class="outline-text-3" id="text-org0f9c79d">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>defparameterはグローバル変数</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*small*</span> 1)
+*small*
+</pre>
+</div>
+
+<div class="results" id="org9616234">
+<p>
+1
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>元の値は上書きされる</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*foo*</span> 5)
+*foo*
+(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*foo*</span> 6)
+*foo*
+</pre>
+</div>
+
+<div class="results" id="orgb3e15ae">
+<p>
+6
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>ashはバイナリサーチを書くのに使う</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">guess-my-number</span> ()
+  (ash (+ *small* *big*) -1))
+</pre>
+</div>
+
+<div class="results" id="orgf395065">
+<p>
+GUESS-MY-NUMBER
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>実行してみる</label><pre class="src src-lisp">(guess-my-number)
+</pre>
+</div>
+
+<div class="results" id="org39befd6">
+<p>
+50
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>smallerとbigger関数の定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">smaller</span> ()
+  (setf *big* (1- (guess-my-number)))
+  (guess-my-number))
+(<span class="org-keyword">defun</span> <span class="org-function-name">bigger</span> ()
+  (setf *small* (1+ (guess-my-number)))
+  (guess-my-number))
+</pre>
+</div>
+
+<div class="results" id="org2c614a2">
+<p>
+BIGGER
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>使ってみる</label><pre class="src src-lisp">(bigger)
+</pre>
+</div>
+
+<div class="results" id="org2496d4c">
+<p>
+75
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>初期化関数の定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">start-over</span> ()
+  (<span class="org-keyword">defparameter</span> <span class="org-variable-name">*small*</span> 1)
+  (<span class="org-keyword">defparameter</span> <span class="org-variable-name">*big*</span> 100)
+  (guess-my-number))
+(start-over)
+</pre>
+</div>
+
+<div class="results" id="org2a6f42f">
+<p>
+50
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgc5df254" class="outline-3">
+<h3 id="orgc5df254"><a href="#orgc5df254">基本関数</a></h3>
+<div class="outline-text-3" id="text-orgc5df254">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>53の53乗</label><pre class="src src-lisp">(expt 53 53)
+</pre>
+</div>
+
+<div class="results" id="org24e62ff">
+<p>
+24356848165022712132477606520104725518533453128685640844505130879576720609150223301256150373
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>除算関数は有理数を返す</label><pre class="src src-lisp">(/ 4 6)
+</pre>
+</div>
+
+<div class="results" id="org6e94e85">
+<p>
+2/3
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>文字を表示するprinc</label><pre class="src src-lisp">(princ <span class="org-string">"aaaa"</span>)
+</pre>
+</div>
+
+<div class="results" id="org7506d32">
+<p>
+aaaa
+</p>
+
+</div>
+
+<p>
+Lispには、コードモードとデータモードがある。
+通常はコードモード、シングルクォートがつくとデータモード。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>cadrで短くかける</label><pre class="src src-lisp">(car (cdr '(pork beef chicken)))
+(cadr '(pork beef chicken))
+</pre>
+</div>
+<p>
+名前はリストにしたときの順番になっている。
+つまり評価するときの意味としては逆になる。
+cadrはcdr+carである。
+</p>
+
+<p>
+andやorは真偽値演算だけでなく、条件判断としても使える。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>条件を満たさないときは、以降は評価されない</label><pre class="src src-lisp">(and *file-modified* (ask-user-about-saving) (save-file))
+</pre>
+</div>
+
+<p>
+member関数の返り値は部分リストになっている。もしマッチしたものを返すだったらnilを探すとき偽になってしまうから。
+</p>
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">if</span> (member nil '(3 4 nil 5))
+    'nil-is-in-the-list
+    'nil-is-not-in-the-list)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>シンボル同士は常に <code>eq</code> で比較する</li>
+<li>シンボル同士の比較でなければ <code>equal</code> で比較する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org5515355" class="outline-3">
+<h3 id="org5515355"><a href="#org5515355">描写する</a></h3>
+<div class="outline-text-3" id="text-org5515355">
+<ul class="org-ul">
+<li>ゲームに限らずほとんどの実用プログラムでは、出力される情報は単なるテキストよりもはるかに複雑な構造をとる。HTML, PDF, グラフィック</li>
+<li>元となるデータ構造を出力形式に縛られない形で最初から持っておけば、プログラミング言語の得意な点を活かしたコーディングができる。<a href="20210911183844-lisp.html#ID-18fbe00f-4ec8-4ca0-adfa-2d1381669642">LISP</a>の場合操作がしやすいのはシンボルとリストだから、可能な限り、プログラムを設計する際にこれらのデータ型で処理できないかを考える</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>連想リストを使って景色を描写する</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*nodes*</span> '((living-room (you are in the living-room.
+                                      a wizard is snoring loudly on the couch.))
+                        (garden (your are in a beautiful garden.
+                                 there is a well in front of you.))
+                        (attic (you are in the attic.
+                                there is a giant welding torch in the corner.))))
+</pre>
+</div>
+
+<div class="results" id="org6aaa7d5">
+<p>
+<b>NODES</b>
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>alistからキーを取り出す</label><pre class="src src-lisp">(assoc 'garden *nodes*)
+</pre>
+</div>
+
+<div class="results" id="org0a87b37">
+<p>
+(GARDEN (YOUR ARE IN A BEAUTIFUL GARDEN. THERE IS A WELL IN FRONT OF YOU.))
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>場所を描写する関数</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">describe-location</span> (location nodes)
+  (cadr (assoc location nodes)))
+(describe-location 'living-room *nodes*)
+</pre>
+</div>
+
+<div class="results" id="org2710b55">
+<p>
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH.)
+</p>
+
+</div>
+
+<p>
+通り道を描写する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>ゲームのマップ上でプレーヤーが場所間を移動可能な通り道を格納する</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*edges*</span> '((living-room (garden west door)
+                                     (attic upstairs ladder))
+                        (garden (living-room east door))
+                        (attic (living-room downstairs ladder))))
+</pre>
+</div>
+
+<div class="results" id="org18f7fc3">
+<p>
+<b>EDGES</b>
+</p>
+
+</div>
+
+<p>
+テキストをシンボルのリストとして表現しておいたおかげで、準クォートを使って文を構築するコードを簡潔に書ける。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>必要なエッジの名前からテキストによる説明を得る関数</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">describe-path</span> (edge)
+  `(there is a ,(caddr edge) going ,(cadr edge) from here.))
+(describe-path '(garden west door))
+</pre>
+</div>
+
+<div class="results" id="orgeb3ddc5">
+<p>
+(THERE IS A DOOR GOING WEST FROM HERE.)
+</p>
+
+</div>
+
+<p>
+1つの場所からはいくつもの通り道が出ている可能性がある。
+与えられた場所から出ているすべての*edges*データから探して描写する関数が必要。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>描写する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">describe-paths</span> (location edges)
+  (apply #'append (mapcar #'describe-path (cdr (assoc location edges)))))
+(describe-paths 'living-room *edges*)
+</pre>
+</div>
+
+<div class="results" id="orgac9ad89">
+<p>
+(THERE IS A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM
+ HERE.)
+</p>
+
+</div>
+
+<p>
+mapcarはよく使われる。引数に他の関数とリストを受け取って、リストの要素それぞれを引数として受け取った関数を呼び出す。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>sqrtは平方根を求める関数</label><pre class="src src-lisp">(mapcar #'sqrt '(1 2 3 4))
+</pre>
+</div>
+
+<div class="results" id="orgdf6ab8a">
+<p>
+(1 1.4142135 1.7320508 2)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>2つのリストの最初を返す</label><pre class="src src-lisp">(mapcar #'car '((foo bar) (baz qux)))
+</pre>
+</div>
+
+<div class="results" id="orgd5e6b38">
+<p>
+(FOO BAZ)
+</p>
+
+</div>
+
+<p>
+#&rsquo;はfunctionオペレータの略記。この記号を含む式は、内部的に変換される。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>↑の関数の内部的な形</label><pre class="src src-lisp">(mapcar (function car) '((foo bar) (baz qux)))
+</pre>
+</div>
+
+<div class="results" id="org74a9618">
+<p>
+(FOO BAZ)
+</p>
+
+</div>
+
+<p>
+Common Lispでは関数を値として扱うときにfunctionオペレータを使ってそのことを明示しなければならない。
+関数と変数で名前が衝突した場合にエラーを起こす可能性があるから。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 23: </span>別々の名前空間。組み込みの関数carとローカル変数carは区別できる。mapcarはそれぞれのapply結果のリストを返す</label><pre class="src src-lisp">(<span class="org-keyword">let</span> ((car <span class="org-string">"Honda Civic"</span>))
+  (mapcar #'car '((foo bar) (baz qux))))
+</pre>
+</div>
+
+<div class="results" id="org42f08d0">
+<p>
+(FOO BAZ)
+</p>
+
+</div>
+
+<p>
+<a href="20210926144913-scheme.html#ID-53a7a781-8398-4069-8735-6ac5b8c3bc05">Scheme</a>では、変数と関数と名前空間が共通なので関数を値として渡す場合にfunctionオペレータで明示する必要はない。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 24: </span>applyとappendでリストを合体する</label><pre class="src src-lisp">(apply #'append '((mary had) (a) (little lamb)))
+</pre>
+</div>
+
+<div class="results" id="orge16e444">
+<p>
+(MARY HAD A LITTLE LAMB)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(apply #'append '((THERE IS A DOOR GOING WEST FROM HERE.)
+                  (THERE IS A LADDER GOING UPSTAIRS FROM HERE.)))
+</pre>
+</div>
+
+<div class="results" id="org3f35048">
+<p>
+(THERE IS A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM
+ HERE.)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgb30a3eb" class="outline-3">
+<h3 id="orgb30a3eb"><a href="#orgb30a3eb">目に見えるオブジェクトをリストする</a></h3>
+<div class="outline-text-3" id="text-orgb30a3eb">
+<p>
+ゲーム世界に存在するオブジェクトのリストを作る。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*objects*</span> '(whiskey bucket frog chain))
+</pre>
+</div>
+
+<div class="results" id="org1bed475">
+<p>
+<b>OBJECTS</b>
+</p>
+
+</div>
+
+<p>
+オブジェクトとその場所をalistで表現する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 27: </span>alist</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*object-locations*</span> '((whiskey living-room)
+                                   (bucket living-room)
+                                   (chain garden)
+                                   (frog garden)))
+*object-locations*
+</pre>
+</div>
+
+<div class="results" id="orgd68322d">
+<p>
+((WHISKEY LIVING-ROOM) (BUCKET LIVING-ROOM) (CHAIN GARDEN) (FROG GARDEN))
+</p>
+
+</div>
+
+<p>
+与えられた場所から見るオブジェクトのリスト。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 28: </span>labelsでローカル関数が定義できる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">objects-at</span> (loc objs obj-locs)
+  (<span class="org-keyword">labels</span> ((at-loc-p (obj)
+             (eq (cadr (assoc obj obj-locs)) loc)))
+    (remove-if-not #'at-loc-p objs)))
+</pre>
+</div>
+
+<div class="results" id="orgfd09021">
+<p>
+OBJECTS-AT
+</p>
+
+</div>
+
+<p>
+objects-atを使ってみる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 29: </span>living-roomにあるobjectを描写する</label><pre class="src src-lisp">(objects-at 'living-room *objects* *object-locations*)
+</pre>
+</div>
+
+<div class="results" id="org91286e4">
+<p>
+(WHISKEY BUCKET)
+</p>
+
+</div>
+
+<p>
+ある場所で見えるオブジェクトの一覧。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 30: </span>オブジェクト一覧</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">describe-objects</span> (loc objs obj-loc)
+  (<span class="org-keyword">labels</span> ((describe-obj (obj)
+             `(you see a ,obj on the floor.)))
+    (apply #'append (mapcar #'describe-obj (objects-at loc objs obj-loc)))))
+</pre>
+</div>
+
+<div class="results" id="org4320de3">
+<p>
+DESCRIBE-OBJECTS
+</p>
+
+</div>
+
+<p>
+使ってみる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(describe-objects 'living-room *objects* *object-locations*)
+</pre>
+</div>
+
+<div class="results" id="org6544a18">
+<p>
+(YOU SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org47b8c95" class="outline-3">
+<h3 id="org47b8c95"><a href="#org47b8c95">現在地を保持する</a></h3>
+<div class="outline-text-3" id="text-org47b8c95">
+<p>
+現在値を保持する変数を作る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 32: </span>現在地を保持する</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*location*</span> 'living-room)
+*location*
+</pre>
+</div>
+
+<div class="results" id="orgcf2cbc7">
+<p>
+LIVING-ROOM
+</p>
+
+</div>
+
+<p>
+プレイヤーがタイプするlook関数を作る。見えるものすべてを描写する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 33: </span>見えるものすべてを描写する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">look</span> ()
+(append (describe-location *location* *nodes*)
+      (describe-paths *location* *edges*)
+      (describe-objects *location* *objects* *object-locations*)))
+(look)
+</pre>
+</div>
+
+<div class="results" id="org60d2722">
+<p>
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+</p>
+
+</div>
+
+<p>
+look関数はグローバル変数を読むから、関数的ではない。
+</p>
+</div>
+</div>
+<div id="outline-container-org312f1c0" class="outline-3">
+<h3 id="org312f1c0"><a href="#org312f1c0">動き回る</a></h3>
+<div class="outline-text-3" id="text-org312f1c0">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 34: </span>歩き回るwalk関数。find関数はリストから与えた要素を探す関数</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">walk</span> (direction)
+  (<span class="org-keyword">let</span> ((next (find direction
+                    (cdr (assoc *location* *edges*))
+                    <span class="org-builtin">:key</span> #'cadr)))
+    (<span class="org-keyword">if</span> next
+        (<span class="org-keyword">progn</span> (setf *location* (car next))
+               (look))
+        '(you cannot go that way.))))
+</pre>
+</div>
+
+<div class="results" id="org59ee9ef">
+<p>
+WALK
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 35: </span>findの例: シンボルyをcadrに持つような最初の要素をリストから探し出す</label><pre class="src src-lisp">(find 'y '((5 x) (3 y) (7 z)) <span class="org-builtin">:key</span> #'cadr)
+</pre>
+</div>
+
+<div class="results" id="org52b38b4">
+<p>
+(3 Y)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 36: </span>findの例2: シンボルyをcarに持つような最初の要素をリストから探し出す</label><pre class="src src-lisp">(find '3 '((5 x) (3 y) (7 z)) <span class="org-builtin">:key</span> #'car)
+</pre>
+</div>
+
+<div class="results" id="org8bd344a">
+<p>
+(3 Y)
+</p>
+
+</div>
+
+<p>
+:key #&rsquo;carはキーワード引数。
+コロンで始まる名前、続く値で構成されている。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 37: </span>walkを使ってみる</label><pre class="src src-lisp">(walk 'west)
+</pre>
+</div>
+
+<div class="results" id="orgec80c6c">
+<p>
+(YOUR ARE IN A BEAUTIFUL GARDEN. THERE IS A WELL IN FRONT OF YOU. THERE IS A
+ DOOR GOING EAST FROM HERE. YOU SEE A FROG ON THE FLOOR. YOU SEE A CHAIN ON THE
+ FLOOR.)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org8c162db" class="outline-3">
+<h3 id="org8c162db"><a href="#org8c162db">オブジェクトを手に取る</a></h3>
+<div class="outline-text-3" id="text-org8c162db">
+<p>
+pushとassocを使うことで、alistの値が変更されたかのように見せることができる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 38: </span>オブジェクトの場所を管理している変数 *object-locations*を変更する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">pickup</span> (object)
+  (<span class="org-keyword">cond</span> ((member object
+                 (objects-at *location* *objects* *object-locations*))
+         (push (list object 'body) *object-locations*)
+         `(you are now carrying the ,object))
+        (t '(you cannot get that.))))
+</pre>
+</div>
+
+<div class="results" id="orgd521764">
+<p>
+PICKUP
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 39: </span>リビングに戻る</label><pre class="src src-lisp">(walk 'east)
+</pre>
+</div>
+
+<div class="results" id="org9f4a733">
+<p>
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A WHISKEY ON THE FLOOR. YOU SEE A BUCKET ON THE FLOOR.)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 40: </span>ウィスキーを取る</label><pre class="src src-lisp">(pickup 'whiskey)
+</pre>
+</div>
+
+<div class="results" id="orgc7000d7">
+<p>
+(YOU CANNOT GET THAT.)
+</p>
+
+</div>
+
+<p>
+alist中の値を置き換えたければ、新しい要素をリストにpushするだけでいい。
+assocはもっとも新しい値だけを返すから。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 41: </span>持っているものを調べる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">inventory</span> ()
+    (cons 'items- (objects-at 'body *objects* *object-locations*)))
+(inventory)
+</pre>
+</div>
+
+<div class="results" id="org00801cb">
+<p>
+(ITEMS-)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 42: </span>pushは先頭に新しいリストを追加する</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*foo*</span> '(1 2 3))
+(push 7 *foo*)
+</pre>
+</div>
+
+<div class="results" id="org333343d">
+<p>
+(7 1 2 3)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 43: </span>↑と同じことをsetfで表現する</label><pre class="src src-lisp">(setf *foo* (cons 7 '(1 2 3)))
+</pre>
+</div>
+
+<div class="results" id="orga77b769">
+<p>
+(7 1 2 3)
+</p>
+
+</div>
+
+<p>
+動作を試す。
+居間に戻ってウィスキーを取る。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 44: </span>歩く</label><pre class="src src-lisp">(walk 'east)
+</pre>
+</div>
+
+<div class="results" id="org3d6a30c">
+<p>
+(YOU CANNOT GO THAT WAY.)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 45: </span>ウィスキーを取る</label><pre class="src src-lisp">(pickup 'whiskey)
+</pre>
+</div>
+
+<div class="results" id="org363af25">
+<p>
+(YOU ARE NOW CARRYING THE WHISKEY)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgd20e4aa" class="outline-3">
+<h3 id="orgd20e4aa"><a href="#orgd20e4aa">テキストの表示と読み込み</a></h3>
+<div class="outline-text-3" id="text-orgd20e4aa">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 46: </span>表示する</label><pre class="src src-lisp">(print <span class="org-string">"foo"</span>)
+</pre>
+</div>
+
+<div class="results" id="orgc328028">
+<p>
+foo
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 47: </span>printは改行する</label><pre class="src src-lisp">(<span class="org-keyword">progn</span> (print <span class="org-string">"this"</span>)
+       (print <span class="org-string">"is"</span>)
+       (print <span class="org-string">"a"</span>)
+       (print <span class="org-string">"test"</span>))
+</pre>
+</div>
+
+<div class="results" id="org89b152a">
+<p>
+
+</p>
+
+<p>
+&ldquo;this&rdquo;
+&ldquo;is&rdquo;
+&ldquo;a&rdquo;
+&ldquo;test&rdquo;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 48: </span>prin1は改行しない</label><pre class="src src-lisp">(<span class="org-keyword">progn</span> (prin1 <span class="org-string">"this"</span>)
+       (prin1 <span class="org-string">"is"</span>)
+       (prin1 <span class="org-string">"a"</span>)
+       (prin1 <span class="org-string">"test"</span>))
+</pre>
+</div>
+
+<div class="results" id="org7723461">
+<p>
+this&ldquo;&rdquo;is&ldquo;&rdquo;a&ldquo;&rdquo;test
+</p>
+
+</div>
+
+<p>
+prin1の方がやってることは少ないので、より基本的な関数であると言える。組み合わせの自由度も高く、したがって大規模なコードの中でよく見られる。
+</p>
+
+<p>
+入力させて挨拶を返す関数。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 49: </span>プロンプトから呼び出して、入力を待つ。入力はダブルクォートで囲む必要がある</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">say-hello</span> ()
+  (print <span class="org-string">"Please type your name:"</span>)
+  (<span class="org-keyword">let</span> ((name (read)))
+    (print <span class="org-string">"Nice to meet you, "</span>)
+    (print name)))
+</pre>
+</div>
+
+<p>
+printはコンピュータ向け、princは人間向け。
+printは元のデータを表示する。printcは文字列にして表示する。
+</p>
+
+<p>
+ダブルクォートをつけなくていい改良版。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 50: </span>princ, read-lineを使う</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">say-hello</span>()
+  (princ <span class="org-string">"Please type your name:"</span>)
+  (<span class="org-keyword">let</span> ((name (read-line)))
+    (princ <span class="org-string">"Nice to meet you, "</span>)
+    (princ name)))
+</pre>
+</div>
+
+<div class="results" id="orge355b46">
+<p>
+SAY-HELLO
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org3052016" class="outline-3">
+<h3 id="org3052016"><a href="#org3052016">データの対称性</a></h3>
+<div class="outline-text-3" id="text-org3052016">
+<p>
+プログラムコードとデータを同じデータ構造を使って扱うプログラミング言語は、同図象性を持つ、と呼ばれる。
+</p>
+
+<ul class="org-ul">
+<li>&rsquo;(+ 1 2) → データモード</li>
+<li>(+ 1 2) → コードモード</li>
+</ul>
+
+<p>
+evalは強力で、自己書き換えのプログラムを書くには役立つ。が、普段はほとんど使わない。
+</p>
+</div>
+</div>
+<div id="outline-container-orge9ad446" class="outline-3">
+<h3 id="orge9ad446"><a href="#orge9ad446">専用のインターフェースを追加する</a></h3>
+<div class="outline-text-3" id="text-orge9ad446">
+<p>
+専用のREPLを作るのは簡単にできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">game-repl</span> ()
+  (<span class="org-keyword">loop</span> (print (eval (read)))))
+(game-repl)
+</pre>
+</div>
+
+<p>
+REPLでの実行。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-lisp">CL-USER&gt; (look)
+(YOU ARE IN THE LIVING-ROOM. A WIZARD IS SNORING LOUDLY ON THE COUCH. THERE IS
+ A DOOR GOING WEST FROM HERE. THERE IS A LADDER GOING UPSTAIRS FROM HERE. YOU
+ SEE A BUCKET ON THE FLOOR.)
+</pre>
+</div>
+
+<p>
+quit呼び出しを検知して、replを抜けられるようにする。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 52: </span>ローカル変数cmdにコマンドを保存しておいて、判断する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">game-repl</span> ()
+  (<span class="org-keyword">let</span> ((cmd (game-read)))
+    (<span class="org-keyword">unless</span> (eq (car cmd) 'quit)
+      (game-print (game-eval cmd))
+      (game-repl))))
+</pre>
+</div>
+
+<div class="results" id="org674ab35">
+<p>
+GAME-REPL
+</p>
+
+</div>
+
+<p>
+カッコをつけなくてもコマンド入力できるようにする。
+walk east とタイプしたなら、(walk east) になる。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 53: </span>カッコを付け足して評価する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">game-read</span> ()
+  (<span class="org-keyword">let</span> ((cmd (read-from-string
+              (concatenate 'string <span class="org-string">"("</span> (read-line) <span class="org-string">")"</span>))))
+    (<span class="org-keyword">flet</span> ((quote-it (x)
+             (list 'quote x)))
+      (cons (car cmd) (mapcar #'quote-it (cdr cmd))))))
+</pre>
+</div>
+
+<div class="results" id="org31d9a29">
+<p>
+GAME-READ
+</p>
+
+</div>
+
+<p>
+game-evalではあらかじめ決めたコマンドだけを呼べるようにする。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 54: </span>変数に入れておいたコマンドだけ実行できる</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*allowed-commands*</span> '(look walk pickup inventory))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">game-eval</span> (sexp)
+  (<span class="org-keyword">if</span> (member (car sexp) *allowed-commands*)
+      (eval sexp)
+      '(i do not know that command.)))
+</pre>
+</div>
+
+<div class="results" id="org2e17fc0">
+<p>
+GAME-EVAL
+</p>
+
+</div>
+
+<p>
+テキストをいい感じに変換する関数が必要。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 55: </span>内部表現にすぎないシンボルのリストを文字列に変換する。coerce関数を使って文字列を文字のリストに変換することで、解くべき問題をリスト処理へと落とし込んでいる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">tweak-text</span> (lst caps lit)
+  (<span class="org-keyword">when</span> lst
+    (<span class="org-keyword">let</span> ((item (car lst))
+          (rest (cdr lst)))
+      (<span class="org-keyword">cond</span> ((eql item #\space) (cons item (tweak-text rest caps lit)))
+            ((member item '(#\! #\? #\.)) (cons item (tweak-text rest t lit))) <span class="org-comment-delimiter">;; </span><span class="org-comment">&#25991;&#31456;&#12398;&#20808;&#38957;&#12399;&#12289;!,?,.,&#12398;&#12354;&#12392;&#12395;&#29694;&#12428;&#12427;
+</span>            ((eql item #\") (tweak-text rest caps (not lit)))
+            (lit (cons  item (tweak-text rest nil lit)))
+            (caps (cons (char-upcase item) (tweak-text rest nil lit)))
+            (t (cons (char-downcase item) (tweak-text rest nil nil))))))) <span class="org-comment-delimiter">;; </span><span class="org-comment">&#12393;&#12398;&#26465;&#20214;&#12418;&#28288;&#12383;&#12373;&#12394;&#12369;&#12428;&#12400;&#12289;&#23567;&#25991;&#23383;&#12395;&#12394;&#12427;
+</span>
+(<span class="org-keyword">defun</span> <span class="org-function-name">game-print</span> (lst)
+  (princ (coerce (tweak-text (coerce (string-trim <span class="org-string">"() "</span>
+                                                  (prin1-to-string lst))
+                                     'list)
+                             t
+                             nil)
+                 'string)
+         (fresh-line)))
+</pre>
+</div>
+
+<div class="results" id="orge3fe353">
+<p>
+GAME-PRINT
+</p>
+
+</div>
+
+<p>
+途中で大文字が出てくる場合に対応している。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 56: </span>"がでてきた場合は無視して、残りの処理を続行する</label><pre class="src src-lisp">(game-print '(not only does this sentence have a <span class="org-string">"comma,"</span> it also mentions the <span class="org-string">"iPad."</span>))
+</pre>
+</div>
+
+<div class="results" id="orgc0bc7ad">
+<p>
+Not only does this sentence have a comma, it also mentions the iPad.
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org7321b5c" class="outline-3">
+<h3 id="org7321b5c"><a href="#org7321b5c">Lambda</a></h3>
+<div class="outline-text-3" id="text-org7321b5c">
+<p>
+そもそもLispが産まれたのは、lambdaコマンドのためだった。
+</p>
+
+<p>
+lambdaを使えば、名前を与えずに関数を作れる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 57: </span>関数引数に渡すことができる</label><pre class="src src-lisp">(mapcar (<span class="org-keyword">lambda</span> (n) (/ n 2)) '(2 4 6))
+</pre>
+</div>
+
+<div class="results" id="orgafe6690">
+<p>
+(1 2 3)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 58: </span>関数引数に渡すことができる</label><pre class="src src-lisp">(funcall (<span class="org-keyword">lambda</span> (n) (/ n 2)) 2)
+</pre>
+</div>
+
+<div class="results" id="org781134a">
+<p>
+1
+</p>
+
+</div>
+
+<p>
+lambdaの引数は評価されずlambdaに渡される。つまり、lambdaは本物の関数ではない。これはマクロとよばれる。<a href="20210911183844-lisp.html#ID-18fbe00f-4ec8-4ca0-adfa-2d1381669642">LISP</a>の関数の引数は、関数自体が評価される前にすべて評価される。
+lambdaが返す値は通常のLisp関数である。
+多くの言語では、関数と値の世界を分けようとしている。Lispでは、この2つの世界をつなぐことができる。
+</p>
+
+<p>
+関数を普通のデータのように受け渡しできるという機能は、とても便利である。純粋に数学的な意味では、lambdaが唯一のLispコマンドといえる。(ラムダ算法…lambdaを唯一のコマンドする理論的なプログラミング言語のようなもの。)
+</p>
+
+<ul class="org-ul">
+<li>lambda形式はLispシステムの中でもっとも根源的なコマンドである</li>
+<li>Lispの他の関数はlambdaの概念を元に導かれている</li>
+<li>lambdaはLispのアイディアそのものが産まれた中心にある概念</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge860ff6" class="outline-3">
+<h3 id="orge860ff6"><a href="#orge860ff6">奇妙なリスト</a></h3>
+<div class="outline-text-3" id="text-orge860ff6">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 59: </span>通常のリスト</label><pre class="src src-lisp">(cons 1 (cons 2 (cons 3 nil)))
+</pre>
+</div>
+
+<div class="results" id="org03449fa">
+<p>
+(1 2 3)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 60: </span>リストの最後のnilが見つからなかったとき、3の前に . をつけて表示する</label><pre class="src src-lisp">(cons 1 (cons 2 3))
+</pre>
+</div>
+
+<div class="results" id="orgbfdddd0">
+<p>
+(1 2 . 3)
+</p>
+
+</div>
+
+<p>
+最後がnilではないことを明示するために.をつけている。
+ドットリストは、対を表現するのによく使う。
+</p>
+
+<p>
+リストの最後がリストの最初を指すような、循環しているリストもある。
+遊ぶ前に準備する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 61: </span>ループで止まるのを防ぐ設定</label><pre class="src src-lisp">(setf *print-circle* t)
+</pre>
+</div>
+
+<div class="results" id="org2b55daa">
+<p>
+T
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 62: </span>循環リストを作る</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">foo</span> (list 1 2 3))
+(setf (cdddr foo) foo)
+</pre>
+</div>
+
+<div class="results" id="org925a1af">
+<p>
+#1=(1 2 3 . #1#)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org353e00e" class="outline-3">
+<h3 id="org353e00e"><a href="#org353e00e">連想リスト</a></h3>
+<div class="outline-text-3" id="text-org353e00e">
+<p>
+コンスセルから作られるデータ構造の中でも特に便利なのは、連想リスト。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 63: </span>連想リストと、assocによるアクセス</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*drink-order*</span> '((bill . double-espresso)
+                              (lisa . small-drip-coffee)
+                              (john . medium-latter)))
+(assoc 'lisa *drink-order*)
+</pre>
+</div>
+
+<div class="results" id="org9ebdb83">
+<p>
+(LISA . SMALL-DRIP-COFFEE)
+</p>
+
+</div>
+
+<p>
+追加。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 64: </span>追加。lisaが2つあることがわかる</label><pre class="src src-lisp">(push '(lisa . large-mocha-with-whipped-cream) *drink-order*)
+</pre>
+</div>
+
+<div class="results" id="org1dbe932">
+<p>
+((LISA . LARGE-MOCHA-WITH-WHIPPED-CREAM) (BILL . DOUBLE-ESPRESSO)
+ (LISA . SMALL-DRIP-COFFEE) (JOHN . MEDIUM-LATTER))
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 65: </span>assocで優先されるのは先にあるほうだから、新しい値に入れ替わったことになる</label><pre class="src src-lisp">(assoc 'lisa *drink-order*)
+</pre>
+</div>
+
+<div class="results" id="orgbfc6ad7">
+<p>
+(LISA . LARGE-MOCHA-WITH-WHIPPED-CREAM)
+</p>
+
+</div>
+
+<p>
+そのため、データの変更履歴をたどることも可能。
+</p>
+</div>
+</div>
+<div id="outline-container-org6b98981" class="outline-3">
+<h3 id="org6b98981"><a href="#org6b98981">ノードの変換</a></h3>
+<div class="outline-text-3" id="text-org6b98981">
+<p>
+グラフ構造を視覚的に表現するために、graphvizを使う。
+フォーマットを出力するための関数を書く。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 66: </span>DOTフォーマットが受け付けない文字(アルファベットでも数字でもない)をすべてアンダースコアに変更する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">dot-name</span> (exp)
+    (substitute-if #\_ (complement #'alphanumericp) (prin1-to-string exp)))
+(dot-name 'foo!)
+</pre>
+</div>
+
+<div class="results" id="orgd034a56">
+<p>
+FOO_
+</p>
+
+</div>
+
+<p>
+substitute-ifは、与えられたテスト関数の結果によって値を置き換える関数。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 67: </span>数字をeに変換する</label><pre class="src src-lisp">(substitute-if #\e #'digit-char-p <span class="org-string">"I'm a l33t hack3r!"</span>)
+</pre>
+</div>
+
+<div class="results" id="org05d12eb">
+<p>
+I&rsquo;m a leet hacker!
+</p>
+
+</div>
+
+<p>
+substitute-ifは、リストも処理できる。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 68: </span>奇数を0に置き換える</label><pre class="src src-lisp">(substitute-if 0 #'oddp '(1 2 3 4 5 6 7 8 9))
+</pre>
+</div>
+
+<div class="results" id="org304df97">
+<p>
+(0 2 0 4 0 6 0 8 0)
+</p>
+
+</div>
+
+<p>
+グラフのノードにラベルをつける。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 69: </span>write-to-string のキーワード引数prettyは、人間用に改行などを整形してくれるのをオフにするため</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*max-label-length*</span> 30)
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">dot-label</span> (exp)
+  (<span class="org-keyword">if</span> exp
+      (<span class="org-keyword">let</span> ((s (write-to-string exp <span class="org-builtin">:pretty</span> nil)))
+        (<span class="org-keyword">if</span> (&gt; (length s) *max-label-length*)
+            (concatenate 'string (subseq s 0 (- *max-label-length* 3)) <span class="org-string">"..."</span>)
+            s))
+      <span class="org-string">""</span>))
+</pre>
+</div>
+
+<div class="results" id="org1507623">
+<p>
+DOT-LABEL
+</p>
+
+</div>
+
+<p>
+ノードのalistを取ってその情報をDOTの形で生成する関数を書く。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 70: </span>mapcはmapcarの変種で、結果のリストを返さない。ここではREPLで出力される情報だけが重要(副作用だけを使う)なため</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">nodes-&gt;dot</span> (nodes)
+  (mapc (<span class="org-keyword">lambda</span> (node)
+          (fresh-line)
+          (princ (dot-name (car node)))
+          (princ <span class="org-string">"[label=\""</span>)
+          (princ (dot-label node))
+          (princ <span class="org-string">"\"];"</span>))
+        nodes))
+</pre>
+</div>
+
+<div class="results" id="org480f7fa">
+<p>
+NODES-&gt;DOT
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 71: </span>変換したいalistを再定義しておく</label><pre class="src src-lisp">(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*wizard-edges*</span> '((living-room (garden west door)
+                         (attic upstairs ladder))
+                        (garden (living-room east door))
+                        (attic (living-room downstairs ladder))))
+
+(<span class="org-keyword">defparameter</span> <span class="org-variable-name">*wizard-nodes*</span> '((living-room (you are in the living-room.
+                                      a wizard is snoring loudly on the couch.))
+                        (garden (your are in a beautiful garden.
+                                 there is a well in front of you.))
+                        (attic (you are in the attic.
+                                there is a giant welding torch in the corner.))))
+</pre>
+</div>
+
+<div class="results" id="org6d92358">
+<p>
+<b>WIZARD-NODES</b>
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(nodes-&gt;dot *wizard-nodes*)
+</pre>
+</div>
+
+<div class="results" id="org052335a">
+<p>
+LIVING_ROOM[label=&ldquo;(LIVING-ROOM (YOU ARE IN TH&#x2026;&rdquo;];
+GARDEN[label=&ldquo;(GARDEN (YOUR ARE IN A BEAU&#x2026;&rdquo;];
+ATTIC[label=&ldquo;(ATTIC (YOU ARE IN THE ATTI&#x2026;&rdquo;];
+</p>
+
+</div>
+
+<p>
+次は、エッジをDOTの情報として書き出す。
+</p>
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">edges-&gt;dot</span> (edges)
+  (mapc (<span class="org-keyword">lambda</span> (node)
+          (mapc (<span class="org-keyword">lambda</span> (edge)
+                  (fresh-line)
+                  (princ (dot-name (car node)))
+                  (princ <span class="org-string">"-&gt;"</span>)
+                  (princ (dot-name (car edge)))
+                  (princ <span class="org-string">"[label=\""</span>)
+                  (princ (dot-label (cdr edge)))
+                  (princ <span class="org-string">"\"];"</span>))
+                (cdr node)))
+        edges))
+</pre>
+</div>
+
+<div class="results" id="org60239be">
+<p>
+EDGES-&gt;DOT
+</p>
+
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orgd04d7d3" class="outline-2">
+<h2 id="orgd04d7d3"><a href="#orgd04d7d3"><a href="https://www.amazon.co.jp/%E5%88%9D%E3%82%81%E3%81%A6%E3%81%AE%E4%BA%BA%E3%81%AE%E3%81%9F%E3%82%81%E3%81%AELISP-%E5%A2%97%E8%A3%9C%E6%94%B9%E8%A8%82%E7%89%88-%E7%AB%B9%E5%86%85-%E9%83%81%E9%9B%84/dp/4798119415/ref=pd_vtp_3/356-6212978-4622712">初めての人のためのLISP</a></a></h2>
+<div class="outline-text-2" id="text-orgd04d7d3">
+</div>
+<div id="outline-container-orgaa16d1d" class="outline-3">
+<h3 id="orgaa16d1d"><a href="#orgaa16d1d">_</a></h3>
+<div class="outline-text-3" id="text-orgaa16d1d">
+<p>
+Lispの考え方に焦点を当てた入門本。
+解説で使われているのは<a href="20210926152425-common_lisp.html#ID-2337587f-0d95-484f-922a-f4cca1ace49e">Common Lisp</a>。
+</p>
+</div>
+</div>
+<div id="outline-container-org440bb0e" class="outline-3">
+<h3 id="org440bb0e"><a href="#org440bb0e">cond</a></h3>
+<div class="outline-text-3" id="text-org440bb0e">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 74: </span>condは条件式の処理に使う。</label><pre class="src src-lisp">(<span class="org-keyword">cond</span> ((&gt;= 1 1) (print 0))
+      ((= 0 0) (print 1)))
+</pre>
+</div>
+
+<pre class="example">
+0
+</pre>
+</div>
+</div>
+<div id="outline-container-orgf4f4e01" class="outline-3">
+<h3 id="orgf4f4e01"><a href="#orgf4f4e01">member</a></h3>
+<div class="outline-text-3" id="text-orgf4f4e01">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 75: </span>member関数は、リストのトップレベルに望むものがあるか調べる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-member</span> (x y)
+  (<span class="org-keyword">cond</span> ((null y) nil)
+        ((eq x (car y)) t)
+        (t (member x (cdr y)))))
+(my-member 'a '(a b))
+</pre>
+</div>
+
+<div class="results" id="orge6a3bea">
+<p>
+T
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 76: </span>無い場合はnilを返す</label><pre class="src src-lisp">(my-member 'c '(a b))
+</pre>
+</div>
+
+<div class="results" id="org1b76255">
+<p>
+NIL
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgb77a3da" class="outline-3">
+<h3 id="orgb77a3da"><a href="#orgb77a3da">assoc</a></h3>
+<div class="outline-text-3" id="text-orgb77a3da">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 77: </span>assoc関数は辞書を検索する</label><pre class="src src-lisp">(setq dict '((unum . 1) (duo . 2) (tria . 3)))
+(assoc 'unum dict)
+</pre>
+</div>
+
+<div class="results" id="orge64e03c">
+<p>
+(UNUM . 1)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 78: </span>assocの定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-assoc</span> (x y)
+  (<span class="org-keyword">cond</span> ((null y) nil)
+        ((eq x (caar y)) (car y))
+        (t (assoc x (cdr y)))))
+(my-assoc 'unum dict)
+</pre>
+</div>
+
+<div class="results" id="org34a3b91">
+<p>
+(UNUM . 1)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org60dd00e" class="outline-3">
+<h3 id="org60dd00e"><a href="#org60dd00e">rassoc</a></h3>
+<div class="outline-text-3" id="text-org60dd00e">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 79: </span>rassocは逆引き関数。辞書からcdrを検索する</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-rassoc</span> (x y)
+  (<span class="org-keyword">cond</span> ((null y) nil)
+        ((eq x (cdar y)) (car y))
+        (t (rassoc x (cdr y)))))
+(my-rassoc 1 dict)
+</pre>
+</div>
+
+<div class="results" id="org8fd70bd">
+<p>
+(UNUM . 1)
+</p>
+
+</div>
+
+<p>
+ドット記法で <code>(reiko . (3 712 5648))</code> は、
+<code>(reiko 3 712 5678)</code> と同じ。後ろの方がリストになっているとドットは書かない慣習。
+</p>
+
+<p>
+Lispにおける式は、題付きリストといえる。
+(関数 引数1 引数2 &#x2026;)
+は、関数と引数のリストとのドット対、
+(関数 . 引数のリスト)
+と考えることができる。
+</p>
+</div>
+</div>
+<div id="outline-container-org9bd8bc4" class="outline-3">
+<h3 id="org9bd8bc4"><a href="#org9bd8bc4">replaca</a></h3>
+<div class="outline-text-3" id="text-org9bd8bc4">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 80: </span>rplacaはxが指しているセルのcarをyに置き換える</label><pre class="src src-lisp">(rplaca '(1 1) 2)
+</pre>
+</div>
+
+<div class="results" id="orgf61a3f8">
+<p>
+(2 1)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 81: </span>rplacdはcdrバージョン</label><pre class="src src-lisp">(rplacd '(1 1) 2)
+</pre>
+</div>
+
+<div class="results" id="orge13c554">
+<p>
+(1 . 2)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 82: </span>alistを書き換える関数</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">update-phone</span> (p x y)
+    (rplacd (assoc x p) y)
+    p  )
+
+(setq dict '((unum . 1) (duo . 2) (tria . 3)))
+(update-phone dict 'unum 111)
+</pre>
+</div>
+
+<div class="results" id="org59cd93d">
+<p>
+((UNUM . 111) (DUO . 2) (TRIA . 3))
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org1d3b26d" class="outline-3">
+<h3 id="org1d3b26d"><a href="#org1d3b26d">remove</a></h3>
+<div class="outline-text-3" id="text-org1d3b26d">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 83: </span>xと等しいトップレベルの要素をすべて削除してみる</label><pre class="src src-lisp">  (<span class="org-keyword">defun</span> <span class="org-function-name">my-remove</span> (x y)
+    (<span class="org-keyword">cond</span> ((null y) nil)
+          ((eq (car y) x) (remove x (cdr y)))
+          (t (cons (car y) (remove x (cdr y))))))
+(my-remove 'mo '(to mo do mo mo to mo to mo))
+</pre>
+</div>
+
+<div class="results" id="orge9050a6">
+<p>
+(TO DO TO TO)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 84: </span>マッチした最初のリストを取り除く。書き換えるべきセルは、1つ前のセル。</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-delete-1</span> (x y)
+  (setq y (cons 'dummy y))
+  (my-del2 x (cdr y) y)
+  (cdr y))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">my-del2</span> (x y z)
+  (<span class="org-keyword">cond</span> ((null y) nil)
+        ((eq (car y) x) (rplacd z (cdr y)))
+        (t (my-del2 x (cdr y) y))))
+(my-delete-1 'mo '(mo mo mo to to to))
+</pre>
+</div>
+
+<div class="results" id="orgff8b037">
+<p>
+(MO MO TO TO TO)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 85: </span>再帰関数が取る変数を少なくしたバージョン</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-delete</span> (x y)
+  (setq y (cons 'dummy y))
+  (my-dela x y)
+  (cdr y))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">my-dela</span> (x y)
+  (<span class="org-keyword">cond</span> ((null (cdr y)) nil)
+        ((eq (cadr y) x)
+         (rplacd y (cddr y))
+         (my-dela x (cdr y)))
+  (t (my-dela x (cdr y)))))
+
+(my-delete 'mo '(mo to mo to))
+</pre>
+</div>
+
+<div class="results" id="orgd7e7ba7">
+<p>
+(TO TO TO)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org96138ba" class="outline-3">
+<h3 id="org96138ba"><a href="#org96138ba">nreverse</a></h3>
+<div class="outline-text-3" id="text-org96138ba">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 86: </span>nreverseはリストを逆にする関数</label><pre class="src src-lisp">(nreverse '(A B C))
+</pre>
+</div>
+
+<div class="results" id="orgc849ffd">
+<p>
+(C B A)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 87: </span>nreverseを定義する(バグ)</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-nreverse</span> (x)
+  (nrev2 x nil))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">nrev2</span> (x r)
+  (<span class="org-keyword">cond</span> ((null x) r)
+        (t (rplacd x r)
+           (nrev2 (cdr x) x))))
+(my-nreverse '(A B C))
+</pre>
+</div>
+
+<div class="results" id="orgcc27d13">
+<p>
+(A)
+</p>
+
+</div>
+
+<p>
+特殊形式prog1。
+(prog1 式1 式2 式3 &#x2026;)
+は返す値が式1の値。これを使って修正する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 88: </span>nrev2の修正版。prog1を使う</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">nrev2</span> (x r)
+  (<span class="org-keyword">cond</span> ((null x) r)
+        (t (<span class="org-keyword">prog1</span> (nrev2 (cdr x) x)
+             (rplacd x r)))))
+(my-nreverse '(A B C))
+</pre>
+</div>
+
+<div class="results" id="org097a0d2">
+<p>
+(C B A)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org6528682" class="outline-3">
+<h3 id="org6528682"><a href="#org6528682">破壊的関数</a></h3>
+<div class="outline-text-3" id="text-org6528682">
+<p>
+nreverseは破壊的。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 89: </span>返される値は逆になる</label><pre class="src src-lisp">(setq numl '(1 2 3))
+(nreverse numl)
+</pre>
+</div>
+
+<div class="results" id="org6096d08">
+<p>
+(3 2 1)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 90: </span>元のリストは破壊される</label><pre class="src src-lisp">numl
+</pre>
+</div>
+
+<div class="results" id="org5dc885f">
+<p>
+(1)
+</p>
+
+</div>
+
+<p>
+破壊的関数にはsetqを使うとよい。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 91: </span>numlにnreverseした後の値が入っている</label><pre class="src src-lisp">(setq numl '(1 2 3))
+(setq numl (nreverse numl))
+numl
+</pre>
+</div>
+
+<div class="results" id="org7bfa5ce">
+<p>
+(3 2 1)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgfb1b7e6" class="outline-3">
+<h3 id="orgfb1b7e6"><a href="#orgfb1b7e6">append, nconc</a></h3>
+<div class="outline-text-3" id="text-orgfb1b7e6">
+<p>
+appendの破壊版がnconc。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 92: </span>appendは非破壊</label><pre class="src src-lisp">(setq numl '(1 2 3))
+(append numl 1)
+numl
+</pre>
+</div>
+
+<div class="results" id="orgf3ed9df">
+<p>
+(1 2 3)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 93: </span>nconcは破壊的</label><pre class="src src-lisp">(setq numl '(1 2 3))
+(nconc numl 1)
+numl
+</pre>
+</div>
+
+<div class="results" id="orgf0c9b16">
+<p>
+(1 2 3 . 1)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 94: </span>nconcを定義する。xに破壊的変更して、xを最後に返す</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-nconc</span> (x y)
+  (<span class="org-keyword">cond</span> ((null x) y)
+        (t (rplacd (last x) y) x)))
+(my-nconc '(1 2 3) 1)
+</pre>
+</div>
+
+<div class="results" id="orgd9336c2">
+<p>
+(1 2 3 . 1)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org16e4d56" class="outline-3">
+<h3 id="org16e4d56"><a href="#org16e4d56">last</a></h3>
+<div class="outline-text-3" id="text-org16e4d56">
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-last</span> (x)
+  (<span class="org-keyword">cond</span> ((null x) nil)
+        (t (my-last2 x))))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">my-last2</span> (x)
+  (<span class="org-keyword">cond</span> ((null (cdr x)) x)
+        (t (my-last2 (cdr x)))))
+
+(my-last '(1 2 3))
+</pre>
+</div>
+
+<div class="results" id="orgae45541">
+<p>
+(3)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgc9f59ed" class="outline-3">
+<h3 id="orgc9f59ed"><a href="#orgc9f59ed">subst</a></h3>
+<div class="outline-text-3" id="text-orgc9f59ed">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 96: </span>substはaをbに置き換える関数</label><pre class="src src-lisp">(subst 'a 'b '(a b (a b (b ba) nil a)))
+</pre>
+</div>
+
+<div class="results" id="org49ed395">
+<p>
+(A A (A A (A BA) NIL A))
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 97: </span>substの定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-subst</span> (new old tree)
+  (<span class="org-keyword">cond</span> ((eq old Tree) new)
+        ((atom tree) tree)
+        (t (cons (subst new old (car tree))
+                 (subst new old (cdr tree))))))
+(my-subst 'a 'b '(a b a b))
+</pre>
+</div>
+
+<div class="results" id="org1f336cd">
+<p>
+(A A A A)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 98: </span>substではcarもcdrも平等に扱われているので、ドット記法が見える。</label><pre class="src src-lisp">(subst 'kk nil '(a b (b ba) nil a))
+</pre>
+</div>
+
+<div class="results" id="orga1cc8cd">
+<p>
+(A B (B BA . KK) KK A . KK)
+</p>
+
+</div>
+
+<p>
+consを使っているので、新しいリストを作っていることになる。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 99: </span>置き換える対象がなければ単にリストコピーになる</label><pre class="src src-lisp">(subst 'a 'b '(a a a))
+</pre>
+</div>
+
+<div class="results" id="org8becf23">
+<p>
+(A A A)
+</p>
+
+</div>
+
+<p>
+何もやらないときはcopy関数の定義と同じ。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 100: </span>cons部分に注目すると同じことがわかる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-copy</span> (tree)
+  (<span class="org-keyword">cond</span> ((atom tree) tree)
+        (t (cons (my-copy (car tree))
+                 (my-copy (cdr tree))))))
+(my-copy '(a a a))
+</pre>
+</div>
+
+<div class="results" id="org1853e6a">
+<p>
+(A A A)
+</p>
+
+</div>
+
+<p>
+今風スタイルなsubst。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 101: </span>letと、同じであればコピーせずtreeをそのまま返すのが違い</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-subst</span> (new old tree)
+  (<span class="org-keyword">cond</span> ((eq old tree) new)
+        ((atom tree) tree)
+        (t (<span class="org-keyword">let</span> ((a (my-subst new old (car tree)))
+                 (d (my-subst new old (cdr tree))))
+             (<span class="org-keyword">cond</span> ((and (eq a (car tree))
+                         (eq d (cdr tree)))
+                    tree)
+                   (t (cons a d)))))))
+(my-subst 'a 'b '(a b))
+</pre>
+</div>
+
+<div class="results" id="org8f12b79">
+<p>
+(A A)
+</p>
+
+</div>
+
+<p>
+複数種類の置き換えをしたい。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 102: </span>sublistは置き換えのための辞書をalistでもらう</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-sublis</span> (alist tree)
+  (<span class="org-keyword">let</span> ((pair (assoc tree alist)))
+    (<span class="org-keyword">cond</span> (pair (cdr pair))
+          ((atom tree) tree)
+          (t (<span class="org-keyword">let</span> ((a (my-sublis alist (car tree)))
+                   (d (my-sublis alist (cdr tree))))
+               (<span class="org-keyword">cond</span> ((and (eq a (car tree))
+                           (eq d (cdr Tree)))
+                      tree)
+                     (t (cons a d))))))))
+(my-sublis '((unum . 1) (duo . 2) (tria . 3)) '(unum duo tria unum (unum tria)))
+</pre>
+</div>
+
+<div class="results" id="org7ae7968">
+<p>
+(1 2 3 1 (1 3))
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org9c30056" class="outline-3">
+<h3 id="org9c30056"><a href="#org9c30056">defsubst</a></h3>
+<div class="outline-text-3" id="text-org9c30056">
+<p>
+defsubstが使われるとき。
+</p>
+
+<p>
+まずifを定義してみる(これはうまくいかない)。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 103: </span>返る値とxの値の違いに注目する。ifを呼ぶ時に引数を評価してしまう。なので副作用が実行されてxの値は7になる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-if</span> (p x y)
+  (<span class="org-keyword">cond</span> (p x)
+        (t y)))
+
+(setq x 4)
+(setq flag t)
+(my-if flag (setq x (+ x 1)) (setq x (+ x 2))) <span class="org-comment-delimiter">;; </span><span class="org-comment">=&gt; 5
+</span>x <span class="org-comment-delimiter">;; </span><span class="org-comment">=&gt; 7</span>
+</pre>
+</div>
+
+<div class="results" id="orgd83b8c6">
+<p>
+7
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 104: </span>defsubst。setqのように副作用のある式が引数に来ても、評価しない</label><pre class="src src-lisp">(<span class="org-keyword">defsubst</span> <span class="org-function-name">my-if</span> (p x y)
+  (<span class="org-keyword">cond</span> (p x)
+        (t y)))
+
+<span class="org-comment-delimiter">;; </span><span class="org-comment">(setq x 4)
+</span><span class="org-comment-delimiter">;; </span><span class="org-comment">(setq flag t)
+</span><span class="org-comment-delimiter">;; </span><span class="org-comment">(my-if flag (setq x (+ x 1)) (setq x (+ x 2)))</span>
+</pre>
+</div>
+
+<p>
+余剰変数: 変数が不定個の引数をリストに束ねて受け取ること。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 105: </span>&amp;restでlistが簡単に定義できる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-list</span> (<span class="org-type">&amp;rest</span> x) x)
+(my-list 1 1)
+</pre>
+</div>
+
+<div class="results" id="org329b9e7">
+<p>
+(1 1)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org6622b9f" class="outline-3">
+<h3 id="org6622b9f"><a href="#org6622b9f">defmacro</a></h3>
+<div class="outline-text-3" id="text-org6622b9f">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 106: </span>マクロは引数を評価しない</label><pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">my-first</span> (x)
+  (list 'car x))
+(my-first (list 1 2 3))
+</pre>
+</div>
+
+<div class="results" id="org21bbe2e">
+<p>
+1
+</p>
+
+</div>
+
+<p>
+<code>(my-first (list 1 2 3))</code> は、
+<code>(car (list 1 2 3))</code> に置き換わるように見える。
+</p>
+
+<p>
+試しにdefunでやってみると、できない。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 107: </span>carが単なるシンボルになり(関数として評価されない)、リストになる</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-first</span> (x)
+  (list 'car x))
+(my-first '(1 2 3)) <span class="org-comment-delimiter">;; </span><span class="org-comment">'(car (1 2 3)) &#12392;&#21516;&#12376;</span>
+</pre>
+</div>
+
+<div class="results" id="org994761f">
+<p>
+(CAR (1 2 3))
+</p>
+
+</div>
+
+<p>
+condをマクロ定義してみる。
+</p>
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">my-cond</span> (<span class="org-type">&amp;rest</span> clauses)
+  (expand-cond clauses))
+
+(<span class="org-keyword">defun</span> <span class="org-function-name">expand-cond</span> (clauses)
+  (my-cond ((null clauses) nil)
+        ((eq (caar clauses) 't)
+         (cons 'progn (cdar clauses)))
+        (t (list 'if
+                 (caar clauses)
+                 (cons 'progn (cdar clauses))
+                 (expand-cond (cdr clauses))))))
+(my-cond (1 '(1))
+         (t '(t)))
+</pre>
+</div>
+
+<div class="results" id="orgf7f1061">
+<p>
+(1)
+</p>
+
+</div>
+
+<p>
+backquoteをつけると、quoteと違ってS式がコピーされる。
+コピーの途中で、コンマのついた部分S式があるとそれを評価する。
+これを用いてfirstの定義を書き直す。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 109: </span>バッククォートを使ったバージョンのfirst</label><pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">my-first</span> (x)
+  `(car ,x))
+(my-first '(1 2 3))
+</pre>
+</div>
+
+<div class="results" id="org986650d">
+<p>
+1
+</p>
+
+</div>
+
+<p>
+よく見るパターンをマクロ化する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 110: </span>よく見るやつ</label><pre class="src src-lisp">(<span class="org-keyword">cond</span> ((null &#12394;&#12435;&#12392;&#12363;) &#12393;&#12358;&#12377;&#12427;1)
+      (t &#12393;&#12358;&#12377;&#12427;2))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">if-null</span> (nan dos1 dos2)
+  `(<span class="org-keyword">cond</span> ((null ,nan) ,dos1)
+         (t ,dos2)))
+(<span class="org-keyword">defun</span> <span class="org-function-name">my-even</span> (x)
+  (if-null (= (mod x 2) 1) t nil))
+(my-even 2)
+</pre>
+</div>
+
+<div class="results" id="orge47e56a">
+<p>
+T
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org705b574" class="outline-3">
+<h3 id="org705b574"><a href="#org705b574">pop</a></h3>
+<div class="outline-text-3" id="text-org705b574">
+<p>
+よく使うマクロ2つ。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 112: </span>定義する</label><pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">my-pop</span> (x)
+  `(<span class="org-keyword">prog1</span> (car ,x) (setq ,x (cdr ,x))))
+(<span class="org-keyword">defmacro</span> <span class="org-function-name">my-push</span> (y x)
+  `(setq ,x (cons ,y ,x)))
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 113: </span>popを使ってみる</label><pre class="src src-lisp">(setq pop-test '(1 2 3))
+(my-pop pop-test)
+</pre>
+</div>
+
+<div class="results" id="org21af304">
+<p>
+1
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 114: </span>破壊的</label><pre class="src src-lisp">pop-test
+</pre>
+</div>
+
+<div class="results" id="org0c0c8c4">
+<p>
+(2 3)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">image</span> (var list <span class="org-type">&amp;rest</span> forms)
+  `(<span class="org-keyword">let</span> (($list$ ,list)
+         ($r$ nil)
+         (,var nil))
+    (<span class="org-keyword">while</span> ($list$ (nreverse $r$))
+     (setq ,var (pop $list$))
+     (push (<span class="org-keyword">progn</span> ,@forms) $r$))))
+(image i (list 1 2 3 4) (* i i)) <span class="org-comment-delimiter">;; </span><span class="org-comment">=&gt; (1 4 9 16)&#12395;&#12394;&#12427;&#12399;&#12378;&#12384;&#12364;&#21205;&#12363;&#12394;&#12356;
+</span><span class="org-comment-delimiter">;; </span><span class="org-comment">i &#12434;ruby&#12391;&#12356;&#12358;&#12502;&#12525;&#12483;&#12463;&#24341;&#25968;&#12392;&#12377;&#12427;&#12424;&#12358;&#12395;&#23450;&#32681;&#12377;&#12427;&#12510;&#12463;&#12525;
+</span><span class="org-comment-delimiter">;; </span><span class="org-comment">&#12371;&#12398;&#12424;&#12358;&#12395;&#12418;&#12392;&#12418;&#12392;&#12398;&#29305;&#27530;&#24418;&#24335;&#12392;&#21516;&#12376;&#12424;&#12358;&#12395;&#33258;&#30001;&#12395;&#23450;&#32681;&#12391;&#12365;&#12427;&#12398;&#12364;Lisp&#12425;&#12375;&#12373;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org35eb5c2" class="outline-3">
+<h3 id="org35eb5c2"><a href="#org35eb5c2">文字列</a></h3>
+<div class="outline-text-3" id="text-org35eb5c2">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 115: </span>実体が異なるのでnilになる</label><pre class="src src-lisp">(eq <span class="org-string">"tide"</span> <span class="org-string">"tide"</span>)
+</pre>
+</div>
+
+<div class="results" id="org4727433">
+<p>
+NIL
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 116: </span>equalを使うと文字列で比較する</label><pre class="src src-lisp">(equal <span class="org-string">"tide"</span> <span class="org-string">"tide"</span>)
+</pre>
+</div>
+
+<div class="results" id="orgf61ab62">
+<p>
+T
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org5a030e4" class="outline-3">
+<h3 id="org5a030e4"><a href="#org5a030e4">alist</a></h3>
+<div class="outline-text-3" id="text-org5a030e4">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 117: </span>alistにアクセスするgetの実装</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-get</span> (symbol property)
+  (<span class="org-keyword">let</span> ((plist (symbol-plist symbol)))
+    (<span class="org-keyword">loop</span> (until (null plist) nil)
+       (until (eq (car plist) property) (cadr plist))
+       (setq plist (cddr plist)))))
+</pre>
+</div>
+
+<div class="results" id="org44b0ae6">
+<p>
+MY-GET
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 118: </span>putpropの実装</label><pre class="src src-lisp">(putprop 'foo
+         (cons (symbol-function 'foo)
+               (get 'foo 'old-definition))
+         'old-definition)
+</pre>
+</div>
+
+<p>
+lambdaはdefunのように関数を定義する特殊形式ではない。
+lambdaはcarにあるリストが関数実体を示す単なる標識。
+defunとは、関数実体に名前をつける関数といえる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 119: </span>applyは関数(ラムダ式でも名前付きでもよい)に引数を与えて評価する</label><pre class="src src-lisp">(apply (<span class="org-keyword">lambda</span> (x y) (+ (* x x) (* y y))) (list 3 4))
+</pre>
+</div>
+
+<div class="results" id="org7817a57">
+<p>
+25
+</p>
+
+</div>
+
+<p>
+簡単な例。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 120: </span>リストの合計を求める。第2引数はリスト</label><pre class="src src-lisp">(apply '+ '(1 2 3 4))
+</pre>
+</div>
+
+<div class="results" id="org3580bb5">
+<p>
+10
+</p>
+
+</div>
+
+<p>
+funcallで書く。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 121: </span>リストの合計を求める。第2引数は任意の数</label><pre class="src src-lisp">(funcall '+ 1 2 3 4)
+</pre>
+</div>
+
+<div class="results" id="orgd0feb41">
+<p>
+10
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgb825bba" class="outline-3">
+<h3 id="orgb825bba"><a href="#orgb825bba">mapcar</a></h3>
+<div class="outline-text-3" id="text-orgb825bba">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 122: </span>mapcarの定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-mapcar</span> (fn mlist)
+  (<span class="org-keyword">cond</span> ((null mlist) nil)
+        (t (cons (funcall fn (car mlist))
+                 (mapcar fn (cdr mlist))))))
+(my-mapcar #'sqrt '(1 2 3))
+</pre>
+</div>
+
+<div class="results" id="org8d72b7b">
+<p>
+(1 1.4142135 1.7320508)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 123: </span>maplistの定義</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">my-maplist</span> (fn mlist)
+  (<span class="org-keyword">cond</span> ((null mlist) nil)
+        (t (cons (funcall fn mlist) <span class="org-comment-delimiter">;; </span><span class="org-comment">mapcar &#12392;&#12398;&#36949;&#12356;&#12399;&#12371;&#12371;&#12384;&#12369;&#12290;car&#12391;&#12399;&#12394;&#12367;&#12522;&#12473;&#12488;&#12395;&#23550;&#12375;&#12390;fn&#12434;apply&#12377;&#12427;
+</span>                 (maplist fn (cdr mlist))))))
+(my-maplist #'append '(1 2 3))
+</pre>
+</div>
+
+<div class="results" id="orgb621e8e">
+<p>
+((1 2 3) (2 3) (3))
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 124: </span>maplistの例。各要素の累計を得るとき</label><pre class="src src-lisp">(reverse
+ (my-maplist (<span class="org-keyword">lambda</span> (x) (apply #'+ x))
+             (reverse '(10 5 6 12 3 5 9 7 0 4 2 15))))
+</pre>
+</div>
+
+<div class="results" id="org02fb278">
+<p>
+(10 15 21 33 36 41 50 57 57 61 63 78)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgedc0027" class="outline-3">
+<h3 id="orgedc0027"><a href="#orgedc0027">sort</a></h3>
+<div class="outline-text-3" id="text-orgedc0027">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 125: </span>無名関数で順序を指定してソートする</label><pre class="src src-lisp">(setq monthly-sales
+      '((Jan . 10) (Feb . 5) (Mar . 6) (Apr . 12) (May . 3)(Jun . 5) (Jul . 9) (Aug . 7) (Sep . 0) (Oct . 4)(Nov . 2) (Dec . 15)))
+(sort monthly-sales #'(<span class="org-keyword">lambda</span> (x y) (&gt; (cdr x) (cdr y))))
+</pre>
+</div>
+
+<div class="results" id="org21149c2">
+<p>
+((DEC . 15) (APR . 12) (JAN . 10) (JUL . 9) (AUG . 7) (MAR . 6) (FEB . 5)
+ (JUN . 5) (OCT . 4) (MAY . 3) (NOV . 2) (SEP . 0))
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgd248878" class="outline-3">
+<h3 id="orgd248878"><a href="#orgd248878">eval</a></h3>
+<div class="outline-text-3" id="text-orgd248878">
+<p>
+evalを実装することで理解する。
+スコープあたりの核となる部分を実装しているのだが、よくわからない。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 126: </span>eval</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">eval</span> (form)
+  (<span class="org-keyword">cond</span>
+    ((or (null form) (numberp form) (stringp form)) form) <span class="org-comment">; nil, &#25968;, &#25991;&#23383;&#21015;&#12398;&#20516;&#12399;&#12381;&#12428;&#33258;&#36523;
+</span>    ((symbolp form) (variable-value form)) <span class="org-comment">; &#12471;&#12531;&#12508;&#12523;&#12399;&#22793;&#25968;&#12392;&#35299;&#37320;&#12373;&#12428;&#12427;
+</span>    ((member (car form)
+             '(quote cond setq prog progn prog1 prog2 go let let* if do do* defun defmacro function ...))
+     (eval-special-form form)) <span class="org-comment">; &#29305;&#27530;&#24418;&#24335;&#12398;&#20966;&#29702;(&#12371;&#12371;&#12363;&#12425;&#20808;&#12399;&#12475;&#12523;&#12392;&#12431;&#12363;&#12387;&#12390;&#12356;&#12427;)
+</span>    ((and (consp (car Form)) <span class="org-comment">; &#12521;&#12512;&#12480;&#24335;
+</span>          (eq (caar form) 'lambda))
+     (apply (car form) (evlis (cdr form))))
+    ((function-symbol-p (car form)  <span class="org-comment">; &#38306;&#25968;&#12471;&#12531;&#12508;&#12523;
+</span>                        (evlis (cdr form))))
+    ((macro-symbol-p (car form)) <span class="org-comment">; &#12510;&#12463;&#12525;&#21628;&#12403;&#20986;&#12375;&#12290;&#12383;&#12384;&#12375;backquote&#12395;&#12399;&#26410;&#23550;&#24540;
+</span>     (eval (apply (macro-function (car form)) (cdr form))))
+    (t (<span class="org-warning">error</span> 'concat-evaluate form))))
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 127: </span>evlis</label><pre class="src src-lisp"><span class="org-comment-delimiter">;; </span><span class="org-comment">&#24341;&#25968;&#12434;&#38918;&#27425;&#35413;&#20385;&#12375;&#12390;&#12522;&#12473;&#12488;&#12395;&#12377;&#12427;(&#23455;&#38555;&#12399;&#12522;&#12473;&#12488;&#12434;&#20316;&#12425;&#12378;&#12473;&#12479;&#12483;&#12463;&#12395;&#31309;&#12416; ??)
+</span>(<span class="org-keyword">defun</span> <span class="org-function-name">evlis</span> (args)
+  (<span class="org-keyword">cond</span> ((null args) nil)
+        (t (cons (eval (car args)) (evlis (cdr args))))))
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 128: </span>特殊形式の評価</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">eval-special-form</span> (form)
+  (<span class="org-keyword">cond</span> ((eq (car form) 'quote) (cadr form))
+        ((eq (car form 'cond) (evcon (cdr form))))
+        ((eq (car form) 'setq') ...)
+        ((eq (car form) 'progn) (evprogn (cdr form)))))
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 129: </span>cond式の評価</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">evcon</span> (clauses)
+  (<span class="org-keyword">cond</span>
+    <span class="org-comment-delimiter">;; </span><span class="org-comment">&#12418;&#12358;cond&#31680;&#12364;&#27531;&#12387;&#12390;&#12394;&#12369;&#12428;&#12400;nil&#12434;&#36820;&#12377;
+</span>    ((null clauses) nil)
+    <span class="org-comment-delimiter">;; </span><span class="org-comment">&#36848;&#35486;&#12364;&#30495;&#12391;&#12354;&#12428;&#12400;&#12289;&#24112;&#32080;&#12398;&#26263;&#40665;&#12398;progn&#12434;&#38918;&#27425;&#35413;&#20385;&#12377;&#12427;
+</span>    ((eval (caar clauses))
+     (evprogn (cdr clauses)))
+    <span class="org-comment-delimiter">;; </span><span class="org-comment">&#27425;&#12398;cond&#31680;&#12434;&#35519;&#12409;&#12427;
+</span>    (t (evcon (cdr clauses)))))
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 130: </span>prognの評価</label><pre class="src src-lisp">(<span class="org-keyword">defun</span> <span class="org-function-name">evprogn</span> (forms)
+  (<span class="org-keyword">cond</span>
+    ((null forms) nil)
+    ((null (cdr forms)) (eval (car forms)))
+    (t (eval (car forms)) (evprogn (cdr forms)))))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org441b3dd" class="outline-3">
+<h3 id="org441b3dd"><a href="#org441b3dd">キーワード</a></h3>
+<div class="outline-text-3" id="text-org441b3dd">
+<p>
+Common Lispでは名前空間のことをシンボル・パッケージあるいは単にパッケージと呼ぶ。シンボルはどれかのパッケージに属する。
+Common Lispで標準的に用意されているのはlisp, user, keyword, systemの4つ。
+</p>
+
+<p>
+carと使うときは、実際にはlisp:carとしている。文脈によって自動で決定されるので毎回lisp:を打つ必要はない。
+</p>
+
+<p>
+キーワード引数は名前空間のうち、keywordを使う。特別扱いされ、keyword: が :だけに省略できる。
+なので keyword:direction と:direction は同じ意味である。キーワードを評価すると、つねにそれ自身を値として返すので、quoteする必要がない。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org697f1f6" class="outline-2">
+<h2 id="org697f1f6"><a href="#org697f1f6">Tasks</a></h2>
+<div class="outline-text-2" id="text-org697f1f6">
+</div>
+<div id="outline-container-orgf908d75" class="outline-3">
+<h3 id="orgf908d75"><a href="#orgf908d75"><a href="https://www.cs.cmu.edu/~dst/LispBook/book.pdf">COMMONLISP: A Gentle Introduction to Symbolic Computation</a></a></h3>
+<div class="outline-text-3" id="text-orgf908d75">
+<p>
+わかりやすい入門。
+</p>
+</div>
+</div>
+<div id="outline-container-org29bb521" class="outline-3">
+<h3 id="org29bb521"><a href="#org29bb521"><span class="todo TODO">TODO</span> <a href="http://lyrical.bugyo.tk/">魔法言語 リリカル☆Lisp</a></a></h3>
+<div class="outline-text-3" id="text-org29bb521">
+<p>
+nscripterと萌えキャラでLispが学べる…。
+</p>
+</div>
+</div>
+<div id="outline-container-org2f24eff" class="outline-3">
+<h3 id="org2f24eff"><a href="#org2f24eff"><a href="https://lispcookbook.github.io/cl-cookbook/">Common Lisp Cookbook Home</a></a></h3>
+</div>
+<div id="outline-container-orga727a2b" class="outline-3">
+<h3 id="orga727a2b"><a href="#orga727a2b"><a href="https://gigamonkeys.com/book/">Practical Common Lisp</a></a></h3>
+</div>
+<div id="outline-container-orgf3c6ece" class="outline-3">
+<h3 id="orgf3c6ece"><a href="#orgf3c6ece"><span class="todo TODO">TODO</span> 実用 Common Lisp</a></h3>
+<div class="outline-text-3" id="text-orgf3c6ece">
+<ul class="org-ul">
+<li><a href="https://www.amazon.co.jp/Common-Lisp-Architects%E2%80%99Archive-CLASSIC-MODER/dp/4798118907/">実用 Common Lisp (IT Architects’Archive CLASSIC MODER)</a></li>
+<li><a href="https://github.com/norvig/paip-lisp">norvig/paip-lisp</a> - サンプルスクリプト</li>
+</ul>
+
+<blockquote>
+<p>
+良質なプログラムの構造がどういうものかを理解して、その上で関心を持てるものを得た時に、興味深く実用性の高いプログラムが書けるようになる。これが、正にこの本の前提となる考え方である。その意味では、プログラムを書くことは、文章を書くことに似ている。カーニハン（Kernighan, B. W.）とプローガ（Plauger, J.）は、彼らの著書 Software Tools in Pascal の表紙で以下のように述べている。
+</p>
+
+<p>
+一般的なことを学んでも良質なプログラムは書けない。良質なプログラムを書くには、良質なプログラムを自分の目で読んでみることだ。このようなプログラムには、不要なものがない。可読性に優れているし、保守や修正も容易だ。人間工学的で、効率が良く信頼性も高い。読むことに加えて、良識のある良質なプログラミングの実践も不可欠だ。良質のプログラムを模倣しながらていねいに学習することこそ良質なプログラムへ到達する王道なのだ。
+</p>
+</blockquote>
+</div>
+</div>
+<div id="outline-container-orgecef8fb" class="outline-3">
+<h3 id="orgecef8fb"><a href="#orgecef8fb"><span class="todo TODO">TODO</span> Common Lisp Quick Reference</a></h3>
+</div>
+</div>
+<div id="outline-container-orgb256084" class="outline-2">
+<h2 id="orgb256084"><a href="#orgb256084">Reference</a></h2>
+<div class="outline-text-2" id="text-orgb256084">
+</div>
+<div id="outline-container-org7d78d1a" class="outline-3">
+<h3 id="org7d78d1a"><a href="#org7d78d1a"><a href="https://lisphub.jp/common-lisp/cookbook/index.cgi">逆引き Common Lisp クックブック:逆引きCommon Lisp</a></a></h3>
+<div class="outline-text-3" id="text-org7d78d1a">
+<p>
+リファレンス。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgad44dd7" class="outline-2">
+<h2 id="orgad44dd7"><a href="#orgad44dd7">Archives</a></h2>
+<div class="outline-text-2" id="text-orgad44dd7">
+</div>
+<div id="outline-container-org51da8a2" class="outline-3">
+<h3 id="org51da8a2"><a href="#org51da8a2"><span class="done DONE">DONE</span> Road to Common Lisp</a></h3>
+<div class="outline-text-3" id="text-org51da8a2">
+<p>
+Lispの学び方、おすすめ本の紹介。
+</p>
+<ul class="org-ul">
+<li><a href="https://gist.github.com/y2q-actionman/49d7587912b2786eb68643afde6ca192">A Road to Common Lisp 翻訳</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org3319377" class="outline-2">
+<h2 id="org3319377"><a href="#org3319377">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org3319377">
+<ul class="org-ul">
+<li><a href="./20210911183844-lisp.html">LISP</a></li>
+<li><a href="./20210926152425-common_lisp.html">Common Lisp</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

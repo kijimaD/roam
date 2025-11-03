@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:54Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』</h1>
+<div id="outline-container-org4c93dc9" class="outline-2">
+<h2 id="org4c93dc9"><a href="#org4c93dc9">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org4c93dc9">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-10 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-06-12 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org4e9a4da" class="outline-2">
+<h2 id="org4e9a4da"><a href="#org4e9a4da">概要</a></h2>
+<div class="outline-text-2" id="text-org4e9a4da">
+<p>
+<a href="https://www.shuwasystem.co.jp/book/9784798044781.html">ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ</a>は、おなじみの&ldquo;Hello, World&rdquo;を表示するまでの流れを詳しく解説する本。
+</p>
+</div>
+</div>
+<div id="outline-container-org60fa226" class="outline-2">
+<h2 id="org60fa226"><a href="#org60fa226">メモ</a></h2>
+<div class="outline-text-2" id="text-org60fa226">
+<ul class="org-ul">
+<li>writeとwrite() の違い。writeはシステムコール、OSカーネルのことを指している。それに対してwrite()はPOSIXで定義されているwriteシステムコールを呼び出すためのC言語用API、つまりアプリーケーション用のAPIのことを指している(p143)</li>
+<li>main関数ではいったい何をしているのか。なぜexit()を呼び出すとプログラムは終了するのだろうか。main()から戻った先には何があるのか、を調べる(p159)</li>
+<li>スタートアップは標準Cライブラリの役割であり、GNU/Linuxディストリビューションの場合はglibcによって提供される(p170)</li>
+<li>標準Cライブラリでもっとも重要なのはシステムコール・ラッパーである(p170)</li>
+<li><a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>カーネルが提供するのはシステムコールのABIであり、APIを提供するのはglibcの役割。POSIXの <code>exit()</code> と <code>_exit()</code> を実現するための機能としてLinuxには <code>exit_group</code> や <code>exit</code> システムコールがあり、glibcは <code>exit_group</code> システムコールを呼び出すことで、POSIXの <code>_exit()</code> を提供している。 <code>_exit()</code> は、システムコール・ラッパーとしてユーザに提供されるAPIである、という(p183)</li>
+<li>UNIXライクなシステムでは、新しいプロセスは <code>fork()</code> によって生成され、 <code>exec()</code> 系の関数により新たなプログラムとして書き換わることで実行されるのが基本形、だという(p191)</li>
+<li><code>execve</code> システムコールが発行されたときカーネルがやること(p191)
+<ul class="org-ul">
+<li>実行ファイルを読み込み、仮想メモリ上にマッピングする</li>
+<li>argc/argv[]、BSSの初期化、環境変数の引き渡しなどをやる</li>
+<li>実行ファイル上のエントリ・ポイントから実行を開始する</li>
+</ul></li>
+<li>sysにあるのがカーネルのソースコード、libはユーザに提供されるライブラリのソースコード、だという(p213)</li>
+<li>もともとBSDはAT&amp;TのUNIXカーネルに対して追加の各種ツール類やカーネルへのパッチを配布していたものが、AT&amp;T依存部を追加実装で置き換えることで独自発展してきた。このためBSDはOSを構成する一通りのものがすべて提供されている。いっぽうでLinuxカーネルとglibcは歴史的に異なるものなので、別々に配布されている(p213)</li>
+<li>Newlibは組み込みシステムをターゲットとした標準Cライブラリで、現在RedHatによって開発されている、という(p219)</li>
+<li>gccの実行ログを見ると、「ccl」「as」「collect2」というコマンドが順に発行されているのがわかる。gccというコマンドは実は厳密な意味でのコンパイラではなく、指定されたファイルの種別に応じてこれらのコマンドを適切に組み合わせて適切な引数で呼び出してくれるドライバであるといえる、という(p231)
+<ul class="org-ul">
+<li>ccl: 狭義のコンパイラ</li>
+<li>as: アセンブラ</li>
+<li>collect2: リンカ</li>
+</ul></li>
+<li>OSとは何か、は人によって曖昧である。万人にしっくりくる定義は、「自身がメインテーマとしている分野に対して、その下層にあってその先は知らなくていいとしている部分」のことをOSと呼ぶ、ということ(p233)</li>
+<li>UNIXではパイプというプロセス間通信機能によって、あるプロセスの出力を別のプロセスの入力に与えるようなことが簡単にできる。ひとつのプログラムに様々な機能をもたせるのではなく、入出力はテキストという標準的なフォーマットを基本として、複数のアプリケーションをパイプで接続して順に処理する、という思想になっている。この特徴はほかの汎用OSには必ずしも当てはまらない(p240)</li>
+<li>技術的な意味で、「GNU/Linux」と呼ぶべきだという。GNU/Linuxディストリビューションは<a href="20210926144734-gnu.html#ID-5c26b8e3-7dcb-47c4-833b-4fd2e7e8bfda">GNU</a>アプリケーション群に強く依存していて、それをLinuxとだけ呼ぶことに違和感があるという。GCCによるプログラミング環境やbashによるシェル環境のことをLinux環境と呼ぶのは誤解の原因になる(p245)</li>
+<li>「LinuxはUNIX互換」といわれるが、POSIXのAPIはglibcによって提供され、ユーザインターフェースはbashなどのGNUアプリケーションによって提供される、という。LinuxはUNIX互換のシステムを作り上げるためのベースとしてUNIXに備わっている機能を提供するカーネル、くらいが適当か(p246)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>共有ライブラリ</label><pre class="src src-shell">readelf -a /lib/x86_64-linux-gnu/libc.so.6 | head
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 03 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - GNU
+  ABI Version:                       0
+  Type:                              DYN (Shared object file)
+  Machine:                           Advanced Micro Devices X86-64
+  Version:                           0x1
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>静的ライブラリ</label><pre class="src src-shell">readelf -a /lib/x86_64-linux-gnu/libdialog.a | head
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+File: /lib/x86_64-linux-gnu/libdialog.a(trace.o)
+ELF Header:
+  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00
+  Class:                             ELF64
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              REL (Relocatable file)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ふだん意識せずに利用しているヘッダファイルやライブラリだが、自然にできることはなく必ず開発した人がいる。ファイルのライセンス表記を見ることで提供元を考えてみると歴史や経緯がわかったりすることは多い。そうした技術とは一見関係なさそうな知識は、解析の際に意外に役に立ったりするものである。そしてGNU/Linuxのシステムがどのように構築されているかを知るための良い手がかりになる、という(p263)</li>
+<li>なんとなくバイナリファイルを眺めるだけでも、32ビット・アーキテクチャであったり、リトルエンディアンであることがなんとなく推測できる。はじめから読めないものとして諦めず、とりあえず見てみて、肌で感じてみるということが重要だという(p265)</li>
+<li>ELFフォーマットに限らず、多くのフォーマットは解析用のヘッダファイルが <code>/usr/include</code> にインストールされている場合が多い、という(p277)</li>
+<li>readelfの解析結果だけでは、情報がどのように格納されているかを実感しにくい。バイナリダンプだけをいきなり見ても、なかなか解析できるものではない。ここに構造体の定義を含め、3つを照らし合わせて見てみることで、実際にさまざまな情報が格納されていることを実感しながら理解できるだろう(p280)</li>
+<li>セクションとセグメント2つの管理単位がある理由。セクションはリンカのためにあり、セグメントはローダのためにある(p290)</li>
+<li>動的リンクと共有リンク(p293)
+<ul class="org-ul">
+<li>「動的リンク」は、実行時にライブラリをリンクするという意味。ハードディスクの容量節約に貢献する。動的リンクだといって動作に共有ライブラリが用いられているとは限らない。単に実行時に動的にライブラリをリンクしているだけで、メモリ上では別々の資源となって動作していることもありうる</li>
+<li>「共有ライブラリ」は、仮想メモリ機構を使ってライブラリをメモリ上で共有すること。仮想メモリで動作していることが前提の、汎用OS向けの機能。メモリ使用量の節約に貢献する。共有ライブラリは実装上、動的リンクを必要とする場合が一般的である</li>
+</ul></li>
+<li>共有ライブラリの位置独立コード。共有ライブラリはどのアドレスにロードされていても動作する必要がある。他の共有ライブラリと衝突しないようなアドレスに自動的にロードされるから。実体はひとつだが、プロセスによってマッピングされるアドレスが異なる。ライブラリ中の関数呼び出し、変数では、絶対アドレスで呼び出し先を指定できない。この解決方法として、関数呼び出しをする際には呼び出し先の関数のポインタを別のところに保持しておき、ポインタ経由で関数呼び出しをするようにする。ポインタはデータ領域に置かれるため、プロセス間で共有はされずに実行コードはそのまま共有できる。このような関数へのポインタの配列領域をGOT(Global Offset Table)とよぶまた、GOTを参照して関数呼び出しを行うような処理の集まりをPLTとよぶ。また、このようなコードをPIC(Position Independent Code)とよぶ(p297)</li>
+<li>実行ファイルには機器語コードや文字列データ、デバッグ情報やさまざまなコメントなどが格納されている。ヘッダもさまざまなものを持っていて、技術的知見の宝庫になっている、という。機械語コードの解析の際には、実行ファイルに含まれた情報が欠かせず、objdumpによる逆アセンブル結果とreadelfによる解析結果を並べてみることも少なくない(p300)</li>
+<li>同じアーキテクチャ向けの機械語コードで、同じx86アーキテクチャ上の環境なのに、エミュレーション無しでは動作しないのはなぜか。それはシステムコールのABIの違いがあるから(p325)</li>
+<li>FreeBSDはシステムコールの引数はスタック経由で渡し、エラーはフラグレジスタ上のフラグで返す。Linuxはシステムコールの引数はレジスタ経由で渡し、エラーは負の値の戻り値として返す(p339)</li>
+<li>世の中にはLinuxやx86アーキテクチャ以外にも、さまざまなプラットフォームやアーキテクチャがある。そしてシステムコールの仕様もPOSIXがすべてではない。そのような目線で見ないと、理解できないことも多い。俯瞰して見られるような視点は大切である、という。何かについて調べるときにはその対象としているものだけを見るのではなく、同じような別の実装を見て比較してみるようにするといい、という(p376)</li>
+<li>アセンブラの解読を避けて図などで無理に理解しようとするよりも、アセンブラを見てみることで素直に理解できることがある(p389)</li>
+<li>共有ライブラリは静的にローディングされる実行コードと衝突しないように、仮想メモリ機構により異なるアドレスにマッピングされる。このため「アドレスが全然違う値になっている」という現象が見えたら、それは共有ライブラリ上にあると考えるべきである、という(p392)</li>
+<li>vDSO(仮想共有動的オブジェクト)は、 <code>gettimeofday()</code> のような情報取得サービスの負荷を下げるために利用される。例えばカーネル側が特定の領域に定期的に時刻を書き込み、アプリケーション側からはそれを見るだけにすれば、システムコール例外(割込)を発行せずにサービスを提供できる。vDSOから低レイヤーを幅広く知ることの意義がわかる。モジュール単位での最適化が行われるのは当然であるが、より重要なこととして、モジュール間をまたいでの最適化をいかに行うかということが先にある。そのためには、インターフェースさえ知っていればあとはお互いのことは知らなくてもよい、というわけにはいかない(p428)</li>
+<li>高度で効果的な最適化を行うためには、ひとつの分野に閉じているだけでは不十分である。複数の分野を知り、全体を俯瞰しての設計が必要になる。目安として、自分が専門としている層の、ひとつ上とひとつ下の層を知るように常に意識するとよい、という(p429)</li>
+<li>下の層に降りていくことに敷居を感じるとき有効なのは、とにかく手を動かして実物を見てみることだという。さらにもうひとつ重要なのはそれを開発しているプロジェクトやコミュニティについて知ること。ソースコードの先に、それを作っている「人」が見えるようになると、より興味を持って読むことができるようになる(p429)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgfa9a18a" class="outline-2">
+<h2 id="orgfa9a18a"><a href="#orgfa9a18a">関連</a></h2>
+<div class="outline-text-2" id="text-orgfa9a18a">
+<ul class="org-ul">
+<li><a href="20240324T214548--kdoc-129-『ポインタ理解のためのアセンブリ入門』__book.html#ID-20240324T214548">KDOC 129: 『ポインタ理解のためのアセンブリ入門』</a>。アセンブラがよく出てくるつながり</li>
+<li><a href="https://ja.wikipedia.org/wiki/Executable_and_Linkable_Format">Executable and Linkable Format - Wikipedia</a>。ELFフォーマットの概要</li>
+<li><a href="https://docs.oracle.com/cd/E19683-01/817-4912/6mkdg542u/index.html">第7章 オブジェクトファイル形式 (リンカーとライブラリ)</a>。ELFフォーマットの例</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org975017d" class="outline-2">
+<h2 id="org975017d"><a href="#org975017d">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org975017d">
+<ul class="org-ul">
+<li><a href="./20240601T120632--kdoc-181-『linuxシステムプログラミング』__book.html">KDOC 181: 『Linuxシステムプログラミング』</a></li>
+<li><a href="./20240623T212808--kdoc-193-プログラミング言語は共通言語として役立つ__essay.html">KDOC 193: プログラミング言語は共通言語として役立つ</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

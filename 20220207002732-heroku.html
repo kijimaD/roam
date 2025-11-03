@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:54Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Heroku</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Heroku</h1>
+<div id="outline-container-orgfdae269" class="outline-2">
+<h2 id="orgfdae269"><a href="#orgfdae269">概要</a></h2>
+<div class="outline-text-2" id="text-orgfdae269">
+<p>
+HerokuはアメリカのPaaS企業。
+<a href="20220212141124-ci.html#ID-eaf6ed04-7927-4a16-ba94-fbb9f6e76166">CI</a>,<a href="20220212141243-cd.html#ID-2c4cb3a7-7a8a-4a3b-88c2-2c5e69515764">CD</a>サービスを提供する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcd108c7" class="outline-2">
+<h2 id="orgcd108c7"><a href="#orgcd108c7">Memo</a></h2>
+<div class="outline-text-2" id="text-orgcd108c7">
+</div>
+<div id="outline-container-org697bb28" class="outline-3">
+<h3 id="org697bb28"><a href="#org697bb28">紐付ける</a></h3>
+<div class="outline-text-3" id="text-org697bb28">
+<p>
+↓のようなエラーが出たとき。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>どのアプリと紐付けるか明示されてない</label><pre class="src src-nil">$ heroku push
+ ›   Error: Missing required flag:
+ ›     -a, --app APP  app to run command against
+ ›   See more help with --help
+</pre>
+</div>
+
+<p>
+紐付ける。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">heroku git:remote -a &#12450;&#12503;&#12522;&#21517;
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3f58641" class="outline-3">
+<h3 id="org3f58641"><a href="#org3f58641">review app</a></h3>
+<div class="outline-text-3" id="text-org3f58641">
+<p>
+PRごとにデプロイ環境を作ってくれる、便利な機能。
+設定も意外と簡単。
+</p>
+</div>
+</div>
+<div id="outline-container-orgda9219c" class="outline-3">
+<h3 id="orgda9219c"><a href="#orgda9219c">イメージ作成の流れ</a></h3>
+<div class="outline-text-3" id="text-orgda9219c">
+<p>
+heroku.ymlを作成。
+build, release, runとそれぞれのステージごとのイメージ、タスクを定義する。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>heroku.yml</label><pre class="src src-yaml">build:
+  docker:
+    web:
+       dockerfile: Dockerfile
+       target: release
+run:
+  web: cd ./public &amp;&amp; python -m SimpleHTTPServer $PORT
+</pre>
+</div>
+
+<p>
+↑で定義したコンテナイメージをherokuにプッシュする。
+プッシュしないと、毎回ビルドするので非常に時間がかかる。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">heroku container:login
+heroku container:push release
+heroku container:release release
+</pre>
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-orga731f5a" class="outline-2">
+<h2 id="orga731f5a"><a href="#orga731f5a">Tasks</a></h2>
+</div>
+<div id="outline-container-orgdf3ce37" class="outline-2">
+<h2 id="orgdf3ce37"><a href="#orgdf3ce37">Reference</a></h2>
+<div class="outline-text-2" id="text-orgdf3ce37">
+</div>
+<div id="outline-container-org163d41c" class="outline-3">
+<h3 id="org163d41c"><a href="#org163d41c"><a href="https://ja.wikipedia.org/wiki/Heroku">Heroku - Wikipedia</a></a></h3>
+</div>
+</div>
+<div id="outline-container-orga8e2a59" class="outline-2">
+<h2 id="orga8e2a59"><a href="#orga8e2a59">Archives</a></h2>
+</div>
+
+
+<div id="outline-container-org01d180f" class="outline-2">
+<h2 id="org01d180f"><a href="#org01d180f">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org01d180f">
+<ul class="org-ul">
+<li><a href="./20210817003906-history.html">History</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

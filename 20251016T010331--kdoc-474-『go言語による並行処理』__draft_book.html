@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:48Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 474: 『Go言語による並行処理』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 474: 『Go言語による並行処理』</h1>
+<div id="outline-container-orgeb3618b" class="outline-2">
+<h2 id="orgeb3618b"><a href="#orgeb3618b">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgeb3618b">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+
+<ul class="org-ul">
+<li>レビュー
+<ul class="org-ul">
+<li class="off"><input type='checkbox' /> &lt;署名&gt;</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3d724e0" class="outline-2">
+<h2 id="org3d724e0"><a href="#org3d724e0">概要</a></h2>
+<div class="outline-text-2" id="text-org3d724e0">
+<p>
+『Go言語による並行処理』は、並行処理を解説する本である。
+</p>
+</div>
+</div>
+<div id="outline-container-orgee1b2b7" class="outline-2">
+<h2 id="orgee1b2b7"><a href="#orgee1b2b7">メモ</a></h2>
+<div class="outline-text-2" id="text-orgee1b2b7">
+<ul class="org-ul">
+<li>並列性はランタイムの性質であって、コードの性質ではない(p24)
+<ul class="org-ul">
+<li>並列で走ってほしいと考えて並行なコードを書いている</li>
+</ul></li>
+<li>コードの結果を別のコードに共有したい場合、これはデータの所有権を移動していることになる。並行プログラムを安全にするには、一度に1つの並行処理のコンテキストのみがデータの所有権を持つようにする(p33)</li>
+<li>構造体の内部の状態を保護している場合はメモリアクセス同期を使うべきで、チャネルを使うべきではない(p34)</li>
+<li>メモリアクセスするべきか、チャネルを使うべきかの判断基準がある</li>
+<li>ゴルーチンは一時停止や再エントリーのポイントを定義していない。Goのランタイムはゴルーチンの実行時の振る舞いを観察して自動的に一時停止したり再開する(p38)</li>
+<li>Goがゴルーチンを管理する機構はM:Nスケジューラという実装になっている。M個のグリーンスレッドをN個のOSスレッドに対応させる。ゴルーチンはグリーンスレッドにスケジュールされる(p39)</li>
+<li>ゴルーチンは未来の任意のタイミングにスケジュールされる。ループ内でゴルーチンを発行していたら、順番に実行される保証はない</li>
+<li>WaitGroupの使い方。
+<ul class="org-ul">
+<li>Add カウンタを増やす &#x2013; 監視対象のゴルーチンの外で行う。いつゴルーチンが実行されるかはわからない。競合する可能性があるから</li>
+<li>Done カウンタを減らす</li>
+<li>Wait ゼロになるまでメインゴルーチンをブロック</li>
+</ul></li>
+<li>Sync, Cond, WaitGroup, Once, Pool</li>
+<li>オブジェクトプールデザインパターンはオブジェクトを要求するがインスタンス化のあとすぐにオブジェクトを捨てる並行処理のプロセスがある場合あるいはオブジェクトの生成がメモリに悪影響を与える場合に最適である(p64)</li>
+<li>一方向チャネルを宣言するには <code>&lt;-</code> 演算子を使う(p66)
+<ul class="org-ul">
+<li>読み込み専用チャネル: chan&lt;-</li>
+<li>書き込み専用チャネル: &lt;-chan</li>
+</ul></li>
+<li>Goは双方向チャネルを必要に応じて暗黙的に一方向チャネルに変換してくれる(p66)</li>
+<li>チャネルをrange処理すると、チャネルが閉じたときに自動的にループを終了する(p69)</li>
+<li>チャネルを閉じるとチャネルの読み込みブロックが解除される。閉じたチャネルは無限に読み込める(p70)</li>
+<li>チャネルが満杯のときはチャネルへの書き込みによってブロックし、チャネルが空のときはチャネルからの読み込みによってブロックする(p71)</li>
+<li>nilチャネルの扱い。nilチャネルからの読み込み、書き込み、close。チャネルを扱うときは常に、確実に初期化する(p75)</li>
+<li>読み込み
+<ul class="org-ul">
+<li>nil -&gt; ブロック</li>
+<li>Openで空ではない -&gt; 値を取得</li>
+<li>Openで空 -&gt; ブロック</li>
+<li>Closed -&gt; デフォルト値、false</li>
+<li>書き込み専用 -&gt; コンパイルエラー</li>
+</ul></li>
+<li>書き込み
+<ul class="org-ul">
+<li>nil -&gt; ブロック</li>
+<li>Openで満杯 -&gt; ブロック</li>
+<li>Openで満杯ではない -&gt; 値を書き込み</li>
+<li>Closed -&gt; panic</li>
+<li>読み込み専用 -&gt; コンパイルエラー</li>
+</ul></li>
+<li>Close
+<ul class="org-ul">
+<li>nil -&gt; panic</li>
+<li>Openで空ではない -&gt; チャネルを閉じる。読み込みはチャネルの中身がなくなるまで成功する。その後読み込みはデフォルト値を読み込む</li>
+<li>Openで空 -&gt; チャネルを閉じる。デフォルト値を読み込む</li>
+<li>Closed -&gt; panic</li>
+<li>読み込み専用 -&gt; コンパイルエラー</li>
+</ul></li>
+<li>どのゴルーチンがチャネルを所有しているかはっきりさせることが重要である。所有しているゴルーチンにはチャネルに対する書き込み権限がある。利用しているだけのゴルーチンには読み込み専用権限しかない(p77)</li>
+</ul>
+
+<p>
+selectでタイムアウトを実現する簡潔な方法。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>time.After は送信チャネルを返す</label><pre class="src src-go">package main
+
+import (
+ 	"time"
+ 	"fmt"
+)
+
+func main() {
+	var c &lt;- chan int
+	select {
+	case &lt;-c: // 決してブロックは解放されない
+	case &lt;-time.After(1 * time.Second):
+		fmt.Println("Timed out.")
+	}
+}
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">Timed out.
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>もしあるゴルーチンがゴルーチンの生成の責任を負っているのであれば、そのゴルーチンを停止できるようにする責任もある(p96)</li>
+<li>外部から終了させるためのチャネルを返させるパターン</li>
+<li>チャネルの合成パターン(p98)</li>
+<li>パイプライン構築のベストプラクティス(p106)</li>
+<li>パイプライン全体を割り込み可能にする(p111)</li>
+<li>キューの真の実用性は、あるステージの実行時間が他のステージの実行時間に影響を与えないようにステージを分離することにある(p129)</li>
+<li>Contextパッケージの2つの目的(p135)
+<ul class="org-ul">
+<li>コールグラフの各枝をキャンセルするAPIを提供する</li>
+<li>コールグラフを通じてリクエストに関するデータを渡すデータの置き場所を提供する</li>
+</ul></li>
+<li>Contextに保存するガイドライン(p147)</li>
+<li>エラーで表示する必要のあること(p150)
+<ul class="org-ul">
+<li>何が起きたか</li>
+<li>いつどこでエラーが発生したか</li>
+<li>1行程度のわかりやすいメッセージ</li>
+<li>さらに情報を得るにはどうすればよいか(スタックトレースなど)</li>
+</ul></li>
+<li>エラーを包む必要があるのは自分のコードが有益なエラーコンテキストを追加しうるときだけである。たいていのコードでエラーを包む必要はない(p152)</li>
+<li>きちんとした形式のエラーが持つべき情報をすべて含む独自のエラー型を作る(p153)</li>
+<li>並行処理のプロセスを設計するときには、タイムアウトとキャンセル処理を考慮する(p164)</li>
+<li>トークンバケットアルゴリズムによる流量制限(p180)</li>
+<li>複数の流量制限ルール(時間、日、&#x2026;)を適用する実装例(p187)</li>
+<li>ゴルーチンの健全性を監視する実装例(p192)</li>
+</ul>
+
+<p>
+感想。
+</p>
+
+<ul class="org-ul">
+<li>デススパイラルの話がよくわからない(p132)</li>
+<li>ハートビートの話がよくわからない(p171)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org90ba138" class="outline-2">
+<h2 id="org90ba138"><a href="#org90ba138">関連</a></h2>
+<div class="outline-text-2" id="text-org90ba138">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

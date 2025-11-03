@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:36Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 24: ゲームボーイエミュレータを作る</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 24: ゲームボーイエミュレータを作る</h1>
+<p>
+ゲームボーイエミュレータの実装は数多くある。参考にして作る。
+</p>
+<div id="outline-container-org057d973" class="outline-2">
+<h2 id="org057d973"><a href="#org057d973">memo</a></h2>
+<div class="outline-text-2" id="text-org057d973">
+<ul class="org-ul">
+<li><a href="https://github.com/bokuweb/gopher-boy">bokuweb/gopher-boy</a>は<a href="20210911113057-go.html#ID-7cacbaa3-3995-41cf-8b72-58d6e07468b1">Go</a>で読める。最初のコミットをたどる。</li>
+<li>pkgconfigの問題で実行できず
+<ul class="org-ul">
+<li>ググった方法で実行できた</li>
+<li>機能ごとにさまざまなミニマルROMがある</li>
+<li>各ROMの画像回帰テストで動作チェックしているよう。うまい</li>
+<li>go run cmd/go-boy/main.go roms/helloworld/hello.gb</li>
+</ul></li>
+<li>比較的コードが少なく、ファイルが分かれているので読みやすそう</li>
+<li>命令には引数(オペランド)が存在することがある
+<ul class="org-ul">
+<li>引数を指定する方法は13種類ある。アドレッシングモードという</li>
+<li>プログラムに埋め込んだ定数を引数にするモードやメモリアドレスを渡してそのアドレスに格納されている値を引数にするモードがある</li>
+</ul></li>
+<li>memory mapped IO
+<ul class="org-ul">
+<li>IOレジスタがCPUのメモリ空間上にマップされている。該当するアドレスを読み書きすることで、CPUはコントローラの入力を読み取ったり、PPUに出力する画像の情報を送ったり、APUから出力する音の波形を設定したりできる</li>
+<li>アドレスに対応するモジュールにアクセス</li>
+<li>CPUからはメモリアクセスに見える</li>
+<li>このアドレスを読み書きすれば各モジュールを使える、くらいの感じ</li>
+</ul></li>
+<li>カセットのMemory Bank Controller
+<ul class="org-ul">
+<li>カセットにはメモリが積まれていて、メモリの拡張として用いる</li>
+<li>セーブデータとか保存している領域っぽい</li>
+<li>確かにカセットごとに保存されてたよな</li>
+<li>コントローラには種類がある</li>
+<li>RAMのサイズはカセットによって異なる</li>
+<li>コントローラは複数のbankで構成されていて、スイッチできる</li>
+<li>コントローラにはモードがある
+<ul class="org-ul">
+<li>RAM優先/ROM優先</li>
+</ul></li>
+</ul></li>
+<li>ビット演算を復習しないといけないな。こういうとき使うんだ
+<ul class="org-ul">
+<li>命令を眺める。意味はわかるが、どうしてそうなのかはよくわからない</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org8092971" class="outline-2">
+<h2 id="org8092971"><a href="#org8092971">Tasks</a></h2>
+<div class="outline-text-2" id="text-org8092971">
+</div>
+<div id="outline-container-org03db82b" class="outline-3">
+<h3 id="org03db82b"><a href="#org03db82b"><span class="todo TODO">TODO</span> GPUのヘルパー関数のテストを書く</a></h3>
+<div class="outline-text-3" id="text-org03db82b">
+<p>
+まだあまり理解できてないところがある。
+</p>
+</div>
+</div>
+<div id="outline-container-org50c85cb" class="outline-3">
+<h3 id="org50c85cb"><a href="#org50c85cb"><span class="todo TODO">TODO</span> 割込のテストを書く</a></h3>
+<div class="outline-text-3" id="text-org50c85cb">
+<p>
+難しそうな部分。
+</p>
+</div>
+</div>
+<div id="outline-container-org75d3610" class="outline-3">
+<h3 id="org75d3610"><a href="#org75d3610"><span class="todo TODO">TODO</span> CPUのテストを書く</a></h3>
+<div class="outline-text-3" id="text-org75d3610">
+<ul class="org-ul">
+<li>フラグあたりがよくわかってない</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org141d6db" class="outline-2">
+<h2 id="org141d6db"><a href="#org141d6db">Archives</a></h2>
+<div class="outline-text-2" id="text-org141d6db">
+</div>
+<div id="outline-container-org9a7f704" class="outline-3">
+<h3 id="org9a7f704"><a href="#org9a7f704"><span class="done DONE">DONE</span> バスのテストを書く</a></h3>
+<div class="outline-text-3" id="text-org9a7f704">
+<p>
+完全に理解するためにテストを書く。
+</p>
+
+<ul class="org-ul">
+<li>リトルエンディアンだから逆に格納されているわけか
+<ul class="org-ul">
+<li>DEAD =&gt; AD DE</li>
+</ul></li>
+<li>0x0000 に 0xA5 が格納されている
+<ul class="org-ul">
+<li>0x0000は配列のインデックスで、0xA5が中に入っている値と考えられる。もちろん ハードウェア的には違うんだろうが、同じことだ</li>
+<li>中身は0〜255が入る。これらは16進数で2文字で表せる</li>
+</ul></li>
+<li>書き込みしてるのだが、反映されないな
+<ul class="org-ul">
+<li>バンクコントローラが0の場合は、書き込み不可。ROMしかないから。コントローラによってはRAMがあったりするので、そこでは書き込める</li>
+<li>まだあまりバンクコントローラについてよくわかっていない</li>
+</ul></li>
+<li>カートリッジのROMと、バンクコントローラのROMは違うのだろうか</li>
+<li>メモリマッピングを理解した。バスから0x8001番を読み込むと、VRAMの0x0001番を参照するようなことだ。実際のRead, Writeの処理はデバイスに移譲する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgcc15818" class="outline-3">
+<h3 id="orgcc15818"><a href="#orgcc15818"><span class="done DONE">DONE</span> <a href="https://gihyo.jp/dp/ebook/2019/978-4-297-10822-9">動かしてわかる CPUの作り方10講 | Gihyo Digital Publishing</a></a></h3>
+<div class="outline-text-3" id="text-orgcc15818">
+<p>
+CPUの知識が足りないので読む。
+</p>
+
+<ul class="org-ul">
+<li>この本で設計するシンプルなRISC型CPUの仕様
+<ul class="org-ul">
+<li>すべての命令は固定長で15bit</li>
+<li>機械語を格納するインストラクション・レジスタやメインメモリのプログラムにおけるデータ長も、命令と同じ長さになる</li>
+<li>2バイト(16bit)のデータ表現
+<ul class="org-ul">
+<li>CPUが扱うデータは2バイト(16bit)</li>
+<li>汎用レジスタやメインメモリのデータ領域のデータ長も16bitになる</li>
+<li>算術論理演算を行うALUも16bitが基本サイズ</li>
+</ul></li>
+<li>8個の汎用レジスタ
+<ul class="org-ul">
+<li>命令長が15bitの制約の中で、命令の種類を表すオペレーションと、最大2つのオペランドを指定する必要がある</li>
+<li>オペレーションを表す命令コードに4bit、汎用レジスタを指定するオペランドに3bitを割り当てることにする</li>
+<li>なので命令の数は16個、汎用レジスタの数は8個になる</li>
+</ul></li>
+<li>プログラム領域とデータ領域を分離するハーバードアーキテクチャ
+<ul class="org-ul">
+<li>メインメモリとレジスタ間のデータ転送は、
+<ul class="org-ul">
+<li>A. プログラム領域とインストラクション・レジスタ間</li>
+<li>B. データ領域と汎用レジスタ間</li>
+</ul></li>
+<li>プログラム領域におけるデータ長が15bit、データ領域におけるデータ長は16bitとなり、1bitのずれがある。そのため独立したデータバスとして扱うハーバードアーキテクチャを採用する</li>
+<li>メモリマップドI/O
+<ul class="org-ul">
+<li>回路構成をシンプルにするため、メインメモリのデータ領域に独立したアドレスを与えてI/Oを配置するメモリマップドI/Oを採用する</li>
+</ul></li>
+</ul></li>
+<li>シンプルさに徹している。命令長を増やせば命令数を増やしたり、オペランド等に割り当てるビット数に余裕が生まれ、汎用レジスタの数やメモリサイズを大きくできるがやらない</li>
+</ul></li>
+<li>mov
+<ul class="org-ul">
+<li>汎用レジスタのデータを移動(コピー)する</li>
+<li>[命令コード][第1オペランド&#x2026;to][第2オペランド&#x2026;from]</li>
+<li>toの汎用レジスタの内容を、fromの汎用レジスタにコピーする</li>
+</ul></li>
+<li>add
+<ul class="org-ul">
+<li>汎用レジスタのデータを加算</li>
+<li>[命令コード][第1オペランド&#x2026;target][第2オペランド&#x2026;from]</li>
+<li>target + fromして、計算結果をtargetの汎用レジスタに上書きする</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org7d6aeeb" class="outline-3">
+<h3 id="org7d6aeeb"><a href="#org7d6aeeb"><span class="done DONE">DONE</span> 命令セットを網羅する</a></h3>
+<div class="outline-text-3" id="text-org7d6aeeb">
+<p>
+追加していく。
+</p>
+</div>
+</div>
+<div id="outline-container-org445c644" class="outline-3">
+<h3 id="org445c644"><a href="#org445c644"><span class="done CLOSE">CLOSE</span> オペランドを取る関数が何かおかしい</a></h3>
+<div class="outline-text-3" id="text-org445c644">
+<p>
+第2引数のレジスタとデータが混じっているように見える。
+</p>
+
+<p>
+いや、第2引数のレジスタとデータは一部共用だから、混じっていていいんだ。
+</p>
+</div>
+</div>
+<div id="outline-container-org129e70d" class="outline-3">
+<h3 id="org129e70d"><a href="#org129e70d"><span class="done DONE">DONE</span> 画像によるテスト方法を確認する</a></h3>
+<div class="outline-text-3" id="text-org129e70d">
+<p>
+テストでそれぞれのROM実行結果を画像出力しているので、手動確認しなくていい。これはどうやっているのだろうか。ほかのゲーム開発にも応用できそうだ。
+</p>
+
+<ul class="org-ul">
+<li>そもそも画像をどうやって出しているのだろう
+<ul class="org-ul">
+<li>OpenGLのラッパーライブラリを使うのだが、これはエミュレータとどう絡んでいるか</li>
+<li>WASMで出せたりするか</li>
+<li>GPUが色情報の配列を持っている。それを画像サイズに合わせて長さと幅を設定して配置すれば画像になる</li>
+<li>3種類のレイヤがある。背景、ウィンドウ、スプライト。それらの重なり具合をうまくやって、1つの色情報の配列になる</li>
+<li>skipFrameが返す画像
+<ul class="org-ul">
+<li>emu.next()が返す画像
+<ul class="org-ul">
+<li>gpu.Step()して、gpu.GetImageData()する</li>
+<li>フィールドのg.imageDataのゲッター</li>
+</ul></li>
+</ul></li>
+<li>色情報の配列を描画ライブラリで書き出す
+<ul class="org-ul">
+<li>それだけのことだから、別に四角い白黒の文字列に置き換えても画面は表示できる</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6fff6d9" class="outline-3">
+<h3 id="org6fff6d9"><a href="#org6fff6d9"><span class="done DONE">DONE</span> GPUのテストで画像を出力してみる</a></h3>
+<div class="outline-text-3" id="text-org6fff6d9">
+<ul class="org-ul">
+<li>なんだかわからない。進まない
+<ul class="org-ul">
+<li>Readでは、命令を解釈している。渡されたオペコードから、返す情報を決めている。CPUと同じ感じ</li>
+<li>build系はレイヤごとに色情報を作成する処理をしている</li>
+<li>build系はStepから呼び出される。step上で分岐してどのbuildを使うか決めている。基本的に1つのセルに対して複数のbuildは使わない</li>
+<li>実体はOAMアドレスにあって、そこから設定だのを取り出す</li>
+<li>lycは何に使ってるんだろう。ly compareのよう。割り込み判定に使ってる</li>
+</ul></li>
+<li>GBには画像に特殊効果を与えるラスタエフェクトをやるハードウェアはない
+<ul class="org-ul">
+<li>レジスタで特殊効果を与えている</li>
+</ul></li>
+<li>特にテストにするような項目はなさそう
+<ul class="org-ul">
+<li>画像を出してみる</li>
+<li>imageDataには、何らか処理したあとの色の構造体が入っている(buildWindowTileを実行した結果とか)</li>
+<li>処理する前のデータはどこにあるのだろう</li>
+<li>GPUの中にあるlcdcって何
+<ul class="org-ul">
+<li>GBの画面を制御するLCDC(LCDコントローラ)で、タイル単位で画面を描画するタイルは8x8のビットマップで、専用のメモリ領域に定義する</li>
+<li>LCDの知識が必要</li>
+<li>タイルデータはVRAM(8000から97FF)に配置されている
+<ul class="org-ul">
+<li>前半はスプライトと背景、後半はオブジェクト</li>
+</ul></li>
+<li>タイルマップは9800-9BFFにある</li>
+<li>つまり8x8の1つ1つと、それらを使って画面を構成する2階層あるということか</li>
+</ul></li>
+<li>背景は出せた。単に行の <code>g.ly</code> それぞれでbuildBG()しただけ。あの緑色がついた</li>
+<li>スプライトが出ない</li>
+<li>タイル指定もできない</li>
+<li>タイルIDが全部同じになっている
+<ul class="org-ul">
+<li>タイルID</li>
+<li>パレットIDを固定すると、出力する色が変わった。パレットにプリセットの色が設定されていて、IDで選択するだけで色を変えられる</li>
+<li>2アドレスで1行分を担当している。2アドレスを重ね合わせて濃さを決定する。1x1は濃、1x0はやや濃、0x1はやや薄、0x0は薄</li>
+<li>アドレス8000に0b1111_1110, アドレス8001に0b1111_1100の場合、1行は░░░░░░▒▓になる。</li>
+</ul></li>
+<li>タイルの集合がタイルマップ</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orga76045f" class="outline-3">
+<h3 id="orga76045f"><a href="#orga76045f"><span class="done DONE">DONE</span> テストでスプライトを出力する</a></h3>
+<div class="outline-text-3" id="text-orga76045f">
+<p>
+スプライトを出してみる。
+</p>
+
+<ul class="org-ul">
+<li>paletteIDが0になっているな
+<ul class="org-ul">
+<li>paletteIDが0だと背景色を優先して描画されない</li>
+<li>タイルIDはスプライトごとにあり、</li>
+<li>パレットIDはピクセルごとにあり、実際の色を指定している</li>
+<li>objPaletteが設定されていなくて、paletteIDが常に背景色のIDになっていた</li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-org2a4eac1" class="outline-2">
+<h2 id="org2a4eac1"><a href="#org2a4eac1">Reference</a></h2>
+<div class="outline-text-2" id="text-org2a4eac1">
+</div>
+<div id="outline-container-org51e5bb8" class="outline-3">
+<h3 id="org51e5bb8"><a href="#org51e5bb8"><a href="http://yuma.ohgami.jp/GB-Programming-with-Shell-Script/02_tile_on_bg.html">背景にタイルを配置 | シェルスクリプトで ゲームボーイプログラミング 入門</a></a></h3>
+<div class="outline-text-3" id="text-org51e5bb8">
+<p>
+LCDについて。
+</p>
+</div>
+</div>
+<div id="outline-container-org6a6ae84" class="outline-3">
+<h3 id="org6a6ae84"><a href="#org6a6ae84"><a href="http://gikofami.fc2web.com/">ｷﾞｺ猫でもわかるファミコンプログラミング</a></a></h3>
+<div class="outline-text-3" id="text-org6a6ae84">
+<p>
+定番のエミュレータ解説サイト。一般的な仕組みはこっちで学んでおくのがよさそう。
+</p>
+</div>
+</div>
+<div id="outline-container-org1abeb76" class="outline-3">
+<h3 id="org1abeb76"><a href="#org1abeb76"><a href="https://gbdev.io/pandocs/About.html">Foreword - Pan Docs</a></a></h3>
+<div class="outline-text-3" id="text-org1abeb76">
+<p>
+ゲームボーイの仕様。
+</p>
+</div>
+</div>
+<div id="outline-container-org141f068" class="outline-3">
+<h3 id="org141f068"><a href="#org141f068"><a href="http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf">GameBoy CPU Manual</a></a></h3>
+<div class="outline-text-3" id="text-org141f068">
+<p>
+ゲームボーイのCPUマニュアル。
+</p>
+</div>
+</div>
+<div id="outline-container-org8d142ca" class="outline-3">
+<h3 id="org8d142ca"><a href="#org8d142ca"><a href="https://gbdev.io/">Projects | gbdev.io</a></a></h3>
+<div class="outline-text-3" id="text-org8d142ca">
+<p>
+開発コミュニティ。
+</p>
+</div>
+</div>
+<div id="outline-container-org7044845" class="outline-3">
+<h3 id="org7044845"><a href="#org7044845"><a href="https://gbdev.io/resources.html#tools">Resources | gbdev.io</a></a></h3>
+<div class="outline-text-3" id="text-org7044845">
+<p>
+非常に詳しい解説集。
+</p>
+</div>
+</div>
+<div id="outline-container-org398308f" class="outline-3">
+<h3 id="org398308f"><a href="#org398308f"><a href="https://www.dkrk-blog.net/game/gb_dev_sprite1">GB ゲーム開発覚え書き: スプライトを動かす1 | きるこの日記帳</a></a></h3>
+<div class="outline-text-3" id="text-org398308f">
+<p>
+スプライトのわかりやすい説明。
+</p>
+</div>
+</div>
+<div id="outline-container-org82eeec3" class="outline-3">
+<h3 id="org82eeec3"><a href="#org82eeec3"><a href="https://gekkio.fi/files/gb-docs/gbctr.pdf">Game Boy: Complete Technical Reference</a></a></h3>
+<div class="outline-text-3" id="text-org82eeec3">
+<p>
+詳しいリファレンス。
+</p>
+</div>
+</div>
+<div id="outline-container-orgad21cbf" class="outline-3">
+<h3 id="orgad21cbf"><a href="#orgad21cbf"><a href="https://w.atwiki.jp/gbspec/pages/35.html">CPU/命令セット - GB Spec - atwiki（アットウィキ）</a></a></h3>
+<div class="outline-text-3" id="text-orgad21cbf">
+<p>
+命令セットの一覧。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgff8127a" class="outline-2">
+<h2 id="orgff8127a"><a href="#orgff8127a">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgff8127a">
+<ul class="org-ul">
+<li><a href="./20240206T225726--kdoc-73-odでファイルの中身をn進数で見る__wiki.html">KDOC 73: odでファイルの中身をN進数で見る</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

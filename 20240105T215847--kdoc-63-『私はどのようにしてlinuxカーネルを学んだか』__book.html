@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:38Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 63: 『私はどのようにしてLinuxカーネルを学んだか』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 63: 『私はどのようにしてLinuxカーネルを学んだか』</h1>
+<div id="outline-container-org90893a4" class="outline-2">
+<h2 id="org90893a4"><a href="#org90893a4">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-org90893a4">
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 作成</li>
+<li class="on"><input type='checkbox' checked='checked' /> レビュー</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgbc58f90" class="outline-2">
+<h2 id="orgbc58f90"><a href="#orgbc58f90">概要</a></h2>
+<div class="outline-text-2" id="text-orgbc58f90">
+<p>
+<a href="https://amzn.to/3wvb94Q">私はどのようにしてLinuxカーネルを学んだか</a>は、<a href="20220108110637-linux.html#ID-7a81eb7c-8e2b-400a-b01a-8fa597ea527a">Linux</a>カーネルについて全体像の解説と、ゼロから学ぶ道筋を示す本。
+</p>
+</div>
+</div>
+<div id="outline-container-orga83f716" class="outline-2">
+<h2 id="orga83f716"><a href="#orga83f716">メモ</a></h2>
+<div class="outline-text-2" id="text-orga83f716">
+<ul class="org-ul">
+<li><a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C言語</a>はわかるのに、デバイスドライバのソースコードが理解できない。プログラムを理解するための前提知識がないから</li>
+<li>Linuxカーネルに関する情報は十分にあった。しかし当時理解できていなかった。文章を読んでなんとなく言いたいことは理解できるが、腹落ちしない</li>
+<li>難しいことを理解するためには、段階を踏んで基本を学んでいく必要がある。下地がない状態でいくら背伸びをしても手は届かない</li>
+<li>コンピュータアーキテクチャを理解していなかった。コンピュータアーキテクチャを理解せずして、Linuxカーネルを理解できるようにはならない</li>
+<li>まずはソースコードというよりも、カーネルやOSがわからないと理解できない</li>
+<li>コードも特有の部分があって、じつは詳しく知らないと難しい</li>
+<li>Linuxカーネルはあくまでもユーザプロセスを動作させることが目的なので、ユーザプロセスのプログラムの動きを知っておく必要がある。ユーザプロセスとLinuxカーネルの両方の動作を把握することで話がひとつにつながる</li>
+<li>ユーザプロセスがカーネルの機能を利用することをシステムプログラミングという。システムプログラミングを知らない状態では、いくらカーネルのソースコードを見ても全体像が見えてこない</li>
+<li>言語文法は習得済みと思っていたが、実は間違いだった。まだまだ習得できてないところがあり読めないところがあった</li>
+<li>もっとも重要な概念であるユーザ空間とカーネル空間の違いを理解できていなかった。この違いのために、ユーザプロセスとカーネルとで、プログラムの設計が全く変わってくる。ユーザプロセスにはmain関数があるが、カーネルおよびデバイスドライバにはない</li>
+<li>カーネルのソースコードを読む前に、ハードウェアの動きを理解しなければならない。Linuxカーネルはさまざまなプラットフォームに対応している。自分がどのプラットフォームに対応するLinuxカーネルを学びたいかを明確にする必要がある</li>
+<li>unameコマンドでアーキテクチャを確認できる。アーキテクチャの名称はLinuxカーネルをビルドしたときに決定する。 <code>UTS-MACHINE2</code> という定義でアーキテクチャの文字列が定義される</li>
+<li>システムプログラミングを知る。システムコールとはユーザプロセスがシステムコールを使って、カーネルの機能を呼び出すこと
+<ul class="org-ul">
+<li>厳密には特定のアセンブラ命令を呼び出すこと</li>
+</ul></li>
+<li>システムコールとはなにかを理解しなければならない。システムコールはユーザプロセスとカーネルをつなぐためのインターフェースであり、全体像を抑えるうえで必要となるから。システムコールとして使われる関数の意味を知ることがLinuxカーネルを理解するうえで必要になる</li>
+<li>Linuxカーネルのビルドは慣習的にgccが使われている。gccの拡張機能がソースコードに多く使われている。そのためgccの拡張機能について一通り知っておく必要がある</li>
+<li>とにかく動かして見る</li>
+<li>図を書きながら理解していくとよい</li>
+<li>動かして理解していく流れ
+<ul class="org-ul">
+<li>printk関数で調べる</li>
+<li>SystemTapというツールもある</li>
+<li>ビルドする</li>
+<li>動かす</li>
+</ul></li>
+<li>C言語で使われる整数データ型は大小の関係だけが仕様で規定されており、それぞれのデータ型のサイズはコンパイラ任せになっている</li>
+<li>カーネルコンフィギュレーションとによってLinuxカーネルを構成するモジュールを自由に選択できる。必要なモジュールのみをカーネルに組み込める。それによってカーネルのサイズを小さくできる</li>
+<li>Linuxカーネルでは条件コンパイル文を活用してカーネルコンフィギュレーションを実現している</li>
+<li>マクロが多用されているので、ビルドオプションであらかじめ展開して読むとよい
+<ul class="org-ul">
+<li>MakefileのEXTRA_CLAGSオプションで、コンパイルの途中結果をファイルに残す。コンパイルの途中結果にプリプロセッサ出力が含まれる</li>
+</ul></li>
+<li>マクロの中身を理解する必要はあまりない。必要に迫られたときはプリプロセッサ出力で見るのがおすすめ</li>
+<li>Linuxカーネルはどれかと聞かれたら、「/boot配下にあるvmlinuzファイルである」で間違いない</li>
+<li>ブートメッセージを学習の題材とするのもおすすめ</li>
+<li>initデーモンに何を選択するかはLinuxディストリビューションの開発元が決めること</li>
+</ul>
+
+<p>
+ソフトウェア割り込みを見る方法。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">cat /proc/interrupts | head -n 10
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">           CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       CPU8       CPU9       CPU10      CPU11      CPU12      CPU13      CPU14      CPU15
+  1:          0          0          0          0          0    1599978          0          0          0          0          0          0          0          0          0          0   IO-APIC    1-edge      i8042
+  8:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   IO-APIC    8-edge      rtc0
+  9:    3406692          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   IO-APIC    9-fasteoi   acpi
+ 12:          0          0          0          0     149358          0          0          0          0          0          0          0          0          0          0          0   IO-APIC   12-edge      i8042
+ 14:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   IO-APIC   14-fasteoi   INTC1055:00
+ 16:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   IO-APIC   16-fasteoi   i801_smbus
+ 27:          0          0     392073          0    1739738          0   78235528          0   10926714          0          0          0          0          0        544          0   IO-APIC   27-fasteoi   idma64.0, i2c_designware.0
+ 56:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   11701805   IO-APIC   56-fasteoi   ELAN067B:00
+120:          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0          0   PCI-MSI 98304-edge      PCIe PME
+</pre>
+</div>
+
+<p>
+カーネルスレッドを見る方法。initデーモンはユーザプロセスなので、VSZ列とRSS列が0ではなく、COMMAND列には角括弧がついていない。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>VSZ(Virtual Memory Size)とRSS(Resident Set Size)の列が0となっているのがカーネルスレッド</label><pre class="src src-shell">ps auxw | head -n 10
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0 170996 16260 ?        Ss   Feb11   3:07 /sbin/init splash
+root           2  0.0  0.0      0     0 ?        S    Feb11   0:02 [kthreadd]
+root           3  0.0  0.0      0     0 ?        I&lt;   Feb11   0:00 [rcu_gp]
+root           4  0.0  0.0      0     0 ?        I&lt;   Feb11   0:00 [rcu_par_gp]
+root           5  0.0  0.0      0     0 ?        I&lt;   Feb11   0:00 [netns]
+root          10  0.0  0.0      0     0 ?        I&lt;   Feb11   0:00 [mm_percpu_wq]
+root          11  0.0  0.0      0     0 ?        S    Feb11   0:00 [rcu_tasks_rude_]
+root          12  0.0  0.0      0     0 ?        S    Feb11   0:00 [rcu_tasks_trace]
+root          13  0.0  0.0      0     0 ?        S    Feb11   0:27 [ksoftirqd/0]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>CPUのレジスタの状態がユーザプロセスの実行状態を表している</li>
+<li>ある時点のCPUレジスタの状態を保存しておくと、あとで任意のタイミングでCPUレジスタを復元してユーザプロセスを再開できる</li>
+<li>CPUレジスタはスナップショットのようなもので、コンテキストという。マルチタスクの実現のために実行中のユーザプロセスを停止し、別のユーザプロセスを実行することをプロセス切り替えやコンテキストスイッチという</li>
+<li>プロセス切り替えを行うために仮想メモリという概念が必要になる。ユーザプロセスごとにメモリ領域を持っているが、ひとつのプロセスに閉じているため、他のプロセスのメモリ領域とは独立している</li>
+<li>ページテーブルは仮想メモリを実現するためのしくみ。プロセス切り替えを行うとき、CPUの管理対象となるメモリ領域の切り替えも必要となるから</li>
+<li>セグメントは16bitCPU時代によく使われていたしくみ。メモリのアドレス空間が1MBであることに対して、CPUは通常16bitであることから、64KBしかアクセスできないセグメントというしくみを使って64KBを超えるアクセスを行っていた</li>
+<li>32bit CPUではセグメントという仕組みを使わずともメモリアクセスが行える。</li>
+<li>仮想メモリはメモリアドレスを1バイトずつ処理しない。ページサイズの単位で処理する。アドレス変換もページサイズ単位で行う</li>
+<li>システムコールforkを使うと新しくユーザプロセスを生成できる。別々のプロセスになり、親子関係ができる</li>
+<li>システムコールcloneを使うと新しくスレッドを生成できる。メモリ領域をユーザプロセスと共有する</li>
+<li>定義に飛ぶタグジャンプ、呼び出し箇所を表示するキーワード検索が便利</li>
+</ul>
+
+<p>
+読み進めるコツ。
+</p>
+
+<ul class="org-ul">
+<li>上から下まで通しで読む。流れで全体の動きを俯瞰する</li>
+<li>キャラクタ型デバイスドライバがおすすめ。/dev/nullとか。/drivers/char/mem.cにある</li>
+<li>プリプロセッサを活用する。マクロが多いのですべて展開して読む</li>
+<li>わからなくても気にしない。大事なのは全体の流れを把握すること</li>
+<li>図に起こす。図を見て全体を俯瞰する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf3a4ca0" class="outline-2">
+<h2 id="orgf3a4ca0"><a href="#orgf3a4ca0">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgf3a4ca0">
+<ul class="org-ul">
+<li><a href="./20240225T172419--kdoc-106-linuxでアーキテクチャ名を調べる__wiki.html">KDOC 106: Linuxでアーキテクチャ名を調べる</a></li>
+<li><a href="./20240225T172456--kdoc-107-システムコールを調べる__wiki.html">KDOC 107: システムコールを調べる</a></li>
+<li><a href="./20240225T174224--kdoc-109-発行システムコールを調べる__wiki.html">KDOC 109: 発行システムコールを調べる</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

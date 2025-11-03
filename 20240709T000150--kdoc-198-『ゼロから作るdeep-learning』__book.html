@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:39Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 198: 『ゼロから作るDeep Learning』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 198: 『ゼロから作るDeep Learning』</h1>
+<div id="outline-container-orga3c2797" class="outline-2">
+<h2 id="orga3c2797"><a href="#orga3c2797">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orga3c2797">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-07-31 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-08-01 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgb0ba66d" class="outline-2">
+<h2 id="orgb0ba66d"><a href="#orgb0ba66d">概要</a></h2>
+<div class="outline-text-2" id="text-orgb0ba66d">
+<p>
+<a href="https://www.oreilly.co.jp/books/9784873117584/">ゼロから作るDeep Learning</a>は、深層学習を実装して学ぶ本。
+</p>
+</div>
+</div>
+<div id="outline-container-orga33461d" class="outline-2">
+<h2 id="orga33461d"><a href="#orga33461d">メモ</a></h2>
+<div class="outline-text-2" id="text-orga33461d">
+<p>
+実行の前提環境: <a href="https://github.com/kijimaD/zerodeep1">https://github.com/kijimaD/zerodeep1</a> を <code>~/Project</code> 下に展開してから実行する。
+</p>
+
+<ul class="org-ul">
+<li>パーセプトロンの限界は、このように 1 本の直線で分けた領域だけしか表現できない点にある(p30)</li>
+<li>パーセプトロンの素晴らしさは、“層を重ねる”ことができる点にある(p31)</li>
+<li>行列Aと行列Bの積を計算するとき、Aの列数とBの行数を同じ値にする必要がある
+<ul class="org-ul">
+<li>A(2x3) と B(3x4) みたいに</li>
+</ul></li>
+<li>一般的に回帰問題では恒等関数を、分類問題ではソフトマックス関数を使う(p66)</li>
+<li>計算グラフにおけるレイヤの実装(例: 乗算、加算…)は簡単に行うことができる。それらを使えば複雑な微分の計算を求めることができる(p141)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>NumPy配列との演算</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.array([<span class="org-operator">-</span>1.0, 1.0, 2.0])
+<span class="org-builtin">print</span>(x)
+
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> x <span class="org-operator">&gt;</span> 0
+<span class="org-builtin">print</span>(y)
+
+<span class="org-variable-name">z</span> <span class="org-operator">=</span> y.astype(<span class="org-builtin">int</span>)
+<span class="org-builtin">print</span>(z)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[-1.  1.  2.]
+[False  True  True]
+[0 1 1]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>org-babelで実行が終わらないのでshow()はコメントアウトしている</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> matplotlib.pylab <span class="org-keyword">as</span> plt
+
+<span class="org-keyword">def</span> <span class="org-function-name">step_function</span>(x):
+    <span class="org-keyword">return</span> np.array(x <span class="org-operator">&gt;</span> 0, dtype<span class="org-operator">=</span><span class="org-builtin">int</span>)
+
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.arange(<span class="org-operator">-</span>5.0, 5.0, 0.1)
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> step_function(x)
+plt.plot(x, y)
+plt.ylim(<span class="org-operator">-</span>0.1, 1.1)
+<span class="org-comment-delimiter"># </span><span class="org-comment">plt.show()</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>シグモイド関数。0から1の間になる</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">sigmoid</span>(x):
+  <span class="org-keyword">return</span> 1 <span class="org-operator">/</span> (1 <span class="org-operator">+</span> np.exp(<span class="org-operator">-</span>x))
+
+<span class="org-builtin">print</span>(sigmoid(<span class="org-operator">-</span>5))
+<span class="org-builtin">print</span>(sigmoid(<span class="org-operator">-</span>1))
+<span class="org-builtin">print</span>(sigmoid(0))
+<span class="org-builtin">print</span>(sigmoid(1))
+<span class="org-builtin">print</span>(sigmoid(5))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">0.0066928509242848554
+0.2689414213699951
+0.5
+0.7310585786300049
+0.9933071490757153
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>NumPy配列の演算</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">t</span> <span class="org-operator">=</span> np.array([1.0, 2.0, 3.0])
+<span class="org-builtin">print</span>(1.0 <span class="org-operator">+</span> t)
+<span class="org-builtin">print</span>(1.0 <span class="org-operator">/</span> t)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[2. 3. 4.]
+[1.         0.5        0.33333333]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>ReLU関数。0より大きいとそのまま返す</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">rel</span>(x):
+    <span class="org-keyword">return</span> np.maximum(0, x)
+
+<span class="org-builtin">print</span>(rel(<span class="org-operator">-</span>1))
+<span class="org-builtin">print</span>(rel(0))
+<span class="org-builtin">print</span>(rel(1))
+<span class="org-builtin">print</span>(rel(100))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">0
+0
+1
+100
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>多次元配列</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">A</span> <span class="org-operator">=</span> np.array([10, 20, 30, 40])
+<span class="org-builtin">print</span>(A)
+<span class="org-builtin">print</span>(np.ndim(A))
+<span class="org-builtin">print</span>(A.shape)
+<span class="org-builtin">print</span>(A.shape[0])
+
+<span class="org-builtin">print</span>(<span class="org-string">"================"</span>)
+
+<span class="org-variable-name">B</span> <span class="org-operator">=</span> np.array([[10, 20, 30, 40], [10, 20, 30, 40]])
+<span class="org-builtin">print</span>(B)
+<span class="org-builtin">print</span>(np.ndim(B))
+<span class="org-builtin">print</span>(B.shape)
+<span class="org-builtin">print</span>(B.shape[0])
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[10 20 30 40]
+1
+(4,)
+4
+================
+[[10 20 30 40]
+ [10 20 30 40]]
+2
+(2, 4)
+2
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 7: </span>行列同士の演算</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">A</span> <span class="org-operator">=</span> np.array([[1, 2], [3, 4]])
+A.shape
+
+<span class="org-variable-name">B</span> <span class="org-operator">=</span> np.array([[5, 6], [7, 8]])
+B.shape
+
+<span class="org-builtin">print</span>(np.dot(A, B))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[[19 22]
+ [43 50]]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 8: </span>行列同士の演算では、順番を変えると結果が変わる</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">A</span> <span class="org-operator">=</span> np.array([[1, 2], [3, 4]])
+A.shape
+
+<span class="org-variable-name">B</span> <span class="org-operator">=</span> np.array([[7, 8], [5, 6]])
+B.shape
+
+<span class="org-builtin">print</span>(np.dot(A, B))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[[17 20]
+ [41 48]]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 9: </span>1x2 と 2x3 の積</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-variable-name">X</span> <span class="org-operator">=</span> np.array([1, 2])
+<span class="org-builtin">print</span>(X)
+<span class="org-variable-name">W</span> <span class="org-operator">=</span> np.array([[1, 3, 5], [2, 4, 8]])
+<span class="org-builtin">print</span>(W)
+
+<span class="org-builtin">print</span>(X.shape)
+<span class="org-builtin">print</span>(W.shape)
+<span class="org-builtin">print</span>(np.dot(X, W))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[1 2]
+[[1 3 5]
+ [2 4 8]]
+(2,)
+(2, 3)
+[ 5 11 21]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 10: </span>基本式を実装する 1x2 と 2x3</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">sigmoid</span>(x):
+    <span class="org-keyword">return</span> 1 <span class="org-operator">/</span> (1 <span class="org-operator">+</span> np.exp(<span class="org-operator">-</span>x))
+
+<span class="org-variable-name">X</span> <span class="org-operator">=</span> np.array([1.0, 0.5])
+<span class="org-variable-name">W1</span> <span class="org-operator">=</span> np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+<span class="org-variable-name">B1</span> <span class="org-operator">=</span> np.array([0.1, 0.2, 0.3])
+
+<span class="org-builtin">print</span>(X.shape)
+<span class="org-builtin">print</span>(W1.shape)
+<span class="org-builtin">print</span>(B1.shape)
+
+<span class="org-variable-name">A1</span> <span class="org-operator">=</span> np.dot(X, W1) <span class="org-operator">+</span> B1
+<span class="org-variable-name">Z1</span> <span class="org-operator">=</span> sigmoid(A1)
+<span class="org-builtin">print</span>(A1)
+<span class="org-builtin">print</span>(Z1)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">(2,)
+(2, 3)
+(3,)
+[0.3 0.7 1.1]
+[0.57444252 0.66818777 0.75026011]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 11: </span>まとめ</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">sigmoid</span>(x):
+  <span class="org-keyword">return</span> 1 <span class="org-operator">/</span> (1 <span class="org-operator">+</span> np.exp(<span class="org-operator">-</span>x))
+
+<span class="org-keyword">def</span> <span class="org-function-name">identity_function</span>(x):
+  <span class="org-keyword">return</span> x
+
+<span class="org-keyword">def</span> <span class="org-function-name">init_network</span>():
+  <span class="org-variable-name">network</span> <span class="org-operator">=</span> {}
+  <span class="org-variable-name">network</span>[<span class="org-string">'W1'</span>] <span class="org-operator">=</span> np.array([[0.1, 0.3, 0.5], [0.2, 0.4, 0.6]])
+  <span class="org-variable-name">network</span>[<span class="org-string">'b1'</span>] <span class="org-operator">=</span> np.array([0.1, 0.2, 0.3])
+  <span class="org-variable-name">network</span>[<span class="org-string">'W2'</span>] <span class="org-operator">=</span> np.array([[0.1, 0.4], [0.2, 0.5], [0.3, 0.6]])
+  <span class="org-variable-name">network</span>[<span class="org-string">'b2'</span>] <span class="org-operator">=</span> np.array([0.1, 0.2])
+  <span class="org-variable-name">network</span>[<span class="org-string">'W3'</span>] <span class="org-operator">=</span> np.array([[0.1, 0.3], [0.2, 0.4]])
+  <span class="org-variable-name">network</span>[<span class="org-string">'b3'</span>] <span class="org-operator">=</span> np.array([0.1, 0.2])
+
+  <span class="org-keyword">return</span> network
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#20837;&#21147;&#12363;&#12425;&#20986;&#21147;&#26041;&#21521;&#12408;&#12398;&#20253;&#36948;&#20966;&#29702;
+</span><span class="org-keyword">def</span> <span class="org-function-name">forward</span>(network, x):
+  <span class="org-variable-name">W1</span>, <span class="org-variable-name">W2</span>, <span class="org-variable-name">W3</span> <span class="org-operator">=</span> network[<span class="org-string">'W1'</span>], network[<span class="org-string">'W2'</span>], network[<span class="org-string">'W3'</span>]
+  <span class="org-variable-name">b1</span>, <span class="org-variable-name">b2</span>, <span class="org-variable-name">b3</span> <span class="org-operator">=</span> network[<span class="org-string">'b1'</span>], network[<span class="org-string">'b2'</span>], network[<span class="org-string">'b3'</span>]
+
+  <span class="org-variable-name">a1</span> <span class="org-operator">=</span> np.dot(x, W1) <span class="org-operator">+</span> b1
+  <span class="org-variable-name">z1</span> <span class="org-operator">=</span> sigmoid(a1)
+  <span class="org-variable-name">a2</span> <span class="org-operator">=</span> np.dot(z1, W2) <span class="org-operator">+</span> b2
+  <span class="org-variable-name">z2</span> <span class="org-operator">=</span> sigmoid(a2)
+  <span class="org-variable-name">a3</span> <span class="org-operator">=</span> np.dot(z2, W3) <span class="org-operator">+</span> b3
+  <span class="org-variable-name">y</span> <span class="org-operator">=</span> identity_function(a3)
+
+  <span class="org-keyword">return</span> y
+
+<span class="org-variable-name">network</span> <span class="org-operator">=</span> init_network()
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.array([1.0, 0.5])
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> forward(network, x)
+<span class="org-builtin">print</span>(y)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[0.31682708 0.69627909]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 12: </span>ソフトマックス関数</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">a</span> <span class="org-operator">=</span> np.array([0.3, 2.9, 4.0])
+<span class="org-variable-name">exp_a</span> <span class="org-operator">=</span> np.exp(a) <span class="org-comment-delimiter"># </span><span class="org-comment">&#25351;&#25968;&#38306;&#25968;
+</span><span class="org-variable-name">sum_exp_a</span> <span class="org-operator">=</span> np.<span class="org-builtin">sum</span>(exp_a) <span class="org-comment-delimiter"># </span><span class="org-comment">&#25351;&#25968;&#38306;&#25968;&#12398;&#21644;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> exp_a <span class="org-operator">/</span> sum_exp_a
+<span class="org-builtin">print</span>(exp_a)
+<span class="org-builtin">print</span>(sum_exp_a)
+<span class="org-builtin">print</span>(y)
+
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[ 1.34985881 18.17414537 54.59815003]
+74.1221542101633
+[0.01821127 0.24519181 0.73659691]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 13: </span>ソフトマックス関数のオーバーフロー</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">a</span> <span class="org-operator">=</span> np.array([1010, 1000, 990])
+<span class="org-variable-name">result</span> <span class="org-operator">=</span> np.exp(a) <span class="org-operator">/</span> np.<span class="org-builtin">sum</span>(np.exp(a))
+<span class="org-builtin">print</span>(result)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[nan nan nan]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 14: </span>ソフトマックス関数のオーバーフロー対策。入力信号の最大値を引く</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">a</span> <span class="org-operator">=</span> np.array([1010, 1000, 990])
+<span class="org-variable-name">c</span> <span class="org-operator">=</span> np.<span class="org-builtin">max</span>(a)
+<span class="org-variable-name">result</span> <span class="org-operator">=</span> np.exp(a<span class="org-operator">-</span>c) <span class="org-operator">/</span> np.<span class="org-builtin">sum</span>(np.exp(a<span class="org-operator">-</span>c))
+<span class="org-builtin">print</span>(result)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[9.99954600e-01 4.53978686e-05 2.06106005e-09]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 15: </span>ソフトマックス関数の特徴</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">softmax</span>(a):
+    <span class="org-variable-name">c</span> <span class="org-operator">=</span> np.<span class="org-builtin">max</span>(a)
+    <span class="org-variable-name">exp_a</span> <span class="org-operator">=</span> np.exp(a <span class="org-operator">-</span> c) <span class="org-comment-delimiter"># </span><span class="org-comment">&#12458;&#12540;&#12496;&#12540;&#12501;&#12525;&#12540;&#23550;&#31574;
+</span>    <span class="org-variable-name">sum_exp_a</span> <span class="org-operator">=</span> np.<span class="org-builtin">sum</span>(exp_a)
+    <span class="org-variable-name">y</span> <span class="org-operator">=</span> exp_a <span class="org-operator">/</span> sum_exp_a
+
+    <span class="org-keyword">return</span> y
+
+<span class="org-variable-name">a</span> <span class="org-operator">=</span> np.array([0.3, 2.9, 4.0])
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> softmax(a)
+<span class="org-builtin">print</span>(y)
+<span class="org-builtin">print</span>(np.<span class="org-builtin">sum</span>(y))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[0.01821127 0.24519181 0.73659691]
+1.0
+</pre>
+</div>
+
+<p>
+ソフトマックス関数の出力の総和は1になる。この性質のおかげでソフトマックス関数の出力を確率として解釈できる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 16: </span>NumPy配列どうしで比較する</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> np.array([1, 2, 1, 0])
+<span class="org-variable-name">t</span> <span class="org-operator">=</span> np.array([1, 2, 0, 0])
+<span class="org-builtin">print</span>(y<span class="org-operator">==</span>t)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[ True  True False  True]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 17: </span>2乗誤差</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">sum_squared_error</span>(y, t):
+    <span class="org-keyword">return</span> 0.5 <span class="org-operator">*</span> np.<span class="org-builtin">sum</span>((y<span class="org-operator">-</span>t)<span class="org-operator">**</span>2)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;2&#12301;&#12434;&#27491;&#35299;&#12392;&#12377;&#12427;
+</span><span class="org-variable-name">t</span> <span class="org-operator">=</span> [0,0,1,0,0,0,0,0,0,0]
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;2&#12301;&#12398;&#30906;&#29575;&#12364;&#26368;&#12418;&#39640;&#12356;&#22580;&#21512;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> [0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0]
+<span class="org-builtin">print</span>(sum_squared_error(np.array(y), np.array(t)))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;7&#12301;&#12398;&#30906;&#29575;&#12364;&#26368;&#12418;&#39640;&#12356;&#22580;&#21512;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> [0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0]
+<span class="org-builtin">print</span>(sum_squared_error(np.array(y), np.array(t)))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">0.09750000000000003
+0.5975
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 18: </span>誤差エントロピー誤差</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">def</span> <span class="org-function-name">cross_entropy_error</span>(y, t):
+  <span class="org-variable-name">delta</span> <span class="org-operator">=</span> 1e<span class="org-operator">-</span>7 <span class="org-comment-delimiter"># </span><span class="org-comment">&#24494;&#32048;&#12394;&#20516;&#12434;&#36861;&#21152;&#12375;&#12390;&#12510;&#12452;&#12490;&#12473;&#28961;&#38480;&#22823;&#12434;&#30330;&#29983;&#12373;&#12379;&#12394;&#12356;&#12424;&#12358;&#12395;&#12377;&#12427;
+</span>  <span class="org-keyword">return</span> <span class="org-operator">-</span>np.<span class="org-builtin">sum</span>(t <span class="org-operator">*</span> np.log(y <span class="org-operator">+</span> delta))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;2&#12301;&#12434;&#27491;&#35299;&#12392;&#12377;&#12427;
+</span><span class="org-variable-name">t</span> <span class="org-operator">=</span> [0,0,1,0,0,0,0,0,0,0]
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;2&#12301;&#12398;&#30906;&#29575;&#12364;&#26368;&#12418;&#39640;&#12356;&#22580;&#21512;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> [0.1, 0.05, 0.6, 0.0, 0.05, 0.1, 0.0, 0.1, 0.0, 0.0]
+<span class="org-builtin">print</span>(cross_entropy_error(np.array(y), np.array(t)))
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12300;7&#12301;&#12398;&#30906;&#29575;&#12364;&#26368;&#12418;&#39640;&#12356;&#22580;&#21512;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> [0.1, 0.05, 0.1, 0.0, 0.05, 0.1, 0.0, 0.6, 0.0, 0.0]
+<span class="org-builtin">print</span>(cross_entropy_error(np.array(y), np.array(t)))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">0.510825457099338
+2.302584092994546
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 19: </span>ランダムに選び出す</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-builtin">print</span>(np.random.choice(60000, 10))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">[ 2811 41200  8006  1524 57277 54382 27135 35842 18590 13150]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 20: </span>微分の悪い実装例</label><pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">numerical_diff</span>(f, x):
+  <span class="org-variable-name">h</span> <span class="org-operator">=</span> 1e<span class="org-operator">-</span>50 <span class="org-comment-delimiter"># </span><span class="org-comment">&#12372;&#12367;&#23567;&#12373;&#12356;&#20516;
+</span>  <span class="org-keyword">return</span> (f(x<span class="org-operator">+</span>h) <span class="org-operator">-</span> f(x)) <span class="org-operator">/</span> h
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 21: </span>丸め誤差を試す</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-builtin">print</span>(np.float32(1e<span class="org-operator">-</span>50))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">0.0
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 22: </span>微分の改良した実装例</label><pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">numerical_diff</span>(f, x):
+  <span class="org-variable-name">h</span> <span class="org-operator">=</span> 1e<span class="org-operator">-</span>4 <span class="org-comment-delimiter"># </span><span class="org-comment">&#20024;&#12417;&#35492;&#24046;&#12434;&#12373;&#12369;&#12427;
+</span>  <span class="org-keyword">return</span> (f(x<span class="org-operator">+</span>h) <span class="org-operator">-</span> f(x<span class="org-operator">-</span>h)) <span class="org-operator">/</span> (2<span class="org-operator">*</span>h) <span class="org-comment-delimiter"># </span><span class="org-comment">&#20013;&#24515;&#24046;&#20998;&#12391;&#35492;&#24046;&#12434;&#28187;&#12425;&#12379;&#12427;</span>
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>極小な差分によって微分を求めることを数値微分という。数式の展開によって微分を求めることを解析的に微分を求めるなどという(p99)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 23: </span>数値微分の例</label><pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">function_1</span>(x):
+  <span class="org-keyword">return</span> 0.01<span class="org-operator">*</span>x<span class="org-operator">**</span>2 <span class="org-operator">+</span> 0.1<span class="org-operator">*</span>x
+
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> matplotlib.pylab <span class="org-keyword">as</span> plt
+
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.arange(0.0, 20.0, 0.1)
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> function_1(x)
+plt.xlabel(<span class="org-string">"x"</span>)
+plt.ylabel(<span class="org-string">"f(x)"</span>)
+plt.plot(x, y)
+plt.show()
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 24: </span>2変数関数のプロット</label><pre class="src src-python"><span class="org-keyword">def</span> <span class="org-function-name">function_2</span>(x):
+  <span class="org-keyword">return</span> x[0]<span class="org-operator">**</span>2 <span class="org-operator">+</span> x[1]<span class="org-operator">**</span>2
+
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> matplotlib.pylab <span class="org-keyword">as</span> plt
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">x = np.arange(0.0, 20.0, 0.1)
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">y = function_2(x)
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">plt.xlabel("x")
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">plt.ylabel("f(x)")
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">plt.plot(x, y)
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">plt.show()
+</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">x&#12392;y&#12398;&#31684;&#22258;&#12434;&#35373;&#23450;
+</span><span class="org-variable-name">x</span> <span class="org-operator">=</span> np.linspace(<span class="org-operator">-</span>5, 5, 100)
+<span class="org-variable-name">y</span> <span class="org-operator">=</span> np.linspace(<span class="org-operator">-</span>5, 5, 100)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12513;&#12483;&#12471;&#12517;&#12464;&#12522;&#12483;&#12489;&#12434;&#20316;&#25104;
+</span><span class="org-variable-name">X</span>, <span class="org-variable-name">Y</span> <span class="org-operator">=</span> np.meshgrid(x, y)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#38306;&#25968;&#12398;&#20516;&#12434;&#35336;&#31639;
+</span><span class="org-variable-name">Z</span> <span class="org-operator">=</span> function_2([X, Y])
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12503;&#12525;&#12483;&#12488;&#12434;&#20316;&#25104;
+</span><span class="org-variable-name">fig</span> <span class="org-operator">=</span> plt.figure()
+<span class="org-variable-name">ax</span> <span class="org-operator">=</span> fig.add_subplot(111, projection<span class="org-operator">=</span><span class="org-string">'3d'</span>)
+ax.plot_surface(X, Y, Z, cmap<span class="org-operator">=</span><span class="org-string">'viridis'</span>)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12464;&#12521;&#12501;&#12398;&#12521;&#12505;&#12523;&#12434;&#35373;&#23450;
+</span>ax.set_xlabel(<span class="org-string">'X axis'</span>)
+ax.set_ylabel(<span class="org-string">'Y axis'</span>)
+ax.set_zlabel(<span class="org-string">'Z axis'</span>)
+ax.set_title(<span class="org-string">'3D plot of function_2'</span>)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#12464;&#12521;&#12501;&#12434;&#34920;&#31034;
+</span>plt.show()
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-keyword">def</span> <span class="org-function-name">function_2</span>(x):
+    <span class="org-keyword">return</span> x[0]<span class="org-operator">**</span>2 <span class="org-operator">+</span> x[1]<span class="org-operator">**</span>2
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#12434;&#35336;&#31639;&#12377;&#12427;
+</span><span class="org-keyword">def</span> <span class="org-function-name">numerical_gradient</span>(f, x):
+    <span class="org-variable-name">h</span> <span class="org-operator">=</span> 1e<span class="org-operator">-</span>4                <span class="org-comment-delimiter"># </span><span class="org-comment">&#26997;&#23567;&#20516;
+</span>    <span class="org-variable-name">grad</span> <span class="org-operator">=</span> np.zeros_like(x) <span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#12434;&#26684;&#32013;&#12377;&#12427;&#12290;x&#12392;&#21516;&#12376;&#24418;&#29366;&#12398;&#37197;&#21015;&#12434;&#29983;&#25104;&#12377;&#12427;
+</span>
+    <span class="org-keyword">for</span> idx <span class="org-keyword">in</span> <span class="org-builtin">range</span>(x.size):
+        <span class="org-builtin">print</span>(<span class="org-string">"idx:"</span>, idx)
+        <span class="org-variable-name">tmp_val</span> <span class="org-operator">=</span> x[idx] <span class="org-comment-delimiter"># </span><span class="org-comment">&#20803;&#12398;&#20516;&#12434;&#20445;&#25345;&#12377;&#12427;
+</span>        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-operator">+</span> h
+        <span class="org-variable-name">fxh1</span> <span class="org-operator">=</span> f(x) <span class="org-comment-delimiter"># </span><span class="org-comment">&#26997;&#23567;&#20516;&#12434;&#20837;&#12428;&#12390;&#35336;&#31639;&#12377;&#12427;
+</span>
+        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-operator">-</span> h
+        <span class="org-variable-name">fxh2</span> <span class="org-operator">=</span> f(x) <span class="org-comment-delimiter"># </span><span class="org-comment">&#26997;&#23567;&#20516;&#12434;&#20837;&#12428;&#12390;&#35336;&#31639;&#12377;&#12427;
+</span>
+        <span class="org-variable-name">grad</span>[idx] <span class="org-operator">=</span> (fxh1 <span class="org-operator">-</span> fxh2) <span class="org-operator">/</span> (2<span class="org-operator">*</span>h) <span class="org-comment-delimiter"># </span><span class="org-comment">&#20013;&#24515;&#24046;&#20998;
+</span>        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-comment-delimiter"># </span><span class="org-comment">&#20516;&#12434;&#20803;&#12395;&#25147;&#12377;
+</span>
+    <span class="org-keyword">return</span> grad
+
+<span class="org-builtin">print</span>(numerical_gradient(function_2, np.array([3.0, 4.0])))
+<span class="org-builtin">print</span>(<span class="org-string">"========"</span>)
+<span class="org-builtin">print</span>(numerical_gradient(function_2, np.array([0.0, 2.0])))
+<span class="org-builtin">print</span>(<span class="org-string">"========"</span>)
+<span class="org-builtin">print</span>(numerical_gradient(function_2, np.array([<span class="org-operator">-</span>3.0, 4.0])))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">idx: 0
+idx: 1
+[6. 8.]
+========
+idx: 0
+idx: 1
+[0. 4.]
+========
+idx: 0
+idx: 1
+[-6.  8.]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 25: </span>勾配降下法</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#25968;&#20516;&#24494;&#20998;
+</span><span class="org-keyword">def</span> <span class="org-function-name">numerical_gradient</span>(f, x):
+    <span class="org-variable-name">h</span> <span class="org-operator">=</span> 1e<span class="org-operator">-</span>4
+    <span class="org-variable-name">grad</span> <span class="org-operator">=</span> np.zeros_like(x) <span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#12434;&#26684;&#32013;&#12377;&#12427;&#12290;x&#12392;&#21516;&#12376;&#24418;&#29366;&#12398;&#37197;&#21015;&#12434;&#29983;&#25104;&#12377;&#12427;
+</span>
+    <span class="org-keyword">for</span> idx <span class="org-keyword">in</span> <span class="org-builtin">range</span>(x.size):
+        <span class="org-variable-name">tmp_val</span> <span class="org-operator">=</span> x[idx]
+        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-operator">+</span> h
+        <span class="org-variable-name">fxh1</span> <span class="org-operator">=</span> f(x)
+
+        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-operator">-</span> h
+        <span class="org-variable-name">fxh2</span> <span class="org-operator">=</span> f(x)
+
+        <span class="org-variable-name">grad</span>[idx] <span class="org-operator">=</span> (fxh1 <span class="org-operator">-</span> fxh2) <span class="org-operator">/</span> (2<span class="org-operator">*</span>h)
+        <span class="org-variable-name">x</span>[idx] <span class="org-operator">=</span> tmp_val <span class="org-comment-delimiter"># </span><span class="org-comment">&#21069;&#24460;&#12395;&#12378;&#12425;&#12375;&#12383;&#20516;&#12434;&#20803;&#12395;&#25147;&#12377;
+</span>
+    <span class="org-keyword">return</span> grad
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#38477;&#19979;
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">lr -&gt; learning rate
+</span><span class="org-keyword">def</span> <span class="org-function-name">gradient_descent</span>(f, init_x, lr<span class="org-operator">=</span>0.01, step_num<span class="org-operator">=</span>100):
+  <span class="org-comment-delimiter"># </span><span class="org-comment">&#24341;&#25968;&#12391;&#28193;&#12373;&#12428;&#12383;&#20516;&#12364;&#22793;&#12431;&#12425;&#12394;&#12356;&#12424;&#12358;&#12395;&#12467;&#12500;&#12540;&#12377;&#12427;
+</span>  <span class="org-variable-name">x</span> <span class="org-operator">=</span> init_x
+
+  <span class="org-keyword">for</span> i <span class="org-keyword">in</span> <span class="org-builtin">range</span>(step_num):
+    <span class="org-variable-name">grad</span> <span class="org-operator">=</span> numerical_gradient(f, x)
+    <span class="org-variable-name">x</span> <span class="org-operator">-=</span> lr <span class="org-operator">*</span> grad <span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#12398;&#20998;&#26356;&#26032;&#12377;&#12427;
+</span>    <span class="org-builtin">print</span>(i, <span class="org-string">" x: "</span>, x, <span class="org-string">"</span><span class="org-constant">\t</span><span class="org-string">grad: "</span>, grad)
+
+  <span class="org-keyword">return</span> x
+
+<span class="org-keyword">def</span> <span class="org-function-name">function_2</span>(x):
+  <span class="org-keyword">return</span> x[0]<span class="org-operator">**</span>2 <span class="org-operator">+</span> x[1]<span class="org-operator">**</span>2
+
+<span class="org-variable-name">init_x</span> <span class="org-operator">=</span> np.array([<span class="org-operator">-</span>3.0, 4.0])
+<span class="org-builtin">print</span>(<span class="org-string">"init_x: "</span>, init_x)
+<span class="org-builtin">print</span>(<span class="org-string">"gradient_descent: "</span>, gradient_descent(function_2, init_x<span class="org-operator">=</span>init_x, lr<span class="org-operator">=</span>0.1, step_num<span class="org-operator">=</span>10))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">init_x:  [-3.  4.]
+0  x:  [-2.4  3.2] 	grad:  [-6.  8.]
+1  x:  [-1.92  2.56] 	grad:  [-4.8  6.4]
+2  x:  [-1.536  2.048] 	grad:  [-3.84  5.12]
+3  x:  [-1.2288  1.6384] 	grad:  [-3.072  4.096]
+4  x:  [-0.98304  1.31072] 	grad:  [-2.4576  3.2768]
+5  x:  [-0.786432  1.048576] 	grad:  [-1.96608  2.62144]
+6  x:  [-0.6291456  0.8388608] 	grad:  [-1.572864  2.097152]
+7  x:  [-0.50331648  0.67108864] 	grad:  [-1.2582912  1.6777216]
+8  x:  [-0.40265318  0.53687091] 	grad:  [-1.00663296  1.34217728]
+9  x:  [-0.32212255  0.42949673] 	grad:  [-0.80530637  1.07374182]
+gradient_descent:  [-0.32212255  0.42949673]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>損失関数を重みで微分することで、各重みが損失関数にどの程度影響を与えるかを知ることができる</li>
+<li>勾配(微分の結果)は、損失関数の値がもっとも急速に変化する方向とその大きさを示す。重みをどの方向にどれだけ調整すれば損失関数を最小化できるかを示す</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 26: </span>損失を求める</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch04.gradient_simpleset <span class="org-keyword">import</span> simpleNet
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">net</span> <span class="org-operator">=</span> simpleNet()
+<span class="org-builtin">print</span>(<span class="org-string">"net.W: "</span>, net.W)
+
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.array([0.6, 0.9])
+<span class="org-variable-name">p</span> <span class="org-operator">=</span> net.predict(x)
+<span class="org-builtin">print</span>(<span class="org-string">"p: "</span>, p)
+
+<span class="org-builtin">print</span>(<span class="org-string">"argmax: "</span>, np.argmax(p)) <span class="org-comment-delimiter"># </span><span class="org-comment">&#26368;&#22823;&#20516;&#12398;&#12452;&#12531;&#12487;&#12483;&#12463;&#12473;
+</span>
+<span class="org-variable-name">t</span> <span class="org-operator">=</span> np.array([0, 0, 1]) <span class="org-comment-delimiter"># </span><span class="org-comment">&#27491;&#35299;&#12521;&#12505;&#12523;
+</span><span class="org-builtin">print</span>(<span class="org-string">"loss: "</span>, net.loss(x, t))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">net.W:  [[ 0.66771825 -0.03691929  1.8614051 ]
+ [-1.38471091 -0.62661547  0.3531814 ]]
+p:  [-0.84560886 -0.58610549  1.43470632]
+argmax:  2
+loss:  0.21090872143605693
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 27: </span>重みの勾配を求める</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch04.gradient_simpleset <span class="org-keyword">import</span> simpleNet
+<span class="org-keyword">from</span> ch04.gradient <span class="org-keyword">import</span> numerical_gradient
+
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.array([0.6, 0.9])
+<span class="org-variable-name">t</span> <span class="org-operator">=</span> np.array([0, 0, 1])
+
+<span class="org-variable-name">net</span> <span class="org-operator">=</span> simpleNet()
+<span class="org-builtin">print</span>(<span class="org-string">"net.W: "</span>, net.W)
+
+<span class="org-variable-name">f</span> <span class="org-operator">=</span> <span class="org-keyword">lambda</span> w: net.loss(x, t) <span class="org-comment-delimiter"># </span><span class="org-comment">&#25613;&#22833;&#38306;&#25968;&#12434;&#35336;&#31639;&#12377;&#12427;&#38306;&#25968;
+</span><span class="org-variable-name">dW</span> <span class="org-operator">=</span> numerical_gradient(f, net.W)
+<span class="org-builtin">print</span>(<span class="org-string">"dW: "</span>, dW)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">net.W:  [[-2.09839831 -1.31760955 -0.01513779]
+ [-0.14700285 -0.98933336 -0.75867432]]
+dW:  [[ 0.15952377  0.11941069 -0.27893446]
+ [ 0.23928565  0.17911604 -0.41840169]]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>勾配は、損失関数の値をもっとも減らす方向を示す(p113)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 28: </span>ディクショナリを確認する</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch04.two_layer_net <span class="org-keyword">import</span> TwoLayerNet
+
+<span class="org-variable-name">net</span> <span class="org-operator">=</span> TwoLayerNet(input_size<span class="org-operator">=</span>784, hidden_size<span class="org-operator">=</span>100, output_size<span class="org-operator">=</span>10)
+<span class="org-builtin">print</span>(net.params[<span class="org-string">'W1'</span>].shape)
+<span class="org-builtin">print</span>(net.params[<span class="org-string">'b1'</span>].shape)
+<span class="org-builtin">print</span>(net.params[<span class="org-string">'W2'</span>].shape)
+<span class="org-builtin">print</span>(net.params[<span class="org-string">'b2'</span>].shape)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">(784, 100)
+(100,)
+(100, 10)
+(10,)
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 29: </span>推論を実行する</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch04.two_layer_net <span class="org-keyword">import</span> TwoLayerNet
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">net</span> <span class="org-operator">=</span> TwoLayerNet(input_size<span class="org-operator">=</span>784, hidden_size<span class="org-operator">=</span>100, output_size<span class="org-operator">=</span>10)
+
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.random.rand(100, 784) <span class="org-comment-delimiter"># </span><span class="org-comment">&#12480;&#12511;&#12540;&#12398;&#20837;&#21147;&#12487;&#12540;&#12479;&#65288;100 &#26522;&#20998;&#65289;
+</span><span class="org-variable-name">y</span> <span class="org-operator">=</span> net.predict(x)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 30: </span>numerical_gradientを使って勾配を計算すると、grads変数に勾配情報が格納される。非常に時間がかかる</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch04.two_layer_net <span class="org-keyword">import</span> TwoLayerNet
+<span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">&#20837;&#21147;&#30011;&#20687;&#12399; 28x28, &#20998;&#39006;&#12399;10&#12463;&#12521;&#12473;&#20998;
+</span><span class="org-variable-name">net</span> <span class="org-operator">=</span> TwoLayerNet(input_size<span class="org-operator">=</span>784, hidden_size<span class="org-operator">=</span>100, output_size<span class="org-operator">=</span>10)
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.random.rand(100, 784) <span class="org-comment-delimiter"># </span><span class="org-comment">&#12480;&#12511;&#12540;&#12398;&#20837;&#21147;&#12487;&#12540;&#12479; &#65288;100 &#26522;&#20998;&#65289;
+</span><span class="org-variable-name">t</span> <span class="org-operator">=</span> np.random.rand(100, 10) <span class="org-comment-delimiter"># </span><span class="org-comment">&#12480;&#12511;&#12540;&#12398;&#27491;&#35299;&#12521;&#12505;&#12523;&#65288;100 &#26522;&#20998;&#65289;
+</span><span class="org-variable-name">grads</span> <span class="org-operator">=</span> net.numerical_gradient(x, t) <span class="org-comment-delimiter"># </span><span class="org-comment">&#21246;&#37197;&#12434;&#35336;&#31639;
+</span><span class="org-builtin">print</span>(grads[<span class="org-string">'W1'</span>].shape)
+<span class="org-builtin">print</span>(grads[<span class="org-string">'b1'</span>].shape)
+<span class="org-builtin">print</span>(grads[<span class="org-string">'W2'</span>].shape)
+<span class="org-builtin">print</span>(grads[<span class="org-string">'b2'</span>].shape)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">(784, 100)
+(100,)
+(100, 10)
+(10,)
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>誤差逆伝播法を使って求めた勾配の結果は、数値微分による結果とほぼ同じになるが、高速に処理することができる(p117)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 31: </span>乗算レイヤを使って順伝播で合計金額を求める例</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch05.layer_naive <span class="org-keyword">import</span> MulLayer
+
+<span class="org-variable-name">apple</span> <span class="org-operator">=</span> 100   <span class="org-comment-delimiter"># </span><span class="org-comment">&#21336;&#20385;
+</span><span class="org-variable-name">apple_num</span> <span class="org-operator">=</span> 2 <span class="org-comment-delimiter"># </span><span class="org-comment">&#20491;&#25968;
+</span><span class="org-variable-name">tax</span> <span class="org-operator">=</span> 1.1     <span class="org-comment-delimiter"># </span><span class="org-comment">&#28040;&#36027;&#31246;
+</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">layer
+</span><span class="org-variable-name">mul_apple_layer</span> <span class="org-operator">=</span> MulLayer()
+<span class="org-variable-name">mul_tax_layer</span> <span class="org-operator">=</span> MulLayer()
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">forward
+</span><span class="org-variable-name">apple_price</span> <span class="org-operator">=</span> mul_apple_layer.forward(apple, apple_num)
+<span class="org-variable-name">price</span> <span class="org-operator">=</span> mul_tax_layer.forward(apple_price, tax)
+
+<span class="org-builtin">print</span>(price)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">220.00000000000003
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 32: </span>各変数に対する微分をbackward()で求める。p138の図を見よ</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch05.layer_naive <span class="org-keyword">import</span> MulLayer
+
+<span class="org-variable-name">apple</span> <span class="org-operator">=</span> 100   <span class="org-comment-delimiter"># </span><span class="org-comment">&#21336;&#20385;
+</span><span class="org-variable-name">apple_num</span> <span class="org-operator">=</span> 2 <span class="org-comment-delimiter"># </span><span class="org-comment">&#20491;&#25968;
+</span><span class="org-variable-name">tax</span> <span class="org-operator">=</span> 1.1     <span class="org-comment-delimiter"># </span><span class="org-comment">&#28040;&#36027;&#31246;
+</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">layer
+</span><span class="org-variable-name">mul_apple_layer</span> <span class="org-operator">=</span> MulLayer()
+<span class="org-variable-name">mul_tax_layer</span> <span class="org-operator">=</span> MulLayer()
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">forward
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">&#26368;&#24460;&#12398;&#20516;&#12398;&#12463;&#12521;&#12473;&#22793;&#25968;x, y&#12434;&#12475;&#12483;&#12488;&#12377;&#12427;
+</span><span class="org-variable-name">apple_price</span> <span class="org-operator">=</span> mul_apple_layer.forward(apple, apple_num) <span class="org-comment-delimiter"># </span><span class="org-comment">&#12426;&#12435;&#12372;&#12398;&#21512;&#35336;&#20385;&#26684; = &#21336;&#20385; * &#20491;&#25968;
+</span><span class="org-variable-name">price</span> <span class="org-operator">=</span> mul_tax_layer.forward(apple_price, tax)         <span class="org-comment-delimiter"># </span><span class="org-comment">&#21512;&#35336;&#20385;&#26684; = &#12426;&#12435;&#12372;&#12398;&#21512;&#35336;&#20385;&#26684; * &#31246;
+</span>
+<span class="org-comment-delimiter"># </span><span class="org-comment">backward
+</span><span class="org-comment-delimiter"># </span><span class="org-comment">backward&#12399;&#20516;&#12364;2&#12388;&#12395;&#20998;&#12363;&#12428;&#12427;&#12398;&#12391;&#36820;&#12426;&#20516;&#12399;2&#12388;&#12354;&#12427;
+</span><span class="org-variable-name">dprice</span> <span class="org-operator">=</span> 1
+<span class="org-variable-name">dapple_price</span>, <span class="org-variable-name">dtax</span> <span class="org-operator">=</span> mul_tax_layer.backward(dprice)         <span class="org-comment-delimiter"># </span><span class="org-comment">&#24341;&#25968;&#12399;&#38918;&#20253;&#25773;&#12398;&#38555;&#12398;&#20986;&#21147;&#22793;&#25968;&#12395;&#23550;&#12377;&#12427;&#24494;&#20998;
+</span><span class="org-variable-name">dapple</span>, <span class="org-variable-name">dapple_num</span> <span class="org-operator">=</span> mul_apple_layer.backward(dapple_price) <span class="org-comment-delimiter"># </span><span class="org-comment">&#24341;&#25968;&#12399;&#38918;&#20253;&#25773;&#12398;&#38555;&#12398;&#20986;&#21147;&#22793;&#25968;&#12395;&#23550;&#12377;&#12427;&#24494;&#20998;
+</span><span class="org-builtin">print</span>(<span class="org-string">"dapple: "</span>, dapple)
+<span class="org-builtin">print</span>(<span class="org-string">"dapple_num: "</span>, dapple_num)
+<span class="org-builtin">print</span>(<span class="org-string">"dtax: "</span>, dtax)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">dapple:  2.2
+dapple_num:  110.00000000000001
+dtax:  200
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 33: </span>りんご2個とみかん3個の買い物</label><pre class="src src-python"><span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> ch05.layer_naive <span class="org-keyword">import</span> MulLayer, AddLayer
+
+<span class="org-variable-name">apple</span> <span class="org-operator">=</span> 100
+<span class="org-variable-name">apple_num</span> <span class="org-operator">=</span> 2
+<span class="org-variable-name">orange</span> <span class="org-operator">=</span> 150
+<span class="org-variable-name">orange_num</span> <span class="org-operator">=</span> 3
+<span class="org-variable-name">tax</span> <span class="org-operator">=</span> 1.1
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">layer
+</span><span class="org-variable-name">mul_apple_layer</span> <span class="org-operator">=</span> MulLayer()
+<span class="org-variable-name">mul_orange_layer</span> <span class="org-operator">=</span> MulLayer()
+<span class="org-variable-name">add_apple_orange_layer</span> <span class="org-operator">=</span> AddLayer()
+<span class="org-variable-name">mul_tax_layer</span> <span class="org-operator">=</span> MulLayer()
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">forward
+</span><span class="org-variable-name">apple_price</span> <span class="org-operator">=</span> mul_apple_layer.forward(apple, apple_num)
+<span class="org-variable-name">orange_price</span> <span class="org-operator">=</span> mul_orange_layer.forward(orange, orange_num)
+<span class="org-variable-name">all_price</span> <span class="org-operator">=</span> add_apple_orange_layer.forward(apple_price, orange_price)
+<span class="org-variable-name">price</span> <span class="org-operator">=</span> mul_tax_layer.forward(all_price, tax)
+<span class="org-builtin">print</span>(<span class="org-string">"price"</span>, price)
+
+<span class="org-comment-delimiter"># </span><span class="org-comment">backward
+</span><span class="org-variable-name">dprice</span> <span class="org-operator">=</span> 1
+<span class="org-variable-name">dall_price</span>, <span class="org-variable-name">dtax</span> <span class="org-operator">=</span> mul_tax_layer.backward(dprice)
+<span class="org-variable-name">dapple_price</span>, <span class="org-variable-name">dorange_price</span> <span class="org-operator">=</span> add_apple_orange_layer.backward(dall_price)
+<span class="org-variable-name">dorange</span>, <span class="org-variable-name">dorange_num</span> <span class="org-operator">=</span> mul_orange_layer.backward(dorange_price)
+<span class="org-variable-name">dapple</span>, <span class="org-variable-name">dapple_num</span> <span class="org-operator">=</span> mul_apple_layer.backward(dapple_price)
+
+<span class="org-builtin">print</span>(<span class="org-string">"dapple_num: "</span>, dapple_num)
+<span class="org-builtin">print</span>(<span class="org-string">"dapple: "</span>,dapple)
+<span class="org-builtin">print</span>(<span class="org-string">"dorange: "</span>,dorange)
+<span class="org-builtin">print</span>(<span class="org-string">"dorange_num: "</span>,dorange_num)
+<span class="org-builtin">print</span>(<span class="org-string">"dtax"</span>, dtax)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">price 715.0000000000001
+dapple_num:  110.00000000000001
+dapple:  2.2
+dorange:  3.3000000000000003
+dorange_num:  165.0
+dtax 650
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>計算グラフの考え方をニューラルネットワークに適用する(p141)</li>
+<li>活性関数として使われるReLUを、計算グラフのレイヤとして見る。順伝播時の入力である x が 0 より大きければ、逆伝播は上流の値をそのまま下流に流す。逆に、順伝播時に x が 0 以下であれば、逆伝播では下流への信号はそこでストップする(p141)</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 34: </span>NumPyでマスクする例</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-variable-name">x</span> <span class="org-operator">=</span> np.array([[1.0, <span class="org-operator">-</span>0.5], [<span class="org-operator">-</span>2.0, 3.0]])
+<span class="org-builtin">print</span>(<span class="org-string">"x: "</span>, x)
+
+<span class="org-variable-name">mask</span> <span class="org-operator">=</span> (x <span class="org-operator">&lt;=</span> 0)
+<span class="org-builtin">print</span>(<span class="org-string">"mask: "</span>, mask)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">x:  [[ 1.  -0.5]
+ [-2.   3. ]]
+mask:  [[False  True]
+ [ True False]]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 35: </span>順伝播でのバイアスの加算。それぞれのデータに対して加算が行われる</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-variable-name">X_dot_w</span> <span class="org-operator">=</span> np.array([[0, 0, 0], [10, 10, 10]])
+<span class="org-variable-name">B</span> <span class="org-operator">=</span> np.array([1, 2, 3])
+<span class="org-builtin">print</span>(<span class="org-string">"X_dot_w"</span>, X_dot_w)
+<span class="org-builtin">print</span>(<span class="org-string">"X_dot_w + B"</span>, X_dot_w <span class="org-operator">+</span> B)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">X_dot_w [[ 0  0  0]
+ [10 10 10]]
+X_dot_w + B [[ 1  2  3]
+ [11 12 13]]
+</pre>
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 36: </span>逆伝播でのバイアスの加算。それぞれのデータの逆伝播の値がバイアスの要素に集約される必要がある</label><pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+
+<span class="org-variable-name">dY</span> <span class="org-operator">=</span> np.array([[1, 2, 3], [4, 5, 6]])
+<span class="org-builtin">print</span>(<span class="org-string">"dY: "</span>, dY)
+
+<span class="org-variable-name">dB</span> <span class="org-operator">=</span> np.<span class="org-builtin">sum</span>(dY, axis<span class="org-operator">=</span>0)
+<span class="org-builtin">print</span>(<span class="org-string">"dB: "</span>, dB)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">dY:  [[1 2 3]
+ [4 5 6]]
+dB:  [5 7 9]
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>数値微分が実践的に必要とされる場面もある。誤差逆伝播法の実装の正しさを確認するとき(p161)</li>
+<li>ニューラルネットワークを行う処理をレイヤという単位で実装した。これらのレイヤには、forward と backward というメソッドが実装されており、データを順方向と逆方向に伝播することで、重みパラメータの勾配を効率的に求められる(p163)</li>
+<li>AdaGrad は、過去の勾配を 2 乗和としてすべて記録する。そのため、学習を進めれば進めるほど、更新度合いは小さくなる(p173)</li>
+<li>重みの初期値を 0 にすると、正しい学習が行えない。誤差逆伝播法において、すべての重みの値が均一に（同じように）更新されてしまうため(p179)</li>
+<li>隠れ層のアクティベーション(活性化関数の後の出力データ)の分布を観察することで多くの知見が得られる(p179)</li>
+<li>シグモイド関数の出力が 0 に近づくにつれて(または 1 に近づくにつれて)、その微分の値は 0 に近づく。そのため、0 と 1 に偏ったデータ分布では、逆伝播での勾配の値がどんどん小さくなって消える。これは勾配消失（gradient vanishing）と呼ばれる問題である(p180)</li>
+<li>活性化関数によって、効果的な初期値が異なる。適度な広がりが必要。重みの初期値を適切に設定すれば、各層のアクティベーションの分布は適度な広がりを持ち、学習がスムーズに行える(p185)</li>
+<li>Batch Normは各層でのアクティベーションの分布を適度な広がりを持つように調整する(p187)</li>
+<li>ハイパーパラメータの調整用のデータは、一般に検証データ(validation data)と呼ぶ</li>
+<li>全結合層の問題点は、データの形状が“無視”されてしまうこと。たとえば入力データが画像の場合、画像は通常、縦・横・チャンネル方向の3次元の形状である。全結合層に入力するときには、3次元のデータを1次元のデータにする必要がある(p207)</li>
+<li>全結合層は、形状を無視して、すべての入力データを同等のニューロン(同じ次元のニューロン)として扱うので、形状に関わる情報を生かせない。畳み込み層は形状を維持する。画像の場合、入力データを3次元のデータとして受け取り、同じく3次元のデータとして、次の層にデータを出力する(p207)</li>
+<li>CNNでは、畳み込み層の入出力データを特徴マップということがある(p207)</li>
+<li>幅1のパディングとは、周囲を幅1ピクセルの0で埋めることを言う。パディングを行う理由は、出力サイズを調整するため(p210)</li>
+<li>フィルターを適用する位置の間隔をストライドという。ストライドを大きくすると出力サイズは小さくなる(p211)</li>
+<li>画像の場合、縦・横方向に加えてチャンネル方向も合わせた3次元のデータを扱う必要がある(p214)</li>
+<li>フィルターの重みデータは4次元のデータとして(output_channel, input_channel, height, width)という順に書く。たとえばチャンネル数3、サイズ5x5のフィルターが5個ある場合は(20, 3, 5, 5)と書く</li>
+<li>プーリングは、縦・横方向の空間を小さくする演算。たとえば、2x2の領域を1つの要素に集約するような処理をし、空間サイズを小さくする(p219)</li>
+<li>大きな行列にまとめて計算することは、コンピュータで計算するうえで多くの恩恵がある。たとえば、行列計算のライブラリ(線形代数ライブラリ)などは、行列の計算実装が高度に最適化されており、大きな行列の掛け算を高速に行うことができる。そのため、行列の計算に帰着させることで、線形代数ライブラリを有効に活用できる(p223)</li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> common.util <span class="org-keyword">import</span> im2col
+
+<span class="org-variable-name">x1</span> <span class="org-operator">=</span> np.random.rand(1, 3, 7, 7)
+<span class="org-variable-name">col1</span> <span class="org-operator">=</span> im2col(x1, 5, 5, stride<span class="org-operator">=</span>1, pad<span class="org-operator">=</span>0)
+<span class="org-builtin">print</span>(<span class="org-string">"col1: "</span>, col1.shape)
+
+<span class="org-variable-name">x2</span> <span class="org-operator">=</span> np.random.rand(10, 3, 7, 7) <span class="org-comment-delimiter"># </span><span class="org-comment">10&#20491;&#12398;&#12487;&#12540;&#12479;
+</span><span class="org-variable-name">col2</span> <span class="org-operator">=</span> im2col(x2, 5, 5, stride<span class="org-operator">=</span>1, pad<span class="org-operator">=</span>0)
+<span class="org-builtin">print</span>(<span class="org-string">"col2: "</span>, col2.shape)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">col1:  (9, 75)
+col2:  (90, 75)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-python"><span class="org-keyword">import</span> numpy <span class="org-keyword">as</span> np
+<span class="org-keyword">import</span> sys, os
+sys.path.append(os.environ[<span class="org-string">'HOME'</span>] <span class="org-operator">+</span> <span class="org-string">"/Project/zerodeep1"</span>)
+<span class="org-keyword">from</span> common.util <span class="org-keyword">import</span> im2col
+
+<span class="org-keyword">class</span> <span class="org-type">Convolution</span>:
+    <span class="org-keyword">def</span> <span class="org-function-name">__init__</span>(<span class="org-keyword">self</span>, w, b, stride<span class="org-operator">=</span>1, pad<span class="org-operator">=</span>0):
+        <span class="org-keyword">self</span>.<span class="org-variable-name">W</span> <span class="org-operator">=</span> W
+        <span class="org-keyword">self</span>.<span class="org-variable-name">b</span> <span class="org-operator">=</span> b
+        <span class="org-keyword">self</span>.<span class="org-variable-name">stride</span> <span class="org-operator">=</span> stride
+        <span class="org-keyword">self</span>.<span class="org-variable-name">pad</span> <span class="org-operator">=</span> pad
+
+    <span class="org-keyword">def</span> <span class="org-function-name">forward</span>(<span class="org-keyword">self</span>, x):
+        <span class="org-variable-name">FN</span>, <span class="org-variable-name">C</span>, <span class="org-variable-name">FH</span>, <span class="org-variable-name">FW</span> <span class="org-operator">=</span> <span class="org-keyword">self</span>.W.shape
+        <span class="org-variable-name">N</span>, <span class="org-variable-name">C</span>, <span class="org-variable-name">H</span>, <span class="org-variable-name">W</span> <span class="org-operator">=</span> x.shape
+        <span class="org-variable-name">out_h</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(1 <span class="org-operator">+</span> (H <span class="org-operator">+</span> 2<span class="org-operator">*</span><span class="org-keyword">self</span>.pad <span class="org-operator">-</span> FH) <span class="org-operator">/</span> <span class="org-keyword">self</span>.stride)
+        <span class="org-variable-name">out_w</span> <span class="org-operator">=</span> <span class="org-builtin">int</span>(1 <span class="org-operator">+</span> (W <span class="org-operator">+</span> 2<span class="org-operator">*</span><span class="org-keyword">self</span>.pad <span class="org-operator">-</span> FW) <span class="org-operator">/</span> <span class="org-keyword">self</span>.stride)
+
+        <span class="org-variable-name">col</span> <span class="org-operator">=</span> im2col(x, FH, FW, <span class="org-keyword">self</span>.stride, <span class="org-keyword">self</span>.pad)
+        <span class="org-variable-name">col_W</span> <span class="org-operator">=</span> <span class="org-keyword">self</span>.W.reshape(FN, <span class="org-operator">-</span>1).T
+        <span class="org-variable-name">out</span> <span class="org-operator">=</span> np.dot(col, col_W) <span class="org-operator">+</span> <span class="org-keyword">self</span>.b
+
+        <span class="org-variable-name">out</span> <span class="org-operator">=</span> out.reshape(N, out_h, out_w, <span class="org-operator">-</span>1).transpose(0, 3, 1, 2)
+
+        <span class="org-keyword">return</span> out
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-nil">
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ディープラーニングは層を深くしたディープなニューラルネットワークである、という(p241)</li>
+<li>手書き数字という比較的単純な問題に対しては、ネットワークの表現力をそこまで高める必要がないと考えられる。そのため、層を深くすることの恩恵が少ないと言える。大規模な一般物体認識では、問題が複雑になるため、層を深くすることが認識精度の向上に大いに貢献することが分かる(p245)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org89bd579" class="outline-2">
+<h2 id="org89bd579"><a href="#org89bd579">関連</a></h2>
+<div class="outline-text-2" id="text-org89bd579">
+<ul class="org-ul">
+<li><a href="20240629T235112--kdoc-195-『ディープラーニングがわかる数学入門』__book.html#ID-20240629T235112">KDOC 195: 『ディープラーニングがわかる数学入門』</a>。ディープラーニングの入門つながり</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

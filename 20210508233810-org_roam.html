@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:35Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Org-roam</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Org-roam</h1>
+<div id="outline-container-orgb6b7392" class="outline-2">
+<h2 id="orgb6b7392"><a href="#orgb6b7392">概要</a></h2>
+<div class="outline-text-2" id="text-orgb6b7392">
+<p>
+Org-roamはRoam Research<sup><a id="fnr.1" class="footref" href="#fn.1" role="doc-backlink">1</a></sup>に着想を得て作られた<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>のメモパッケージ。<a href="20210907012153-org_mode.html#ID-7e85e3f3-a6b9-447e-9826-307a3618dac8">org-mode</a>をベースに、目的ファイルへのアクセスしやすさ、リンク、グラフ化の機能を強化する。
+</p>
+
+<p>
+本文書のトップページ<a href="index.html#ID-2709c815-cd38-4679-86e8-ff2d3b8817e4">Insomnia</a>のグラフは、org-roamが生成するsqliteレコードを加工して作成している。
+</p>
+
+<dl class="org-dl">
+<dt>GitHubリポジトリ</dt><dd><a href="https://github.com/org-roam/org-roam">https://github.com/org-roam/org-roam</a></dd>
+<dt>公式サイト</dt><dd><a href="https://www.orgroam.com/">https://www.orgroam.com/</a></dd>
+<dt>マニュアル</dt><dd><a href="https://www.orgroam.com/manual.html">https://www.orgroam.com/manual.html</a></dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-org863632d" class="outline-2">
+<h2 id="org863632d"><a href="#org863632d">Memo</a></h2>
+<div class="outline-text-2" id="text-org863632d">
+</div>
+<div id="outline-container-orgbba3597" class="outline-3">
+<h3 id="orgbba3597"><a href="#orgbba3597">db関連がおかしくなったとき</a></h3>
+<div class="outline-text-3" id="text-orgbba3597">
+<p>
+dbへ書き込みできませんエラーが出たとき。
+</p>
+
+<ul class="org-ul">
+<li><code>(org-roam-db-location)</code> でDBが保存されているパスを調べる。</li>
+<li>.dbファイルを削除。</li>
+<li><code>(org-roam-db-clear-all)</code> でキャッシュ削除。</li>
+<li><code>(org-roam-db-sync)</code> によってdbファイルを再作成。</li>
+</ul>
+
+<p>
+<code>Selecting deleted buffer</code> が出るとき。
+</p>
+
+<ul class="org-ul">
+<li>ライブラリをすべて削除してインストールし直す</li>
+<li>emacsql-sqliteを保存しているディレクトリに行く。sqliteディレクトリ下でmakeしなおす
+<ul class="org-ul">
+<li>make clean &amp;&amp; make emacsql-sqlite</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org17959ea" class="outline-3">
+<h3 id="org17959ea"><a href="#org17959ea">バックエンドの違いを吸収する関数</a></h3>
+<div class="outline-text-3" id="text-org17959ea">
+<p>
+いわゆるコネクターパターン。接続に使用する関数を返す関数。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L123-L137
+</pre>
+</div>
+
+<div class="results" id="orgc1edfa9">
+<p>
+(defun org-roam-db&#x2013;conn-fn ()
+  &ldquo;Return the function for creating the database connection.&rdquo;
+  (cl-case org-roam-database-connector
+    (sqlite
+     (progn
+       (require &rsquo;emacsql-sqlite)
+       #&rsquo;emacsql-sqlite))
+    (libsqlite3
+     (progn
+       (require &rsquo;emacsql-libsqlite3)
+       #&rsquo;emacsql-libsqlite3))
+    (sqlite3
+     (progn
+       (require &rsquo;emacsql-sqlite3)
+       #&rsquo;emacsql-sqlite3))))
+</p>
+
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org7f577b2" class="outline-2">
+<h2 id="org7f577b2"><a href="#org7f577b2">Tasks</a></h2>
+</div>
+<div id="outline-container-orgc5affe0" class="outline-2">
+<h2 id="orgc5affe0"><a href="#orgc5affe0">References</a></h2>
+<div class="outline-text-2" id="text-orgc5affe0">
+</div>
+<div id="outline-container-org0049c97" class="outline-3">
+<h3 id="org0049c97"><a href="#org0049c97"><a href="https://futurismo.biz/using-org-roam-one-year-2022/">🖊知的生産のキラーアプリOrg-roamを１年使い倒し学ぶとはなにか考えたポエム(2022) | Futurismo</a></a></h3>
+<div class="outline-text-3" id="text-org0049c97">
+<p>
+ZettelkastenやOrg-roamの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orgeceee39" class="outline-3">
+<h3 id="orgeceee39"><a href="#orgeceee39"><a href="https://www.orgroam.com/manual.html">Org-roam User Manual</a></a></h3>
+<div class="outline-text-3" id="text-orgeceee39">
+<p>
+マニュアル。
+</p>
+</div>
+</div>
+<div id="outline-container-org0f94e58" class="outline-3">
+<h3 id="org0f94e58"><a href="#org0f94e58"><a href="https://www.youtube.com/watch?v=AyhPmypHDEw">Getting Started with Org Roam - Build a Second Brain in Emacs - YouTube</a></a></h3>
+<div class="outline-text-3" id="text-org0f94e58">
+<p>
+<a href="20210915221421-systemcrafters.html#ID-fa497359-ae3f-494a-b24a-9822eefe67ad">System Crafters</a>のOrg Roam紹介。
+</p>
+</div>
+</div>
+<div id="outline-container-org4647f96" class="outline-3">
+<h3 id="org4647f96"><a href="#org4647f96"><a href="https://www.mhatta.org/wp/2021/02/20/org-mode-101-9/#org125e180">Org mode 教室 その9: org-roam でアイデアをひねり出す</a></a></h3>
+<div class="outline-text-3" id="text-org4647f96">
+<p>
+具体的なワークフローがわかりやすい。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbcde41b" class="outline-3">
+<h3 id="orgbcde41b"><a href="#orgbcde41b"><a href="https://blog.jethro.dev/posts/introducing_org_roam/">https://blog.jethro.dev/posts/introducing_org_roam/</a></a></h3>
+<div class="outline-text-3" id="text-orgbcde41b">
+<p>
+作者サイトのマニュアル。
+</p>
+</div>
+</div>
+<div id="outline-container-org50b076b" class="outline-3">
+<h3 id="org50b076b"><a href="#org50b076b"><a href="https://blog.jethro.dev/posts/org_mode_workflow_preview/">https://blog.jethro.dev/posts/org_mode_workflow_preview/</a></a></h3>
+<div class="outline-text-3" id="text-org50b076b">
+<p>
+org-modeのワークフロー。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org1f9404e" class="outline-2">
+<h2 id="org1f9404e"><a href="#org1f9404e">Archives</a></h2>
+<div class="outline-text-2" id="text-org1f9404e">
+</div>
+<div id="outline-container-org1f4a282" class="outline-3">
+<h3 id="org1f4a282"><a href="#org1f4a282"><span class="done CLOSE">CLOSE</span> Unify workflow management with roam</a></h3>
+<div class="outline-text-3" id="text-org1f4a282">
+<p>
+<a href="https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html">https://d12frosted.io/posts/2021-01-16-task-management-with-roam-vol5.html</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org5cc981b" class="outline-3">
+<h3 id="org5cc981b"><a href="#org5cc981b"><span class="done CLOSE">CLOSE</span> CI, sqliteを入れて試してみる</a></h3>
+<div class="outline-text-3" id="text-org5cc981b">
+<ul class="org-ul">
+<li>search emacsql</li>
+</ul>
+<p>
+Default install sqlite on ubuntu, so does not matter.
+</p>
+</div>
+</div>
+<div id="outline-container-orgf1be244" class="outline-3">
+<h3 id="orgf1be244"><a href="#orgf1be244"><span class="done DONE">DONE</span> 基本的キーバインド</a></h3>
+<div class="outline-text-3" id="text-orgf1be244">
+<ul class="org-ul">
+<li>find(C-c n f)</li>
+<li>バックリンク(C-c n l)</li>
+<li>Roamリンク挿入(C-c n i)補完を有効にすることであまり使わなくなる。</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge599359" class="outline-3">
+<h3 id="orge599359"><a href="#orge599359"><span class="done DONE">DONE</span> idリンクをpublishできない問題</a></h3>
+<div class="outline-text-3" id="text-orge599359">
+<p>
+roamのidがhtmlに変換できないよう。
+</p>
+<blockquote>
+<p>
+Unable to resolve link
+</p>
+</blockquote>
+<p>
+になる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> org-hugo-base-dir <span class="org-string">"."</span>)
+(<span class="org-keyword">setq</span> org-export-with-broken-links t)
+</pre>
+</div>
+<p>
+するとできるが、idリンクを辿れない。
+ほかのサイトではidがあってもできてるように見える。
+<a href="https://hugocisneros.com/blog/my-org-roam-notes-workflow/">https://hugocisneros.com/blog/my-org-roam-notes-workflow/</a>
+orgのバージョンを最新にしたが変わらず。
+</p>
+
+<p>
+公式で言及。
+<a href="https://github.com/org-roam/org-roam/wiki/Hitchhiker's-Rough-Guide-to-Org-roam-V2#export">https://github.com/org-roam/org-roam/wiki/Hitchhiker's-Rough-Guide-to-Org-roam-V2#export</a>
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> org-id-link-to-org-use-id t)
+(<span class="org-keyword">setq</span> org-id-extra-files (org-roam--list-files org-roam-directory))
+</pre>
+</div>
+<p>
+↓で設定していた。これを設定すると成功した。
+<a href="https://hugocisneros.com/org-config/#configuration">https://hugocisneros.com/org-config/#configuration</a>
+</p>
+
+<p>
+<a href="https://gist.github.com/hugcis/1f2d2ad4b98b07ee543f10232ba1b025">https://gist.github.com/hugcis/1f2d2ad4b98b07ee543f10232ba1b025</a>
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">require</span> '<span class="org-constant">find-lisp</span>)
+(<span class="org-keyword">defun</span> <span class="org-function-name">hugcis/publish-note</span> (file)
+  <span class="org-doc">"Publish a note in FILE."</span>
+  (<span class="org-keyword">interactive</span>)
+  (<span class="org-keyword">with-current-buffer</span> (find-file-noselect file)
+    (projectile-mode -1)
+    (<span class="org-keyword">setq</span> org-hugo-section <span class="org-string">"notes"</span>
+          org-hugo-base-dir <span class="org-string">"."</span>
+          citeproc-org-org-bib-header <span class="org-string">"* Bibliography\n&lt;ol class=\"biblio-list\"&gt;"</span>
+          citeproc-org-org-bib-footer <span class="org-string">"&lt;/ol&gt;"</span>)
+    (<span class="org-keyword">let</span> ((org-id-extra-files (find-lisp-find-files org-roam-directory <span class="org-string">"</span><span class="org-string"><span class="org-warning">\</span></span><span class="org-string">.org$"</span>)))
+        (org-hugo-export-wim-to-md))))
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-shell">find . -name <span class="org-string">'*.org'</span> | emacs --batch -l ./publish.el --funcall kd/publish
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9421d32" class="outline-3">
+<h3 id="org9421d32"><a href="#org9421d32"><span class="done DONE">DONE</span> 初期設定</a></h3>
+<div class="outline-text-3" id="text-org9421d32">
+<p>
+⚠バージョンが上がって設定が変わった。この内容は古い。
+roamのデフォルトディレクトリを作成して、そこでファイルが作成されたり、検索対象になる。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">require</span> '<span class="org-constant">org-roam</span>)
+(add-hook 'after-init-hook 'org-roam-mode)
+(make-directory <span class="org-string">"~/roam"</span> t)
+(<span class="org-keyword">setq</span> org-roam-directory <span class="org-string">"~/roam"</span>)
+</pre>
+</div>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> org-roam-completion-everywhere t)
+(define-key org-mode-map (kbd <span class="org-string">"C-M-i"</span>) 'completion-at-point)
+</pre>
+</div>
+<p>
+リンク補完が有効になります。非常に便利。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(define-key org-roam-mode-map (kbd <span class="org-string">"C-c n l"</span>) 'org-roam)
+(define-key org-roam-mode-map (kbd <span class="org-string">"C-c n f"</span>) 'org-roam-find-file)
+(define-key org-roam-mode-map (kbd <span class="org-string">"C-c n g"</span>) 'org-roam-graph)
+(define-key org-mode-map (kbd <span class="org-string">"C-c n i"</span>) 'org-roam-insert)
+(define-key org-mode-map (kbd <span class="org-string">"C-c n I"</span>) 'org-roam-insert-immediate)
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgf8e9ab6" class="outline-3">
+<h3 id="orgf8e9ab6"><a href="#orgf8e9ab6"><span class="done DONE">DONE</span> 外部リンクをグラフに表示したくない</a></h3>
+<div class="outline-text-3" id="text-orgf8e9ab6">
+<p>
+<code>org-roam-graph</code> でファイルリンクだけのつながりを表示したい。
+v1ではファイルリンクだけで、外部リンクは出てなくてわかりやすかった。
+</p>
+
+<p>
+<a href="https://github.com/org-roam/org-roam-ui">org-roam-ui</a>を使ってみた。めちゃかっこいい。
+</p>
+
+<p>
+org-roam-graph-link-hidden-types でhttp, httpsを指定すると消せた。
+これでCIでも出力できるはず。
+</p>
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(<span class="org-keyword">setq</span> org-roam-graph-link-hidden-types '(<span class="org-string">"https"</span> <span class="org-string">"http"</span> <span class="org-string">"file"</span>))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org0346e66" class="outline-3">
+<h3 id="org0346e66"><a href="#org0346e66"><span class="done DONE">DONE</span> d3でのグラフ出力</a></h3>
+<div class="outline-text-3" id="text-org0346e66">
+<ol class="org-ol">
+<li>org-roam-db-syncでdbファイルを生成する</li>
+<li>dbファイルをグラフとしてjsonに変換する</li>
+<li><a href="20210509100112-javascript.html#ID-a6980e15-ecee-466e-9ea7-2c0210243c0d">JavaScript</a>のd3ライブラリでjsonを読み込む</li>
+<li>ブラウザ描画</li>
+</ol>
+</div>
+</div>
+<div id="outline-container-org388fc92" class="outline-3">
+<h3 id="org388fc92"><a href="#org388fc92"><span class="done CLOSE">CLOSE</span> Selecting deleted bufferエラー</a></h3>
+<div class="outline-text-3" id="text-org388fc92">
+<p>
+新しく構築した環境にて、 <code>(org-roam-db-sync)</code> をやると <code>Selecting deleted buffer</code> がエラーが出る。
+依存しているemacs-sqlite関係でなにかおかしくなっているよう。同じくemacs-sqliteに依存しているmagit-forgeも動かない。
+</p>
+
+<p>
+メインマシン、<a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>環境ではうまくいっているので、sqlite関係か、.emacs.dで何か起きている。
+うまくいくようになった。関連ライブラリが修正されたよう。
+</p>
+</div>
+</div>
+<div id="outline-container-org3b9046f" class="outline-3">
+<h3 id="org3b9046f"><a href="#org3b9046f"><span class="done DONE">DONE</span> dbを使って何をしているのか&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org3b9046f">
+<p>
+デフォルトではsqliteを利用しているのは知っているが、実際何をしているのだろうか。結論: ファイルの変更をdbに同期し、再利用しやすいようにしている。
+</p>
+
+<p>
+まずorg-roam-db.elを見てみる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>Database APIの箇所に、クエリを実行する関数がある。削除関数&#x2026;dbのバイナリファイルを見て、存在していればテーブルを消す</label><pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L279-L288
+</pre>
+</div>
+
+<div class="results" id="org8f1abe0">
+<p>
+;;; Database API
+;;;; Clearing
+(defun org-roam-db-clear-all ()
+  &ldquo;Clears all entries in the Org-roam cache.&rdquo;
+  (interactive)
+  (when (file-exists-p org-roam-db-location)
+    (dolist (table (mapcar #&rsquo;car org-roam-db&#x2013;table-schemata))
+      (org-roam-db-query `[:delete :from ,table]))))
+</p>
+
+<p>
+(defun org-roam-db-clear-file (&amp;optional file)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>ファイル情報をinsertする。syncしたときに呼び出す</label><pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L309-L323
+</pre>
+</div>
+
+<div class="results" id="org6cc2036">
+<p>
+(defun org-roam-db-insert-file ()
+  &ldquo;Update the files table for the current buffer.
+If UPDATE-P is non-nil, first remove the file in the database.&rdquo;
+  (let* ((file (buffer-file-name))
+         (file-title (org-roam-db&#x2013;file-title))
+         (attr (file-attributes file))
+         (atime (file-attribute-access-time attr))
+         (mtime (file-attribute-modification-time attr))
+         (hash (org-roam-db&#x2013;file-hash)))
+    (org-roam-db-query
+     [:insert :into files
+      :values $v1]
+     (list (vector file file-title hash atime mtime)))))
+</p>
+
+<p>
+(defun org-roam-db-get-scheduled-time ()
+</p>
+
+</div>
+
+<p>
+org-roam-db-insert-fileが呼ばれることによって、orgファイルの追加をdbと同期する。こういった感じで1ファイルの追加、削除、変更に対応する同期関数がある。
+</p>
+
+<p>
+↑のみでは1ファイルのみなので、org-roamファイル全体に大して同期をかける関数がある。org-roam-db-sync。変更のタイプを判定して、各関数で処理し、orgファイルとdbの内容を同期する。なるほど。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>全org-roamファイルに対して、差分があればdb同期をかける</label><pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-db.el#L611-L643
+</pre>
+</div>
+
+<div class="results" id="org925139b">
+<p>
+(defun org-roam-db-sync (&amp;optional force)
+  &ldquo;Synchronize the cache state with the current Org files on-disk.
+If FORCE, force a rebuild of the cache from scratch.&rdquo;
+  (interactive &ldquo;P&rdquo;)
+  (org-roam-db&#x2013;close) ;; Force a reconnect
+  (when force (delete-file org-roam-db-location))
+  (org-roam-db) ;; To initialize the database, no-op if already initialized
+  (org-roam-require &rsquo;(org-ref oc))
+  (let* ((gc-cons-threshold org-roam-db-gc-threshold)
+         (org-agenda-files nil)
+         (org-roam-files (org-roam-list-files))
+         (current-files (org-roam-db&#x2013;get-current-files))
+         (modified-files nil))
+    (dolist (file org-roam-files)
+      (let ((contents-hash (org-roam-db&#x2013;file-hash file)))
+        (unless (string= (gethash file current-files)
+                         contents-hash)
+          (push file modified-files)))
+      (remhash file current-files))
+    (emacsql-with-transaction (org-roam-db)
+      (org-roam-dolist-with-progress (file (hash-table-keys current-files))
+          &ldquo;Clearing removed files&#x2026;&rdquo;
+        (org-roam-db-clear-file file))
+      (org-roam-dolist-with-progress (file modified-files)
+          &ldquo;Processing modified files&#x2026;&rdquo;
+        (condition-case err
+            (org-roam-db-update-file file &rsquo;no-require)
+          (error
+           (org-roam-db-clear-file file)
+           (lwarn &rsquo;org-roam :error &ldquo;Failed to process %s with error %s, skipping&#x2026;&rdquo;
+                  file (error-message-string err))))))))
+</p>
+
+<p>
+;;;###autoload
+</p>
+
+</div>
+
+<p>
+直にdbに追加する関数を呼ぶことはなく、ファイルの変更をもとに同期関数経由でdbに追加されるようだ。ファイルの方が先に存在していて、後でdbと同期する。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>取得関数</label><pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-node.el#L461-L477
+</pre>
+</div>
+
+<div class="results" id="orgfeb2672">
+<p>
+;;;###autoload
+(cl-defun org-roam-node-find (&amp;optional other-window initial-input filter-fn &amp;key templates)
+  &ldquo;Find and open an Org-roam node by its title or alias.
+INITIAL-INPUT is the initial input for the prompt.
+FILTER-FN is a function to filter out nodes: it takes an `org-roam-node&rsquo;,
+and when nil is returned the node will be filtered out.
+If OTHER-WINDOW, visit the NODE in another window.
+The TEMPLATES, if provided, override the list of capture templates (see
+`org-roam-capture-&rsquo;.)&rdquo;
+  (interactive current-prefix-arg)
+  (let ((node (org-roam-node-read initial-input filter-fn)))
+    (if (org-roam-node-file node)
+        (org-roam-node-visit node other-window)
+      (org-roam-capture-
+       :node node
+       :templates templates
+       :props &rsquo;(:finalize find-file)))))
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>ファイルがあれば、visitを呼び出す</li>
+<li>ファイルがなければ、作成するためにcaptureを呼び出す。dbと関係することは同期時にやるので、ここでは一切考えなくてよく、責務分離できている</li>
+</ul>
+
+<p>
+dbへの同期をみた。利用はどうしているのだろうか。
+</p>
+
+<p>
+探す系は、org-roam-node.elに含まれている。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/org-roam/blob/abe63b436035049923ae96639b9b856697047779/org-roam-node.el#L461-L477
+</pre>
+</div>
+
+<div class="results" id="org3a5a0a5">
+<p>
+;;;###autoload
+(cl-defun org-roam-node-find (&amp;optional other-window initial-input filter-fn &amp;key templates)
+  &ldquo;Find and open an Org-roam node by its title or alias.
+INITIAL-INPUT is the initial input for the prompt.
+FILTER-FN is a function to filter out nodes: it takes an `org-roam-node&rsquo;,
+and when nil is returned the node will be filtered out.
+If OTHER-WINDOW, visit the NODE in another window.
+The TEMPLATES, if provided, override the list of capture templates (see
+`org-roam-capture-&rsquo;.)&rdquo;
+  (interactive current-prefix-arg)
+  (let ((node (org-roam-node-read initial-input filter-fn)))
+    (if (org-roam-node-file node)
+        (org-roam-node-visit node other-window)
+      (org-roam-capture-
+       :node node
+       :templates templates
+       :props &rsquo;(:finalize find-file)))))
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>nodeが存在していればファイルを開く。そうでなければorg-roam-captureでテンプレート画面を開く</li>
+<li>開くときもdbに接続して情報を取ってくるはずだが、コードのどの箇所かわからなかった</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgf1a8453" class="outline-3">
+<h3 id="orgf1a8453"><a href="#orgf1a8453"><span class="done DONE">DONE</span> メモのとり方について再考</a></h3>
+<div class="outline-text-3" id="text-orgf1a8453">
+<ul class="org-ul">
+<li>denoteとroamの使い分けが微妙</li>
+<li>1つの見出しが1つのファイルに属するとは限らない</li>
+<li>文章としてあまり読みやすいものではない</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org45e142a" class="outline-3">
+<h3 id="org45e142a"><a href="#org45e142a"><span class="done DONE">DONE</span> <a href="https://www.amazon.co.jp/TAKE-NOTES-%E2%80%95%E2%80%95%E3%83%A1%E3%83%A2%E3%81%A7%E3%80%81%E3%81%82%E3%81%AA%E3%81%9F%E3%81%A0%E3%81%91%E3%81%AE%E3%82%A2%E3%82%A6%E3%83%88%E3%83%97%E3%83%83%E3%83%88%E3%81%8C%E8%87%AA%E7%84%B6%E3%81%AB%E3%81%A7%E3%81%8D%E3%82%8B%E3%82%88%E3%81%86%E3%81%AB%E3%81%AA%E3%82%8B-%E3%82%BA%E3%83%B3%E3%82%AF%E3%83%BB%E3%82%A2%E3%83%BC%E3%83%AC%E3%83%B3%E3%82%B9-ebook/dp/B09HZ38SFZ/ref=sr_1_1?__mk_ja_JP=%E3%82%AB%E3%82%BF%E3%82%AB%E3%83%8A&amp;crid=4MF6SE54C9DJ&amp;keywords=take+notes&amp;qid=1696764621&amp;sprefix=take+note%2Caps%2C196&amp;sr=8-1">Amazon.co.jp: TAKE NOTES!――メモで、あなただけのアウトプットが自然にできるようになる eBook : ズンク・アーレンス, 二木 夢子: Kindleストア</a></a></h3>
+<div class="outline-text-3" id="text-org45e142a">
+<p>
+Zettelkastenの解説本。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdebea5d" class="outline-2">
+<h2 id="orgdebea5d"><a href="#orgdebea5d">脚注</a></h2>
+<div class="outline-text-2" id="text-orgdebea5d">
+</div>
+</div>
+<div id="outline-container-orgcdb3879" class="outline-2">
+<h2 id="orgcdb3879"><a href="#orgcdb3879">Backlinks</a></h2>
+<div class="outline-text-2" id="text-orgcdb3879">
+<ul class="org-ul">
+<li><a href="./20210508234743-emacs.html">Emacs</a></li>
+<li><a href="./20210907012153-org_mode.html">org-mode</a></li>
+<li><a href="./20210915221421-systemcrafters.html">System Crafters</a></li>
+<li><a href="./20221026T102641--kdoc-1-denoteを使う__essay.html">KDOC 1: denoteを使う</a></li>
+<li><a href="./20240218T162607--kdoc-98-org-roam-node-findでエントリが出なくなったときの直し方__wiki.html">KDOC 98: org-roam-node-findでエントリが出なくなったときの直し方</a></li>
+<li><a href="./20240430T111500--kdoc-146-org-roam-uiをデプロイした__wiki.html">KDOC 146: org-roam-uiをデプロイした</a></li>
+</ul>
+</div>
+</div>
+<div id="footnotes">
+<h2 class="footnotes">Footnotes: </h2>
+<div id="text-footnotes">
+
+<div class="footdef"><sup><a id="fn.1" class="footnum" href="#fnr.1" role="doc-backlink">1</a></sup> <div class="footpara" role="doc-footnote"><p class="footpara">
+<a href="https://roamresearch.com/">https://roamresearch.com/</a> Webでのアウトラインツール。
+</p></div></div>
+
+
+</div>
+</div></div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

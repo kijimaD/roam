@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:50Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 129: 『ポインタ理解のためのアセンブリ入門』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 129: 『ポインタ理解のためのアセンブリ入門』</h1>
+<div id="outline-container-orgd12eeb1" class="outline-2">
+<h2 id="orgd12eeb1"><a href="#orgd12eeb1">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgd12eeb1">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-03-29 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2024-04-27 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org58bb01a" class="outline-2">
+<h2 id="org58bb01a"><a href="#org58bb01a">概要</a></h2>
+<div class="outline-text-2" id="text-org58bb01a">
+<p>
+<a href="https://nextpublishing.jp/book/17419.html">RISC-Vから学ぶC言語 ポインタ理解のためのアセンブリ入門</a>は、<a href="20210911104632-c_language.html#ID-656a0aa4-e5d3-416f-82d5-f909558d0639">C言語</a>をアセンブリで解説する本である。C言語やポインタといいつつ、紙幅のほとんどは前提知識となる命令セットやアセンブリの解説である。
+</p>
+</div>
+</div>
+<div id="outline-container-orge7a14a9" class="outline-2">
+<h2 id="orge7a14a9"><a href="#orge7a14a9">感想</a></h2>
+<div class="outline-text-2" id="text-orge7a14a9">
+<p>
+条件文、ポインタ、配列、構造体などのプリミティブのコードと生成アセンブリを比較する流れはとても良かった。解説はあっさりしているが、実際に比較してみて考えてみるとわかる。一度では腑に落ちなかったが、何度か行ったり来たりしたら理解できた。50ページほどしかないのはむしろよく、圧倒されなかった。
+</p>
+
+<p>
+例コードを<a href="https://godbolt.org/">Compiler Explorer</a>に通して、アセンブリとコードを読んでみてから解説を読んでいった。対応部分が色分けされているのは本当にわかりやすい。
+</p>
+</div>
+</div>
+<div id="outline-container-org17237a6" class="outline-2">
+<h2 id="org17237a6"><a href="#org17237a6">メモ</a></h2>
+<div class="outline-text-2" id="text-org17237a6">
+<ul class="org-ul">
+<li><code>bne</code> 命令。「等しくなければジャンプする」==「等しければジャンプしない」</li>
+<li><b>メモリの図は上にいくほど小さい</b> 。-60と-40では、-60が上にある</li>
+<li>流れ
+<ol class="org-ol">
+<li>最初にスタックポインタ(sp)をマイナスにしてスタック領域を確保する</li>
+<li>スタックの下の方に、レジスタの値を退避させる。元の関数フレームの基準点など</li>
+<li>spからもっとも離れたスタックの底をフレームポインタ(s0)とする</li>
+<li>s0からのオフセットでメモリアクセスする</li>
+<li>本処理をいろいろやる</li>
+<li>関数呼び出しが終わったらメモリに退避させていた関数フレームの基準点をフレームポインタ(s0)に戻し、呼び出し先に戻る</li>
+</ol></li>
+<li>a0は戻り値を格納するレジスタ</li>
+</ul>
+
+<p>
+↓条件文。
+</p>
+
+<iframe width="800px" height="200px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:8,positionColumn:2,positionLineNumber:8,selectionStartColumn:2,selectionStartLineNumber:8,startColumn:2,startLineNumber:8),source:'%23include+%3Cstdio.h%3E%0Aint+main()+%7B%0A++++int+a+%3D+5%3B%0A++++if+(a+%3D%3D+5)+%7B%0A++++++++a+%3D+1%3B%0A++++%7D%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+
+<p>
+↓配列。
+</p>
+
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:11,positionColumn:2,positionLineNumber:11,selectionStartColumn:2,selectionStartLineNumber:11,startColumn:2,startLineNumber:11),source:'%23include+%3Cstdio.h%3E%0Aint+main()+%7B%0A++++int+array1%5B5%5D+%3D+%7B10,+11,+12,+13,+14%7D%3B%0A++++int+array2%5B2%5D%5B3%5D+%3D+%7B%7B1,+2,+3%7D,+%7B4,+5,+6%7D%7D%3B%0A++++array1%5B0%5D+%3D+20%3B%0A++++array2%5B0%5D%5B0%5D+%3D+100%3B%0A++++array2%5B0%5D%5B1%5D+%3D+200%3B%0A++++array2%5B1%5D%5B0%5D+%3D+300%3B%0A++++array2%5B1%5D%5B1%5D+%3D+400%3B%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+
+<p>
+↓ポインタ。
+</p>
+
+<p>
+<code>addi a5,s0,-24</code> でアドレスを求めている。
+</p>
+
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:4,positionColumn:2,positionLineNumber:4,selectionStartColumn:2,selectionStartLineNumber:4,startColumn:2,startLineNumber:4),source:'int+main()+%7B%0A++++int+a+%3D+1%3B%0A++++int+*b+%3D+%26a%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+
+<p>
+↓構造体。
+</p>
+
+<iframe width="800px" height="400px" src="https://godbolt.org/e#g:!((g:!((g:!((h:codeEditor,i:(filename:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,selection:(endColumn:2,endLineNumber:16,positionColumn:2,positionLineNumber:16,selectionStartColumn:2,selectionStartLineNumber:16,startColumn:2,startLineNumber:16),source:'%23include+%3Cstdio.h%3E%0A%23include+%3Cstdlib.h%3E%0Atypedef+struct+student+student%3B%0Astruct+student+%7B%0A++++char+id%3B%0A++++short+age%3B%0A++++char+*name%3B%0A%7D+Student1,+Student2%3B%0Aint+main()+%7B%0A++++student+*s+%3D+(student+*)malloc(sizeof(student))%3B%0A++++s-%3Ename+%3D+%22reten%22%3B%0A++++s-%3Eid+%3D+10%3B%0A++++s-%3Eage+%3D+21%3B%0A++++Student1.id+%3D+11%3B%0A++++return+0%3B%0A%7D'),l:'5',n:'0',o:'C+source+%231',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0'),(g:!((h:compiler,i:(compiler:rv32-cgcctrunk,filters:(b:'0',binary:'1',binaryObject:'1',commentOnly:'0',debugCalls:'1',demangle:'0',directives:'0',execute:'1',intel:'1',libraryCode:'0',trim:'0'),flagsViewOpen:'1',fontScale:14,fontUsePx:'0',j:1,lang:___c,libs:!(),options:'',overrides:!(),selection:(endColumn:1,endLineNumber:1,positionColumn:1,positionLineNumber:1,selectionStartColumn:1,selectionStartLineNumber:1,startColumn:1,startLineNumber:1),source:1),l:'5',n:'0',o:'+RISC-V+(32-bits)+gcc+(trunk)+(Editor+%231)',t:'0')),k:50,l:'4',n:'0',o:'',s:0,t:'0')),l:'2',n:'0',o:'',t:'0')),version:4"></iframe>
+</div>
+</div>
+<div id="outline-container-org3b5659e" class="outline-2">
+<h2 id="org3b5659e"><a href="#org3b5659e">関連</a></h2>
+<div class="outline-text-2" id="text-org3b5659e">
+<ul class="org-ul">
+<li><a href="20231014T125935--kdoc-45-プログラミング言語の内部的な違いをアセンブリから調べる__wiki.html#ID-20231014T125935">KDOC 45: プログラミング言語の内部的な違いをアセンブリから調べる</a>。で触れたときはあやふやな理解のままだった</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org3b2e59c" class="outline-2">
+<h2 id="org3b2e59c"><a href="#org3b2e59c">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org3b2e59c">
+<ul class="org-ul">
+<li><a href="./20240324T222331--kdoc-130-アセンブラの手っ取り早い学び方を考える__essay.html">KDOC 130: アセンブラの手っ取り早い学び方を考える</a></li>
+<li><a href="./20240427T113714--kdoc-140-『自作エミュレータで学ぶx86アーキテクチャ』__book.html">KDOC 140: 『自作エミュレータで学ぶx86アーキテクチャ』</a></li>
+<li><a href="./20240502T175719--kdoc-155-文献メモには内容のメモしか書かないようにする__essay.html">KDOC 155: 文献メモには内容のメモしか書かないようにする</a></li>
+<li><a href="./20240529T002323--kdoc-179-『ハローhello-world-osと標準ライブラリのシゴトとしくみ』__book.html">KDOC 179: 『ハロー“Hello, World” OSと標準ライブラリのシゴトとしくみ』</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

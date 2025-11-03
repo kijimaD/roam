@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:56Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 15: Emacs Caskを読む</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 15: Emacs Caskを読む</h1>
+<p>
+Caskは<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>のプロジェクト管理ツール。ファイルに依存ライブラリを列挙し、同じ環境を再現できる。Caskの仕組みを調べる。
+</p>
+<div id="outline-container-org95bf149" class="outline-2">
+<h2 id="org95bf149"><a href="#org95bf149">memo</a></h2>
+<div class="outline-text-2" id="text-org95bf149">
+</div>
+<div id="outline-container-org57d5409" class="outline-3">
+<h3 id="org57d5409"><a href="#org57d5409">機能</a></h3>
+<div class="outline-text-3" id="text-org57d5409">
+<p>
+そもそもどんな機能があるか。
+</p>
+
+<p>
+<code>define-error</code> 各エラーの定義。
+</p>
+
+<p>
+<code>defstruct</code> は構造体を定義する Common Lisp の関数。使い方がわからない。
+</p>
+
+<p>
+<code>check-parens</code> カッコの対応をチェックする関数。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcef20d7" class="outline-3">
+<h3 id="orgcef20d7"><a href="#orgcef20d7">helpの出力</a></h3>
+<div class="outline-text-3" id="text-orgcef20d7">
+<p>
+そもそもinstall以外の機能を知らない。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-nil">  USAGE: cask [COMMAND] [OPTIONS]
+
+Emacs dependency management made easy
+
+COMMANDS:
+
+ pkg-file                                Write a ‘define-package’ file.
+
+                                         The file is written to the Cask project root path with name
+                                         {project-name}-pkg.el.
+ install                                 Install all packages specified in the Cask-file.
+
+                                         The dependencies to packages are also installed.  If a package
+                                         already is installed, it will not be installed again.
+ update                                  Update package versions.
+
+                                         All packages that are specified in the Cask-file will be updated
+                                         including their dependencies.
+ upgrade                                 Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ upgrade-cask                            Upgrade Cask itself and its dependencies.
+
+                                         This command requires that Cask is installed using Git and that
+                                         Git is available in ‘exec-path’.
+ exec [*]                                Execute ARGS with correct ‘exec-path’ and ‘load-path’.
+ version                                 Print version for the current project.
+ list                                    List this package dependencies.
+ info                                    Show info about the current package.
+ help [command]                          Display usage information or documentation for COMMAND-NAME.
+ load-path                               Print ‘load-path’ for all packages and dependencies.
+
+                                         The output is formatted as a colon path.
+ exec-path                               Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ eval &lt;form&gt;                             Eval FORM with the ‘load-path’ set according to the project.
+ path                                    Print ‘exec-path’ for all packages and dependencies.
+
+                                         A dependency will be included in this list of the package has a
+                                         directory called bin in the root directory.
+
+                                         The output is formatted as a colon path.
+ package-directory                       Print current package installation directory.
+ outdated                                Print list of outdated packages.
+
+                                         That is packages that have a more recent version available for
+                                         installation.
+ files                                   Print list of files specified in the files directive.
+                                         If no files directive or no files, do nothing.
+ build                                   Build all Elisp files in the files directive.
+ clean-elc                               Remove all byte compiled Elisp files in the files directive.
+ link [*]                                Manage links.
+
+                                         A link is just that, a symbolic link.  The purpose of the link
+                                         command is that you should be able to work with local
+                                         dependencies.
+
+                                         For example, let’s say you are developing an Emacs package that
+                                         depends on f.el. Consider what happens if you need to extend f.el
+                                         with some function that your package requires.
+
+                                         With the link command, you can checkout f.el locally, add it as a
+                                         link in your local package.  That means that when you require
+                                         f.el, you will require the local package instead of the one
+                                         fetched from the ELPA mirror.  Now you add the desired function
+                                         to f.el and use your library to try it out.
+
+                                         COMMAND-OR-NAME can be one of: delete, list or a link name.
+                                         ARG is sent to some of the commands.
+
+                                         Commands:
+
+                                          $ cask link list
+
+                                           List all project links.
+
+                                          $ cask link name path
+
+                                           Add local link with NAME to PATH.
+
+                                          $ cask link delete name
+
+                                           Delete local link with NAME.
+ package [target-dir]                    Build package and put in TARGET-DIR or dist if not specified.
+ emacs [*]                               Execute emacs with the appropriate environment.
+
+OPTIONS:
+
+ --proxy &lt;host&gt;                          Set Emacs proxy for HTTP and HTTPS to HOST.
+ --http-proxy &lt;host&gt;                     Set Emacs proxy for HTTP to HOST.
+ --https-proxy &lt;host&gt;                    Set Emacs proxy for HTTPS to HOST.
+ --no-proxy &lt;host&gt;                       Set Emacs no-proxy to HOST.
+ --version                               Print Cask’s version.
+ -h [command], --help [command]          Display usage information or documentation for COMMAND-NAME.
+ --debug                                 Turn on debug output.
+ --path &lt;path&gt;                           Run command in this PATH instead of in ‘default-directory’.
+ --verbose                               Be verbose and show debug output.
+ --silent                                Be silent and do not print anything.
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orge623713" class="outline-3">
+<h3 id="orge623713"><a href="#orge623713">eplって何</a></h3>
+<div class="outline-text-3" id="text-orge623713">
+<p>
+パッケージ関連のライブラリ。
+</p>
+
+<ul class="org-ul">
+<li><a href="https://github.com/cask/epl">cask/epl: Emacs Package Library</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org79b7182" class="outline-3">
+<h3 id="org79b7182"><a href="#org79b7182">例外を返すcask&#x2013;exit-error</a></h3>
+<div class="outline-text-3" id="text-org79b7182">
+<p>
+渡されたエラーの種類によって正しいメッセージを返す。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/kd-collective/cask/blob/467979414c85bb2ce83f5c6ab9f95721164e9efa/cask.el#L237
+</pre>
+</div>
+
+<div class="results" id="org24e2c8a">
+<p>
+(defun cask&#x2013;exit-error (bundle err)
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org9342bc6" class="outline-3">
+<h3 id="org9342bc6"><a href="#org9342bc6">読み進めるread</a></h3>
+<div class="outline-text-3" id="text-org9342bc6">
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 1: </span>read は読み進める関数。1つカーソルが進む</label><pre class="src src-emacs-lisp">(read (current-buffer))
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org9195de5" class="outline-3">
+<h3 id="org9195de5"><a href="#org9195de5">エラーをシグナルする関数signal</a></h3>
+<div class="outline-text-3" id="text-org9195de5">
+<p>
+signalはエラーをシグナルする関数。
+</p>
+</div>
+</div>
+<div id="outline-container-org993ba02" class="outline-3">
+<h3 id="org993ba02"><a href="#org993ba02">ローカル定義関数を作るcl-flet</a></h3>
+<div class="outline-text-3" id="text-org993ba02">
+<p>
+ローカル定義関数を作る。
+</p>
+</div>
+</div>
+<div id="outline-container-org56e433e" class="outline-3">
+<h3 id="org56e433e"><a href="#org56e433e">メタプロパティを付与するdeclare</a></h3>
+<div class="outline-text-3" id="text-org56e433e">
+<p>
+<a href="https://ayatakesi.github.io/emacs/24.5/elisp_html/Declare-Form.html">Declare Form (GNU Emacs Lisp Reference Manual)</a>
+</p>
+
+<p>
+関数やマクロにメタプロパティを付与するのに使う。陳腐化マークをつけたり、TABインデント規則をつけたりできる。たとえば通常defunでは第3引数に来るdoc stringを、ほかのマクロで定義するのに使う。
+</p>
+</div>
+</div>
+<div id="outline-container-org6ff1c79" class="outline-3">
+<h3 id="org6ff1c79"><a href="#org6ff1c79">cask&#x2013;with-file</a></h3>
+<div class="outline-text-3" id="text-org6ff1c79">
+<p>
+引数のcaskが存在すれば、bodyを評価するマクロ。
+</p>
+
+<dl class="org-dl">
+<dt>f-file?</dt><dd>file-regular-p  のエイリアス。regular file って何</dd>
+</dl>
+</div>
+</div>
+<div id="outline-container-orgd026055" class="outline-3">
+<h3 id="orgd026055"><a href="#orgd026055">commanderパッケージ</a></h3>
+<div class="outline-text-3" id="text-orgd026055">
+<p>
+CLIの実行には、commanderというパーサーライブラリを使っている。これを使ってEmacs Lispで書かれた関数をシェルから呼び出せるようにしている。サブコマンド・オプション・ヘルプ表示などをommanderでしている。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org47ba279" class="outline-2">
+<h2 id="org47ba279"><a href="#org47ba279">Tasks</a></h2>
+</div>
+<div id="outline-container-org9f8a0ab" class="outline-2">
+<h2 id="org9f8a0ab"><a href="#org9f8a0ab">Archives</a></h2>
+<div class="outline-text-2" id="text-org9f8a0ab">
+</div>
+<div id="outline-container-org069699b" class="outline-3">
+<h3 id="org069699b"><a href="#org069699b"><span class="done DONE">DONE</span> cask-printの仕組み&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Write">Write</span></span></a></h3>
+<div class="outline-text-3" id="text-org069699b">
+<p>
+cask-print内でgreen関数を使って出力を色付けできる。直接green関数は中でないと利用できない。これはどういう仕組みになっているのだろう。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(cask-print <span class="org-string">"----"</span> (green <span class="org-string">"green"</span>) <span class="org-string">"----"</span>)
+</pre>
+</div>
+
+<div class="results" id="org09748c5">
+<p>
+-&#x2014;[32mgreen[0m-&#x2014;
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-git-permalink">https://github.com/cask/cask/blob/bc168a11d7881a62657cdf19bab2e7966033ec2c/cask.el#L218-L226
+</pre>
+</div>
+
+<div class="results" id="orgb5746af">
+<p>
+(cl-defmacro cask-print (&amp;rest body &amp;key stderr &amp;allow-other-keys)
+  "Print messages to `standard-output&rsquo;.
+</p>
+
+<p>
+The BODY of this macro is automatically wrapped with
+`with-ansi&rsquo; for easier colored output."
+  (delq :stderr body)
+  `(when (or (not (boundp &rsquo;cask-cli&#x2013;silent))
+             (not cask-cli&#x2013;silent))
+     (princ (with-ansi ,@body) ,(when stderr &rsquo;(function external-debugging-output)))))
+</p>
+
+</div>
+
+<ul class="org-ul">
+<li>cask-print
+<ul class="org-ul">
+<li>with-ansi</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(with-ansi <span class="org-string">"----"</span> (green <span class="org-string">"green"</span>))
+</pre>
+</div>
+
+<div class="results" id="org4dd71f0">
+<p>
+-&#x2014;[32mgreen[0m
+</p>
+
+</div>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>ソースコード ansi.el</label><pre class="src src-emacs-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">with-ansi</span> (<span class="org-type">&amp;rest</span> body)
+  <span class="org-doc">"Shortcut names (without ansi- prefix) can be used in this BODY."</span>
+  (<span class="org-keyword">if</span> ansi-inhibit-ansi
+      `(ansi--concat ,@body)
+    `(<span class="org-keyword">cl-macrolet</span>
+         ,(mapcar
+           (<span class="org-keyword">lambda</span> (alias)
+             (<span class="org-keyword">let</span> ((fn (intern (format <span class="org-string">"ansi-%s"</span> (symbol-name alias)))))
+               `(,alias (string <span class="org-type">&amp;rest</span> objects)
+                        ,(list 'backquote (list fn ',string ',@objects)))))
+           (append
+            (mapcar 'car ansi-colors)
+            (mapcar 'car ansi-on-colors)
+            (mapcar 'car ansi-styles)
+            (mapcar 'car ansi-csis)))
+       ,(cons 'ansi--concat body))))
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>with~系はだいたいマクロで、バインドされた関数をbodyで渡すフォームで使用できることを示している</li>
+<li>with-ansi関数の概略
+<ul class="org-ul">
+<li>色のリスト(black white &#x2026;)を使って、関数のエイリアスを割り当てる
+<ul class="org-ul">
+<li>(ansi-black) (<code>ansi-white</code>) マクロがある。それらを、with-ansi 内では(black) (white) で呼び出せるようにエイリアスを張る</li>
+</ul></li>
+<li>macroletの第1引数でマクロ名と関数の中身を定義してるっぽい
+<ul class="org-ul">
+<li>だから、第2引数のbody部分では↑マクロが使える
+<ul class="org-ul">
+<li><code>,(cons 'ansi--concat body)</code> の箇所</li>
+</ul></li>
+</ul></li>
+<li>consでbodyをansi&#x2013;concatの引数にしてる。body内のblackとかは、macroletで定義したマクロで解釈される</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orge80ccb9" class="outline-3">
+<h3 id="orge80ccb9"><a href="#orge80ccb9"><span class="done DONE">DONE</span> fetcherとは何か</a></h3>
+<div class="outline-text-3" id="text-orge80ccb9">
+<p>
+どのバージョン管理システムを使ってダウンロードするかみたい。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 4: </span>デフォルト値</label><pre class="src src-emacs-lisp">cask-fetchers
+</pre>
+</div>
+
+<div class="results" id="orgb0cd46e">
+<p>
+(:git :bzr :hg :darcs :svn :cvs)
+</p>
+
+</div>
+
+<p>
+セットされてないケースもある。ない場合はローカルのファイルから処理する、などの分岐がある。
+</p>
+</div>
+</div>
+<div id="outline-container-org187a545" class="outline-3">
+<h3 id="org187a545"><a href="#org187a545"><span class="done DONE">DONE</span> どうやってinstallしているか</a></h3>
+<div class="outline-text-3" id="text-org187a545">
+<ul class="org-ul">
+<li>cask-install
+<ul class="org-ul">
+<li>cask&#x2013;with-environment バインドして、bodyを実行する
+<ul class="org-ul">
+<li>cl-destructuring-bind 実行結果で変数をバインドする
+<ul class="org-ul">
+<li>cask&#x2013;dependencies-and-missing 依存関係を集める</li>
+<li>cask&#x2013;install-dependency 個別にインストールを実行</li>
+<li>missing-dependencies のときはエラーを吐く</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+bundle構造体に対して、さまざまなアクセサがある感じか。bundleがよくわかってなくてピンときてない感じ。ほとんどの関数はbundleを引数にとる。
+</p>
+
+<ul class="org-ul">
+<li>cask&#x2013;install-dependency
+<ul class="org-ul">
+<li>print関係やってる。見覚えがある</li>
+<li>本質的にはepl-install-file か epl-package-install を使ってインストール
+<ul class="org-ul">
+<li>install-fileはファイルからインストールし、package installは名前からダウンロードか</li>
+<li>fetcherの有無で分岐する</li>
+<li>インターネットからダウンロードするか、ローカルファイルからインストールするか、ということか</li>
+</ul></li>
+<li>epl-refresh package descriptionを更新する</li>
+<li>cask&#x2013;checkout-and-package-dependency パッケージのパスを返す</li>
+<li>cask-dependency 系はCaskのdepends-on関数で指定されるもの。各依存パッケージが入っている。</li>
+<li>cask&#x2013;with-package 引数がパッケージであればbodyを評価し、パッケージでなければ例外を返す</li>
+<li>パッケージ名が存在するか、また必要な値を持っているかチェックして、最後にインストール
+<ul class="org-ul">
+<li>途中でおかしいところがあれば例外を出す</li>
+<li>インストールは epl-package-install を使う
+<ul class="org-ul">
+<li>内部的にpackage-install を使う</li>
+</ul></li>
+<li>ダウンロード + 評価される</li>
+</ul></li>
+</ul></li>
+</ul>
+
+<p>
+まとめると、depend-onの情報を元にパッケージ名を特定する。チェックして、既存のインストール関数を使うことでインストールする。fetcherを変更したりもあるので、その分岐も入っている。
+</p>
+</div>
+</div>
+<div id="outline-container-org593b94c" class="outline-3">
+<h3 id="org593b94c"><a href="#org593b94c"><span class="done DONE">DONE</span> どこでbundle structをセットしているか</a></h3>
+<div class="outline-text-3" id="text-org593b94c">
+<p>
+テストを見ればよさそうに見える。
+</p>
+
+<ul class="org-ul">
+<li>cask-test/with-bundle Caskファイルの中身を渡して、生成する + body評価。bundleがバインドされてる
+<ul class="org-ul">
+<li>cask-test/with-sandbox
+<ul class="org-ul">
+<li>f-with-sandbox</li>
+</ul></li>
+</ul></li>
+<li>(cask-setup cask-test/sandbox-path) みたいな感じでbundleが生成されている。プロジェクトディレクトリを指定してcask-setupによってパースを開始する、ということか。パース結果がbundleである</li>
+<li>CLIから実行した場合も、全く同じようにcask-setupでbundleを用意する。CLIのパスが使われ、キャッシュとして変数に実行結果が保存されるというだけの違い</li>
+</ul>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 5: </span>cask-bundleの中身にアクセスする</label><pre class="src src-emacs-lisp">(cask-bundle-name (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-version (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-description (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-runtime-dependencies (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-development-dependencies (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-path (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-patterns (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+(cask-bundle-sources (cask-setup <span class="org-string">"~/.emacs.d"</span>))
+</pre>
+</div>
+
+<div class="results" id="org0d7eb9e">
+
+</div>
+
+<ul class="org-ul">
+<li>cask-bundleの中にcask-dependency[]がある。dependencyにnameやversionが含まれていて、名前を元にダウンロードする</li>
+<li>Caskに書かれているコードはリストとして処理される。構造体に格納され、伝播する</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org61bf0e2" class="outline-3">
+<h3 id="org61bf0e2"><a href="#org61bf0e2"><span class="done DONE">DONE</span> ansi&#x2013;define</a></h3>
+<div class="outline-text-3" id="text-org61bf0e2">
+<p>
+Caskというかansiパッケージの話。どういう仕組みになっているか。
+(ansi&#x2013;define red) という風に色を定義している。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 6: </span>ansi.el</label><pre class="src src-emacs-lisp">(<span class="org-keyword">defmacro</span> <span class="org-function-name">ansi--define</span> (effect)
+  <span class="org-doc">"Define ansi function with EFFECT."</span>
+  (<span class="org-keyword">let</span> ((fn-name (intern (format <span class="org-string">"ansi-%s"</span> (symbol-name effect)))))
+    `(<span class="org-keyword">defun</span> ,fn-name (format-string <span class="org-type">&amp;rest</span> objects)
+       ,(format <span class="org-string">"Add '</span><span class="org-string"><span class="org-constant">%s</span></span><span class="org-string">' ansi effect to text."</span> effect)
+       (apply 'ansi-apply (cons ',effect (cons format-string objects))))))
+</pre>
+</div>
+
+<ul class="org-ul">
+<li>ansi&#x2013;define(my-test) とすると、ansi-my-test関数が定義される
+<ul class="org-ul">
+<li>defunの次の行はdocstring</li>
+<li>ansi-apply 内で呼び出されるansi&#x2013;code関数で、色名と番号を紐づけている。だからansi&#x2013;defineでの引数がgreenだとgreenでansi-applyされて対応する32が取り出され、その内容でansi-green関数が定義される</li>
+<li>適当な名前でansi-defineしても、関数は定義される。しかし、対応するコードが存在しないため実行時エラーになる</li>
+</ul></li>
+</ul>
+
+<div class="org-src-container">
+<pre class="src src-emacs-lisp">(ansi-green <span class="org-string">"green"</span>)
+</pre>
+</div>
+
+<div class="results" id="org59dcf9e">
+<p>
+[32mgreen[0m
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org1306517" class="outline-3">
+<h3 id="org1306517"><a href="#org1306517"><span class="done DONE">DONE</span> どうやってDSLを定義しているか</a></h3>
+<div class="outline-text-3" id="text-org1306517">
+<p>
+Cask-fileではいくつかのDSLが使えるが、その仕組みはどうなっているか。
+</p>
+
+<p>
+驚くほどシンプルに実装できる。
+</p>
+
+<ul class="org-ul">
+<li>cask&#x2013;eval で定義している
+<ul class="org-ul">
+<li>dolistで各リスト処理。それぞれのcarを見て、cl-case分岐</li>
+<li>キーワードがcaseで引っかかるようになっていて、その処理が走る
+<ul class="org-ul">
+<li>たとえば引数formsが(source 1) の場合は、case条件でsource が一致してそこの処理が走る、というだけのこと</li>
+</ul></li>
+<li>DSLの引数はcl-destructuring-bindでformからバインドする</li>
+</ul></li>
+</ul>
+
+<p>
+これによって、処理全体中の、ファイルから構造体に読み込む部分が理解できた。
+</p>
+
+<ul class="org-ul">
+<li>たとえばdepend-onの場合は、bundleに値を追加する。DSLを処理する段階ではグローバルな状態を保持するbundle structに集積していく</li>
+<li>あとから、bundleからまとめて必要な値を取り出してインストールする、みたいな感じ</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org400cd06" class="outline-3">
+<h3 id="org400cd06"><a href="#org400cd06"><span class="done CLOSE">CLOSE</span> recipeとは何か&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Write">Write</span></span></a></h3>
+<div class="outline-text-3" id="text-org400cd06">
+<p>
+たまに見るがどういう意味なのだろう。パッケージのビルドと関係ありそうに見える。Melpaのレシピでは、パッケージ名とかURLを指定するが…ここではどういう意味なのだろう。
+</p>
+
+<ul class="org-ul">
+<li>package-recipe.el がある
+<ul class="org-ul">
+<li>package-recipeというクラスがある</li>
+<li>組み込みでpackage-build というコマンドがある。対応する何かなのだろう</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgff0eb33" class="outline-3">
+<h3 id="orgff0eb33"><a href="#orgff0eb33"><span class="done CLOSE">CLOSE</span> cask installが遅い理由&#xa0;&#xa0;&#xa0;<span class="tag"><span class="Write">Write</span></span></a></h3>
+<div class="outline-text-3" id="text-orgff0eb33">
+<p>
+わからない。
+</p>
+
+<p>
+すでに存在していても、0.5秒くらいかかるので、300パッケージあると150秒かかる。
+</p>
+
+<p>
+ひとつひとつ通信しているように見える。ローカルだけだとこんなにかからないはずだ。なぜかMacだとすぐ終わっていたはずだが、わからない。
+</p>
+
+<ul class="org-ul">
+<li>ダウンロードは、いくつかチェックがあって最終的に走る</li>
+<li>すでにダウンロードされていると判定すれば、途中で抜けるので早いはず、だがここがあまり早くない</li>
+<li>その前の判定に比較的時間のかかる箇所があるように見える</li>
+<li>cask&#x2013;dependency-installed-p ですでにダウンロードされてるかの判定をしている
+<ul class="org-ul">
+<li>内部的に epl-package-installed-p を使っている</li>
+<li>引数に構造体epl-packageを取る。epl-package-create 関数を使って構造体を初期化する</li>
+<li>通信は発生してなさそう
+<ul class="org-ul">
+<li>さらに内部でpackage-installed-p を使っている</li>
+<li><code>package-activated-list</code> でチェック</li>
+</ul></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

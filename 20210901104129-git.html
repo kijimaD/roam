@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:53Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Git</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Git</h1>
+<div id="outline-container-org05aed56" class="outline-2">
+<h2 id="org05aed56"><a href="#org05aed56">概要</a></h2>
+<div class="outline-text-2" id="text-org05aed56">
+<p>
+Gitはバージョン管理システムである。
+</p>
+</div>
+</div>
+<div id="outline-container-org34bad04" class="outline-2">
+<h2 id="org34bad04"><a href="#org34bad04">Memo</a></h2>
+<div class="outline-text-2" id="text-org34bad04">
+</div>
+<div id="outline-container-org70e5018" class="outline-3">
+<h3 id="org70e5018"><a href="#org70e5018">デフォルトブランチをmaster → mainに変えたときの対応</a></h3>
+<div class="outline-text-3" id="text-org70e5018">
+<p>
+デフォルトブランチをmaster → mainに変えたとき、ローカルで実行して対応する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">git branch -m master main
+git fetch origin
+git branch -u origin/main main
+git remote set-head origin -a
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgdc56a75" class="outline-3">
+<h3 id="orgdc56a75"><a href="#orgdc56a75">warning: refname &rsquo;xxx&rsquo; is ambiguous</a></h3>
+<div class="outline-text-3" id="text-orgdc56a75">
+<p>
+pullやpushしたとき、↑が出てうまくいかなくなることがある。これは、ブランチ名とタグ名がかぶっていることが原因。どちらかを削除するとうまくいくようになる。
+</p>
+
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 2: </span>どちらか</label><pre class="src src-shell">$ git branch -d xxx
+$ git tag -d xxx
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-orgebfe8cc" class="outline-3">
+<h3 id="orgebfe8cc"><a href="#orgebfe8cc">ゴミファイルを削除する</a></h3>
+<div class="outline-text-3" id="text-orgebfe8cc">
+<p>
+gitignoreしたディレクトリで、いつの間にかゴミファイルがたまりがち。
+</p>
+<div class="org-src-container">
+<label class="org-src-name"><span class="listing-number">Listing 3: </span>削除されるファイルを確認してから、削除する</label><pre class="src src-shell">git clean -xdn <span class="org-comment-delimiter"># </span><span class="org-comment">dry run
+</span>git clean -xdf <span class="org-comment-delimiter"># </span><span class="org-comment">&#23455;&#34892;</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org7445b1d" class="outline-3">
+<h3 id="org7445b1d"><a href="#org7445b1d">revertしたブランチを再開するとき</a></h3>
+<div class="outline-text-3" id="text-org7445b1d">
+<p>
+revertしたブランチの途中から再開すると、revertコミットのために差分が出ない。
+なので、revertコミットをさらにrevertして、その上で作業を再開する。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">git revert -m 1 {revert&#12375;&#12383;&#12467;&#12511;&#12483;&#12488;&#12495;&#12483;&#12471;&#12517;}
+</pre>
+</div>
+
+<p>
+<a href="https://stackoverflow.com/questions/2389361/undo-a-git-merge-that-hasnt-been-pushed-yet/6217372#6217372">https://stackoverflow.com/questions/2389361/undo-a-git-merge-that-hasnt-been-pushed-yet/6217372#6217372</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org7d0cedd" class="outline-3">
+<h3 id="org7d0cedd"><a href="#org7d0cedd">コミットハッシュ取得</a></h3>
+<div class="outline-text-3" id="text-org7d0cedd">
+<p>
+タグをつけるときに便利。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell"><span class="org-variable-name">LC</span>=$(git rev-parse --short HEAD)
+<span class="org-builtin">echo</span> ${<span class="org-variable-name">LC</span>}
+</pre>
+</div>
+
+<pre class="example">
+0f777f9
+</pre>
+
+
+<p>
+↓みたいな感じで。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">docker build -t ghcr.io/kijimad/webapp:${<span class="org-variable-name">LC</span>} .
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org6e1f6a0" class="outline-3">
+<h3 id="org6e1f6a0"><a href="#org6e1f6a0">certエラーが出るとき</a></h3>
+<div class="outline-text-3" id="text-org6e1f6a0">
+<p>
+依存パッケージインストール時、httpsでcloneできないことがある。証明書がないエラー。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">git config --global http.sslVerify false
+</pre>
+</div>
+
+<p>
+<a href="https://stackoverflow.com/questions/19045556/git-clone-https-ssl-error">git clone https/ssl error - Stack Overflow</a>
+</p>
+</div>
+</div>
+<div id="outline-container-org0a775b7" class="outline-3">
+<h3 id="org0a775b7"><a href="#org0a775b7">バイナリファイルの差分</a></h3>
+<div class="outline-text-3" id="text-org0a775b7">
+<p>
+ファイルによって戦略を変えることができる。
+特定のバイナリファイル…Wordファイルだったらこうやって変換してから差分を取る、など。
+テキストに変換して、比較できる。
+</p>
+
+<ul class="org-ul">
+<li><a href="http://git-scm.com/book/ja/v2/Git-%E3%81%AE%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA-Git-%E3%81%AE%E5%B1%9E%E6%80%A7">Git - Git の属性</a></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-orgaffc3da" class="outline-3">
+<h3 id="orgaffc3da"><a href="#orgaffc3da">Git軽量化</a></h3>
+<div class="outline-text-3" id="text-orgaffc3da">
+<p>
+しばらく使っていると不要なブランチが溜まってきて重くなるので、定期的に不要なものを削除する。
+</p>
+<div class="org-src-container">
+<pre class="src src-shell">git gc &amp;&amp; git fetch --prune
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org48cb390" class="outline-3">
+<h3 id="org48cb390"><a href="#org48cb390">Gitクライアント</a></h3>
+<div class="outline-text-3" id="text-org48cb390">
+<p>
+直にGitコマンドを打つほかに、クライアントを使って操作する方法がある。
+プログラミングと密接に関係しているので、エディタに付属したものを使うと、同じインターフェイスで扱えて便利。
+例えば<a href="20210508234743-emacs.html#ID-1ad8c3d5-97ba-4905-be11-e6f2626127ad">Emacs</a>では<a href="https://github.com/magit/magit">Magit</a>パッケージが人気。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org4749bda" class="outline-2">
+<h2 id="org4749bda"><a href="#org4749bda">Tasks</a></h2>
+<div class="outline-text-2" id="text-org4749bda">
+</div>
+<div id="outline-container-orgfd32168" class="outline-3">
+<h3 id="orgfd32168"><a href="#orgfd32168"><span class="todo TODO">TODO</span> <a href="https://zenn.dev/chanmoro/scraps/06c972692f98df">git diff がある場合もしくは untracked なファイルがある場合にエラーの終了コードを返すコマンド</a></a></h3>
+<div class="outline-text-3" id="text-orgfd32168">
+<p>
+差分があるとエラーにする。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-shell">$ test -z <span class="org-string">"$(git status -s)"</span>
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org4500db0" class="outline-3">
+<h3 id="org4500db0"><a href="#org4500db0"><span class="todo TODO">TODO</span> <a href="https://koseki.hatenablog.com/entry/2014/04/22/inside-git-1">Git の仕組み (1) - こせきの技術日記</a></a></h3>
+<div class="outline-text-3" id="text-org4500db0">
+<p>
+Gitの仕組み。
+</p>
+</div>
+</div>
+<div id="outline-container-orgcc5573b" class="outline-3">
+<h3 id="orgcc5573b"><a href="#orgcc5573b"><span class="todo TODO">TODO</span> <a href="https://qiita.com/_ha1f/items/2dca1047c57d4f0bd465">難しいGitコマンドは、仕組みから理解してみよう - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgcc5573b">
+<p>
+Gitの仕組みの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orgc36559a" class="outline-3">
+<h3 id="orgc36559a"><a href="#orgc36559a"><span class="todo TODO">TODO</span> <a href="http://git-scm.com/book/ja/v2">Git - Book</a></a></h3>
+<div class="outline-text-3" id="text-orgc36559a">
+<p>
+日本語で無料公開されている本。
+Gitの仕組みの章がとても面白い。
+実際のGitが内部で行っていることを、原始的なコマンドを使ってやってみるというもの。
+</p>
+</div>
+</div>
+<div id="outline-container-orgdda77d4" class="outline-3">
+<h3 id="orgdda77d4"><a href="#orgdda77d4"><span class="todo TODO">TODO</span> <a href="https://github.blog/jp/2021-01-06-commits-are-snapshots-not-diffs/">コミットはスナップショットであり差分ではない - GitHubブログ</a></a></h3>
+<div class="outline-text-3" id="text-orgdda77d4">
+<p>
+仕組みからの解説。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org6861c20" class="outline-2">
+<h2 id="org6861c20"><a href="#org6861c20">Reference</a></h2>
+<div class="outline-text-2" id="text-org6861c20">
+</div>
+<div id="outline-container-orgadef211" class="outline-3">
+<h3 id="orgadef211"><a href="#orgadef211"><a href="https://evanli.github.io/Github-Ranking/Top100/Go.html">Github Ranking | Github-Ranking</a></a></h3>
+<div class="outline-text-3" id="text-orgadef211">
+<p>
+スター数のランキング。
+</p>
+</div>
+</div>
+<div id="outline-container-org265b334" class="outline-3">
+<h3 id="org265b334"><a href="#org265b334"><a href="https://gource.io/">Gource - a software version control visualization tool</a></a></h3>
+<div class="outline-text-3" id="text-org265b334">
+<p>
+Gitの美しい可視化ツール。
+</p>
+</div>
+</div>
+<div id="outline-container-orgd28f95d" class="outline-3">
+<h3 id="orgd28f95d"><a href="#orgd28f95d"><a href="https://qiita.com/koara-local/items/e36bc172a3c36eb67b4f">[Git] remoteのtagとbranchの名前が同じ場合の消し方 - Qiita</a></a></h3>
+<div class="outline-text-3" id="text-orgd28f95d">
+<p>
+<a href="20220427215330-github_actions.html#ID-2d35ac9e-554a-4142-bba7-3c614cbfe4c4">GitHub Actions</a>で間違えたときになる。調べないとわからない。
+</p>
+</div>
+</div>
+<div id="outline-container-orga545a9f" class="outline-3">
+<h3 id="orga545a9f"><a href="#orga545a9f"><a href="http://git-scm.com/book/ja/v2/Git%E3%81%AE%E5%86%85%E5%81%B4-%E9%85%8D%E7%AE%A1%EF%BC%88Plumbing%EF%BC%89%E3%81%A8%E7%A3%81%E5%99%A8%EF%BC%88Porcelain%EF%BC%89">Git - 配管（Plumbing）と磁器（Porcelain）</a></a></h3>
+<div class="outline-text-3" id="text-orga545a9f">
+<p>
+基本的なGitの仕組みの解説。
+</p>
+</div>
+</div>
+<div id="outline-container-orge0eb6ba" class="outline-3">
+<h3 id="orge0eb6ba"><a href="#orge0eb6ba"><a href="https://www.youtube.com/watch?v=W71BTkUbdqE">Why Google Stores Billions of Lines of Code in a Single Repository - YouTube</a></a></h3>
+<div class="outline-text-3" id="text-orge0eb6ba">
+<p>
+なぜGoogleはモノレポで管理しているか。
+</p>
+</div>
+</div>
+<div id="outline-container-org3362806" class="outline-3">
+<h3 id="org3362806"><a href="#org3362806"><a href="https://codeinthehole.com/tips/a-useful-template-for-commit-messages/">A useful template for commit messages — David Winterbottom</a></a></h3>
+<div class="outline-text-3" id="text-org3362806">
+<p>
+Git commitテンプレート。
+</p>
+</div>
+</div>
+<div id="outline-container-orgca4eaf3" class="outline-3">
+<h3 id="orgca4eaf3"><a href="#orgca4eaf3"><a href="https://chris.beams.io/posts/git-commit/">How to Write a Git Commit Message</a></a></h3>
+<div class="outline-text-3" id="text-orgca4eaf3">
+<p>
+わかりやすいメッセージの書き方。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-orgbb0fd17" class="outline-2">
+<h2 id="orgbb0fd17"><a href="#orgbb0fd17">Archive</a></h2>
+<div class="outline-text-2" id="text-orgbb0fd17">
+</div>
+<div id="outline-container-org017151a" class="outline-3">
+<h3 id="org017151a"><a href="#org017151a"><span class="done DONE">DONE</span> Rebase on Magit</a></h3>
+<div class="outline-text-3" id="text-org017151a">
+<p>
+わかりやすく解説している。
+</p>
+<ul class="org-ul">
+<li><a href="https://www.youtube.com/watch?v=zM7K1y4h6UQ&amp;list=PLEoMzSkcN8oMc34dTjyFmTUWbXTKrNfZA&amp;index=3">Fix Your Git Commits Like a Rebase Expert with Magit - YouTube</a></li>
+</ul>
+
+<p>
+今までコミットの修正したことなかったな。
+</p>
+</div>
+</div>
+<div id="outline-container-org66cb878" class="outline-3">
+<h3 id="org66cb878"><a href="#org66cb878"><span class="done CLOSE">CLOSE</span> Gitの仕組みを大まかに理解する&#xa0;&#xa0;&#xa0;<span class="tag"><span class="DontKnow">DontKnow</span></span></a></h3>
+<div class="outline-text-3" id="text-org66cb878">
+</div>
+</div>
+</div>
+<div id="outline-container-org829613c" class="outline-2">
+<h2 id="org829613c"><a href="#org829613c">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org829613c">
+<ul class="org-ul">
+<li><a href="./20210508234743-emacs.html">Emacs</a></li>
+<li><a href="./20210615222732-project.html">project</a></li>
+<li><a href="./20210912124846-dotfiles.html">dotfiles</a></li>
+<li><a href="./20210922004953-magit_forge.html">magit-forge</a></li>
+<li><a href="./20210922005248-magit.html">magit</a></li>
+<li><a href="./20210922005532-projectile.html">projectile</a></li>
+<li><a href="./20210922010846-terraform.html">Terraform</a></li>
+<li><a href="./20210922011437-kubernetes.html">Kubernetes</a></li>
+<li><a href="./20210926103926-github.html">GitHub</a></li>
+<li><a href="./20211209223810-conventional_commits.html">Conventional Commits</a></li>
+<li><a href="./20220115181851-development.html">development</a></li>
+<li><a href="./20240204T105547--kdoc-71-kdocエントリの書き方を考える__essay.html">KDOC 71: KDOCエントリの書き方を考える</a></li>
+<li><a href="./20240313T202310--kdoc-120-git-lfs反映には削除が必要なことを知る__essay.html">KDOC 120: Git LFS反映には削除が必要なことを知る</a></li>
+<li><a href="./20241115T185022--kdoc-288-dnsフィルタリングで有害コンテンツをブロックする__essay.html">KDOC 288: DNSフィルタリングで有害コンテンツをブロックする</a></li>
+<li><a href="./index.html">Insomnia</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

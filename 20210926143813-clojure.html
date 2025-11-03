@@ -1,0 +1,5053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:38:52Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Clojure</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+<script>
+  window.MathJax = {
+    tex: {
+      ams: {
+        multlineWidth: '85%'
+      },
+      tags: 'ams',
+      tagSide: 'right',
+      tagIndent: '.8em'
+    },
+    chtml: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    svg: {
+      scale: 1.0,
+      displayAlign: 'center',
+      displayIndent: '0em'
+    },
+    output: {
+      font: 'mathjax-modern',
+      displayOverflow: 'overflow'
+    }
+  };
+</script>
+
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">Clojure</h1>
+<div id="outline-container-org3a9c1dd" class="outline-2">
+<h2 id="org3a9c1dd"><a href="#org3a9c1dd">概要</a></h2>
+<div class="outline-text-2" id="text-org3a9c1dd">
+<p>
+Clojureは<a href="20210509101246-programming_language.html#ID-868ac56a-2d42-48d7-ab7f-7047c85a8f39">Programming Language</a>、<a href="20210911183844-lisp.html#ID-18fbe00f-4ec8-4ca0-adfa-2d1381669642">LISP</a>の方言の1つ。
+プログラムは<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>仮想マシン、.NETで動作する。
+</p>
+</div>
+</div>
+<div id="outline-container-orgb6782c9" class="outline-2">
+<h2 id="orgb6782c9"><a href="#orgb6782c9">Memo</a></h2>
+<div class="outline-text-2" id="text-orgb6782c9">
+</div>
+<div id="outline-container-org9e99284" class="outline-3">
+<h3 id="org9e99284"><a href="#org9e99284">インストール</a></h3>
+<div class="outline-text-3" id="text-org9e99284">
+<ul class="org-ul">
+<li>Javaのランタイム</li>
+<li>Leiningen&#x2026;依存関係管理。</li>
+</ul>
+<div class="org-src-container">
+<pre class="src src-shell">sudo apt-get install leiningen
+lein repl
+</pre>
+</div>
+</div>
+</div>
+<div id="outline-container-org3fc2676" class="outline-3">
+<h3 id="org3fc2676"><a href="#org3fc2676">Hello, world</a></h3>
+<div class="outline-text-3" id="text-org3fc2676">
+<div class="org-src-container">
+<pre class="src src-clojure">(println "hello world")
+</pre>
+</div>
+
+<div class="results" id="org555beea">
+<p>
+hello world
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn hello [name] (str "Hello, " name))
+</pre>
+</div>
+
+<div class="results" id="org4836709">
+<p>
+#&rsquo;user/hello
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn hello-world [username]
+  (println (format "Hello, %s" username)))
+</pre>
+</div>
+
+<div class="results" id="org120bd21">
+<p>
+#&rsquo;user/hello-world
+</p>
+
+</div>
+
+<p>
+状態を共有する。
+セットに要素を1つ追加する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(conj coll item)
+(conj #{} "Stu")
+</pre>
+</div>
+
+<div class="results" id="org9a22cd3">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">class clojure.lang.Compiler$CompilerException</td>
+</tr>
+
+<tr>
+<td class="org-left">#{&ldquo;Stu&rdquo;}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+セットを知る。
+<code>conj</code> を <code>update</code>-fn として渡す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def visitors (atom #{}))
+(swap! visitors conj "Stu")
+</pre>
+</div>
+
+<div class="results" id="orga799901">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/visitors</td>
+</tr>
+
+<tr>
+<td class="org-left">#{&ldquo;Stu&rdquo;}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+<code>atom</code> はClojureが持つリファレンスタイプのひとつ。
+<code>ref</code> の中身は <code>deref</code> で見ることができる。略記として <code>@</code> を使える。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(deref visitors)
+@visitors
+</pre>
+</div>
+
+<div class="results" id="org89a5bb9">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#{&ldquo;Stu&rdquo;}</td>
+</tr>
+
+<tr>
+<td class="org-left">#{&ldquo;Stu&rdquo;}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn hello
+  "Writes hello message to *out*. Calls you by username.
+Knows if you have been here before."
+  [username]
+  (swap! visitors conj username)
+  (str "Hello, " username))
+</pre>
+</div>
+
+<div class="results" id="org20274cc">
+<p>
+#&rsquo;user/hello
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(hello "Rich")
+@visitors
+</pre>
+</div>
+
+<div class="results" id="org407cb41">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;Hello, Rich&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">#{&ldquo;Stu&rdquo; &ldquo;Rich&rdquo;}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+状態の問題。それまでにどういう動作をしたかによって、結果が異なってくる。
+純粋な関数なら、局所的な知識だけで動作を理解できるが、状態が絡むとそこに至るすべての履歴を理解しなければならない。
+</p>
+</div>
+</div>
+<div id="outline-container-orga575b71" class="outline-3">
+<h3 id="orga575b71"><a href="#orga575b71">ライブラリ</a></h3>
+<div class="outline-text-3" id="text-orga575b71">
+<p>
+<code>use</code> は <code>require</code> と <code>refer</code> を一度にやってくれる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(require 'clojure.java.io)
+(use 'clojure.java.io)
+</pre>
+</div>
+
+<div class="results" id="orgc1ca13b">
+
+</div>
+
+<p>
+再読込。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(use :reload 'clojure.java.io)
+</pre>
+</div>
+
+<div class="results" id="orgb4f1417">
+
+</div>
+</div>
+</div>
+<div id="outline-container-org5750f9d" class="outline-3">
+<h3 id="org5750f9d"><a href="#org5750f9d">ドキュメント検索</a></h3>
+<div class="outline-text-3" id="text-org5750f9d">
+<div class="org-src-container">
+<pre class="src src-clojure">(doc str)
+</pre>
+</div>
+
+<div class="results" id="org712ec02">
+<hr>
+<p>
+clojure.core/str
+([] [x] [x &amp; ys])
+  With no args, returns the empty string. With one arg x, returns
+  x.toString().  (str ) returns the empty string. With more than
+  one arg, returns the concatenation of the str values of the args.
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(find-doc "reduce")
+</pre>
+</div>
+
+<div class="results" id="orgc339ab0">
+<hr>
+<p>
+cider.nrepl.middleware.track-state/fast-reduce
+([f coll])
+  Like (reduce f {} coll), but faster.
+  Inside f, use `assoc!` and `conj!` instead of `assoc` and `conj`.
+</p>
+<hr>
+<p>
+clojure.core/areduce
+([a idx ret init expr])
+Macro
+  Reduces an expression across an array a, using an index named idx,
+  and return value named ret, initialized to init, setting ret to the
+  evaluation of expr at each step, returning ret.
+</p>
+<hr>
+<p>
+clojure.core/eduction
+([xform* coll])
+  Returns a reducible/iterable application of the transducers
+  to the items in coll. Transducers are applied in order as if
+  combined with comp. Note that these applications will be
+  performed every time reduce/iterator is called.
+</p>
+<hr>
+<p>
+clojure.core/ensure-reduced
+([x])
+  If x is already reduced?, returns it, else returns (reduced x)
+</p>
+<hr>
+<p>
+clojure.core/reduce
+([f coll] [f val coll])
+  f should be a function of 2 arguments. If val is not supplied,
+  returns the result of applying f to the first 2 items in coll, then
+  applying f to that result and the 3rd item, etc. If coll contains no
+  items, f must accept no arguments as well, and reduce returns the
+  result of calling f with no arguments.  If coll has only 1 item, it
+  is returned and f is not called.  If val is supplied, returns the
+  result of applying f to val and the first item in coll, then
+  applying f to that result and the 2nd item, etc. If coll contains no
+  items, returns val and f is not called.
+</p>
+<hr>
+<p>
+clojure.core/reduce-kv
+([f init coll])
+  Reduces an associative collection. f should be a function of 3
+  arguments. Returns the result of applying f to init, the first key
+  and the first value in coll, then applying f to that result and the
+  2nd key and value, etc. If coll contains no entries, returns init
+  and f is not called. Note that reduce-kv is supported on vectors,
+  where the keys will be the ordinals.
+</p>
+<hr>
+<p>
+clojure.core/reduced
+([x])
+  Wraps x in a way such that a reduce will terminate with the value x
+</p>
+<hr>
+<p>
+clojure.core/reduced?
+([x])
+  Returns true if x is the result of a call to reduced
+</p>
+<hr>
+<p>
+clojure.core/reductions
+([f coll] [f init coll])
+  Returns a lazy seq of the intermediate values of the reduction (as
+  per reduce) of coll by f, starting with init.
+</p>
+<hr>
+<p>
+clojure.core/require
+([&amp; args])
+  Loads libs, skipping any that are already loaded. Each argument is
+  either a libspec that identifies a lib, a prefix list that identifies
+  multiple libs whose names share a common prefix, or a flag that modifies
+  how all the identified libs are loaded. Use :require in the ns macro
+  in preference to calling this directly.
+</p>
+
+<p>
+Libs
+</p>
+
+<p>
+A &rsquo;lib&rsquo; is a named set of resources in classpath whose contents define a
+library of Clojure code. Lib names are symbols and each lib is associated
+with a Clojure namespace and a Java package that share its name. A lib&rsquo;s
+name also locates its root directory within classpath using Java&rsquo;s
+package name to classpath-relative path mapping. All resources in a lib
+should be contained in the directory structure under its root directory.
+All definitions a lib makes should be in its associated namespace.
+</p>
+
+<p>
+&rsquo;require loads a lib by loading its root resource. The root resource path
+is derived from the lib name in the following manner:
+Consider a lib named by the symbol &rsquo;x.y.z; it has the root directory
+&lt;classpath&gt;/x/y/, and its root resource is &lt;classpath&gt;/x/y/z.clj, or
+&lt;classpath&gt;/x/y/z.cljc if &lt;classpath&gt;/x/y/z.clj does not exist. The
+root resource should contain code to create the lib&rsquo;s
+namespace (usually by using the ns macro) and load any additional
+lib resources.
+</p>
+
+<p>
+Libspecs
+</p>
+
+<p>
+A libspec is a lib name or a vector containing a lib name followed by
+options expressed as sequential keywords and arguments.
+</p>
+
+<p>
+Recognized options:
+:as takes a symbol as its argument and makes that symbol an alias to the
+  lib&rsquo;s namespace in the current namespace.
+:refer takes a list of symbols to refer from the namespace or the :all
+  keyword to bring in all public vars.
+</p>
+
+<p>
+Prefix Lists
+</p>
+
+<p>
+It&rsquo;s common for Clojure code to depend on several libs whose names have
+the same prefix. When specifying libs, prefix lists can be used to reduce
+repetition. A prefix list contains the shared prefix followed by libspecs
+with the shared prefix removed from the lib names. After removing the
+prefix, the names that remain must not contain any periods.
+</p>
+
+<p>
+Flags
+</p>
+
+<p>
+A flag is a keyword.
+Recognized flags: :reload, :reload-all, :verbose
+:reload forces loading of all the identified libs even if they are
+  already loaded
+:reload-all implies :reload and also forces loading of all libs that the
+  identified libs directly or indirectly load via require or use
+:verbose triggers printing information about each load, alias, and refer
+</p>
+
+<p>
+Example:
+</p>
+
+<p>
+The following would load the libraries clojure.zip and clojure.set
+abbreviated as &rsquo;s&rsquo;.
+</p>
+
+<p>
+(require &rsquo;(clojure zip [set :as s]))
+</p>
+<hr>
+<p>
+clojure.core/run!
+([proc coll])
+  Runs the supplied procedure (via reduce), for purposes of side
+  effects, on successive items in the collection. Returns
+</p>
+<hr>
+<p>
+clojure.core/transduce
+([xform f coll] [xform f init coll])
+  reduce with a transformation of f (xf). If init is not
+  supplied, (f) will be called to produce it. f should be a reducing
+  step function that accepts both 1 and 2 arguments, if it accepts
+  only 2 you can add the arity-1 with &rsquo;completing&rsquo;. Returns the result
+  of applying (the transformed) xf to init and the first item in coll,
+  then applying xf to that result and the 2nd item, etc. If coll
+  contains no items, returns init and f is not called. Note that
+  certain transforms may inject or skip items.
+</p>
+<hr>
+<p>
+clojure.core/unreduced
+([x])
+  If x is reduced?, returns (deref x), else returns x
+</p>
+<hr>
+<p>
+clojure.core.protocols/CollReduce
+  Protocol for collection types that can implement reduce faster than
+  first/next recursion. Called by clojure.core/reduce. Baseline
+  implementation defined in terms of Iterable.
+</p>
+<hr>
+<p>
+clojure.core.protocols/IKVReduce
+  Protocol for concrete associative types that can reduce themselves
+   via a function of key and val faster than first/next recursion over map
+   entries. Called by clojure.core/reduce-kv, and has same
+   semantics (just different arg order).
+</p>
+<hr>
+<p>
+clojure.core.protocols/InternalReduce
+  Protocol for concrete seq types that can reduce themselves
+   faster than first/next recursion. Called by clojure.core/reduce.
+</p>
+<hr>
+<p>
+clojure.core.protocols/interface-or-naive-reduce
+([coll f val])
+  Reduces via IReduceInit if possible, else naively.
+</p>
+<hr>
+<p>
+clojure.core.protocols/naive-seq-reduce
+([s f val])
+  Reduces a seq, ignoring any opportunities to switch to a more
+  specialized implementation.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.util.instrument/strip-instrumentation-meta
+([form])
+  Remove all tags in order to reduce java bytecode size and enjoy cleaner code
+  printouts. We keep ::breakfunction for def symbols because that is how we
+  identify currently instrumented vars in list-instrumented-defs.
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgc497dec" class="outline-3">
+<h3 id="orgc497dec"><a href="#orgc497dec">clojure関数のソースを見る</a></h3>
+<div class="outline-text-3" id="text-orgc497dec">
+<p>
+<code>repl</code> ライブラリを使う。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(use 'clojure.repl)
+(source identity)
+</pre>
+</div>
+
+<div class="results" id="orgfca390f">
+
+</div>
+
+<p>
+Clojureのコレクションが<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>のコレクションであることを確かめる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(ancestors (class [1 2 3]))
+</pre>
+</div>
+
+<div class="results" id="org28c94fd">
+<p>
+#{clojure.lang.IPersistentVector clojure.lang.Indexed clojure.lang.IMeta clojure.lang.ILookup java.lang.Runnable java.lang.Iterable java.util.List clojure.lang.IPersistentCollection java.io.Serializable clojure.lang.IEditableCollection java.util.Collection clojure.lang.Seqable java.util.concurrent.Callable clojure.lang.IHashEq clojure.lang.Counted java.util.RandomAccess clojure.lang.Associative clojure.lang.IFn clojure.lang.Reversible clojure.lang.IObj clojure.lang.IReduceInit clojure.lang.AFn java.lang.Object clojure.lang.IReduce clojure.lang.Sequential clojure.lang.IPersistentStack clojure.lang.IKVReduce clojure.lang.APersistentVector java.lang.Comparable}
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org05b9a91" class="outline-3">
+<h3 id="org05b9a91"><a href="#org05b9a91">フォーム</a></h3>
+<div class="outline-text-3" id="text-org05b9a91">
+<ul class="org-ul">
+<li>Clojureは同図像性を持つ。</li>
+<li>ClojureのコードはClojureのデータによって組み立てられる。</li>
+<li>Clojureのプログラムを走らせるときには、まずClojureの中の <code>リーダ</code> と呼ばれる部分がプログラムを <code>フォーム</code> と呼ばれる単位ごとに読み込んで、それをClojureのデータ構造へと変換する。そしてデータ構造をコンパイルして実行する。</li>
+</ul>
+
+<p>
+フォームにはブール値、文字、キーワード、リスト、マップ…などがある。
+</p>
+</div>
+</div>
+<div id="outline-container-org149fecd" class="outline-3">
+<h3 id="org149fecd"><a href="#org149fecd">シンボル</a></h3>
+<div class="outline-text-3" id="text-org149fecd">
+<p>
+シンボルは、Clojure内のあらゆる種類のものの名前として使う。
+</p>
+
+<p>
+ドットで<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>メソッドの呼び出しであると判断する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(.toUpperCase "hello")
+(str "hello")
+</pre>
+</div>
+
+<div class="results" id="orgb0b4d63">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;HELLO&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;hello&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+
+<p>
+リテラル表記は <code>\{letter}</code> 。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(str \h \e \y \space \y \o \u)
+</pre>
+</div>
+
+<div class="results" id="org154b0e7">
+<p>
+hey you
+</p>
+
+</div>
+
+<p>
+文字を交互に結合。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(interleave "Attack at midnight" "The purple elephant chortled")
+</pre>
+</div>
+
+<div class="results" id="org376c4ac">
+<p>
+(\A \T \t \h \t \e \a \space \c \p \k \u \space \r \a \p \t \l \space \e \m \space \i \e \d \l \n \e \i \p \g \h \h \a \t \n)
+</p>
+
+</div>
+
+<p>
+文字列に戻す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(apply str (interleave "Attack at midnight" "The purple elephant chortled"))
+</pre>
+</div>
+
+<div class="results" id="org76df15f">
+<p>
+ATthtea cpku raptl em iedlneipghhatn
+</p>
+
+</div>
+
+<p>
+復元する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(apply str (take-nth 2 "ATthtea cpku raptl em iedlneipghhatn"))
+</pre>
+</div>
+
+<div class="results" id="org56267e5">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;clojure.lang.LazySeq@c855d426&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Attack at midnight&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+Clojureでは空リストは偽ではない。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(if () "We are in Clojure!" "We are in Common Lisp!")
+</pre>
+</div>
+
+<div class="results" id="org0f2cb73">
+<p>
+We are in Clojure!
+</p>
+
+</div>
+
+<p>
+<code>true?</code> は値が <code>true</code> そのものであるかを調べる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(true? true)
+(true? "foo")
+</pre>
+</div>
+
+<div class="results" id="orgd7833c6">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">true</td>
+</tr>
+
+<tr>
+<td class="org-left">false</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(zero? 0.0)
+</pre>
+</div>
+
+<div class="results" id="org6fea214">
+<p>
+true
+</p>
+
+</div>
+
+<p>
+述語一覧。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(find-doc #"\?$")
+</pre>
+</div>
+
+<div class="results" id="org3d39c14">
+<hr>
+<p>
+nrepl.middleware.interruptible-eval/interrupted?
+([e])
+  Returns true if the given throwable was ultimately caused by an interrupt.
+</p>
+<hr>
+<p>
+leiningen.core.classpath/ext-dependency?
+([dep])
+  Should the given dependency be loaded in the extensions classloader?
+</p>
+<hr>
+<p>
+leiningen.core.pedantic/range?
+([{:keys [node]}])
+  Does the path point to a DependencyNode asking for a version range?
+</p>
+<hr>
+<p>
+leiningen.core.pedantic/top-level?
+([{:keys [parents]}])
+  Is the path a top level dependency in the project?
+</p>
+<hr>
+<p>
+clojure.test/function?
+([x])
+  Returns true if argument is a function or a symbol that resolves to
+  a function (not a macro).
+</p>
+<hr>
+<p>
+clojure.test/successful?
+([summary])
+  Returns true if the given test summary indicates all tests
+  were successful, false otherwise.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader/garg
+([n])
+  Get a symbol for an anonymous ?argument?
+</p>
+<hr>
+<p>
+dynapath.util/addable-classpath?
+([cl])
+  Returns true if the given ClassLoader provides add-claspath-url.
+</p>
+<hr>
+<p>
+dynapath.util/readable-classpath?
+([cl])
+  Returns true if the given ClassLoader provides classpath-urls.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.debug/looks-step-innable?
+([form])
+  Decide whether a form looks like a call to a function that we could
+  instrument and step into.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.debug/safe-to-debug?
+([ns])
+  Some namespaces are not safe to debug, because doing so can cause a stack
+  overflow that crashes the nrepl process.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.debug/skip-breaks?
+([coor STATE__])
+  True if the breakpoint at coordinates should be skipped.
+</p>
+
+<p>
+The `*skip-breaks*` map stores a `mode`, `coordinates`, the `code` that it
+applies to, and a `force?` flag.
+</p>
+
+<p>
+Behaviour depends on the `mode`:
+</p>
+<ul class="org-ul">
+<li>:all - return true, skipping all breaks</li>
+<li>:trace - return false, skip nothing</li>
+<li>:deeper - return true if the given coordinates are deeper than the
+coordinates stored in `*skip-breaks*`, in the same code</li>
+<li>:before - return true if the given coordinates represent a place before
+the coordinates in `*skip-breaks*`, in the same code</li>
+</ul>
+
+<p>
+For :deeper and :before, if we are not in the same code (i.e. we have stepped
+into another instrumented function and code argument doesn&rsquo;t match old code in
+<b>skip-breaks</b>), then return the value of `force?`.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.debug/step-in?
+([v coor code])
+  Return true if we can and should step in to the function in the var `v`.
+  The &ldquo;should&rdquo; part is determined by the value in `step-in-to-next?`, which
+  gets set to true by the user sending the &ldquo;step in&rdquo; command.
+</p>
+<hr>
+<p>
+clojure.core.specs.alpha/even-number-of-forms?
+([forms])
+  Returns true if there are an even number of forms in a binding vector
+</p>
+<hr>
+<p>
+nrepl.middleware.session/interrupted?
+([e])
+  Returns true if the given throwable was ultimately caused by an interrupt.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.javaclasspath.v1v0v0.clojure.java.classpath/jar-file?
+([f])
+  Returns true if file is a normal file with a .jar or .JAR extension.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.util.error-handling/shallow-bencodable?
+([item])
+  Returns false if `item`&rsquo;s type can&rsquo;t be bencoded as defined by the
+  algorithm in `nrepl.bencode/write-bencode`. Does not
+  examine the elements of a collection to ensure that the enclosed
+  elements are also bencodable, and so you probably actually want to
+  use `deep-bencodable-or-fail` or write something similar.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.dynapath.v1v1v0.dynapath.dynamic-classpath/can-add?
+([cl])
+  Must return true if add-classpath-url is implemented.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.dynapath.v1v1v0.dynapath.dynamic-classpath/can-read?
+([cl])
+  Must return true if classpath-urls is implemented.
+</p>
+<hr>
+<p>
+clojure.spec.alpha/?
+([pred-form])
+Macro
+  Returns a regex op that matches zero or one value matching
+  pred. Produces a single value (not a collection) if matched.
+</p>
+<hr>
+<p>
+clojure.spec.alpha/check-asserts?
+([])
+  Returns the value set by check-asserts.
+</p>
+<hr>
+<p>
+clojure.spec.alpha/inst-in-range?
+([start end inst])
+  Return true if inst at or after start and before end
+</p>
+<hr>
+<p>
+clojure.spec.alpha/int-in-range?
+([start end val])
+  Return true if start &lt;= val, val &lt; end and val is a fixed
+  precision integer.
+</p>
+<hr>
+<p>
+clojure.spec.alpha/invalid?
+([ret])
+  tests the validity of a conform return value
+</p>
+<hr>
+<p>
+clojure.spec.alpha/pvalid?
+([pred x] [pred x form])
+  internal helper function that returns true when x is valid for spec.
+</p>
+<hr>
+<p>
+clojure.spec.alpha/regex?
+([x])
+  returns x if x is a (clojure.spec) regex op, else logical false
+</p>
+<hr>
+<p>
+clojure.spec.alpha/spec?
+([x])
+  returns x if x is a spec object, else logical false
+</p>
+<hr>
+<p>
+clojure.spec.alpha/valid?
+([spec x] [spec x form])
+  Helper function that returns true when x is valid for spec.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.dependency/dependent?
+([graph x y])
+  True if y is a dependent of x.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.dependency/depends?
+([graph x y])
+  True if x is directly or transitively dependent on y.
+</p>
+<hr>
+<p>
+leiningen.core.project/composite-profile?
+([profile])
+  Returns true if the profile is composite, false otherwise.
+</p>
+<hr>
+<p>
+leiningen.core.project/different-priority?
+([left right])
+  Returns true if either left has a higher priority than right or vice versa.
+</p>
+<hr>
+<p>
+leiningen.core.project/displace?
+([obj])
+  Returns true if the object is marked as displaceable
+</p>
+<hr>
+<p>
+leiningen.core.project/replace?
+([obj])
+  Returns true if the object is marked as replaceable
+</p>
+<hr>
+<p>
+leiningen.core.project/top-displace?
+([obj])
+  Returns true if the object is marked as top-displaceable
+</p>
+<hr>
+<p>
+clojure.set/subset?
+([set1 set2])
+  Is set1 a subset of set2?
+</p>
+<hr>
+<p>
+clojure.set/superset?
+([set1 set2])
+  Is set1 a superset of set2?
+</p>
+<hr>
+<p>
+cemerick.pomegranate.aether/within?
+([[dep version &amp; opts :as coord] [sdep sversion &amp; sopts :as scoord]])
+  Determines if the first coordinate would be a version in the second
+   coordinate. The first coordinate is not allowed to contain a
+   version range.
+</p>
+<hr>
+<p>
+clojure.string/blank?
+([s])
+  True if s is , empty, or contains only whitespace.
+</p>
+<hr>
+<p>
+clojure.string/ends-with?
+([s substr])
+  True if s ends with substr.
+</p>
+<hr>
+<p>
+clojure.string/includes?
+([s substr])
+  True if s includes substr.
+</p>
+<hr>
+<p>
+clojure.string/starts-with?
+([s substr])
+  True if s starts with substr.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.misc/boot-project?
+([])
+  Check whether we&rsquo;re dealing with a Boot project.
+  We figure this by checking for the presence of Boot&rsquo;s fake classpath.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.misc/directory?
+([f])
+  Whether the argument is a directory or an url that points to a directory
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.misc/file-ext?
+([f &amp; exts])
+  Whether the argument&rsquo;s path ends in one of the specified case-insensitive
+  file extensions
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.misc/ns-obj?
+([ns])
+  Return true if n is a namespace object
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.misc/url?
+([u])
+  Check whether the argument is an url
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.java/add-java-sources-via-dynapath?
+  Should orchard use the dynapath library to use &ldquo;fetch Java sources&rdquo; functionality?
+</p>
+
+<p>
+Note that using dynapath currently implies some bugs, so you might want to disable this option.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.java/immutable-source-file?
+([info])
+  Return true if the source file is effectively immutable. Specifically, this
+  returns true if no source file is available, or if the source file is in a
+  jar/zip archive.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.java/initialize-cache-silently?
+  Should `#&rsquo;cache-initializer` refrain from printing to `System/out`?
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.dynapath.v1v1v0.dynapath.util/addable-classpath?
+([cl])
+  Returns true if the given ClassLoader provides add-claspath-url.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.dynapath.v1v1v0.dynapath.util/readable-classpath?
+([cl])
+  Returns true if the given ClassLoader provides classpath-urls.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.reader-types/indexing-reader?
+([rdr])
+  Returns true if the reader satisfies IndexingReader
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.reader-types/line-start?
+([rdr])
+  Returns true if rdr is an IndexingReader and the current char starts a new line
+</p>
+<hr>
+<p>
+clojure.core/any?
+([x])
+  Returns true given any argument.
+</p>
+<hr>
+<p>
+clojure.core/associative?
+([coll])
+  Returns true if coll implements Associative
+</p>
+<hr>
+<p>
+clojure.core/boolean?
+([x])
+  Return true if x is a Boolean
+</p>
+<hr>
+<p>
+clojure.core/bound?
+([&amp; vars])
+  Returns true if all of the vars provided as arguments have any bound value, root or thread-local.
+   Implies that deref&rsquo;ing the provided vars will succeed. Returns true if no vars are provided.
+</p>
+<hr>
+<p>
+clojure.core/bytes?
+([x])
+  Return true if x is a byte array
+</p>
+<hr>
+<p>
+clojure.core/char?
+([x])
+  Return true if x is a Character
+</p>
+<hr>
+<p>
+clojure.core/class?
+([x])
+  Returns true if x is an instance of Class
+</p>
+<hr>
+<p>
+clojure.core/coll?
+([x])
+  Returns true if x implements IPersistentCollection
+</p>
+<hr>
+<p>
+clojure.core/contains?
+([coll key])
+  Returns true if key is present in the given collection, otherwise
+  returns false.  Note that for numerically indexed collections like
+  vectors and Java arrays, this tests if the numeric key is within the
+  range of indexes. &rsquo;contains?&rsquo; operates constant or logarithmic time;
+  it will not perform a linear search for a value.  See also &rsquo;some&rsquo;.
+</p>
+<hr>
+<p>
+clojure.core/counted?
+([coll])
+  Returns true if coll implements count in constant time
+</p>
+<hr>
+<p>
+clojure.core/decimal?
+([n])
+  Returns true if n is a BigDecimal
+</p>
+<hr>
+<p>
+clojure.core/delay
+([&amp; body])
+Macro
+  Takes a body of expressions and yields a Delay object that will
+  invoke the body only the first time it is forced (with force or deref/@), and
+  will cache the result and return it on all subsequent force
+  calls. See also - realized?
+</p>
+<hr>
+<p>
+clojure.core/delay?
+([x])
+  returns true if x is a Delay created with delay
+</p>
+<hr>
+<p>
+clojure.core/distinct?
+([x] [x y] [x y &amp; more])
+  Returns true if no two of the arguments are =
+</p>
+<hr>
+<p>
+clojure.core/double?
+([x])
+  Return true if x is a Double
+</p>
+<hr>
+<p>
+clojure.core/empty?
+([coll])
+  Returns true if coll has no items - same as (not (seq coll)).
+  Please use the idiom (seq x) rather than (not (empty? x))
+</p>
+<hr>
+<p>
+clojure.core/even?
+([n])
+  Returns true if n is even, throws an exception if n is not an integer
+</p>
+<hr>
+<p>
+clojure.core/every?
+([pred coll])
+  Returns true if (pred x) is logical true for every x in coll, else
+  false.
+</p>
+<hr>
+<p>
+clojure.core/extends?
+([protocol atype])
+  Returns true if atype extends protocol
+</p>
+<hr>
+<p>
+clojure.core/false?
+([x])
+  Returns true if x is the value false, false otherwise.
+</p>
+<hr>
+<p>
+clojure.core/fits-table?
+([ints])
+  Returns true if the collection of ints can fit within the
+  max-table-switch-size, false otherwise.
+</p>
+<hr>
+<p>
+clojure.core/float?
+([n])
+  Returns true if n is a floating point number
+</p>
+<hr>
+<p>
+clojure.core/fn?
+([x])
+  Returns true if x implements Fn, i.e. is an object created via fn.
+</p>
+<hr>
+<p>
+clojure.core/future-cancelled?
+([f])
+  Returns true if future f is cancelled
+</p>
+<hr>
+<p>
+clojure.core/future-done?
+([f])
+  Returns true if future f is done
+</p>
+<hr>
+<p>
+clojure.core/future?
+([x])
+  Returns true if x is a future
+</p>
+<hr>
+<p>
+clojure.core/ident?
+([x])
+  Return true if x is a symbol or keyword
+</p>
+<hr>
+<p>
+clojure.core/identical?
+([x y])
+  Tests if 2 arguments are the same object
+</p>
+<hr>
+<p>
+clojure.core/ifn?
+([x])
+  Returns true if x implements IFn. Note that many data structures
+  (e.g. sets and maps) implement IFn
+</p>
+<hr>
+<p>
+clojure.core/indexed?
+([coll])
+  Return true if coll implements Indexed, indicating efficient lookup by index
+</p>
+<hr>
+<p>
+clojure.core/inst?
+([x])
+  Return true if x satisfies Inst
+</p>
+<hr>
+<p>
+clojure.core/instance?
+([c x])
+  Evaluates x and tests if it is an instance of the class
+    c. Returns true or false
+</p>
+<hr>
+<p>
+clojure.core/int?
+([x])
+  Return true if x is a fixed precision integer
+</p>
+<hr>
+<p>
+clojure.core/integer?
+([n])
+  Returns true if n is an integer
+</p>
+<hr>
+<p>
+clojure.core/isa?
+([child parent] [h child parent])
+  Returns true if (= child parent), or child is directly or indirectly derived from
+  parent, either via a Java type inheritance relationship or a
+  relationship established via derive. h must be a hierarchy obtained
+  from make-hierarchy, if not supplied defaults to the global
+  hierarchy
+</p>
+<hr>
+<p>
+clojure.core/keyword?
+([x])
+  Return true if x is a Keyword
+</p>
+<hr>
+<p>
+clojure.core/lazy-seq
+([&amp; body])
+Macro
+  Takes a body of expressions that returns an ISeq or , and yields
+  a Seqable object that will invoke the body only the first time seq
+  is called, and will cache the result and return it on all subsequent
+  seq calls. See also - realized?
+</p>
+<hr>
+<p>
+clojure.core/libspec?
+([x])
+  Returns true if x is a libspec
+</p>
+<hr>
+<p>
+clojure.core/list?
+([x])
+  Returns true if x implements IPersistentList
+</p>
+<hr>
+<p>
+clojure.core/map-entry?
+([x])
+  Return true if x is a map entry
+</p>
+<hr>
+<p>
+clojure.core/map?
+([x])
+  Return true if x implements IPersistentMap
+</p>
+<hr>
+<p>
+clojure.core/nat-int?
+([x])
+  Return true if x is a non-negative fixed precision integer
+</p>
+<hr>
+<p>
+clojure.core/neg-int?
+([x])
+  Return true if x is a negative fixed precision integer
+</p>
+<hr>
+<p>
+clojure.core/neg?
+([num])
+  Returns true if num is less than zero, else false
+</p>
+<hr>
+<p>
+clojure.core/?
+([x])
+  Returns true if x is , false otherwise.
+</p>
+<hr>
+<p>
+clojure.core/not-any?
+([pred coll])
+  Returns false if (pred x) is logical true for any x in coll,
+  else true.
+</p>
+<hr>
+<p>
+clojure.core/not-every?
+([pred coll])
+  Returns false if (pred x) is logical true for every x in
+  coll, else true.
+</p>
+<hr>
+<p>
+clojure.core/number?
+([x])
+  Returns true if x is a Number
+</p>
+<hr>
+<p>
+clojure.core/odd?
+([n])
+  Returns true if n is odd, throws an exception if n is not an integer
+</p>
+<hr>
+<p>
+clojure.core/pos-int?
+([x])
+  Return true if x is a positive fixed precision integer
+</p>
+<hr>
+<p>
+clojure.core/pos?
+([num])
+  Returns true if num is greater than zero, else false
+</p>
+<hr>
+<p>
+clojure.core/qualified-ident?
+([x])
+  Return true if x is a symbol or keyword with a namespace
+</p>
+<hr>
+<p>
+clojure.core/qualified-keyword?
+([x])
+  Return true if x is a keyword with a namespace
+</p>
+<hr>
+<p>
+clojure.core/qualified-symbol?
+([x])
+  Return true if x is a symbol with a namespace
+</p>
+<hr>
+<p>
+clojure.core/ratio?
+([n])
+  Returns true if n is a Ratio
+</p>
+<hr>
+<p>
+clojure.core/rational?
+([n])
+  Returns true if n is a rational number
+</p>
+<hr>
+<p>
+clojure.core/reader-conditional?
+([value])
+  Return true if the value is the data representation of a reader conditional
+</p>
+<hr>
+<p>
+clojure.core/realized?
+([x])
+  Returns true if a value has been produced for a promise, delay, future or lazy sequence.
+</p>
+<hr>
+<p>
+clojure.core/record?
+([x])
+  Returns true if x is a record
+</p>
+<hr>
+<p>
+clojure.core/reduced?
+([x])
+  Returns true if x is the result of a call to reduced
+</p>
+<hr>
+<p>
+clojure.core/reversible?
+([coll])
+  Returns true if coll implements Reversible
+</p>
+<hr>
+<p>
+clojure.core/satisfies?
+([protocol x])
+  Returns true if x satisfies the protocol
+</p>
+<hr>
+<p>
+clojure.core/seq?
+([x])
+  Return true if x implements ISeq
+</p>
+<hr>
+<p>
+clojure.core/seqable?
+([x])
+  Return true if the seq function is supported for x
+</p>
+<hr>
+<p>
+clojure.core/sequential?
+([coll])
+  Returns true if coll implements Sequential
+</p>
+<hr>
+<p>
+clojure.core/set?
+([x])
+  Returns true if x implements IPersistentSet
+</p>
+<hr>
+<p>
+clojure.core/simple-ident?
+([x])
+  Return true if x is a symbol or keyword without a namespace
+</p>
+<hr>
+<p>
+clojure.core/simple-keyword?
+([x])
+  Return true if x is a keyword without a namespace
+</p>
+<hr>
+<p>
+clojure.core/simple-symbol?
+([x])
+  Return true if x is a symbol without a namespace
+</p>
+<hr>
+<p>
+clojure.core/some?
+([x])
+  Returns true if x is not , false otherwise.
+</p>
+<hr>
+<p>
+clojure.core/sorted?
+([coll])
+  Returns true if coll implements Sorted
+</p>
+<hr>
+<p>
+clojure.core/special-symbol?
+([s])
+  Returns true if s names a special form
+</p>
+<hr>
+<p>
+clojure.core/string?
+([x])
+  Return true if x is a String
+</p>
+<hr>
+<p>
+clojure.core/symbol?
+([x])
+  Return true if x is a Symbol
+</p>
+<hr>
+<p>
+clojure.core/tagged-literal?
+([value])
+  Return true if the value is the data representation of a tagged literal
+</p>
+<hr>
+<p>
+clojure.core/thread-bound?
+([&amp; vars])
+  Returns true if all of the vars provided as arguments have thread-local bindings.
+   Implies that set!&rsquo;ing the provided vars will succeed.  Returns true if no vars are provided.
+</p>
+<hr>
+<p>
+clojure.core/true?
+([x])
+  Returns true if x is the value true, false otherwise.
+</p>
+<hr>
+<p>
+clojure.core/uri?
+([x])
+  Return true if x is a java.net.URI
+</p>
+<hr>
+<p>
+clojure.core/uuid?
+([x])
+  Return true if x is a java.util.UUID
+</p>
+<hr>
+<p>
+clojure.core/var?
+([v])
+  Returns true if v is of type clojure.lang.Var
+</p>
+<hr>
+<p>
+clojure.core/vector?
+([x])
+  Return true if x implements IPersistentVector
+</p>
+<hr>
+<p>
+clojure.core/volatile?
+([x])
+  Returns true if x is a volatile.
+</p>
+<hr>
+<p>
+clojure.core/zero?
+([num])
+  Returns true if num is zero, else false
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.impl.utils/newline?
+([c])
+  Checks whether the character is a newline
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.impl.utils/numeric?
+([ch])
+  Checks whether a given character is numeric
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.impl.utils/whitespace?
+([ch])
+  Checks whether a given character is whitespace
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsreader.v1v3v2.clojure.tools.reader.impl.commons/number-literal?
+([reader initch])
+  Checks whether the reader is at the start of a number literal
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.info/qualified-symbol?
+([x])
+  Return true if `x` is a symbol with a namespace
+</p>
+
+<p>
+This is only available from Clojure 1.9 so we backport it until we
+drop support for Clojure 1.8.
+</p>
+<hr>
+<p>
+dynapath.dynamic-classpath/can-add?
+([cl])
+  Must return true if add-classpath-url is implemented.
+</p>
+<hr>
+<p>
+dynapath.dynamic-classpath/can-read?
+([cl])
+  Must return true if classpath-urls is implemented.
+</p>
+<hr>
+<p>
+cemerick.pomegranate/modifiable-classloader?
+([cl])
+  Returns true iff the given ClassLoader is of a type that satisfies
+   the dynapath.dynamic-classpath/DynamicClasspath protocol, and it can
+   be modified.
+</p>
+<hr>
+<p>
+clojure.pprint/integral?
+([x])
+  returns true if a number is actually an integer (that is, has no fractional part)
+</p>
+<hr>
+<p>
+clojure.pprint/pretty-writer?
+([x])
+  Return true iff x is a PrettyWriter
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.parse/comment?
+([form])
+  Returns true if form is a (comment &#x2026;)
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.parse/ns-decl?
+([form])
+  Returns true if form is a (ns &#x2026;) declaration.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.parse/option-spec?
+([form])
+  Returns true if form represents a libspec vector containing optional
+  keyword arguments like [namespace :as alias] or
+  [namespace :refer (x y)] or just [namespace]
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.parse/prefix-spec?
+([form])
+  Returns true if form represents a libspec prefix list like
+  (prefix name1 name1) or [com.example.prefix [name1 :as name1]]
+</p>
+<hr>
+<p>
+leiningen.core.utils/ancestor?
+([a b])
+  Is a an ancestor of b?
+</p>
+<hr>
+<p>
+leiningen.core.utils/symlink?
+([file])
+  Checks if a File is a symbolic link or points to another file.
+</p>
+<hr>
+<p>
+leiningen.core.user/gpg-available?
+([])
+  Verifies (gpg-program) exists
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.namespace/has-tests?
+([ns])
+  Returns a truthy value if the namespace has any vars with `:test` metadata.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.namespace/in-project?
+([url])
+  Whether the URL is in the current project&rsquo;s directory.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.namespace/inlined-dependency?
+([namespace])
+  Returns true if the namespace matches one of our, or eastwood&rsquo;s,
+   inlined dependencies.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.namespace/internal-namespace?
+([namespace &amp; [prefixes]])
+  Returns true if the namespace matches the given prefixes.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.file/clojure-file?
+([file])
+  Returns true if the java.io.File represents a file which will be
+  read by the Clojure (JVM) compiler.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.file/clojurescript-file?
+([file])
+  Returns true if the java.io.File represents a file which will be
+  read by the ClojureScript compiler.
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.toolsnamespace.v1v0v0.clojure.tools.namespace.file/file-with-extension?
+([file extensions])
+  Returns true if the java.io.File represents a file whose name ends
+  with one of the Strings in extensions.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.util.instrument/contains-recur?
+([form])
+  Return true if form is not a `loop` or a `fn` and a `recur` is found in it.
+</p>
+<hr>
+<p>
+cider.nrepl.middleware.util.instrument/dont-break?
+(<code>[[name :as form]]</code>)
+  Return true if it&rsquo;s NOT ok to wrap form in a breakpoint.
+  Expressions we don&rsquo;t want to wrap are those listed in
+  `dont-break-forms` and anything containing a `recur`
+  form (unless it&rsquo;s inside a `loop`).
+</p>
+<hr>
+<p>
+cider.nrepl.inlined-deps.orchard.v0v7v1.orchard.inspect
+  Clojure data structure inspection functionality.
+  This code has a long history and at various points of
+  time it lived in different projects. Originally
+  it was part of swank-clojure, afterwards it was moved to
+  javert, then forked to another project from which it
+  was contributed to cider-nrepl. Finally cider-nrepl
+  was split into two libraries and the code ended up here.
+</p>
+
+<p>
+Pretty wild, right?
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org9bb1a3d" class="outline-3">
+<h3 id="org9bb1a3d"><a href="#org9bb1a3d">マップ/キーワード/レコード</a></h3>
+<div class="outline-text-3" id="text-org9bb1a3d">
+<p>
+マップ。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def inventors {"Lisp" "McCarthy" "Clojure" "Hickey"})
+</pre>
+</div>
+
+<div class="results" id="org1481906">
+<p>
+#&rsquo;user/inventors
+</p>
+
+</div>
+
+<p>
+みやすさのためにコロンを置くこともできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def inventors {"Lisp" "McCarthy", "Clojure" "Hickey"})
+</pre>
+</div>
+
+<div class="results" id="orgf49361e">
+<p>
+#&rsquo;user/inventors
+</p>
+
+</div>
+
+<p>
+マップは関数としても動作する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(inventors "Lisp")
+</pre>
+</div>
+
+<div class="results" id="orga621dbd">
+<p>
+McCarthy
+</p>
+
+</div>
+
+<p>
+<code>get</code> 関数も使える。存在しない場合の値を指定できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(get inventors "Lisp" "not find")
+(get inventors "Foo" "not find")
+</pre>
+</div>
+
+<div class="results" id="org1c28c10">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;McCarthy&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;not find&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+<code>キーワード</code> はシンボルに似ているが、コロンで始まる。評価されると自分自身を返す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">:foo
+</pre>
+</div>
+
+<div class="results" id="org0f3c9fd">
+<p>
+:foo
+</p>
+
+</div>
+
+<p>
+シンボルとは異なる。シンボルは評価されるとそれに結び付けられた何かを返そうとする。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">foo
+</pre>
+</div>
+
+<div class="results" id="orgc360d51">
+<p>
+class clojure.lang.Compiler$CompilerException
+</p>
+
+</div>
+
+<p>
+キーワードをキーにして書き直す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def inventors {:Lisp "McCarthy" :Clojure "Hickey"})
+</pre>
+</div>
+
+<div class="results" id="org839d811">
+<p>
+#&rsquo;user/inventors
+</p>
+
+</div>
+
+<p>
+<code>defrecord</code> を使って構造体を定義することで、各マップがどういうキーを取りうるか明示し、強制できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defrecord Book [title author])
+(-&gt;Book "title" "author")
+</pre>
+</div>
+
+<div class="results" id="org5160f30">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">user.Book</td>
+</tr>
+
+<tr>
+<td class="org-left">#user.Book{:title &ldquo;title&rdquo;, :author &ldquo;author&rdquo;}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+マップと同じように扱える。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def b (-&gt;Book "Anathem" "Neal Stephenson"))
+(:title b)
+</pre>
+</div>
+
+<div class="results" id="orgc8b9250">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/b</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Anathem&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgabec769" class="outline-3">
+<h3 id="orgabec769"><a href="#orgabec769">リーダマクロ</a></h3>
+<div class="outline-text-3" id="text-orgabec769">
+<p>
+Clojureのフォームはリーダによって読まれて、テキストからClojureのデータに変換される。
+リーダマクロは前置される特定のマクロ文字によって起動される、リーダの特殊な動作。
+コメントのセミコロンや、評価抑制のクォートもリーダマクロ。
+</p>
+</div>
+</div>
+<div id="outline-container-org86bc102" class="outline-3">
+<h3 id="org86bc102"><a href="#org86bc102">関数</a></h3>
+<div class="outline-text-3" id="text-org86bc102">
+<p>
+関数呼び出しは単に最初の要素が関数を指すようなリストである。
+自分で関数を定義するには <code>defn</code> を使う( <code>def</code> ではない)。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn greeting
+  "Returns a greeting of the form 'Hello, username.'"
+  [username]
+  (str "Hello, " username))
+(greeting "world")
+</pre>
+</div>
+
+<div class="results" id="orga473060">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/greeting</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Hello, world&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+同名の関数で受け取る引数が違うものを呼び出す。
+ゼロ引数の <code>greeting</code> は1引数の <code>greeting</code> に渡して移譲できる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn greeting
+  "Returns a greeting of the form 'Hello, username.'
+     Default username is 'world'."
+  ([] (greeting "world"))
+  ([username] (str "Hello, " username)))
+
+(greeting)
+</pre>
+</div>
+
+<div class="results" id="org3119893">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/greeting</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Hello, world&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+フィルタ。
+まず述語を定義する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn indexable-word? [word]
+  (&gt; (count word) 2))
+</pre>
+</div>
+
+<div class="results" id="orga75fa6c">
+<p>
+#&rsquo;user/indexable-word?
+</p>
+
+</div>
+
+<p>
+適用する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(require '[clojure.string :as str])
+(filter indexable-word? (str/split "A fine day it is" #"\W+"))
+</pre>
+</div>
+
+<div class="results" id="org0d2c08e">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">fine</td>
+<td class="org-left">day</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+無名関数バージョン。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(filter (fn [w] (&gt; (count w) 2)) (str/split "A fine day" #"\W+"))
+</pre>
+</div>
+
+<div class="results" id="org46139bb">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">fine</td>
+<td class="org-left">day</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn make-greeter [greeting-prefix]
+  (fn [username] (str greeting-prefix ", " username)))
+
+(def hello-greeting (make-greeter "Hello"))
+(hello-greeting "world")
+
+(def aloha-greeting (make-greeter "Aloha"))
+(aloha-greeting "Hawaii")
+</pre>
+</div>
+
+<div class="results" id="orgd90c2ca">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/make-greeter</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/hello-greeting</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Hello, world&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/aloha-greeting</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;Aloha, Hawaii&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+名前を与えなくてもいい。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-clojure">((make-greeter "Howdy") "pardner")
+</pre>
+</div>
+
+<div class="results" id="orge28098e">
+<p>
+Howdy, pardner
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orgf6d08e1" class="outline-3">
+<h3 id="orgf6d08e1"><a href="#orgf6d08e1">var、束縛、名前空間</a></h3>
+<div class="outline-text-3" id="text-orgf6d08e1">
+<p>
+オブジェクトを <code>def</code> <code>defn</code> で定義すると、オブジェクトはClojureの <code>var</code> に格納される。
+</p>
+
+<p>
+リーダマクロで user/foo に結び付けられた <code>var</code> を見る。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def foo 10)
+#'foo
+</pre>
+</div>
+
+<div class="results" id="org52d50ba">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/foo</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/foo</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+実引数と仮引数のnumberが束縛される。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn triple [number] (* 3 number))
+(triple 10)
+</pre>
+</div>
+
+<div class="results" id="orgd55fa15">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">#&rsquo;user/triple</td>
+</tr>
+
+<tr>
+<td class="org-right">30</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+関数の引数束縛はレキシカルスコープ…関数本体の中だけから見える。
+</p>
+
+<p>
+コレクション全体を変数に束縛する。
+姓と名を両方とも保存するけど、名だけが必要な場合。
+↓引数authorを取るが、必要なのは名だけで、ちょっとわかりにくい。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn greet-author-1 [author]
+  (println "Hello," (:first-name author)))
+</pre>
+</div>
+
+<div class="results" id="org25ee57b">
+<p>
+#&rsquo;user/greet-author-1
+</p>
+
+</div>
+
+<p>
+必要な部分だけを束縛する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn greet-author-2 [{fname :first-name}]
+  (println "Hello," fname))
+</pre>
+</div>
+
+<p>
+アンダースコアは慣用的に値を気にしない束縛を示すのに使う。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(let [[_ _ z] [1 2 3]] z)
+</pre>
+</div>
+
+<div class="results" id="orgb9596d6">
+<p>
+3
+</p>
+
+</div>
+
+<p>
+<code>as</code> でコレクション自体に名前をつけることもできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(let [[x y :as coords] [1 2 3 4 5 6]]
+  (str "x: " x ", y: " y ", total dimensions " (count coords)))
+</pre>
+</div>
+
+<div class="results" id="org9a89a87">
+<p>
+x: 1, y: 2, total dimensions 6
+</p>
+
+</div>
+
+<p>
+分配束縛を使う。
+[w1 w2 w3] への分配束縛によって最初の3つの単語が取り出される。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(require '[clojure.string :as str])
+(defn ellipsize [words]
+  (let [[w1 w2 w3] (str/split words #"\s+")]
+    (str/join " " [w1 w2 w3 "..."])))
+
+(ellipsize "The quick brown fox jumps over the lazy dogs.")
+</pre>
+</div>
+
+<div class="results" id="org746c07e">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/ellipsize</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;The quick brown &#x2026;&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(resolve 'foo)
+(in-ns 'myapp)
+</pre>
+</div>
+
+<div class="results" id="org01f557d">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/foo</td>
+</tr>
+
+<tr>
+<td class="org-left">#namespace[myapp]</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(clojure.core/use 'clojure.core)
+</pre>
+</div>
+
+<div class="results" id="orga8cc58d">
+
+</div>
+</div>
+</div>
+<div id="outline-container-org9ba4371" class="outline-3">
+<h3 id="org9ba4371"><a href="#org9ba4371"><a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>を呼び出す</a></h3>
+<div class="outline-text-3" id="text-org9ba4371">
+<div class="org-src-container">
+<pre class="src src-clojure">(new java.util.Random)
+</pre>
+</div>
+
+<div class="results" id="org76f5a18">
+<p>
+#object[java.util.Random 0x499982f7 &ldquo;java.util.Random@499982f7&rdquo;]
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(def rnd (new java.util.Random))
+</pre>
+</div>
+
+<div class="results" id="org2d6c0ee">
+<p>
+#&rsquo;user/rnd
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(. rnd nextInt)
+</pre>
+</div>
+
+<div class="results" id="orgacaf344">
+<p>
+1468370734
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(. rnd nextInt 10)
+</pre>
+</div>
+
+<div class="results" id="org75d561e">
+<p>
+9
+</p>
+
+</div>
+
+<p>
+<code>.</code> はインスタンスのメソッドだけでなく、クラスメンバへのアクセスにも使える。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(. Math PI)
+</pre>
+</div>
+
+<div class="results" id="org4c0ef47">
+<p>
+3.141592653589793
+</p>
+
+</div>
+
+<p>
+ブラウザで該当ドキュメントに移動する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(javadoc java.net.URL)
+</pre>
+</div>
+
+<div class="results" id="org938fee3">
+<p>
+true
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org7f9da7e" class="outline-3">
+<h3 id="org7f9da7e"><a href="#org7f9da7e">フロー制御</a></h3>
+<div class="outline-text-3" id="text-org7f9da7e">
+<div class="org-src-container">
+<pre class="src src-clojure">(defn is-small? [number]
+  (if (&lt; number 100) "yes" "no"))
+
+(is-small? 50)
+(is-small? 101)
+</pre>
+</div>
+
+<div class="results" id="org4a114a1">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/is-small?</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;yes&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;no&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+分岐後に複数のアクションを起こす、には <code>do</code> を使う。
+<code>do</code> は副作用をもたらすという明示になる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn is-small? [number]
+  (if (&lt; number 100)
+    "yes"
+    (do
+      (println "Saw a big number" number)
+      "no")))
+(is-small? 200)
+</pre>
+</div>
+
+<p>
+<code>loop</code> を使っての再帰。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(loop [result [] x 5]
+  (if (zero? x)
+    result
+    (recur (conj result x) (dec x))))
+</pre>
+</div>
+
+<div class="results" id="orgcd300e3">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">4</td>
+<td class="org-right">3</td>
+<td class="org-right">2</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn countdown [result x]
+  (if (zero? x)
+    result
+    (recur (conj result x) (dec x))))
+
+(countdown [] 5)
+</pre>
+</div>
+
+<div class="results" id="org85f7b2e">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/countdown</td>
+</tr>
+
+<tr>
+<td class="org-left">[5 4 3 2 1]</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+さまざまなカウントダウン。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(into [] (take 5 (iterate dec 5)))
+</pre>
+</div>
+
+<div class="results" id="orgbd0f9a3">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">4</td>
+<td class="org-right">3</td>
+<td class="org-right">2</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(into [] (drop-last (reverse (range 6))))
+</pre>
+</div>
+
+<div class="results" id="org573b913">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">4</td>
+<td class="org-right">3</td>
+<td class="org-right">2</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(vec (reverse (rest (range 6))))
+</pre>
+</div>
+
+<div class="results" id="org1e39e03">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">4</td>
+<td class="org-right">3</td>
+<td class="org-right">2</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn indexed [coll] (map-indexed vector coll))
+(indexed "abcde")
+</pre>
+</div>
+
+<div class="results" id="org1a20409">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/indexed</td>
+</tr>
+
+<tr>
+<td class="org-left">([0 \a] [1 \b] [2 \c] [3 \d] [4 \e])</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(indexed "abcde")
+</pre>
+</div>
+
+<p>
+clojureの <code>for</code> はループではなく、シーケンスの内包表記である。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn index-filter [pred coll]
+  (when pred
+    (for [[idx elt] (indexed coll) :when (pred elt)] idx)))
+(index-filter #{\a \b} "abcdbbb")
+(index-filter #{\a \b} "xyz")
+</pre>
+</div>
+
+<div class="results" id="orga83907f">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/index-filter</td>
+</tr>
+
+<tr>
+<td class="org-left">(0 1 4 5 6)</td>
+</tr>
+
+<tr>
+<td class="org-left">()</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn index-of-any [pred coll]
+  (first (index-filter pred coll)))
+(index-of-any #{\z \a} "zzabyycdxx")
+(index-of-any #{\b \y} "zzabyycdxx")
+</pre>
+</div>
+
+<div class="results" id="orgabba08b">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">#&rsquo;user/index-of-any</td>
+</tr>
+
+<tr>
+<td class="org-right">0</td>
+</tr>
+
+<tr>
+<td class="org-right">3</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org20fd02e" class="outline-3">
+<h3 id="org20fd02e"><a href="#org20fd02e">メタデータ</a></h3>
+<div class="outline-text-3" id="text-org20fd02e">
+<div class="org-src-container">
+<pre class="src src-clojure">(meta #'str)
+</pre>
+</div>
+
+<div class="results" id="orga9cc5bc">
+<p>
+&rsquo;(:added &ldquo;1.0&rdquo;  :ns #namespace(clojure.core)  :name str  :file &ldquo;clojure/core.clj&rdquo;  :static true  :column 1  :line 544  :tag java.lang.String  :arglists (() (x) (x &amp; ys))  :doc &ldquo;With no args, returns the empty string. With one arg x, returns\\n  x.toString().  (str ) returns the empty string. With more than\\n  one arg, returns the concatenation of the str values of the args.&rdquo;)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn ^{:tag String} shout [^{:tag String} s] (.toUpperCase s))
+(meta #'shout)
+</pre>
+</div>
+
+<div class="results" id="org5af772c">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/shout</td>
+</tr>
+
+<tr>
+<td class="org-left">{:tag java.lang.String, :arglists ([s]), :line 1, :column 1, :file &ldquo;<b>cider-repl</b>&rdquo;, :name shout, :ns #namespace[user]}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+あるいは略記法で書ける。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn ^String shout [^String s] (.toUpperCase s))
+</pre>
+</div>
+
+<div class="results" id="org07d0919">
+<p>
+#&rsquo;user/shout
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org80ccc0a" class="outline-3">
+<h3 id="org80ccc0a"><a href="#org80ccc0a">シーケンス</a></h3>
+<div class="outline-text-3" id="text-org80ccc0a">
+<p>
+シーケンスはいろんなデータ構造の抽象。
+</p>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(class (rest [1 2 3]))
+</pre>
+</div>
+
+<div class="results" id="orgf8e8197">
+<p>
+clojure.lang.PersistentVector$ChunkedSeq
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(first ["a" "b"])
+(rest ["a" "b"])
+(cons "a" "b")
+</pre>
+</div>
+
+<div class="results" id="org721bc32">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;a&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;b&rdquo;)</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;a&rdquo; \b)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+マップはキー/値のペアを要素とするシーケンスとして扱える。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(first {:fname "Aaron" :lname "Bedra"})
+(rest {:fname "Aaron" :lname "Bedra"})
+(cons [:mname "James"] {:fname "Aaron" :lname "Bedra"})
+</pre>
+</div>
+
+<div class="results" id="org03aa9c6">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">[:fname &ldquo;Aaron&rdquo;]</td>
+</tr>
+
+<tr>
+<td class="org-left">([:lname &ldquo;Bedra&rdquo;])</td>
+</tr>
+
+<tr>
+<td class="org-left">([:mname &ldquo;James&rdquo;] [:fname &ldquo;Aaron&rdquo;] [:lname &ldquo;Bedra&rdquo;])</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+<code>conj</code> と <code>info</code> は効率的に追加できる位置に要素を加える。
+対象となるデータ構造について一番効率の良い操作をしてくれるので、具体的な実装に結び付けなくても効率的なコードが書ける。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(conj '(1 2 3) :a)
+</pre>
+</div>
+
+<div class="results" id="org2a105d7">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">:a</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">3</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(into '(1 2 3) '(:a :b :c))
+</pre>
+</div>
+
+<div class="results" id="org60f2ac2">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">:c</td>
+<td class="org-left">:b</td>
+<td class="org-left">:a</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">3</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org5bdea63" class="outline-3">
+<h3 id="org5bdea63"><a href="#org5bdea63">シーケンスライブラリ</a></h3>
+<div class="outline-text-3" id="text-org5bdea63">
+</div>
+<div id="outline-container-org22aa431" class="outline-4">
+<h4 id="org22aa431"><a href="#org22aa431">シーケンスを生成する関数</a></h4>
+<div class="outline-text-4" id="text-org22aa431">
+<div class="org-src-container">
+<pre class="src src-clojure">(range 10)
+(range 10 20)
+(range 10 20 2)
+</pre>
+</div>
+
+<div class="results" id="orgd02703f">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">(0 1 2 3 4 5 6 7 8 9)</td>
+</tr>
+
+<tr>
+<td class="org-left">(10 11 12 13 14 15 16 17 18 19)</td>
+</tr>
+
+<tr>
+<td class="org-left">(10 12 14 16 18)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+↓なぜか実行できない。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(repeat 5 "x")
+</pre>
+</div>
+
+<p>
+シーケンスは無限に続くので取り出しが必要。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(take 10 (iterate inc 1))
+</pre>
+</div>
+
+<div class="results" id="org3a1012c">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">3</td>
+<td class="org-right">4</td>
+<td class="org-right">5</td>
+<td class="org-right">6</td>
+<td class="org-right">7</td>
+<td class="org-right">8</td>
+<td class="org-right">9</td>
+<td class="org-right">10</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(defn whole-numbers [] (iterate inc 1))
+</pre>
+</div>
+
+<div class="results" id="org3ca63ae">
+<p>
+#&rsquo;user/whole-numbers
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(take 4 (repeat 1))
+</pre>
+</div>
+
+<div class="results" id="orgd1b6020">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">1</td>
+<td class="org-right">1</td>
+<td class="org-right">1</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(take 10 (cycle (range 3)))
+</pre>
+</div>
+
+<div class="results" id="orge7d6d53">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">0</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">0</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">0</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(interpose "," ["apple" "banana" "grapes"])
+</pre>
+</div>
+
+<div class="results" id="org0dbe305">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">apple</td>
+<td class="org-left">,</td>
+<td class="org-left">banana</td>
+<td class="org-left">,</td>
+<td class="org-left">grapes</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(use '[clojure.string :only (join)])
+(join \, ["apples" "banana", "grapes"])
+</pre>
+</div>
+
+<div class="results" id="org22285e8">
+<p>
+apples,banana,grapes
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orga978d59" class="outline-4">
+<h4 id="orga978d59"><a href="#orga978d59">シーケンスをフィルタする関数</a></h4>
+<div class="outline-text-4" id="text-orga978d59">
+<div class="org-src-container">
+<pre class="src src-clojure">(take 10 (filter even? (whole-numbers)))
+</pre>
+</div>
+
+<div class="results" id="org951e2a4">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">2</td>
+<td class="org-right">4</td>
+<td class="org-right">6</td>
+<td class="org-right">8</td>
+<td class="org-right">10</td>
+<td class="org-right">12</td>
+<td class="org-right">14</td>
+<td class="org-right">16</td>
+<td class="org-right">18</td>
+<td class="org-right">20</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(take 10 (filter odd? (whole-numbers)))
+</pre>
+</div>
+
+<div class="results" id="org66c0698">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">3</td>
+<td class="org-right">5</td>
+<td class="org-right">7</td>
+<td class="org-right">9</td>
+<td class="org-right">11</td>
+<td class="org-right">13</td>
+<td class="org-right">15</td>
+<td class="org-right">17</td>
+<td class="org-right">19</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+最初の母音に出会うまで文字列から文字を取り出す操作。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(take-while (complement #{\a\e\i\o\u}) "the-quick-brown-fox")
+</pre>
+</div>
+
+<div class="results" id="orgcec8335">
+<p>
+(\t \h)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(drop-while (complement #{\a\e\i\o\u}) "the-quick-brown-fox")
+</pre>
+</div>
+
+<div class="results" id="orgc7fd121">
+<p>
+(\e &#x00ad; \q \u \i \c \k &#x00ad; \b \r \o \w \n &#x00ad; \f \o \x)
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(split-at 5 (range 10))
+</pre>
+</div>
+
+<div class="results" id="org1a8c519">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">0</td>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+<td class="org-right">3</td>
+<td class="org-right">4</td>
+</tr>
+
+<tr>
+<td class="org-right">5</td>
+<td class="org-right">6</td>
+<td class="org-right">7</td>
+<td class="org-right">8</td>
+<td class="org-right">9</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(split-with #(&lt;= % 10) (range 0 20 2))
+</pre>
+</div>
+
+<div class="results" id="org5f005ef">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">0</td>
+<td class="org-right">2</td>
+<td class="org-right">4</td>
+<td class="org-right">6</td>
+<td class="org-right">8</td>
+<td class="org-right">10</td>
+</tr>
+
+<tr>
+<td class="org-right">12</td>
+<td class="org-right">14</td>
+<td class="org-right">16</td>
+<td class="org-right">18</td>
+<td class="org-right">&#xa0;</td>
+<td class="org-right">&#xa0;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org04885a2" class="outline-4">
+<h4 id="org04885a2"><a href="#org04885a2">シーケンスに対する述語</a></h4>
+<div class="outline-text-4" id="text-org04885a2">
+<p>
+述語をそれぞれ適応して真偽値を返す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(every? odd? [1 3 5])
+(every? odd? [1 3 8])
+</pre>
+</div>
+
+<div class="results" id="org80a509e">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">true</td>
+</tr>
+
+<tr>
+<td class="org-left">false</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+いずれかが条件に合わないときはnilを返す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(some even? [1 2 3])
+(some even? [1 3 5])
+</pre>
+</div>
+
+<div class="results" id="orgeaf157d">
+<p>
+true
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(some identity [nil false 1 nil 2])
+</pre>
+</div>
+
+<div class="results" id="orgd3e7944">
+<p>
+1
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(not-every? even? (whole-numbers))
+</pre>
+</div>
+
+<div class="results" id="org34ca5c9">
+<p>
+true
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(not-any? even? (take 10 (whole-numbers)))
+</pre>
+</div>
+
+<div class="results" id="org99d12a9">
+<p>
+false
+</p>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org0f57071" class="outline-4">
+<h4 id="org0f57071"><a href="#org0f57071">シーケンスを変換する関数</a></h4>
+<div class="outline-text-4" id="text-org0f57071">
+<p>
+各リストに関数を適用する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(map #(format "&lt;p&gt;%s&lt;/p&gt;" %) ["the" "quick" "brown" "fox"])
+</pre>
+</div>
+
+<div class="results" id="org25844ff">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&lt;p&gt;the&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;quick&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;brown&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;fox&lt;/p&gt;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+シーケンスの中身をまとめ上げる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(reduce + (range 1 11))
+</pre>
+</div>
+
+<div class="results" id="org955db8d">
+<p>
+55
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(reduce * (range 1 11))
+</pre>
+</div>
+
+<div class="results" id="org4439348">
+<p>
+3628800
+</p>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(sort [42 1 7 11])
+</pre>
+</div>
+
+<div class="results" id="org401d7bc">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">7</td>
+<td class="org-right">11</td>
+<td class="org-right">42</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(sort-by #(.toString %) [42 1 7 11])
+</pre>
+</div>
+
+<div class="results" id="org2663f54">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">11</td>
+<td class="org-right">42</td>
+<td class="org-right">7</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+ソートの順番を変えられる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(sort &gt; [42 1 7 11])
+(sort &lt; [42 1 7 11])
+</pre>
+</div>
+
+<div class="results" id="orgec936b9">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">(42 11 7 1)</td>
+</tr>
+
+<tr>
+<td class="org-left">(1 7 11 42)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+リスト内包表記バージョン。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(for [word ["the" "quick" "brown" "fox"]]
+  (format "&lt;p&gt;%s&lt;/p&gt;" word))
+</pre>
+</div>
+
+<div class="results" id="org593b21c">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&lt;p&gt;the&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;quick&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;brown&lt;/p&gt;</td>
+<td class="org-left">&lt;p&gt;fox&lt;/p&gt;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+<code>:when</code> 節を使うと <code>filter</code> をエミュレートできる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(take 10 (for [n (whole-numbers) :when (even? n)] n))
+</pre>
+</div>
+
+<div class="results" id="orgd9ab447">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">2</td>
+<td class="org-right">4</td>
+<td class="org-right">6</td>
+<td class="org-right">8</td>
+<td class="org-right">10</td>
+<td class="org-right">12</td>
+<td class="org-right">14</td>
+<td class="org-right">16</td>
+<td class="org-right">18</td>
+<td class="org-right">20</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+1番右側の束縛を最初に繰り返し、1度繰り返すたびにその左側の操作を1つ進める。
+なのでrankの繰り返しが先に行われる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(for [file "ABCDEFGH" rank (range 1 9)] (format "%c%d" file rank))
+</pre>
+</div>
+
+<div class="results" id="orge115648">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">A1</td>
+<td class="org-left">A2</td>
+<td class="org-left">A3</td>
+<td class="org-left">A4</td>
+<td class="org-left">A5</td>
+<td class="org-left">A6</td>
+<td class="org-left">A7</td>
+<td class="org-left">A8</td>
+<td class="org-left">B1</td>
+<td class="org-left">B2</td>
+<td class="org-left">B3</td>
+<td class="org-left">B4</td>
+<td class="org-left">B5</td>
+<td class="org-left">B6</td>
+<td class="org-left">B7</td>
+<td class="org-left">B8</td>
+<td class="org-left">C1</td>
+<td class="org-left">C2</td>
+<td class="org-left">C3</td>
+<td class="org-left">C4</td>
+<td class="org-left">C5</td>
+<td class="org-left">C6</td>
+<td class="org-left">C7</td>
+<td class="org-left">C8</td>
+<td class="org-left">D1</td>
+<td class="org-left">D2</td>
+<td class="org-left">D3</td>
+<td class="org-left">D4</td>
+<td class="org-left">D5</td>
+<td class="org-left">D6</td>
+<td class="org-left">D7</td>
+<td class="org-left">D8</td>
+<td class="org-left">E1</td>
+<td class="org-left">E2</td>
+<td class="org-left">E3</td>
+<td class="org-left">E4</td>
+<td class="org-left">E5</td>
+<td class="org-left">E6</td>
+<td class="org-left">E7</td>
+<td class="org-left">E8</td>
+<td class="org-left">F1</td>
+<td class="org-left">F2</td>
+<td class="org-left">F3</td>
+<td class="org-left">F4</td>
+<td class="org-left">F5</td>
+<td class="org-left">F6</td>
+<td class="org-left">F7</td>
+<td class="org-left">F8</td>
+<td class="org-left">G1</td>
+<td class="org-left">G2</td>
+<td class="org-left">G3</td>
+<td class="org-left">G4</td>
+<td class="org-left">G5</td>
+<td class="org-left">G6</td>
+<td class="org-left">G7</td>
+<td class="org-left">G8</td>
+<td class="org-left">H1</td>
+<td class="org-left">H2</td>
+<td class="org-left">H3</td>
+<td class="org-left">H4</td>
+<td class="org-left">H5</td>
+<td class="org-left">H6</td>
+<td class="org-left">H7</td>
+<td class="org-left">H8</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org728504a" class="outline-3">
+<h3 id="org728504a"><a href="#org728504a">遅延シーケンスと無限シーケンス</a></h3>
+<div class="outline-text-3" id="text-org728504a">
+<p>
+リストは必要なときに作られる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(use 'examples.primes)
+(def ordinals-and-primes (map vector (iterate inc 1) primes))
+(take 5 (drop 1000 ordinals-and-primes))
+</pre>
+</div>
+
+<div class="results" id="org186f8e9">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;examples.primes/ordinals-and-primes</td>
+</tr>
+
+<tr>
+<td class="org-left">([1001 7927] [1002 7933] [1003 7937] [1004 7949] [1005 7951])</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+遅延なので、副作用が動かないように見える。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def x (for [i (range 1 3)] (do (println i) i)))
+x ;; 標準入力に出ない
+</pre>
+</div>
+
+<div class="results" id="org348dc31">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/x</td>
+</tr>
+
+<tr>
+<td class="org-left">(1 2)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+シーケンスの要素をすべて計算する。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(doall x)
+</pre>
+</div>
+
+<div class="results" id="orge1f4948">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+<td class="org-right">2</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(def x (for [i (range 1 3)] (do (println i) i)))
+x
+</pre>
+</div>
+
+<div class="results" id="orgada9b9d">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/x</td>
+</tr>
+
+<tr>
+<td class="org-left">(1 2)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-orga6e6cb6" class="outline-3">
+<h3 id="orga6e6cb6"><a href="#orga6e6cb6">シーカブル</a></h3>
+<div class="outline-text-3" id="text-orga6e6cb6">
+<p>
+シーケンス関数に渡されると、<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>のコレクションは自動的にシーケンスとして振る舞う。
+シーケンスとして振る舞えるコレクションをシーカブルであるという。
+</p>
+
+<p>
+配列はシーカブル。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(first (.getBytes "hello"))
+(rest (.getBytes "hello"))
+(cons (int \h) (.getBytes "ello"))
+</pre>
+</div>
+
+<div class="results" id="orgc84c0ef">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">104</td>
+</tr>
+
+<tr>
+<td class="org-left">(101 108 108 111)</td>
+</tr>
+
+<tr>
+<td class="org-left">(104 101 108 108 111)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+文字列もシーカブル。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(first "Hello")
+(rest "Hello")
+(cons \H "ello")
+</pre>
+</div>
+
+<div class="results" id="org035aa59">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">\H</td>
+</tr>
+
+<tr>
+<td class="org-left">(\e \l \l \o)</td>
+</tr>
+
+<tr>
+<td class="org-left">(\H \e \l \l \o)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+逆にして、戻す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(reverse "hello")
+(apply str (reverse "hello"))
+</pre>
+</div>
+
+<div class="results" id="orgc8ea308">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">(\o \l \l \e \h)</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;olleh&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>のコレクションを使うのは、<a href="20211007104541-java.html#ID-9fa3711b-a22e-4cf5-ae97-5c057083674a">Java</a>のAPIを扱うときだけ(Clojure組み込みのコレクションの方が便利)。
+</p>
+</div>
+</div>
+<div id="outline-container-org5751ee1" class="outline-3">
+<h3 id="org5751ee1"><a href="#org5751ee1">正規表現</a></h3>
+<div class="outline-text-3" id="text-org5751ee1">
+<p>
+マッチした文字列からなる変更不可なシーケンスを作り出す。
+シーケンスライブラリの関数群がただで正規表現にも使えるようになる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(re-seq #"\w+" "the quick brown fox")
+(sort (re-seq #"\w+" "the quick brown fox"))
+(drop 2 (re-seq #"\w+" "the quick brown fox"))
+(map #(.toUpperCase %) (re-seq #"\w+" "the quick brown fox"))
+</pre>
+</div>
+
+<div class="results" id="org5b27612">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">(&ldquo;the&rdquo; &ldquo;quick&rdquo; &ldquo;brown&rdquo; &ldquo;fox&rdquo;)</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;brown&rdquo; &ldquo;fox&rdquo; &ldquo;quick&rdquo; &ldquo;the&rdquo;)</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;brown&rdquo; &ldquo;fox&rdquo;)</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;THE&rdquo; &ldquo;QUICK&rdquo; &ldquo;BROWN&rdquo; &ldquo;FOX&rdquo;)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(import '(java.io File))
+(map #(.getName %) (.listFiles (File. "./public/css")))
+</pre>
+</div>
+
+<div class="results" id="orgda032c0">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">java.io.File</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;site.css&rdquo; &ldquo;code.css&rdquo;)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+ディレクトリを深さ優先で辿る。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(count (file-seq (File. "./public")))
+</pre>
+</div>
+
+<div class="results" id="org1d194d7">
+<p>
+101
+</p>
+
+</div>
+
+<p>
+最近更新されたファイルだけを調べる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(defn minutes-to-millis [mins]
+  (* mins 1000 60))
+(defn recently-modified? [file]
+  (&gt; (.lastModified file)
+     (- (System/currentTimeMillis) (minutes-to-millis 30))))
+(filter recently-modified? (file-seq (File. ".")))
+</pre>
+</div>
+
+<div class="results" id="orgce51524">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/minutes-to-millis</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/recently-modified?</td>
+</tr>
+
+<tr>
+<td class="org-left">(#object[java.io.File 0x6bf2183f &ldquo;./20210926143813-clojure.org&rdquo;] #object[java.io.File 0x70ca1df7 &ldquo;./.git&rdquo;])</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+読み込む(readerをオープンしたまま)。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(use '[clojure.java.io :only (reader)])
+(take 2 (line-seq (reader "public/index.html")))
+</pre>
+</div>
+
+<div class="results" id="orgb399cb4">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&lt;!DOCTYPE html&gt;</td>
+<td class="org-left">&lt;html lang=&ldquo;en&rdquo;&gt;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+リーダーをちゃんと閉じる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(with-open [rdr (reader "./public/index.html")]
+  (count (line-seq rdr)))
+</pre>
+</div>
+
+<div class="results" id="org594e8b7">
+<p>
+107
+</p>
+
+</div>
+
+<p>
+空行を除いた行数。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(with-open [rdr (reader "./public/index.html")]
+  (count (filter #(re-find #"\S" %) (line-seq rdr))))
+</pre>
+</div>
+
+<div class="results" id="org66a1f21">
+<p>
+98
+</p>
+
+</div>
+
+<p>
+orgコードの行数を数え上げる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(use '[clojure.java.io :only (reader)])
+(defn non-blank? [line] (if (re-find #"\S" line) true false))
+(defn non-svn? [file] (not (.contains (.toString file) ".svn")))
+(defn org-source? [file] (.endsWith (.toString file) ".org"))
+(defn org-loc [base-file]
+  (reduce
+   +
+   (for [file (file-seq base-file)
+         :when (and (org-source? file) (non-svn? file))]
+     (with-open [rdr (reader file)]
+       (count (filter non-blank? (line-seq rdr)))))))
+(org-loc (java.io.File. "./"))
+</pre>
+</div>
+
+<div class="results" id="org176202f">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/non-blank?</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/non-svn?</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/org-source?</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/org-loc</td>
+</tr>
+
+<tr>
+<td class="org-left">12299</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org4e8422c" class="outline-3">
+<h3 id="org4e8422c"><a href="#org4e8422c">特定の構造に特化した関数</a></h3>
+<div class="outline-text-3" id="text-org4e8422c">
+<p>
+シーケンス関数を使うと汎用性の高いコードが書ける。
+リスト、ベクタ、マップ、セットに特化した関数もある。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(peek '(1 2 3))
+(pop '(1 2 3))
+</pre>
+</div>
+
+<div class="results" id="orgd644f6d">
+<table>
+
+
+<colgroup>
+<col  class="org-right">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-right">1</td>
+</tr>
+
+<tr>
+<td class="org-right">(2 3)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(get [:a :b :c] 1)
+(get [:a :b :c] 5) ;; nil
+</pre>
+</div>
+
+<div class="results" id="orgdbbf74d">
+<p>
+:b
+</p>
+
+</div>
+
+<p>
+指定のインデックスに新しい値を入れる。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(assoc [0 1 2 3 4] 2 :two)
+(subvec [1 2 3 4 5] 3)
+(take 2 (drop 3 [1 2 3 4 5]))
+</pre>
+</div>
+
+<div class="results" id="org3c3c823">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">[0 1 :two 3 4]</td>
+</tr>
+
+<tr>
+<td class="org-left">[4 5]</td>
+</tr>
+
+<tr>
+<td class="org-left">(4 5)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+特定の構造向けの関数がある場合、それは性能のためであることがほとんど。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(keys {:sundance "spaniel", :darwin "beagle"})
+(vals {:sundance "spaniel", :darwin "beagle"})
+</pre>
+</div>
+
+<div class="results" id="orga2a2c14">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">(:sundance :darwin)</td>
+</tr>
+
+<tr>
+<td class="org-left">(&ldquo;spaniel&rdquo; &ldquo;beagle&rdquo;)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(get {:sundance "spaniel", :darwin "beagle"} :darwin)
+({:sundance "spaniel", :darwin "beagle"} :darwin)
+(:darwin {:sundance "spaniel", :darwin "beagle"})
+</pre>
+</div>
+
+<div class="results" id="org26521f9">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">&ldquo;beagle&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;beagle&rdquo;</td>
+</tr>
+
+<tr>
+<td class="org-left">&ldquo;beagle&rdquo;</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+キーとして持っていれば値に関わらずtrueを返す。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(def score {:stu nil :joey 100})
+(contains? score :stu)
+</pre>
+</div>
+
+<div class="results" id="orga2c484c">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/score</td>
+</tr>
+
+<tr>
+<td class="org-left">true</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(def song {:name "Agnus Dei"
+           :artist "Kryzysztof Penderecki"
+           :album "Polish Requiem"
+           :genre "Classical"})
+
+song
+(assoc song :kind "MPEG Audio File")
+(dissoc song :genre)
+(select-keys song [:name :artist])
+(merge song {:size 8118166, :time 507245})
+</pre>
+</div>
+
+<div class="results" id="orgd00c178">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/song</td>
+</tr>
+
+<tr>
+<td class="org-left">{:name &ldquo;Agnus Dei&rdquo;, :artist &ldquo;Kryzysztof Penderecki&rdquo;, :album &ldquo;Polish Requiem&rdquo;, :genre &ldquo;Classical&rdquo;}</td>
+</tr>
+
+<tr>
+<td class="org-left">{:name &ldquo;Agnus Dei&rdquo;, :artist &ldquo;Kryzysztof Penderecki&rdquo;, :album &ldquo;Polish Requiem&rdquo;, :genre &ldquo;Classical&rdquo;, :kind &ldquo;MPEG Audio File&rdquo;}</td>
+</tr>
+
+<tr>
+<td class="org-left">{:name &ldquo;Agnus Dei&rdquo;, :artist &ldquo;Kryzysztof Penderecki&rdquo;, :album &ldquo;Polish Requiem&rdquo;}</td>
+</tr>
+
+<tr>
+<td class="org-left">{:name &ldquo;Agnus Dei&rdquo;, :artist &ldquo;Kryzysztof Penderecki&rdquo;}</td>
+</tr>
+
+<tr>
+<td class="org-left">{:name &ldquo;Agnus Dei&rdquo;, :artist &ldquo;Kryzysztof Penderecki&rdquo;, :album &ldquo;Polish Requiem&rdquo;, :genre &ldquo;Classical&rdquo;, :size 8118166, :time 507245}</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+同じキーを持っていた場合、どうやって値を組み合わせるかを指定する関数を与える。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(merge-with
+ concat
+ {:rubble ["Barney"], :flintstone ["Fred"]}
+ {:rubble ["Betty"], :flintstone ["Wilma"]}
+ {:rubble ["Bam-Bam"], :flintstone ["Pebbles"]})
+</pre>
+</div>
+
+<div class="results" id="org47244bf">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">:rubble</td>
+<td class="org-left">(Barney Betty Bam-Bam)</td>
+<td class="org-left">:flintstone</td>
+<td class="org-left">(Fred Wilma Pebbles)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="outline-container-org3a1a0a3" class="outline-3">
+<h3 id="org3a1a0a3"><a href="#org3a1a0a3">セットを扱う関数</a></h3>
+<div class="outline-text-3" id="text-org3a1a0a3">
+<div class="org-src-container">
+<pre class="src src-clojure">(use 'clojure.set)
+(def languages #{"java" "c" "clojure"})
+(def beverages #{"java" "chai" "pop"})
+</pre>
+</div>
+
+<div class="results" id="orga5888ee">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/languages</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/beverages</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<p>
+与えられたセットの少なくとも片方にある要素を集める。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(union languages beverages)
+</pre>
+</div>
+
+<div class="results" id="org3409bf8">
+<p>
+#{&ldquo;clojure&rdquo; &ldquo;pop&rdquo; &ldquo;java&rdquo; &ldquo;chai&rdquo; &ldquo;c&rdquo;}
+</p>
+
+</div>
+
+<p>
+最初のセットに含まれ、しかし2番めのセットには含まれないような要素を集めたセット。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(difference languages beverages)
+</pre>
+</div>
+
+<div class="results" id="orgbccccd5">
+<p>
+#{&ldquo;clojure&rdquo; &ldquo;c&rdquo;}
+</p>
+
+</div>
+
+<p>
+言語の名前でもあり、かつ飲み物の名前でもあるようなもの。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(intersection languages beverages)
+</pre>
+</div>
+
+<div class="results" id="org994e7e3">
+<p>
+#{&ldquo;java&rdquo;}
+</p>
+
+</div>
+
+<p>
+1文字だけの言語。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(select #(= 1 (.length %)) languages)
+</pre>
+</div>
+
+<div class="results" id="org9e5b01a">
+<p>
+#{&ldquo;c&rdquo;}
+</p>
+
+</div>
+
+<p>
+関係演算はSQLなどの問い合わせ言語の基礎となっている。
+</p>
+
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+
+<col  class="org-left">
+
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">関係演算</td>
+<td class="org-left">データベース</td>
+<td class="org-left">Clojureの型システム</td>
+</tr>
+
+<tr>
+<td class="org-left">関係</td>
+<td class="org-left">テーブル</td>
+<td class="org-left">セットとして動作するものすべて</td>
+</tr>
+
+<tr>
+<td class="org-left">タプル</td>
+<td class="org-left">行</td>
+<td class="org-left">マップとして動作するものすべて</td>
+</tr>
+</tbody>
+</table>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(def compositions
+  #{{:name "The Art of the Fugue" :composer "J. S. Bach"}
+    {:name "Musical Offering" :composer "J. S. Bach"}
+    {:name "Requiem" :composer "Giuseppe Verdi"}
+    {:name "Requiem" :composer "W. A. Mozart"}})
+(def composer
+  #{{:composer "J. S. Bach" :country "Germany"}
+    {:composer "W. A. Mozart" :country :Austria}
+    {:composer "Giuseppe Verdi" :country "Italy"}})
+(def nations
+  #{{:nation "Germany" :language "German"}
+    {:nation "Austria" :language "German"}
+    {:nation "Italy" :language "Italian"}})
+</pre>
+</div>
+
+<div class="results" id="orgf702fe1">
+<table>
+
+
+<colgroup>
+<col  class="org-left">
+</colgroup>
+<tbody>
+<tr>
+<td class="org-left">#&rsquo;user/compositions</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/composer</td>
+</tr>
+
+<tr>
+<td class="org-left">#&rsquo;user/nations</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+
+<div class="org-src-container">
+<pre class="src src-clojure">(rename compositions {:name :title})
+</pre>
+</div>
+
+<div class="results" id="orgc932cb5">
+<p>
+#{{:composer &ldquo;Giuseppe Verdi&rdquo;, :title &ldquo;Requiem&rdquo;} {:composer &ldquo;W. A. Mozart&rdquo;, :title &ldquo;Requiem&rdquo;} {:composer &ldquo;J. S. Bach&rdquo;, :title &ldquo;The Art of the Fugue&rdquo;} {:composer &ldquo;J. S. Bach&rdquo;, :title &ldquo;Musical Offering&rdquo;}}
+</p>
+
+</div>
+
+<p>
+SQL SELECT文に該当する抜き出し。
+</p>
+<div class="org-src-container">
+<pre class="src src-clojure">(project compositions [:name])
+</pre>
+</div>
+
+<div class="results" id="org4541ffc">
+<p>
+#{{:name &ldquo;The Art of the Fugue&rdquo;} {:name &ldquo;Musical Offering&rdquo;} {:name &ldquo;Requiem&rdquo;}}
+</p>
+
+</div>
+</div>
+</div>
+</div>
+<div id="outline-container-org8bb6b85" class="outline-2">
+<h2 id="org8bb6b85"><a href="#org8bb6b85">Tasks</a></h2>
+<div class="outline-text-2" id="text-org8bb6b85">
+</div>
+<div id="outline-container-org1662eab" class="outline-3">
+<h3 id="org1662eab"><a href="#org1662eab"><span class="todo TODO">TODO</span> プログラミングClojure</a></h3>
+<div class="outline-text-3" id="text-org1662eab">
+<ul class="org-ul">
+<li>37, 39, 44, 56, 67, 74, 81</li>
+</ul>
+</div>
+</div>
+</div>
+<div id="outline-container-orgcfc64a3" class="outline-2">
+<h2 id="orgcfc64a3"><a href="#orgcfc64a3">Reference</a></h2>
+<div class="outline-text-2" id="text-orgcfc64a3">
+</div>
+<div id="outline-container-orgdfd2f0f" class="outline-3">
+<h3 id="orgdfd2f0f"><a href="#orgdfd2f0f"><a href="https://github.com/dundalek/closh">dundalek/closh: Bash-like shell based on Clojure</a></a></h3>
+<div class="outline-text-3" id="text-orgdfd2f0f">
+<p>
+clojureでのshell実装。
+</p>
+</div>
+</div>
+<div id="outline-container-orgaf4cd47" class="outline-3">
+<h3 id="orgaf4cd47"><a href="#orgaf4cd47"><a href="https://www.infoq.com/presentations/Simple-Made-Easy/">Simple Made Easy</a></a></h3>
+<div class="outline-text-3" id="text-orgaf4cd47">
+<p>
+clojure開発者リッチ・ヒッキーのプレゼン。
+</p>
+</div>
+</div>
+<div id="outline-container-orgad98934" class="outline-3">
+<h3 id="orgad98934"><a href="#orgad98934"><a href="https://boxofpapers.hatenablog.com/entry/simple_made_easy">Clojureと「Simple Made Easy」 - 紙箱</a></a></h3>
+<div class="outline-text-3" id="text-orgad98934">
+<p>
+リッチ・ヒッキーのプレゼンの解説。
+簡単とシンプルさを分ける。抽象化によってシンプルさを保つ。
+</p>
+</div>
+</div>
+<div id="outline-container-org6bb2a04" class="outline-3">
+<h3 id="org6bb2a04"><a href="#org6bb2a04"><a href="https://github.com/stuarthalloway/programming-clojure">stuarthalloway/programming-clojure: Sample code for the book</a></a></h3>
+<div class="outline-text-3" id="text-org6bb2a04">
+<p>
+clojureの本のサンプルコード。
+</p>
+</div>
+</div>
+<div id="outline-container-orgbb84c2c" class="outline-3">
+<h3 id="orgbb84c2c"><a href="#orgbb84c2c"><a href="https://github.com/technomancy/leiningen">technomancy/leiningen: Automate Clojure projects without setting your hair on fire.</a></a></h3>
+<div class="outline-text-3" id="text-orgbb84c2c">
+<p>
+clojureの依存解決ライブラリ。
+</p>
+</div>
+</div>
+<div id="outline-container-org300725f" class="outline-3">
+<h3 id="org300725f"><a href="#org300725f"><a href="http://steve-yegge.blogspot.com/2006/03/execution-in-kingdom-of-nouns.html">「名詞の王国での実行」Stevey&rsquo;s Blog Rants: Execution in the Kingdom of Nouns</a></a></h3>
+<div class="outline-text-3" id="text-org300725f">
+<p>
+オブジェクト指向では名詞が重要な地位を占めている。
+</p>
+</div>
+</div>
+<div id="outline-container-org8a220c0" class="outline-3">
+<h3 id="org8a220c0"><a href="#org8a220c0"><a href="https://www.geidai.ac.jp/~marui/clojure/rationale/">Clojureをつくったわけ</a></a></h3>
+<div class="outline-text-3" id="text-org8a220c0">
+<p>
+clojureの特徴がわかる。
+</p>
+</div>
+</div>
+</div>
+<div id="outline-container-org102cc01" class="outline-2">
+<h2 id="org102cc01"><a href="#org102cc01">Archives</a></h2>
+</div>
+
+
+<div id="outline-container-org9920ad5" class="outline-2">
+<h2 id="org9920ad5"><a href="#org9920ad5">Backlinks</a></h2>
+<div class="outline-text-2" id="text-org9920ad5">
+<ul class="org-ul">
+<li><a href="./20220108003324-scala.html">Scala</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>

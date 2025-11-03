@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- 2025-11-03T16:37:47Z -->
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KDOC 476: 『AWSネットワーク入門』</title>
+<meta name="author" content="kijimaD" />
+<meta name="generator" content="Org Mode" />
+<link rel='shortcut icon' type='image/x-icon' href='https://kijimad.github.io/roam/favicon.ico' /><link rel='stylesheet' href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css' media='print' onload='this.media="all"' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/site.css' /><link rel='stylesheet' href='https://kijimad.github.io/roam/css/code.css' /><link rel='preconnect' href='https://fonts.googleapis.com'><link rel='preconnect' href='https://fonts.gstatic.com' crossorigin><link href='https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP&display=swap' rel='stylesheet'>
+</head>
+<body>
+<div id="preamble" class="status">
+<div><div class="header"><div class="container"><div class="row"><div class="col-sm-12 col-md-12"><nav class="navbar navbar-light"/></div></div></div></div></div>
+</div>
+<div id="content" class="content">
+<h1 class="title">KDOC 476: 『AWSネットワーク入門』</h1>
+<div id="outline-container-orgd00711c" class="outline-2">
+<h2 id="orgd00711c"><a href="#orgd00711c">この文書のステータス</a></h2>
+<div class="outline-text-2" id="text-orgd00711c">
+<ul class="org-ul">
+<li>作成
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-11-03 貴島</li>
+</ul></li>
+<li>レビュー
+<ul class="org-ul">
+<li class="on"><input type='checkbox' checked='checked' /> 2025-11-03 貴島</li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org93de014" class="outline-2">
+<h2 id="org93de014"><a href="#org93de014">概要</a></h2>
+<div class="outline-text-2" id="text-org93de014">
+<p>
+『AWSネットワーク入門』は、AWSサービスのなかの特にネットワークに絞って解説した本である。
+</p>
+</div>
+</div>
+<div id="outline-container-org7be578b" class="outline-2">
+<h2 id="org7be578b"><a href="#org7be578b">メモ</a></h2>
+<div class="outline-text-2" id="text-org7be578b">
+<ul class="org-ul">
+<li>サービスの種類によって、グローバル、リージョン、アベイラビリティゾーンのどの範囲で提供されるのか異なる(p20)
+<ul class="org-ul">
+<li>グローバルサービス: IAM, CDN, Route53&#x2026;</li>
+<li>リージョンサービス: VPC, S3, &#x2026;</li>
+<li>アベイラビリティゾーンサービス: EC2, &#x2026;</li>
+</ul></li>
+<li>非VPCサービスとVPCサービスがある(p22)
+<ul class="org-ul">
+<li>グローバルネットワークを利用する非VPCサービス: CloudFront, Route53, S3, &#x2026;</li>
+<li>プライベートネットワークを利用するVPCサービス: EC2, RDS, &#x2026;</li>
+</ul></li>
+<li>VPCにプライベートIPアドレスを割り当てて運用する(p22)</li>
+<li>セキュリティグループはEC2インスタンスとネットワークの間にあり、パケットフィルタリング型ファイアウォールを提供する。ENIに対して設定する(p24)</li>
+<li>セキュリティグループはインスタンスを対象とし、ネットワークACLはサブネットを対象としている(p26)</li>
+<li>ルーターを設置する操作をしなくても、VPCには必ず1つルーターが暗黙に置かれる。サブネットが増えたとき、暗黙的な1つのルーターを経由して互いにつながる(p26)</li>
+<li>VPCはリージョン全体をまたぐが、サブネットはそれぞれのアベイラビリティゾーンに属する。サブネットがアベイラビリティゾーンをまたぐことはない(p30)</li>
+<li>VPCに割り当てるIPアドレス範囲は、プライベートIPアドレスのネットワーク範囲のなかから任意のものを指定する(p31)</li>
+<li>VPCをインターネットに接続するときは、インターネットゲートウェイという一種のNATを構成することで、「プライベートIPアドレスに加えてパブリックIPアドレスを追加で割り当てる」という構成にする(p32)</li>
+<li>VPCのIPアドレス範囲は変更できない(p32)</li>
+<li>CIDER。数万台の端末は1つのネットワークに接続した運用はパフォーマンス・メンテナンス的に望ましくないので、普通はネットワークを小さい単位に分割する。なのでたとえば <code>10.0.0.0/16</code> より <code>10.0.0.0/24</code> のほうが一般的。 <code>/24</code> の場合は256個のサブネット、256個のIPアドレスになる(p34)</li>
+<li>それぞれのリージョンには契約者ごとにVPCが1つ作られている。この用意されているVPCはデフォルトのVPCと呼ばれていて、他のVPCと少し構成が異なる。デフォルトのVPCはすぐにインターネットに接続できるようにする目的に作られた特別なVPCである(p36)</li>
+<li>VPC &gt; アベイラビリティゾーン &gt; サブネット</li>
+<li>AWSのサブネット上ではDHCPサーバ機能が動作している。そのためサブネットにEC2インスタンスを設置して起動すると、そのDHCPサーバからENIに対してサブネットで利用可能なプライベートIPアドレスが動的に割り当てられる(p48)</li>
+<li>AWSにおけるパブリックIPアドレスは、NATによる運用がなされている。パブリックIPアドレスを割り当てたとしても、EC2インスタンスにはプライベートIPアドレスしか割り当てられない。そのかわりにNATでプライベートIPアドレスとパブリックIPアドレスを相互変換している(p78)</li>
+<li>メインのルートテーブルの初期状態は 送信先: <code>10.0.0.0/16</code> ターゲット: <code>local</code> である。なので、VPCで用いているネットワーク範囲のものはlocal(このネットワーク内)で処理されるが、それ以外はルートの登録がないのですべて破棄される。つまりインターネットに出ていけない。インターネットにつなぐにはルートテーブルを作成し、インターネットゲートウェイをデフォルトゲートウェイとする必要がある(p90)</li>
+<li>ルートテーブルで送信先: 0.0.0.0/0 ターゲット: インターネットゲートウェイとすることで、ほかのルート情報でターゲットの定まらないパケットは破棄されずにインターネットゲートウェイにルーティングされる。0.0.0.0は「すべての宛先」を表す特別なルート(p93)</li>
+<li>EC2のパブリックIPアドレスに対してpingコマンドを実行しても応答はない。デフォルトのセキュリティグループでICMP通信を遮断する設定になっているため(p96)</li>
+<li>AWSネットワーク上には <code>169.254.169.254</code> というIPアドレスが付けられた特別なサーバがある。アクセスしたEC2インスタンスに関するさまざまな情報を返すメタデータサーバである(p102)</li>
+<li>インスタンスにElastic IPアドレスを割り当てても、OSから見えるのはプライベートIPアドレスだけなのは変わらない(p112)</li>
+<li>ENIとセキュリティグループは多対多の関係である(p120)</li>
+<li>プライベートサブネットからインターネットに接続したいとき(p145)
+<ul class="org-ul">
+<li>NATゲートウェイをパブリックサブネットに配置する</li>
+<li>プライベートサブネットのデフォルトゲートウェイをNATゲートウェイに向けるようにルートテーブルを編集する</li>
+</ul></li>
+<li>ポートフォワードの利点は、SSHの鍵を踏み台のサーバに置く必要がないので、鍵が盗まれるおそれがない点(p168)</li>
+<li>IPアドレスとホスト名を関連付けるには、ゾーンを作成してAレコードとして登録する。ELBなど、DNS名が登録されているものへの別名を設定するにはエイリアスとして設定する(p243)</li>
+<li>S3はパブリックIPで提供されているサービスなので、プライベートIP環境からは利用できない。パブリックIPが割り当てられていないとVPC外に出られないから(p265)</li>
+</ul>
+</div>
+</div>
+<div id="outline-container-org6601a76" class="outline-2">
+<h2 id="org6601a76"><a href="#org6601a76">関連</a></h2>
+<div class="outline-text-2" id="text-org6601a76">
+<p>
+なし。
+</p>
+</div>
+</div>
+</div>
+<div id="postamble" class="status">
+<footer class="footer py-3"><div class="container"><div class="row "><div class="col-md-4"></div><div class="col-sm col-md"><nav class="navbar"><a class="nav-link text-secondary small px-0" href="./index.html">Insomnia</a><a class="nav-link text-secondary small px-0" href="./sitemap.html">Sitemap</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD/roam">Repository</a><a class="nav-link text-secondary small px-0" href="https://github.com/kijimaD">@kijimaD</a></nav></div><div class="col-md-4"></div></div></div></footer>
+</div>
+</body>
+</html>
