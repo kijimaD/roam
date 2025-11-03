@@ -38,30 +38,39 @@ jobs:
   release_image:
     if: github.ref == 'refs/heads/main'
     needs: tag
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_release:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_release:latest
       target: release
     secrets:
-      WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   staging_image:
     needs: tag
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_staging:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_staging:latest
       target: staging
     secrets:
-      WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build_image:
     needs: tag
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/build.yml
     with:
       image: ghcr.io/kijimad/roam_build:${{ needs.tag.outputs.git-tag }},ghcr.io/kijimad/roam_build:latest
       target: build
     secrets:
-      WRITE_PACKAGE: ${{ secrets.WRITE_PACKAGE }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish:
     needs:
