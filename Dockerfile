@@ -1,5 +1,5 @@
 # builder ================
-FROM ubuntu:25.10 AS builder
+FROM ubuntu:26.04 AS builder
 
 WORKDIR /roam
 
@@ -61,14 +61,14 @@ COPY --from=build /roam/pdfs /roam/public/pdfs
 COPY --from=builder /usr/bin/sleep /usr/bin/sleep
 
 # Heroku(staging)
-FROM ubuntu:25.10 AS staging
+FROM ubuntu:26.04 AS staging
 
 COPY --from=build /roam/public /roam/public
 
 CMD cd /roam/public && python -m SimpleHTTPServer $PORT
 
 # textlint ================
-FROM node:25.1.0 AS textlint
+FROM node:25.2.0 AS textlint
 
 WORKDIR /work
 
@@ -81,7 +81,7 @@ COPY .textlintrc ./
 COPY prh.yml ./
 
 # pandoc ================
-FROM ubuntu:25.10 AS pandoc
+FROM ubuntu:26.04 AS pandoc
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt update && \
